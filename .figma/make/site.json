@@ -1,0 +1,10 @@
+{
+  "description": "A comprehensive platform for Vivadoxa Music School offering program info, online applications, payment processing, status tracking, and contact support.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
