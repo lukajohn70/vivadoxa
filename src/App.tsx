@@ -1,193 +1,75 @@
+// ─── App.tsx — Root component and router ──────────────────────────────────────
+// All pages are lazy-split into separate files for maintainability.
+// Navigation is client-side (SPA) via the `page` state variable.
+
 import { useState } from "react";
-import brandLogo from "./assets/vivadoxa-logo.png";
+import { Navbar, Footer } from "@/components/Navigation";
+import { Home } from "@/pages/Home";
+import { About, Programs, Modes, Repairs, Contact } from "@/pages/StaticPages";
+import { Apply, Payment, Status } from "@/pages/ApplyFlow";
+import { Admin, AdminLogin } from "@/pages/Admin";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { WHATSAPP_URL } from "@/lib/utils";
+import { Icon } from "@/components/ui";
+import type { Page } from "@/types";
 
-type Page = "home" | "about" | "programs" | "modes" | "repairs" | "apply" | "payment" | "status" | "contact" | "admin";
-
-const hero = "https://images.unsplash.com/photo-1722481742905-0ed15dd8d762?auto=format&fit=crop&w=1600&q=85";
-const trumpet = "https://images.unsplash.com/photo-1615841192203-84f7b2899c0b?auto=format&fit=crop&w=1200&q=85";
-const portrait = "https://images.unsplash.com/photo-1615841192282-0c9aba46d19c?auto=format&fit=crop&w=900&q=85";
-const drums = "https://images.unsplash.com/photo-1721713834000-1064fbf2affb?auto=format&fit=crop&w=900&q=85";
-const piano = "https://images.unsplash.com/photo-1744809482817-9a9d4fc280af?auto=format&fit=crop&w=1200&q=85";
-const guitar = "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=85";
-const studio = "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1400&q=85";
-const violin = "https://images.unsplash.com/photo-1567619822659-2094d3ebef04?auto=format&fit=crop&w=1200&q=85";
-const saxophone = "https://images.unsplash.com/photo-1581283869631-baae04233b04?auto=format&fit=crop&w=1200&q=85";
-
-const Icon = ({ name, size = 20 }: { name: string; size?: number }) => {
-  const paths: Record<string, React.ReactNode> = {
-    arrow: <><path d="M5 12h14M13 6l6 6-6 6"/></>,
-    check: <path d="m5 12 4 4L19 6"/>,
-    menu: <><path d="M4 7h16M4 12h16M4 17h16"/></>,
-    close: <><path d="m6 6 12 12M18 6 6 18"/></>,
-    phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.56 2.81.69A2 2 0 0 1 22 16.92z"/>,
-    mail: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></>,
-    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2"/></>,
-    upload: <><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></>,
-    search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
-    bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></>,
-    copy: <><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></>,
-  };
-  return <svg aria-hidden="true" className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
-};
-
-function Logo({ light = false }: { light?: boolean }) {
-  return <div className={`logo ${light ? "logo-light" : ""}`}><img src={brandLogo} alt="VivaDoxa Music — Actualize your passion"/></div>;
-}
-
-function Button({ children, variant = "primary", onClick, disabled = false, type = "button" }: { children: React.ReactNode; variant?: "primary" | "secondary" | "ghost"; onClick?: () => void; disabled?: boolean; type?: "button" | "submit" }) {
-  return <button type={type} disabled={disabled} onClick={onClick} className={`btn btn-${variant}`}>{children}</button>;
-}
-
-const Field = ({ label, placeholder, type = "text" }: { label: string; placeholder?: string; type?: string }) => <label className="field"><span>{label}</span><input type={type} placeholder={placeholder}/></label>;
-const Select = ({ label, children }: { label: string; children: React.ReactNode }) => <label className="field"><span>{label}</span><select defaultValue=""><option value="" disabled>Select an option</option>{children}</select></label>;
-const Badge = ({ children, tone = "navy" }: { children: React.ReactNode; tone?: "navy" | "gold" | "green" | "red" }) => <span className={`badge badge-${tone}`}>{children}</span>;
-const SectionHead = ({ eyebrow, title, body, center = false }: { eyebrow: string; title: string; body?: string; center?: boolean }) => <div className={`section-head ${center ? "center" : ""}`}><span className="eyebrow">{eyebrow}</span><h2>{title}</h2>{body && <p>{body}</p>}</div>;
-
-function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
-  const [open, setOpen] = useState(false);
-  const items: [string, Page][] = [["Home","home"],["About","about"],["Programs","programs"],["Study Modes","modes"],["Repairs","repairs"],["Check Status","status"],["Contact","contact"]];
-  return <header className="nav"><div className="container nav-inner"><button className="logo-button" onClick={() => go("home")}><Logo/></button><nav className={open ? "open" : ""}>{items.map(([label, id]) => <button key={id} className={page === id ? "active" : ""} onClick={() => { go(id); setOpen(false); }}>{label}</button>)}<Button onClick={() => {go("apply"); setOpen(false);}}>Apply Now <Icon name="arrow" size={17}/></Button></nav><button className="menu-btn" aria-label="Toggle menu" onClick={() => setOpen(!open)}><Icon name={open ? "close" : "menu"}/></button></div></header>;
-}
-
-const programData = [
-  { name: "Piano & Keyboard", tag: "Most popular", image: piano, fee: "₦85,000", desc: "Build strong technique, sight-reading and performance confidence." },
-  { name: "Guitar", tag: "All styles", image: guitar, fee: "₦75,000", desc: "Acoustic, electric or bass—learn chords, rhythm and improvisation." },
-  { name: "Drums & Percussion", tag: "High energy", image: drums, fee: "₦80,000", desc: "Develop timing, coordination and a powerful musical vocabulary." },
-];
-
-function ProgramCard({ item, go }: { item: typeof programData[number]; go: (p: Page) => void }) {
-  return <article className="program-card"><div className="card-image"><img src={item.image} alt={`${item.name} music lesson`}/><Badge tone="gold">{item.tag}</Badge></div><div className="card-body"><div className="card-meta"><span>12 weeks</span><span>Onsite + Online</span></div><h3>{item.name}</h3><p>{item.desc}</p><div className="card-foot"><strong>{item.fee}<small> / term</small></strong><button onClick={() => go("apply")} aria-label={`Apply for ${item.name}`}><Icon name="arrow"/></button></div></div></article>;
-}
-
-function Home({ go }: { go: (p: Page) => void }) {
-  return <main>
-    <section className="hero"><div className="container hero-grid"><div className="hero-copy"><Badge tone="gold">Enrolment now open · 2025 session</Badge><h1>Learn music.<br/><em>Master your craft.</em></h1><p>Expert-led music education that builds confident musicians—one note, one lesson, one stage at a time.</p><div className="button-row"><Button onClick={() => go("apply")}>Start your journey <Icon name="arrow"/></Button><Button variant="secondary" onClick={() => go("programs")}>Explore programs</Button></div><div className="trust-row"><div className="avatars"><span>A</span><span>T</span><span>K</span></div><p><strong>4.9 / 5</strong><br/>from our learning community</p></div></div><div className="hero-visual"><div className="gold-shape"/><img src={hero} alt="Young African musicians performing together"/><div className="floating-card"><span className="play">♪</span><div><strong>Find your sound</strong><small>30+ expert-led courses</small></div></div><div className="staff-lines"/></div></div></section>
-    <section className="stats"><div className="container stats-grid">{[["12+","Years teaching"],["1,500+","Students trained"],["15","Instruments"],["24","Expert instructors"]].map(([n,l]) => <div key={l}><strong>{n}</strong><span>{l}</span></div>)}</div></section>
-    <section className="section"><div className="container"><SectionHead eyebrow="Explore your sound" title="A program for every ambition" body="From your very first note to advanced performance, learn with patient instructors and a practical curriculum."/><div className="program-grid">{programData.map(item => <ProgramCard item={item} go={go} key={item.name}/>)}</div><div className="center-action"><Button variant="secondary" onClick={() => go("programs")}>View all programs <Icon name="arrow"/></Button></div></div></section>
-    <section className="section how"><div className="container"><SectionHead center eyebrow="Simple admission" title="Your journey starts in four steps"/><div className="steps">{[["01","Apply online","Tell us what you want to learn."],["02","Make payment","Choose your preferred method."],["03","Get confirmation","We verify within 24 hours."],["04","Start learning","Receive your admission letter."]].map(([n,t,d],i) => <div className="step" key={n}><span>{n}</span><i className={i < 3 ? "line" : ""}/><h3>{t}</h3><p>{d}</p></div>)}</div></div></section>
-    <section className="section"><div className="container modes-split"><div className="photo-stack"><img src={studio} alt="Professional music production and teaching studio"/><div><strong>Flexible learning</strong><span>Built around your life</span></div></div><div><SectionHead eyebrow="Learn your way" title="Your goals. Your schedule. Your space." body="Whether you thrive in the energy of our studios or prefer focused lessons from home, the same excellent teaching meets you there."/><div className="mode-list">{[["Onsite at our studio","Professional rooms, instruments and community."],["Live online lessons","Personal instruction wherever you are."],["Home lessons","An instructor comes to you in Kaduna."]].map(([t,d],i)=><button key={t} onClick={() => go("modes")}><span>0{i+1}</span><div><strong>{t}</strong><small>{d}</small></div><Icon name="arrow"/></button>)}</div></div></div></section>
-    <section className="testimonial"><div className="container quote"><span className="quote-mark">“</span><blockquote>Vivadoxa gave my daughter more than piano lessons. They gave her the confidence to perform, create and truly love music.</blockquote><div><strong>Amaka Okafor</strong><span>Parent · Kaduna</span></div><div className="dots"><i/><i/><i/></div></div></section>
-    <Cta go={go}/>
-  </main>;
-}
-
-function About({ go }: { go: (p: Page) => void }) {
-  return <main><PageHero eyebrow="About Vivadoxa" title="Music changes people. We help that happen." body="Since 2013, we have helped young people and adults discover their voice, master an instrument and grow in confidence." image={drums}/>
-    <section className="section"><div className="container story-grid"><div><SectionHead eyebrow="Our story" title="Rooted in craft. Driven by purpose."/><p>What began as a small keyboard class in Kaduna has grown into a vibrant learning community. Our teaching blends sound technique, creative expression and real performance experience.</p><p>We believe excellent music education should feel personal, practical and joyful—at every age and skill level.</p></div><div className="mission-card"><span>Our mission</span><h3>To nurture skilled, expressive and confident musicians.</h3><hr/><span>Our vision</span><h3>To become Africa’s most trusted home for modern music education.</h3></div></div></section>
-    <section className="section alt"><div className="container"><SectionHead center eyebrow="Meet your mentors" title="Learn from working musicians"/><div className="team-grid">{[["Tosin Adewale","Piano & Composition",portrait],["David Eze","Guitar & Production",trumpet],["Morenike Bello","Vocals & Performance",hero]].map(([n,s,img])=><article className="team-card" key={n}><img src={img} alt={n}/><h3>{n}</h3><p>{s}</p></article>)}</div></div></section><Cta go={go}/></main>;
-}
-
-function PageHero({ eyebrow, title, body, image }: { eyebrow: string; title: string; body: string; image?: string }) {
-  return <section className="page-hero"><div className="container page-hero-inner"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{body}</p></div>{image && <img src={image} alt="Vivadoxa music school"/>}</div></section>;
-}
-
-function Programs({ go }: { go: (p: Page) => void }) {
-  const [tab, setTab] = useState("Instruments");
-  const tabs = ["Instruments","Vocals","Composition","Music Production"];
-  const allPrograms = [...programData,
-    {name:"Violin",tag:"Classical",image:violin,fee:"₦82,000",desc:"Develop bowing, intonation and expressive performance skills."},
-    {name:"Saxophone",tag:"Jazz + contemporary",image:saxophone,fee:"₦90,000",desc:"Master breath control, tone, repertoire and improvisation."},
-    {name:"Music Production",tag:"Studio skills",image:studio,fee:"₦95,000",desc:"Record, arrange, mix and complete release-ready music."}
-  ];
-  return <main><PageHero eyebrow="Programs & courses" title="Find the sound that feels like you." body="Structured, practical training for beginners through advanced musicians."/>
-    <section className="section"><div className="container"><div className="tabs">{tabs.map(t=><button className={tab===t?"active":""} onClick={()=>setTab(t)} key={t}>{t}</button>)}</div><div className="filter-row"><p><strong>{tab}</strong> · 12 programs</p><select><option>All levels</option><option>Beginner</option><option>Intermediate</option></select></div><div className="program-grid">{allPrograms.map((item,i)=><ProgramCard key={`${item.name}${i}`} item={item} go={go}/>)}</div></div></section></main>;
-}
-
-function Modes({ go }: { go: (p: Page) => void }) {
-  const modes = [{name:"Onsite",sub:"Learn in our purpose-built studio",price:"From ₦75,000",best:true,items:["Access to studio instruments","Real-time ensemble practice","Weekday and weekend slots"]},{name:"Online",sub:"Live one-to-one video lessons",price:"From ₦60,000",items:["Learn from anywhere","Lesson recordings included","Stable internet required"]},{name:"Home lessons",sub:"We bring the lesson to you",price:"From ₦95,000",items:["Available across Kaduna","No commute required","Your own instrument preferred"]}];
-  return <main><PageHero eyebrow="Study modes" title="Excellent teaching, wherever you learn." body="Choose a format that fits your schedule, learning style and location."/><section className="section"><div className="container comparison">{modes.map(m=><article className={m.best?"featured":""} key={m.name}>{m.best&&<Badge tone="gold">Most immersive</Badge>}<h2>{m.name}</h2><p>{m.sub}</p><strong>{m.price}<small> / term</small></strong><ul>{m.items.map(x=><li key={x}><span><Icon name="check" size={16}/></span>{x}</li>)}</ul><Button variant={m.best?"primary":"secondary"} onClick={()=>go("apply")}>Choose {m.name}</Button></article>)}</div><div className="faq"><SectionHead eyebrow="Common questions" title="Everything you need to know"/>{["Can I switch study modes during the term?","Do I need to own an instrument?","How long is each lesson?"].map((q,i)=><details key={q} open={i===0}><summary>{q}<span>+</span></summary><p>Yes. Speak with our admissions team and we will help you move to the best option, subject to instructor availability.</p></details>)}</div></section></main>;
-}
-
-function Repairs() {
-  const [sent,setSent]=useState(false);
-  return <main><PageHero eyebrow="Repairs & maintenance" title="Give your instrument its voice back." body="Careful diagnostics, expert repairs and transparent pricing for the instruments you love." image={trumpet}/><section className="section"><div className="container"><div className="service-grid">{["Professional tuning","String replacement","Full servicing","Careful restoration","Deep cleaning"].map((x,i)=><div className="service-card" key={x}><span>0{i+1}</span><h3>{x}</h3><p>Expert care, quality parts and a clear estimate before work begins.</p></div>)}</div><div className="form-shell">{sent?<Success title="Request received" body="Our repair specialist will contact you within one business day with the next steps." onReset={()=>setSent(false)}/>:<><SectionHead eyebrow="Request a repair" title="Tell us what is happening"/><form onSubmit={e=>{e.preventDefault();setSent(true)}}><div className="form-grid"><Field label="Full name" placeholder="Your full name"/><Field label="Phone number" placeholder="+234"/><Field label="Email address" type="email" placeholder="you@example.com"/><Select label="Instrument type"><option>Piano / Keyboard</option><option>Guitar</option><option>Brass</option></Select><label className="field full"><span>Describe the issue</span><textarea placeholder="Tell us what you noticed..."/></label><label className="upload full"><Icon name="upload"/><strong>Upload instrument photos</strong><span>JPG or PNG, up to 10MB</span><input type="file"/></label></div><div className="form-action"><Button type="submit">Submit repair request <Icon name="arrow"/></Button></div></form></>}</div></div></section></main>;
-}
-
-function Stepper({ step }: { step: number }) { return <div className="stepper">{["Personal","Guardian","Program","Review"].map((x,i)=><div className={i+1<=step?"done":""} key={x}><span>{i+1<step?<Icon name="check" size={14}/>:i+1}</span><small>{x}</small></div>)}</div>; }
-
-function Apply({ go }: { go:(p:Page)=>void }) {
-  const [step,setStep]=useState(1);
-  return <main className="application"><div className="container"><div className="application-head"><Logo/><span>Application saved just now</span></div><div className="apply-layout"><aside><span>Admissions 2025</span><h1>Begin your musical journey.</h1><p>Complete your application in a few simple steps. You can save and return at any time.</p><div className="support"><strong>Need help?</strong><span>+234 803 130 8881</span><span>admissions@vivadoxa.ng</span></div></aside><section className="apply-card"><Stepper step={step}/>{step===1&&<FormStep title="Personal details" intro="Let’s start with some basic information about you."><div className="form-grid"><Field label="Full name" placeholder="As shown on your ID"/><Field label="Date of birth" type="date"/><Select label="Gender"><option>Female</option><option>Male</option><option>Prefer not to say</option></Select><Field label="Phone number" placeholder="+234"/><Field label="Email address" type="email" placeholder="you@example.com"/><Select label="State"><option>Kaduna</option><option>Kano</option><option>Abuja FCT</option></Select><label className="field full"><span>Home address</span><input placeholder="Street and city"/></label></div></FormStep>}{step===2&&<FormStep title="Guardian details" intro="Required for applicants under the age of 18."><div className="form-grid"><Field label="Guardian name"/><Field label="Relationship"/><Field label="Phone number" placeholder="+234"/><Field label="Email address" type="email"/></div></FormStep>}{step===3&&<FormStep title="Choose your program" intro="Tell us what and how you would like to learn."><div className="form-grid"><Select label="Category"><option>Instruments</option><option>Vocals</option></Select><Select label="Program / instrument"><option>Piano & Keyboard</option><option>Guitar</option><option>Drums</option></Select><Select label="Current level"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></Select><Select label="Preferred schedule"><option>Weekday evenings</option><option>Saturday mornings</option></Select><div className="full"><span className="field-label">Study mode</span><div className="radio-cards">{["Onsite","Online","Home Lessons"].map((x,i)=><label key={x}><input type="radio" name="mode" defaultChecked={i===0}/><span><strong>{x}</strong><small>{i===0?"At our Kaduna studio":"Flexible personal lessons"}</small></span></label>)}</div></div></div></FormStep>}{step===4&&<FormStep title="Review & confirm" intro="Check your details before submitting."><div className="review"><ReviewRow title="Applicant" value="Adaeze Okafor · adaeze@example.com"/><ReviewRow title="Program" value="Piano & Keyboard · Beginner"/><ReviewRow title="Study mode" value="Onsite · Saturday mornings"/><div className="total"><span>Program fee</span><strong>₦85,000</strong></div><label className="terms"><input type="checkbox"/> I agree to the admission terms and privacy policy.</label></div></FormStep>}<div className="apply-actions">{step>1?<Button variant="ghost" onClick={()=>setStep(step-1)}>Back</Button>:<span/>}<Button onClick={()=>step<4?setStep(step+1):go("payment")}>{step===4?"Continue to payment":"Save & continue"} <Icon name="arrow"/></Button></div></section></div></div></main>;
-}
-
-function FormStep({title,intro,children}:{title:string;intro:string;children:React.ReactNode}) { return <div className="form-step"><span className="eyebrow">Step details</span><h2>{title}</h2><p>{intro}</p>{children}</div>; }
-function ReviewRow({title,value}:{title:string;value:string}) { return <div className="review-row"><span>{title}</span><strong>{value}</strong><button>Edit</button></div>; }
-
-function Payment({ go }:{go:(p:Page)=>void}) {
-  const [method,setMethod]=useState("bank"); const [sent,setSent]=useState(false); const [copied,setCopied]=useState(false);
-  if(sent) return <main className="confirmation"><Success title="Application received. Payment pending confirmation." body="We will review your transfer and update your status within 2–24 hours." extra="Application reference: VIV-2025-01842" onReset={()=>go("status")} action="Check application status"/></main>;
-  return <main className="payment-page"><div className="container"><div className="payment-head"><Logo/><Badge tone="green">Secure checkout</Badge></div><div className="pay-grid"><section><span className="eyebrow">Payment</span><h1>Complete your application</h1><p>Choose a payment method and follow the instructions below.</p><div className="payment-tabs"><button className={method==="bank"?"active":""} onClick={()=>setMethod("bank")}><i/><div><strong>Bank transfer</strong><small>Manual confirmation · 2–24 hours</small></div><Badge tone="green">Available</Badge></button><button className={method==="online"?"active":""} onClick={()=>setMethod("online")}><i/><div><strong>Pay online</strong><small>Card, transfer or USSD</small></div><Badge tone="gold">Coming soon</Badge></button></div>{method==="bank"?<div className="bank-card"><div className="bank-title"><div className="bank-logo">M</div><div><strong>Moniepoint MFB</strong><span>Transfer exactly ₦85,000</span></div></div><div className="account-number"><div><small>ACCOUNT NUMBER</small><strong>8123456789</strong></div><button onClick={()=>setCopied(true)}><Icon name="copy"/>{copied?"Copied":"Copy"}</button></div><dl><div><dt>Account name</dt><dd>Vivadoxa Music Academy Ltd.</dd></div><div><dt>Narration</dt><dd>VIV-2025-01842</dd></div></dl><div className="proof"><h3>Submit proof of payment</h3><p>Already made the transfer? Send your details for verification.</p><div className="form-grid"><Field label="Payer name"/><Field label="Payment date" type="date"/><Field label="Amount paid (₦)" placeholder="85,000"/><Field label="Transaction reference"/></div><label className="upload"><Icon name="upload"/><strong>Upload transfer receipt</strong><span>JPG, PNG or PDF · Max 10MB</span><input type="file"/></label><Button onClick={()=>setSent(true)}>I have made payment <Icon name="arrow"/></Button></div></div>:<div className="coming-card"><div className="lock">◇</div><h3>Online payments are coming soon</h3><p>Paystack and Flutterwave checkout is fully prepared and will be enabled shortly.</p><div className="gateway-row"><span>PAYSTACK</span><span>flutterwave</span></div><Button disabled>Pay ₦85,000 securely</Button><small>Gateway mount point · public key, reference, callback and webhook verification required</small></div>}</section><aside className="order-card"><h3>Application summary</h3><div className="applicant"><span>AO</span><div><strong>Adaeze Okafor</strong><small>VIV-2025-01842</small></div></div><dl><div><dt>Program</dt><dd>Piano & Keyboard</dd></div><div><dt>Level</dt><dd>Beginner</dd></div><div><dt>Study mode</dt><dd>Onsite</dd></div><div><dt>Schedule</dt><dd>Saturday morning</dd></div></dl><div className="amount"><span>Amount due</span><strong>₦85,000</strong><small>For one 12-week term</small></div><p><Icon name="check" size={16}/> Your application data is encrypted and secure.</p></aside></div></div></main>;
-}
-
-function Status() {
- const [result,setResult]=useState(false); const [state,setState]=useState("pending");
- return <main><PageHero eyebrow="Application status" title="Track your admission journey." body="Enter the details used in your application to see the latest update."/><section className="section status-section"><div className="container"><div className="status-search"><Field label="Email address" placeholder="you@example.com"/><Field label="Application reference" placeholder="e.g. VIV-2025-01842"/><Button onClick={()=>setResult(true)}>Check status</Button></div>{result&&<div className="status-result"><div className="status-top"><div><span className="eyebrow">VIV-2025-01842</span><h2>Adaeze’s application</h2></div><Badge tone={state==="confirmed"?"green":state==="issue"?"red":"gold"}>{state==="confirmed"?"Admission confirmed":state==="issue"?"Payment issue":"Payment under review"}</Badge></div><div className="status-switch"><button onClick={()=>setState("pending")}>Pending</button><button onClick={()=>setState("confirmed")}>Confirmed</button><button onClick={()=>setState("issue")}>Issue</button></div>{state==="confirmed"?<div className="admitted"><div className="success-icon"><Icon name="check" size={30}/></div><h3>Welcome to Vivadoxa!</h3><p>Your payment has been confirmed and your place is secured.</p><Button>Download admission letter (PDF)</Button><Button variant="ghost">Resend to my email</Button></div>:state==="issue"?<div className="issue"><h3>We could not verify this payment</h3><p>The amount on the uploaded receipt does not match your application fee. Please contact admissions for help.</p><Button>Contact support</Button></div>:<><div className="timeline">{["Application submitted","Payment under review","Payment confirmed","Admission complete"].map((x,i)=><div className={i<2?"done":""} key={x}><span>{i===0?<Icon name="check" size={14}/>:i+1}</span><div><strong>{x}</strong><small>{i===0?"18 Jun, 10:42 AM":i===1?"Verification usually takes 2–24 hours":"Pending"}</small></div></div>)}</div><div className="notice"><strong>What happens next?</strong><p>We are matching your transfer to our account. We’ll send an email as soon as it is confirmed.</p></div></>}</div>}</div></section></main>;
-}
-
-function Contact() {
- const [sent,setSent]=useState(false);
- return <main><PageHero eyebrow="Contact us" title="Let’s talk about your music." body="Questions about a course, repair or application? Our friendly team is ready to help."/><section className="section"><div className="container contact-grid"><div><SectionHead eyebrow="Visit or call" title="We’d love to hear from you"/><div className="contact-list"><div><Icon name="pin"/><p><strong>Our studio</strong><span>U/Sunday, Television, Kaduna, Nigeria</span></p></div><div><Icon name="phone"/><p><strong>Call us</strong><span>+234 803 130 8881</span></p></div><div><Icon name="mail"/><p><strong>Email us</strong><span>hello@vivadoxa.ng</span></p></div></div><div className="hours"><strong>Opening hours</strong><span>Mon–Fri: 9:00 AM – 7:00 PM</span><span>Saturday: 9:00 AM – 5:00 PM</span></div><div className="map">KADUNA <span>Vivadoxa Music School · U/Sunday, Television</span></div></div><div className="contact-form">{sent?<Success title="Message sent" body="Thank you for reaching out. We’ll reply within one business day." onReset={()=>setSent(false)}/>:<form onSubmit={e=>{e.preventDefault();setSent(true)}}><h2>Send us a message</h2><div className="form-grid"><Field label="Full name"/><Field label="Email address" type="email"/><Field label="Phone number"/><Select label="Subject"><option>Program enquiry</option><option>Admissions</option><option>Repairs</option></Select><label className="field full"><span>Message</span><textarea placeholder="How can we help?"/></label></div><Button type="submit">Send message <Icon name="arrow"/></Button></form>}</div></div></section></main>;
-}
-
-function Admin() {
- const [active,setActive]=useState("Dashboard");
- const [mobileNav,setMobileNav]=useState(false);
- const [saved,setSaved]=useState(false);
- const navGroups = [
-  ["Workspace",["Dashboard","Website Pages","Navigation & Footer","Media Library","SEO & Analytics"]],
-  ["School",["Programs & Courses","Study Modes","Instructors","Students","Class Schedule"]],
-  ["Admissions",["Applications","Payments","Admission Letters","Status Checker"]],
-  ["Content",["Testimonials","Gallery","FAQs","Announcements","Policies"]],
-  ["Operations",["Repairs","Enquiries","Forms","Notifications","Reports"]],
-  ["System",["Users & Roles","Payment Settings","Integrations","Brand Settings","General Settings"]]
- ];
- const closeNav=(item:string)=>{setActive(item);setMobileNav(false);setSaved(false)};
- return <main className="admin">
-  <aside className={`admin-side ${mobileNav?"show":""}`}><div className="admin-brand"><Logo light/><button onClick={()=>setMobileNav(false)}><Icon name="close"/></button></div><div className="admin-profile"><span>TA</span><div><strong>Tomi Adeyemi</strong><small>Super administrator</small></div></div><nav>{navGroups.map(([group,items])=><div className="admin-nav-group" key={group as string}><small>{group}</small>{(items as string[]).map((item,i)=><button className={active===item?"active":""} onClick={()=>closeNav(item)} key={item}><span>{String(i+1).padStart(2,"0")}</span>{item}</button>)}</div>)}</nav><button className="signout">Sign out</button></aside>
-  <section className="admin-main"><header><div className="admin-title"><button className="admin-menu" onClick={()=>setMobileNav(true)}><Icon name="menu"/></button><div><h1>{active}</h1><p>Manage and customise Vivadoxa Music School.</p></div></div><div className="admin-tools"><button><Icon name="search"/></button><button><Icon name="bell"/></button><span>TA</span></div></header>
-   <div className="admin-content">{active==="Dashboard"?<AdminOverview setActive={setActive}/>:active==="Website Pages"?<AdminPages saved={saved} setSaved={setSaved}/>:active==="Brand Settings"?<AdminBrand saved={saved} setSaved={setSaved}/>:<AdminManager title={active}/>}</div>
-  </section>
- </main>;
-}
-
-function AdminOverview({setActive}:{setActive:(value:string)=>void}) {
- const stats=[["Applications","284","+18%"],["Pending payments","37","Needs review"],["Active students","1,248","+6%"],["This month","₦4.8m","+12%"]];
- return <><div className="welcome-panel"><div><span className="eyebrow">Tuesday, 24 June</span><h2>Good morning, Tomi</h2><p>Everything happening across admissions, lessons and the website—at a glance.</p></div><Button onClick={()=>setActive("Website Pages")}>Customise website <Icon name="arrow"/></Button></div><div className="metric-grid">{stats.map(([a,b,c])=><article key={a}><span>{a}</span><strong>{b}</strong><small>{c}</small></article>)}</div><div className="admin-panels"><section className="chart-panel"><div className="panel-title"><div><h2>Revenue overview</h2><p>Payments received in the last 6 months</p></div><select><option>Last 6 months</option></select></div><div className="chart"><div className="bars">{[42,58,48,72,64,88].map((h,i)=><div key={i}><i style={{height:`${h}%`}}/><span>{["Jan","Feb","Mar","Apr","May","Jun"][i]}</span></div>)}</div></div></section><section className="todo"><div className="panel-title"><div><h2>Needs attention</h2><p>Priority tasks</p></div></div>{[["12","Payments to review"],["08","New applications"],["05","Repair estimates"],["03","Unread messages"]].map(([n,l])=><button key={l}><strong>{n}</strong><span>{l}</span><Icon name="arrow"/></button>)}</section></div><section className="table-panel"><div className="panel-title"><div><h2>Recent applications</h2><p>Latest admission submissions</p></div><Button variant="ghost">View all</Button></div><div className="table-wrap"><table><thead><tr><th>Applicant</th><th>Program</th><th>Study mode</th><th>Amount</th><th>Status</th></tr></thead><tbody>{[["Chidi Nwosu","Guitar","Onsite","₦75,000","Paid"],["Zainab Bello","Vocals","Online","₦70,000","Review"],["David Okoro","Piano","Home","₦95,000","Pending"],["Maya Adekunle","Violin","Onsite","₦82,000","Paid"]].map(r=><tr key={r[0]}>{r.slice(0,4).map(c=><td key={c}>{c}</td>)}<td><Badge tone={r[4]==="Paid"?"green":r[4]==="Review"?"gold":"red"}>{r[4]}</Badge></td></tr>)}</tbody></table></div></section></>;
-}
-
-function AdminPages({saved,setSaved}:{saved:boolean;setSaved:(value:boolean)=>void}) {
- const [page,setPage]=useState("Home");
- const pages=["Home","About Us","Programs & Courses","Program Detail","Study Modes","Repairs & Maintenance","Apply Now","Payment","Check Status","Admission Letter","Contact Us","Privacy Policy","Terms & Conditions","404 Page"];
- return <div className="cms-layout"><aside className="cms-pages"><div><strong>Website pages</strong><button>+ New page</button></div>{pages.map(item=><button className={page===item?"active":""} onClick={()=>setPage(item)} key={item}><span className="page-dot"/>{item}<small>{["Privacy Policy","Terms & Conditions"].includes(item)?"Draft":"Live"}</small></button>)}</aside><section className="cms-editor"><div className="editor-head"><div><span className="eyebrow">Page editor</span><h2>{page}</h2><p>Control every section, image, action and search setting on this page.</p></div><div className="editor-actions"><Button variant="ghost">Preview</Button><Button onClick={()=>setSaved(true)}>{saved?<><Icon name="check"/> Saved</>:"Publish changes"}</Button></div></div><div className="editor-grid"><div className="editor-main"><EditorSection title="Page visibility & navigation"><div className="switch-row"><div><strong>Published</strong><span>Visible to everyone</span></div><label className="switch"><input type="checkbox" defaultChecked/><i/></label></div><div className="form-grid"><Field label="Navigation label" placeholder={page}/><Field label="Page URL" placeholder={`/${page.toLowerCase().replaceAll(" ","-")}`}/></div></EditorSection><EditorSection title="Hero section"><Field label="Eyebrow" placeholder="Welcome to Vivadoxa"/><label className="field"><span>Headline</span><textarea defaultValue={page==="Home"?"Learn music. Master your craft.":page}/></label><Field label="Supporting text" placeholder="Add a short, compelling page introduction"/><div className="image-picker"><img src={page==="Programs & Courses"?guitar:page==="Repairs & Maintenance"?trumpet:studio} alt="Selected section visual"/><div><strong>Hero image</strong><span>Replace, crop or add alt text</span><Button variant="secondary">Choose from library</Button></div></div></EditorSection><EditorSection title="Content sections"><div className="block-list">{["Introduction","Featured cards","How it works","Call to action"].map((x,i)=><div key={x}><span className="drag">⋮⋮</span><div><strong>{x}</strong><small>{i%2?"3 cards · Image + text":"Rich text section"}</small></div><label className="switch"><input type="checkbox" defaultChecked/><i/></label><button>Edit</button></div>)}</div><button className="add-block">+ Add content section</button></EditorSection></div><aside className="editor-side"><EditorSection title="Page settings"><Select label="Template"><option>Marketing page</option><option>Form page</option><option>Utility page</option></Select><Field label="Browser title" placeholder={`${page} | Vivadoxa Music`}/><label className="field"><span>Meta description</span><textarea placeholder="Describe this page for search engines"/></label></EditorSection><EditorSection title="Actions"><div className="stack-actions"><button>Duplicate page</button><button>View revision history</button><button>Schedule publishing</button><button className="danger">Unpublish page</button></div></EditorSection></aside></div></section></div>;
-}
-
-function EditorSection({title,children}:{title:string;children:React.ReactNode}) { return <section className="editor-section"><h3>{title}</h3>{children}</section>; }
-
-function AdminBrand({saved,setSaved}:{saved:boolean;setSaved:(value:boolean)=>void}) {
- return <><div className="editor-head standalone"><div><span className="eyebrow">Design system</span><h2>Brand settings</h2><p>Update the visual identity used across every public page and email.</p></div><Button onClick={()=>setSaved(true)}>{saved?"Saved":"Save brand"}</Button></div><div className="brand-settings"><EditorSection title="Primary logo"><div className="brand-logo-preview"><img src={brandLogo} alt="Current VivaDoxa brand logo"/></div><div className="button-row"><Button variant="secondary">Replace logo</Button><Button variant="ghost">Download original</Button></div></EditorSection><EditorSection title="Brand colours"><div className="colour-grid">{[["Primary","#C96B32"],["Ink","#0B0B0B"],["Background","#F7F5F0"],["White","#FFFFFF"]].map(([n,c])=><label key={n}><span>{n}</span><div><i style={{background:c}}/><input defaultValue={c}/></div></label>)}</div></EditorSection><EditorSection title="Contact details"><div className="form-grid"><Field label="Phone number" placeholder="+234 803 130 8881"/><Field label="Email" placeholder="hello@vivadoxa.ng"/><label className="field full"><span>School address</span><input defaultValue="U/Sunday, Television, Kaduna, Nigeria"/></label></div></EditorSection></div></>;
-}
-
-function AdminManager({title}:{title:string}) {
- const isSettings=title.includes("Settings")||title.includes("Integrations")||title.includes("Analytics")||title.includes("Navigation");
- const rows:Record<string,string[][]>={
-  "Programs & Courses":[["Piano & Keyboard","Instruments","₦85,000","Published"],["Guitar","Instruments","₦75,000","Published"],["Music Production","Production","₦95,000","Published"]],
-  "Applications":[["VIV-2025-01842","Adaeze Okafor","Piano","Under review"],["VIV-2025-01841","Zainab Bello","Vocals","Confirmed"]],
-  "Payments":[["PAY-88421","VIV-2025-01842","₦85,000","Review"],["PAY-88420","VIV-2025-01841","₦70,000","Confirmed"]],
-  "Repairs":[["REP-0142","Yamaha Keyboard","U/Sunday","New"],["REP-0141","Acoustic Guitar","Kaduna","Estimate sent"]],
-  "Students":[["VD-1028","Maya Adekunle","Violin","Active"],["VD-1027","Chidi Nwosu","Guitar","Active"]]
- };
- const data=rows[title]||[["Item 001",`Sample ${title} entry`,"Updated today","Active"],["Item 002",`Second ${title} entry`,"Updated yesterday","Draft"]];
- return <><div className="manager-head"><div><span className="eyebrow">Administration</span><h2>{title}</h2><p>Manage, organise and publish all {title.toLowerCase()} content.</p></div><Button>+ Add new</Button></div>{isSettings?<div className="settings-grid">{["General configuration","Display options","Email notifications","Permissions & access","Automation rules","Advanced settings"].map((x,i)=><EditorSection title={x} key={x}><div className="switch-row"><div><strong>{i%2?"Enable feature":"Use recommended settings"}</strong><span>Applies across the website and staff portal</span></div><label className="switch"><input type="checkbox" defaultChecked={i<4}/><i/></label></div><Field label="Configuration value" placeholder="Enter value"/></EditorSection>)}</div>:<section className="table-panel manager-table"><div className="manager-filters"><div className="search-field"><Icon name="search"/><input placeholder={`Search ${title.toLowerCase()}...`}/></div><select><option>All statuses</option><option>Active</option><option>Draft</option></select><Button variant="ghost">Export</Button></div><div className="table-wrap"><table><thead><tr><th>Reference / Name</th><th>Details</th><th>Category / Date</th><th>Status</th><th/></tr></thead><tbody>{data.map((row,i)=><tr key={i}>{row.map((cell,j)=><td key={cell}>{j===3?<Badge tone={cell.includes("Active")||cell.includes("Published")||cell.includes("Confirmed")?"green":"gold"}>{cell}</Badge>:cell}</td>)}<td><button className="row-menu">•••</button></td></tr>)}</tbody></table></div></section>}</>;
-}
-
-function Success({title,body,onReset,extra,action="Send another request"}:{title:string;body:string;onReset:()=>void;extra?:string;action?:string}) { return <div className="success-state"><div className="success-icon"><Icon name="check" size={30}/></div><h2>{title}</h2><p>{body}</p>{extra&&<strong>{extra}</strong>}<Button onClick={onReset}>{action}</Button></div>; }
-function Cta({go}:{go:(p:Page)=>void}) { return <section className="cta"><div className="container"><div><span className="eyebrow">Your next chapter</span><h2>There is music in you.<br/>Let’s bring it out.</h2></div><Button onClick={()=>go("apply")}>Apply for admission <Icon name="arrow"/></Button></div></section>; }
-
-function Footer({go}:{go:(p:Page)=>void}) { return <footer><div className="container footer-grid"><div><Logo light/><p>Expert music education for every age, ambition and stage.</p><div className="socials"><span>in</span><span>ig</span><span>f</span></div></div><div><strong>Explore</strong>{[["About","about"],["Programs","programs"],["Study modes","modes"],["Repairs","repairs"]].map(([x,p])=><button key={x} onClick={()=>go(p as Page)}>{x}</button>)}</div><div><strong>Get in touch</strong><span>U/Sunday, Television<br/>Kaduna, Nigeria</span><span>+234 803 130 8881</span><span>hello@vivadoxa.ng</span></div><div><strong>Opening hours</strong><span>Mon–Fri · 9am–7pm</span><span>Saturday · 9am–5pm</span><button onClick={()=>go("admin")}>Staff portal</button></div></div><div className="container footer-bottom"><span>© 2025 Vivadoxa Music School</span><div><button>Privacy</button><button>Terms</button></div></div></footer>; }
+// Pages that suppress the global nav/footer
+const STANDALONE_PAGES: Page[] = ["apply", "payment", "admin", "admin-login"];
 
 export default function App() {
-  const [page,setPage]=useState<Page>("home");
-  const go=(p:Page)=>{setPage(p);window.scrollTo({top:0,behavior:"smooth"});};
-  const standalone=page==="apply"||page==="payment"||page==="admin";
-  return <>{!standalone&&<Navbar page={page} go={go}/>} {page==="home"&&<Home go={go}/>} {page==="about"&&<About go={go}/>} {page==="programs"&&<Programs go={go}/>} {page==="modes"&&<Modes go={go}/>} {page==="repairs"&&<Repairs/>} {page==="apply"&&<Apply go={go}/>} {page==="payment"&&<Payment go={go}/>} {page==="status"&&<Status/>} {page==="contact"&&<Contact/>} {page==="admin"&&<Admin/>} {!standalone&&<><Footer go={go}/><button className="whatsapp" aria-label="Chat on WhatsApp"><Icon name="phone"/></button></>}</>;
+  const [page, setPage] = useState<Page>("home");
+  const { session } = useAdminAuth();
+
+  function go(p: Page) {
+    // Guard: going to /admin directly redirects to login if not authenticated
+    if (p === "admin" && !session) {
+      setPage("admin-login");
+    } else {
+      setPage(p);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const standalone = STANDALONE_PAGES.includes(page);
+
+  return (
+    <>
+      {/* Skip-to-content link for keyboard and screen reader users */}
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
+      {!standalone && <Navbar page={page} go={go} />}
+
+      <div id="main-content">
+        {page === "home"        && <Home go={go} />}
+        {page === "about"       && <About go={go} />}
+        {page === "programs"    && <Programs go={go} />}
+        {page === "modes"       && <Modes go={go} />}
+        {page === "repairs"     && <Repairs />}
+        {page === "apply"       && <Apply go={go} />}
+        {page === "payment"     && <Payment go={go} />}
+        {page === "status"      && <Status />}
+        {page === "contact"     && <Contact />}
+        {page === "admin-login" && <AdminLogin go={go} />}
+        {page === "admin"       && <Admin go={go} />}
+      </div>
+
+      {!standalone && (
+        <>
+          <Footer go={go} />
+          {/* WhatsApp floating action button */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whatsapp"
+            aria-label="Chat with Vivadoxa on WhatsApp"
+          >
+            <Icon name="phone" />
+          </a>
+        </>
+      )}
+    </>
+  );
 }

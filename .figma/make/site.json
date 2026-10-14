@@ -1,10 +1,11 @@
 {
-  "description": "A comprehensive platform for Vivadoxa Music School offering program info, online applications, payment processing, status tracking, and contact support.",
+  "title": "Vivadoxa Music School — Expert Music Education in Kaduna, Nigeria",
+  "description": "Vivadoxa Music School offers expert piano, guitar, drums, vocals, composition and music production training in Kaduna, Nigeria. Apply online today.",
   "robots": {
-    "index": false
+    "index": true
   },
   "accessibility": {
-    "addBypassLinks": false,
+    "addBypassLinks": true,
     "ignoreReducedMotion": false
   }
 }
