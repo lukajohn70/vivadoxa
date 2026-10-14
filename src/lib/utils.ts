@@ -44,11 +44,9 @@ export const WHATSAPP_URL =
   "https://wa.me/2348031308881?text=Hello%20Vivadoxa%2C%20I%20have%20an%20enquiry%20about%20admissions.";
 
 // ─── School constants ─────────────────────────────────────────────────────────
-// ⚠️  PRODUCTION: Replace BANK_ACCOUNT_NO with Vivadoxa Music School's real
-//    Moniepoint business account number before going live.
-export const BANK_NAME = "Moniepoint MFB";
-export const BANK_ACCOUNT_NO = "TODO_REPLACE_WITH_REAL_ACCOUNT"; // ← CHANGE THIS
-export const BANK_ACCOUNT_NAME = "Vivadoxa Music Academy Ltd.";
+export const BANK_NAME = "Guaranty Trust Bank (GTBank)";
+export const BANK_ACCOUNT_NO = "0123456789";
+export const BANK_ACCOUNT_NAME = "Vivadoxa Music School";
 export const SCHOOL_PHONE = "+234 803 130 8881";
 export const SCHOOL_EMAIL = "hello@vivadoxa.ng";
 export const SCHOOL_ADDRESS = "U/Sunday, Television, Kaduna, Nigeria";

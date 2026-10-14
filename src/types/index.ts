@@ -6,6 +6,7 @@ export type Page =
   | "programs"
   | "modes"
   | "repairs"
+  | "performances"
   | "apply"
   | "payment"
   | "status"
@@ -82,4 +83,6 @@ export interface Program {
   feeAmount: number;
   desc: string;
   category: "Instruments" | "Vocals" | "Composition" | "Music Production";
+  ageGroup?: "Kids (4–12)" | "Teens (13–19)" | "Adults & Professionals" | "All Ages";
+  level?: "Beginner" | "Intermediate" | "Advanced";
 }

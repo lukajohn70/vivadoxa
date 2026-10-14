@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /Vivadoxa/
+
+  # Don't rewrite calls to the backend API directory
+  RewriteRule ^api/ - [L]
+
+  # Don't rewrite requests for existing files or directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Route all other URLs to the index.html SPA entrypoint
+  RewriteRule ^ index.html [L]
+</IfModule>
