@@ -1,0 +1,10 @@
+{
+  "name": "vivadoxa-coming-soon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vivadoxa Music School — Official Coming Soon Page",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r index.html assets favicon* apple* dist/ 2>/dev/null || true",
+    "preview": "npx serve ."
+  }
+}

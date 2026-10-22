@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en-NG">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- Primary SEO -->
+  <title>Coming Soon — Vivadoxa Music School | Official Launch</title>
+  <meta name="description" content="Vivadoxa Music School is launching Friday, October 30, 2026. Premier music academy, certified instrument training, repair clinic, and recording studio in Kaduna, Nigeria." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0a0a0a" />
+
+  <!-- Open Graph / Social Meta -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Vivadoxa Music School" />
+  <meta property="og:title" content="Vivadoxa Music School — Launching Friday, October 30, 2026" />
+  <meta property="og:description" content="A new stage for musical excellence in Kaduna, Nigeria. Certified music courses, master instrument repair, and sound engineering." />
+  <meta property="og:image" content="./assets/vivadoxa-logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vivadoxa Music School — Coming Soon" />
+  <meta name="twitter:description" content="Official launch countdown to next week Friday. Certified music education in Kaduna." />
+
+  <!-- Brand Favicons -->
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+
+  <!-- Google Fonts Preconnect & Stylesheet -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & CSS Variables ────────────────────────────────────────── */
+    :root {
+      --bg-dark: #09090b;
+      --bg-card: rgba(22, 20, 18, 0.75);
+      --bg-card-hover: rgba(30, 27, 24, 0.9);
+      --gold-primary: #c96b32;
+      --gold-light: #e9a16f;
+      --gold-glow: rgba(201, 107, 50, 0.35);
+      --gold-border: rgba(201, 107, 50, 0.28);
+      --text-main: #f5f3ef;
+      --text-muted: #a39f99;
+      --text-subtle: #716d66;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --whatsapp: #25d366;
+      --whatsapp-dark: #128c7e;
+      --font-serif: "DM Serif Display", Georgia, serif;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100%;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient Background Lighting ──────────────────────────────────── */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .ambient-glow-top {
+      position: absolute;
+      top: -180px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1000px, 120vw);
+      height: 600px;
+      background: radial-gradient(ellipse at 50% 30%, rgba(201, 107, 50, 0.18) 0%, rgba(201, 107, 50, 0.05) 50%, transparent 75%);
+      filter: blur(40px);
+    }
+
+    .ambient-glow-bottom {
+      position: absolute;
+      bottom: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(800px, 100vw);
+      height: 400px;
+      background: radial-gradient(ellipse at 50% 80%, rgba(233, 161, 111, 0.08) 0%, transparent 70%);
+      filter: blur(50px);
+    }
+
+    .ambient-grid {
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+    }
+
+    /* ── Page Layout ──────────────────────────────────────────────────── */
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: clamp(32px, 6vw, 64px) clamp(20px, 4vw, 32px) 40px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* ── Brand Header ─────────────────────────────────────────────────── */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: clamp(28px, 4vw, 44px);
+    }
+
+    .brand-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      background: #000000;
+      border: 1px solid var(--gold-border);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 107, 50, 0.12);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .brand-logo-badge:hover {
+      border-color: var(--gold-primary);
+      box-shadow: 0 6px 30px rgba(201, 107, 50, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .brand-logo-img {
+      height: clamp(42px, 6vw, 56px);
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* ── Status Pill ──────────────────────────────────────────────────── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      margin-top: 22px;
+      border-radius: 999px;
+      background: rgba(201, 107, 50, 0.1);
+      border: 1px solid rgba(201, 107, 50, 0.3);
+      color: var(--gold-light);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 12px rgba(201, 107, 50, 0.1);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold-light);
+      box-shadow: 0 0 10px var(--gold-light);
+      animation: pulse-dot 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* ── Main Hero Copy ───────────────────────────────────────────────── */
+    .hero-section {
+      text-align: center;
+      max-width: 780px;
+      margin: 0 auto clamp(32px, 5vw, 48px);
+    }
+
+    .hero-eyebrow {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      color: var(--gold-primary);
+      margin-bottom: 14px;
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(38px, 6.5vw, 68px);
+      font-weight: 400;
+      line-height: 1.08;
+      letter-spacing: -1.2px;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .hero-title em {
+      font-style: normal;
+      color: var(--gold-light);
+      background: linear-gradient(135deg, #ffffff 10%, #e9a16f 75%, #c96b32 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-description {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    /* ── Live Countdown Display ───────────────────────────────────────── */
+    .countdown-container {
+      width: 100%;
+      max-width: 740px;
+      margin: 0 auto clamp(36px, 5vw, 52px);
+      text-align: center;
+    }
+
+    .countdown-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(10px, 2.5vw, 20px);
+    }
+
+    .countdown-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: clamp(18px, 3vw, 28px) clamp(8px, 1.5vw, 16px);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .countdown-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+      opacity: 0.6;
+    }
+
+    .countdown-card:hover {
+      border-color: var(--gold-border);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 36px rgba(201, 107, 50, 0.12);
+    }
+
+    .countdown-num {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: clamp(34px, 6.2vw, 58px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -1.5px;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 8px;
+    }
+
+    .countdown-label {
+      display: block;
+      font-size: clamp(10px, 1.3vw, 12px);
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    .countdown-target-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 22px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 500;
+    }
+
+    .countdown-target-pill strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* ── Live Launched State Banner ───────────────────────────────────── */
+    .launched-banner {
+      display: none;
+      padding: 24px 32px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, rgba(201, 107, 50, 0.2), rgba(0, 0, 0, 0.7));
+      border: 1px solid var(--gold-primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .launched-banner h3 {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    /* ── Notify Me / Email Form ───────────────────────────────────────── */
+    .notify-wrapper {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto clamp(36px, 5vw, 54px);
+      text-align: center;
+    }
+
+    .notify-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      letter-spacing: 0.2px;
+    }
+
+    .notify-form {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .notify-input {
+      flex: 1;
+      height: 50px;
+      padding: 0 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 14.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .notify-input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .notify-input:focus {
+      border-color: var(--gold-primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(201, 107, 50, 0.18);
+    }
+
+    .notify-btn {
+      height: 50px;
+      padding: 0 24px;
+      background: var(--gold-primary);
+      border: 1px solid var(--gold-primary);
+      border-radius: var(--radius-sm);
+      color: #0b0b0b;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .notify-btn:hover {
+      background: #dc7e45;
+      border-color: #dc7e45;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(201, 107, 50, 0.3);
+    }
+
+    .notify-btn:active {
+      transform: translateY(0);
+    }
+
+    .notify-success {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 18px;
+      background: rgba(37, 211, 102, 0.1);
+      border: 1px solid rgba(37, 211, 102, 0.3);
+      border-radius: var(--radius-sm);
+      color: #51e687;
+      font-size: 13.5px;
+      font-weight: 500;
+      animation: fade-in 0.3s ease;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Highlights / Preview Cards ──────────────────────────────────── */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+      margin-bottom: clamp(36px, 5vw, 54px);
+    }
+
+    .highlight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 24px 20px;
+      text-align: left;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.25s ease;
+    }
+
+    .highlight-card:hover {
+      border-color: rgba(201, 107, 50, 0.3);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+    }
+
+    .highlight-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(201, 107, 50, 0.12);
+      border: 1px solid var(--gold-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-light);
+      margin-bottom: 16px;
+    }
+
+    .highlight-card h3 {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 400;
+      color: #ffffff;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .highlight-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    /* ── Quick Direct Contacts ────────────────────────────────────────── */
+    .contacts-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: clamp(36px, 5vw, 54px);
+    }
+
+    .whatsapp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(37, 211, 102, 0.12);
+      border: 1px solid rgba(37, 211, 102, 0.35);
+      color: #25d366;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .whatsapp-btn:hover {
+      background: rgba(37, 211, 102, 0.22);
+      border-color: #25d366;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .contact-link-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .contact-link-pill:hover {
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
+    }
+
+    /* ── Social & Footer ──────────────────────────────────────────────── */
+    .page-footer {
+      width: 100%;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      color: var(--text-subtle);
+      font-size: 12.5px;
+    }
+
+    .social-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .social-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .social-btn:hover {
+      color: var(--gold-light);
+      border-color: var(--gold-border);
+      background: rgba(201, 107, 50, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .footer-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .footer-copy {
+      color: var(--text-subtle);
+      font-size: 11.5px;
+    }
+
+    /* ── Responsive Queries ───────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .countdown-grid {
+        gap: 8px;
+      }
+      .countdown-card {
+        padding: 14px 6px;
+      }
+      .highlights-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .notify-form {
+        flex-direction: column;
+      }
+      .notify-btn {
+        width: 100%;
+      }
+      .contacts-row {
+        flex-direction: column;
+        width: 100%;
+      }
+      .whatsapp-btn, .contact-link-pill {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Light Effects -->
+  <div class="ambient-bg" aria-hidden="true">
+    <div class="ambient-glow-top"></div>
+    <div class="ambient-glow-bottom"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <div class="page-wrapper">
+
+    <!-- Brand Header -->
+    <header class="brand-header">
+      <div class="brand-logo-badge">
+        <img
+          src="./assets/vivadoxa-logo.png"
+          alt="Vivadoxa Music School — Actualize Your Passion"
+          class="brand-logo-img"
+          onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';"
+        />
+        <div id="logo-fallback" style="display: none; padding: 6px 12px; font-family: var(--font-serif); font-size: 24px; color: #fff; letter-spacing: -0.5px;">
+          Viva<span style="color: var(--gold-light);">doxa</span> Music
+        </div>
+      </div>
+
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>Official Launch Countdown</span>
+      </div>
+    </header>
+
+    <!-- Hero Title & Context -->
+    <main class="hero-section">
+      <p class="hero-eyebrow">Kaduna, Nigeria • Premier Music Academy</p>
+      <h1 class="hero-title">
+        A New Stage for <em>Musical Excellence</em>
+      </h1>
+      <p class="hero-description">
+        We are putting the final touches on our brand-new digital academy portal, student enrollment system, and certified music training programs. Our full site and online admissions officially open next week Friday.
+      </p>
+    </main>
+
+    <!-- Live Countdown Section -->
+    <section class="countdown-container" aria-label="Launch Countdown">
+      
+      <!-- Normal Active Countdown -->
+      <div class="countdown-grid" id="countdown-grid">
+        <div class="countdown-card">
+          <span class="countdown-num" id="cd-days">--</span>
+          <span class="countdown-label">Days</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num" id="cd-hours">--</span>
+          <span class="countdown-label">Hours</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num" id="cd-minutes">--</span>
+          <span class="countdown-label">Minutes</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-num" id="cd-seconds">--</span>
+          <span class="countdown-label">Seconds</span>
+        </div>
+      </div>
+
+      <!-- Live Notification Banner (shows once target is reached) -->
+      <div class="launched-banner" id="launched-banner">
+        <h3>We Are Officially Live!</h3>
+        <p style="color: var(--text-muted); font-size: 15px;">Welcome to the new Vivadoxa Music School platform. Admissions are now open.</p>
+      </div>
+
+      <div class="countdown-target-pill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold-light);">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Opening <strong>Friday, October 30, 2026 • 09:00 AM WAT</strong></span>
+      </div>
+    </section>
+
+    <!-- Priority Notification / Early Access Form -->
+    <section class="notify-wrapper" aria-label="Early Access Notification">
+      <p class="notify-title">Get notified the exact moment admissions open:</p>
+      <form class="notify-form" id="notify-form" onsubmit="handleNotifySubmit(event)">
+        <input
+          type="email"
+          id="notify-email"
+          class="notify-input"
+          placeholder="Enter your email address"
+          required
+          autocomplete="email"
+          aria-label="Email address for launch notification"
+        />
+        <button type="submit" class="notify-btn" id="notify-btn">
+          <span>Notify Me</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </form>
+      <div class="notify-success" id="notify-success" role="alert">
+        ✓ You're on the priority list! We will send your launch invitation on Friday morning.
+      </div>
+    </section>
+
+    <!-- Highlights Preview -->
+    <section class="highlights-grid" aria-label="Programs & Services Preview">
+      <div class="highlight-card">
+        <div class="highlight-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"></path>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="16" r="3"></circle>
+          </svg>
+        </div>
+        <h3>13 Instrument Academies</h3>
+        <p>Expert training across Piano, Guitar, Drums, Voice, Saxophone, Violin, Bass, and Music Theory for all ages.</p>
+      </div>
+
+      <div class="highlight-card">
+        <div class="highlight-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+        </div>
+        <h3>Master Repair Clinic</h3>
+        <p>Kaduna’s premier service center for electronic key servicing, acoustic setup, fret alignment, and brass maintenance.</p>
+      </div>
+
+      <div class="highlight-card">
+        <div class="highlight-icon-box">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+        </div>
+        <h3>Studio & Sound Engineering</h3>
+        <p>Commercial-grade audio production, music scoring, audio mastering, and hands-on digital workstation training.</p>
+      </div>
+    </section>
+
+    <!-- Immediate Inquiries & Contacts -->
+    <div class="contacts-row">
+      <a
+        href="https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Music%20School%2C%20I%20would%20like%20to%20inquire%20about%20admissions%20and%20training."
+        target="_blank"
+        rel="noopener noreferrer"
+        class="whatsapp-btn"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M18.403 5.638A8.919 8.919 0 0 0 12.053 3c-4.948 0-8.976 4.027-8.978 8.977 0 1.582.413 3.126 1.2 4.488L3 21.116l4.759-1.249a8.981 8.981 0 0 0 4.29 1.093h.004c4.947 0 8.975-4.027 8.977-8.977a8.926 8.926 0 0 0-2.627-6.345m-6.35 13.91h-.003a7.446 7.446 0 0 1-3.798-1.041l-.272-.162-2.824.741.753-2.753-.177-.282a7.448 7.448 0 0 1-1.141-3.971c.002-4.114 3.349-7.461 7.465-7.461a7.413 7.413 0 0 1 5.278 2.188 7.42 7.42 0 0 1 2.183 5.279c-.002 4.114-3.349 7.462-7.466 7.462m4.095-5.593c-.225-.113-1.327-.655-1.533-.73-.205-.075-.354-.112-.504.113-.149.224-.579.73-.71 1-.13.112-.262.13-.487.019-.225-.113-.949-.35-1.808-1.115-.668-.596-1.119-1.332-1.25-1.557-.13-.225-.014-.347.099-.459.101-.1.225-.262.337-.393.113-.131.15-.225.225-.375.075-.15.038-.281-.019-.394-.056-.112-.505-1.217-.692-1.666-.182-.438-.367-.378-.504-.385-.13-.007-.28-.008-.43-.008-.15 0-.393.056-.599.281-.206.225-.786.768-.786 1.872 0 1.104.805 2.171.917 2.321.113.15 1.584 2.418 3.838 3.391.536.232.954.37 1.28.473.538.171 1.028.147 1.415.089.432-.065 1.327-.543 1.514-1.067.187-.525.187-.974.131-1.068-.056-.093-.206-.15-.431-.262"/>
+        </svg>
+        <span>Chat on WhatsApp (+234 907 533 0330)</span>
+      </a>
+
+      <a href="tel:+2349010267234" class="contact-link-pill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+        </svg>
+        <span>+234 901 026 7234</span>
+      </a>
+
+      <a href="mailto:vivadoxa@gmail.com" class="contact-link-pill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        <span>vivadoxa@gmail.com</span>
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <div class="social-links">
+        <a href="https://www.youtube.com/@vivadoxa" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="YouTube">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </a>
+        <a href="https://www.instagram.com/vivadoxamusic" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Instagram">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+        </a>
+        <a href="https://www.facebook.com/vivadoxa" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Facebook">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </a>
+        <a href="https://www.tiktok.com/@vivadoxa" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="TikTok">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.89 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.34 0 .67.06.97.16V9.42a6.34 6.34 0 0 0-.97-.08 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.72a8.28 8.28 0 0 0 4.88 1.58V6.85c-.4 0-.78-.06-1.12-.16z"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="footer-location">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span>No. 49B Umaru Ibrahim Street, Angwan Sunday, Kaduna, Nigeria</span>
+      </div>
+
+      <p class="footer-copy">
+        © 2026 Vivadoxa Music School. All rights reserved. Actualize your passion.
+      </p>
+    </footer>
+
+  </div>
+
+  <!-- Countdown & Interaction Logic -->
+  <script>
+    // ── Target Date: Next Week Friday, October 30, 2026 at 09:00:00 WAT (UTC+1)
+    const TARGET_DATE = new Date("2026-10-30T09:00:00+01:00").getTime();
+
+    const daysEl = document.getElementById("cd-days");
+    const hoursEl = document.getElementById("cd-hours");
+    const minutesEl = document.getElementById("cd-minutes");
+    const secondsEl = document.getElementById("cd-seconds");
+    const gridEl = document.getElementById("countdown-grid");
+    const bannerEl = document.getElementById("launched-banner");
+
+    function formatNumber(num) {
+      return num < 10 ? "0" + num : String(num);
+    }
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = TARGET_DATE - now;
+
+      if (distance <= 0) {
+        if (daysEl) daysEl.textContent = "00";
+        if (hoursEl) hoursEl.textContent = "00";
+        if (minutesEl) minutesEl.textContent = "00";
+        if (secondsEl) secondsEl.textContent = "00";
+        if (gridEl) gridEl.style.opacity = "0.4";
+        if (bannerEl) bannerEl.style.display = "block";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      if (daysEl) daysEl.textContent = formatNumber(days);
+      if (hoursEl) hoursEl.textContent = formatNumber(hours);
+      if (minutesEl) minutesEl.textContent = formatNumber(minutes);
+      if (secondsEl) secondsEl.textContent = formatNumber(seconds);
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // ── Notification Form Handler ──────────────────────────────────────
+    function handleNotifySubmit(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById("notify-email");
+      const successBanner = document.getElementById("notify-success");
+      const btn = document.getElementById("notify-btn");
+
+      if (!emailInput || !emailInput.value) return;
+
+      const email = emailInput.value.trim();
+      try {
+        localStorage.setItem("vivadoxa_notify_email", email);
+      } catch (err) {
+        // Storage unavailable
+      }
+
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+      btn.innerHTML = `<span>Subscribed</span>`;
+
+      if (successBanner) {
+        successBanner.style.display = "block";
+      }
+
+      emailInput.value = "";
+    }
+
+    // Check if already subscribed in localStorage
+    (function checkSubscribed() {
+      try {
+        const saved = localStorage.getItem("vivadoxa_notify_email");
+        if (saved) {
+          const successBanner = document.getElementById("notify-success");
+          if (successBanner) {
+            successBanner.textContent = "✓ You are subscribed with " + saved + ". We will email you on launch morning!";
+            successBanner.style.display = "block";
+          }
+        }
+      } catch (err) {}
+    })();
+  </script>
+</body>
+</html>
