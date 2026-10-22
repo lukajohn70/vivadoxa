@@ -463,17 +463,30 @@
       position: relative;
       display: flex;
       justify-content: center;
-      height: 155px;
+      align-items: flex-start;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
-      padding: 4px 0;
+      padding: 6px 0;
       max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .piano-keys-track {
+      position: relative;
+      display: inline-flex;
+      align-items: flex-start;
       margin: 0 auto;
     }
 
-    .piano-key {
+    .piano-key-col {
       position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .piano-key {
       cursor: pointer;
       border-radius: 0 0 6px 6px;
       transition: background 0.1s ease, transform 0.08s ease, box-shadow 0.1s ease;
@@ -481,14 +494,14 @@
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      padding-bottom: 10px;
       outline: none;
+      font-family: inherit;
     }
 
     /* White Natural Keys */
     .piano-key.white {
-      width: clamp(38px, 6.2vw, 56px);
-      height: 100%;
+      width: clamp(38px, 6vw, 54px);
+      height: 160px;
       background: linear-gradient(180deg, #f7f5f0 0%, #ebe7dc 100%);
       border: 1px solid #1a1714;
       border-top: none;
@@ -496,6 +509,7 @@
       z-index: 1;
       margin: 0 1.5px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+      padding-bottom: 12px;
     }
 
     .piano-key.white:hover {
@@ -510,15 +524,20 @@
 
     /* Black Accidental Keys */
     .piano-key.black {
-      width: clamp(24px, 4vw, 34px);
-      height: 62%;
-      background: linear-gradient(180deg, #2b2724 0%, #0d0c0a 100%);
-      border: 1px solid rgba(201, 107, 50, 0.4);
-      border-top: none;
-      color: #f7f5f0;
-      z-index: 2;
       position: absolute;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 -2px 0 rgba(201, 107, 50, 0.3);
+      top: 0;
+      right: 0;
+      transform: translateX(50%);
+      width: clamp(24px, 3.8vw, 34px);
+      height: 102px;
+      background: linear-gradient(180deg, #2b2724 0%, #0d0c0a 100%);
+      border: 1px solid rgba(201, 107, 50, 0.45);
+      border-top: none;
+      border-radius: 0 0 5px 5px;
+      color: #f7f5f0;
+      z-index: 3;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.75), inset 0 -2px 0 rgba(201, 107, 50, 0.35);
+      padding-bottom: 8px;
     }
 
     .piano-key.black:hover {
@@ -527,17 +546,9 @@
 
     .piano-key.black.pressed, .piano-key.black:active {
       background: linear-gradient(180deg, #7a3a14 0%, #4a210a 100%);
-      transform: translateY(2px);
+      transform: translateX(50%) translateY(2px);
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6), 0 0 16px rgba(233, 161, 111, 0.6);
     }
-
-    /* Black keys exact horizontal positioning across the 8-key octave */
-    /* C4 = 0, D4 = 1, E4 = 2, F4 = 3, G4 = 4, A4 = 5, B4 = 6, C5 = 7 */
-    .piano-key.black[data-note="Cs4"] { left: calc(12.5% * 1 - clamp(12px, 2vw, 17px)); }
-    .piano-key.black[data-note="Ds4"] { left: calc(12.5% * 2 - clamp(12px, 2vw, 17px)); }
-    .piano-key.black[data-note="Fs4"] { left: calc(12.5% * 4 - clamp(12px, 2vw, 17px)); }
-    .piano-key.black[data-note="Gs4"] { left: calc(12.5% * 5 - clamp(12px, 2vw, 17px)); }
-    .piano-key.black[data-note="As4"] { left: calc(12.5% * 6 - clamp(12px, 2vw, 17px)); }
 
     .key-note-label {
       font-size: 11px;
@@ -557,6 +568,12 @@
     .piano-key.black .key-note-label {
       font-size: 9.5px;
       color: var(--gold-light);
+    }
+
+    .piano-key.black .key-hint-badge {
+      font-size: 8px;
+      color: #ffffff;
+      opacity: 0.75;
     }
 
     .piano-key.black .key-hint-badge {
@@ -970,61 +987,91 @@
       </div>
 
       <div class="piano-keyboard" id="piano-keyboard">
-        <!-- Natural White Keys -->
-        <button class="piano-key white" data-note="C4" data-key="a" aria-label="Piano key C4">
-          <span class="key-note-label">C</span>
-          <span class="key-hint-badge">A</span>
-        </button>
-        <button class="piano-key white" data-note="D4" data-key="s" aria-label="Piano key D4">
-          <span class="key-note-label">D</span>
-          <span class="key-hint-badge">S</span>
-        </button>
-        <button class="piano-key white" data-note="E4" data-key="d" aria-label="Piano key E4">
-          <span class="key-note-label">E</span>
-          <span class="key-hint-badge">D</span>
-        </button>
-        <button class="piano-key white" data-note="F4" data-key="f" aria-label="Piano key F4">
-          <span class="key-note-label">F</span>
-          <span class="key-hint-badge">F</span>
-        </button>
-        <button class="piano-key white" data-note="G4" data-key="g" aria-label="Piano key G4">
-          <span class="key-note-label">G</span>
-          <span class="key-hint-badge">G</span>
-        </button>
-        <button class="piano-key white" data-note="A4" data-key="h" aria-label="Piano key A4">
-          <span class="key-note-label">A</span>
-          <span class="key-hint-badge">H</span>
-        </button>
-        <button class="piano-key white" data-note="B4" data-key="j" aria-label="Piano key B4">
-          <span class="key-note-label">B</span>
-          <span class="key-hint-badge">J</span>
-        </button>
-        <button class="piano-key white" data-note="C5" data-key="k" aria-label="Piano key C5">
-          <span class="key-note-label">C</span>
-          <span class="key-hint-badge">K</span>
-        </button>
+        <div class="piano-keys-track">
+          <!-- C4 and C#4 -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="C4" data-key="a" aria-label="Piano key C4">
+              <span class="key-note-label">C</span>
+              <span class="key-hint-badge">A</span>
+            </button>
+            <button class="piano-key black" data-note="Cs4" data-key="w" aria-label="Piano key C sharp 4">
+              <span class="key-note-label">C♯</span>
+              <span class="key-hint-badge">W</span>
+            </button>
+          </div>
 
-        <!-- Accidental Black Keys (Sharps) -->
-        <button class="piano-key black" data-note="Cs4" data-key="w" aria-label="Piano key C sharp 4">
-          <span class="key-note-label">C♯</span>
-          <span class="key-hint-badge">W</span>
-        </button>
-        <button class="piano-key black" data-note="Ds4" data-key="e" aria-label="Piano key D sharp 4">
-          <span class="key-note-label">D♯</span>
-          <span class="key-hint-badge">E</span>
-        </button>
-        <button class="piano-key black" data-note="Fs4" data-key="t" aria-label="Piano key F sharp 4">
-          <span class="key-note-label">F♯</span>
-          <span class="key-hint-badge">T</span>
-        </button>
-        <button class="piano-key black" data-note="Gs4" data-key="y" aria-label="Piano key G sharp 4">
-          <span class="key-note-label">G♯</span>
-          <span class="key-hint-badge">Y</span>
-        </button>
-        <button class="piano-key black" data-note="As4" data-key="u" aria-label="Piano key A sharp 4">
-          <span class="key-note-label">A♯</span>
-          <span class="key-hint-badge">U</span>
-        </button>
+          <!-- D4 and D#4 -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="D4" data-key="s" aria-label="Piano key D4">
+              <span class="key-note-label">D</span>
+              <span class="key-hint-badge">S</span>
+            </button>
+            <button class="piano-key black" data-note="Ds4" data-key="e" aria-label="Piano key D sharp 4">
+              <span class="key-note-label">D♯</span>
+              <span class="key-hint-badge">E</span>
+            </button>
+          </div>
+
+          <!-- E4 (No sharp) -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="E4" data-key="d" aria-label="Piano key E4">
+              <span class="key-note-label">E</span>
+              <span class="key-hint-badge">D</span>
+            </button>
+          </div>
+
+          <!-- F4 and F#4 -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="F4" data-key="f" aria-label="Piano key F4">
+              <span class="key-note-label">F</span>
+              <span class="key-hint-badge">F</span>
+            </button>
+            <button class="piano-key black" data-note="Fs4" data-key="t" aria-label="Piano key F sharp 4">
+              <span class="key-note-label">F♯</span>
+              <span class="key-hint-badge">T</span>
+            </button>
+          </div>
+
+          <!-- G4 and G#4 -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="G4" data-key="g" aria-label="Piano key G4">
+              <span class="key-note-label">G</span>
+              <span class="key-hint-badge">G</span>
+            </button>
+            <button class="piano-key black" data-note="Gs4" data-key="y" aria-label="Piano key G sharp 4">
+              <span class="key-note-label">G♯</span>
+              <span class="key-hint-badge">Y</span>
+            </button>
+          </div>
+
+          <!-- A4 and A#4 -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="A4" data-key="h" aria-label="Piano key A4">
+              <span class="key-note-label">A</span>
+              <span class="key-hint-badge">H</span>
+            </button>
+            <button class="piano-key black" data-note="As4" data-key="u" aria-label="Piano key A sharp 4">
+              <span class="key-note-label">A♯</span>
+              <span class="key-hint-badge">U</span>
+            </button>
+          </div>
+
+          <!-- B4 (No sharp) -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="B4" data-key="j" aria-label="Piano key B4">
+              <span class="key-note-label">B</span>
+              <span class="key-hint-badge">J</span>
+            </button>
+          </div>
+
+          <!-- C5 (Octave Root) -->
+          <div class="piano-key-col">
+            <button class="piano-key white" data-note="C5" data-key="k" aria-label="Piano key C5">
+              <span class="key-note-label">C</span>
+              <span class="key-hint-badge">K</span>
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
