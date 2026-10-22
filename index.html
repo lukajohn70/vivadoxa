@@ -35,9 +35,9 @@
   <style>
     /* ── Reset & CSS Variables ────────────────────────────────────────── */
     :root {
-      --bg-dark: #09090b;
-      --bg-card: rgba(22, 20, 18, 0.75);
-      --bg-card-hover: rgba(30, 27, 24, 0.9);
+      --bg-dark: #080706;
+      --bg-card: rgba(20, 18, 16, 0.78);
+      --bg-card-hover: rgba(28, 25, 22, 0.92);
       --gold-primary: #c96b32;
       --gold-light: #e9a16f;
       --gold-glow: rgba(201, 107, 50, 0.35);
@@ -73,13 +73,21 @@
       overflow-x: hidden;
     }
 
-    /* ── Ambient Background Lighting ──────────────────────────────────── */
+    /* ── Ambient Background & Soundwave Canvas ─────────────────────────── */
     .ambient-bg {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
       overflow: hidden;
+    }
+
+    #soundwave-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.65;
     }
 
     .ambient-glow-top {
@@ -89,7 +97,7 @@
       transform: translateX(-50%);
       width: min(1000px, 120vw);
       height: 600px;
-      background: radial-gradient(ellipse at 50% 30%, rgba(201, 107, 50, 0.18) 0%, rgba(201, 107, 50, 0.05) 50%, transparent 75%);
+      background: radial-gradient(ellipse at 50% 30%, rgba(201, 107, 50, 0.2) 0%, rgba(201, 107, 50, 0.06) 50%, transparent 75%);
       filter: blur(40px);
     }
 
@@ -100,7 +108,7 @@
       transform: translateX(-50%);
       width: min(800px, 100vw);
       height: 400px;
-      background: radial-gradient(ellipse at 50% 80%, rgba(233, 161, 111, 0.08) 0%, transparent 70%);
+      background: radial-gradient(ellipse at 50% 80%, rgba(233, 161, 111, 0.1) 0%, transparent 70%);
       filter: blur(50px);
     }
 
@@ -122,9 +130,49 @@
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
-      padding: clamp(32px, 6vw, 64px) clamp(20px, 4vw, 32px) 40px;
-      max-width: 1040px;
+      padding: clamp(28px, 5vw, 56px) clamp(16px, 4vw, 32px) 40px;
+      max-width: 1060px;
       margin: 0 auto;
+    }
+
+    /* ── Top Floating Sound Toggle & Header Bar ──────────────────────── */
+    .top-toolbar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+    }
+
+    .sound-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+
+    .sound-toggle-btn:hover {
+      color: var(--gold-light);
+      border-color: var(--gold-border);
+      background: rgba(201, 107, 50, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .sound-toggle-btn.active {
+      color: var(--gold-light);
+      border-color: rgba(201, 107, 50, 0.4);
+      background: rgba(201, 107, 50, 0.16);
     }
 
     /* ── Brand Header ─────────────────────────────────────────────────── */
@@ -133,7 +181,7 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      margin-bottom: clamp(28px, 4vw, 44px);
+      margin-bottom: clamp(24px, 4vw, 38px);
     }
 
     .brand-logo-badge {
@@ -144,13 +192,13 @@
       border-radius: var(--radius-md);
       background: #000000;
       border: 1px solid var(--gold-border);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 107, 50, 0.12);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 20px rgba(201, 107, 50, 0.15);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .brand-logo-badge:hover {
       border-color: var(--gold-primary);
-      box-shadow: 0 6px 30px rgba(201, 107, 50, 0.22);
+      box-shadow: 0 6px 30px rgba(201, 107, 50, 0.25);
       transform: translateY(-1px);
     }
 
@@ -167,12 +215,12 @@
       align-items: center;
       gap: 8px;
       padding: 6px 16px;
-      margin-top: 22px;
+      margin-top: 18px;
       border-radius: 999px;
       background: rgba(201, 107, 50, 0.1);
       border: 1px solid rgba(201, 107, 50, 0.3);
       color: var(--gold-light);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       letter-spacing: 1.6px;
       text-transform: uppercase;
@@ -197,16 +245,16 @@
     .hero-section {
       text-align: center;
       max-width: 780px;
-      margin: 0 auto clamp(32px, 5vw, 48px);
+      margin: 0 auto clamp(28px, 4.5vw, 42px);
     }
 
     .hero-eyebrow {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       letter-spacing: 2.2px;
       text-transform: uppercase;
       color: var(--gold-primary);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .hero-title {
@@ -216,7 +264,7 @@
       line-height: 1.08;
       letter-spacing: -1.2px;
       color: #ffffff;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .hero-title em {
@@ -228,7 +276,7 @@
     }
 
     .hero-description {
-      font-size: clamp(15px, 2vw, 18px);
+      font-size: clamp(15px, 2vw, 17.5px);
       color: var(--text-muted);
       line-height: 1.65;
       max-width: 650px;
@@ -239,14 +287,14 @@
     .countdown-container {
       width: 100%;
       max-width: 740px;
-      margin: 0 auto clamp(36px, 5vw, 52px);
+      margin: 0 auto clamp(30px, 4.5vw, 44px);
       text-align: center;
     }
 
     .countdown-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: clamp(10px, 2.5vw, 20px);
+      gap: clamp(10px, 2.5vw, 18px);
     }
 
     .countdown-card {
@@ -254,7 +302,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: clamp(18px, 3vw, 28px) clamp(8px, 1.5vw, 16px);
+      padding: clamp(18px, 3vw, 26px) clamp(8px, 1.5vw, 16px);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
@@ -276,13 +324,13 @@
     .countdown-card:hover {
       border-color: var(--gold-border);
       transform: translateY(-2px);
-      box-shadow: 0 14px 36px rgba(201, 107, 50, 0.12);
+      box-shadow: 0 14px 36px rgba(201, 107, 50, 0.14);
     }
 
     .countdown-num {
       display: block;
       font-family: var(--font-sans);
-      font-size: clamp(34px, 6.2vw, 58px);
+      font-size: clamp(34px, 6.2vw, 56px);
       font-weight: 700;
       line-height: 1;
       letter-spacing: -1.5px;
@@ -304,13 +352,13 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-top: 22px;
-      padding: 8px 18px;
+      margin-top: 20px;
+      padding: 7px 18px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 500;
     }
 
@@ -327,7 +375,7 @@
       background: linear-gradient(135deg, rgba(201, 107, 50, 0.2), rgba(0, 0, 0, 0.7));
       border: 1px solid var(--gold-primary);
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
     .launched-banner h3 {
@@ -337,11 +385,191 @@
       margin-bottom: 8px;
     }
 
-    /* ── Notify Me / Email Form ───────────────────────────────────────── */
+    /* ── Immersive Interactive Piano Bar ──────────────────────────────── */
+    .piano-section {
+      width: 100%;
+      max-width: 740px;
+      margin: 0 auto clamp(32px, 5vw, 48px);
+      background: var(--bg-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius-lg);
+      padding: clamp(18px, 3vw, 24px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(201, 107, 50, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .piano-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+    }
+
+    .piano-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .piano-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .piano-icon {
+      font-size: 18px;
+    }
+
+    .piano-heading {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+    }
+
+    .piano-instructions {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .piano-instructions kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+
+    /* Piano Keys Container */
+    .piano-keyboard {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      height: 155px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      padding: 4px 0;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    .piano-key {
+      position: relative;
+      cursor: pointer;
+      border-radius: 0 0 6px 6px;
+      transition: background 0.1s ease, transform 0.08s ease, box-shadow 0.1s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 10px;
+      outline: none;
+    }
+
+    /* White Natural Keys */
+    .piano-key.white {
+      width: clamp(38px, 6.2vw, 56px);
+      height: 100%;
+      background: linear-gradient(180deg, #f7f5f0 0%, #ebe7dc 100%);
+      border: 1px solid #1a1714;
+      border-top: none;
+      color: #1a1714;
+      z-index: 1;
+      margin: 0 1.5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .piano-key.white:hover {
+      background: linear-gradient(180deg, #ffffff 0%, #f3eee3 100%);
+    }
+
+    .piano-key.white.pressed, .piano-key.white:active {
+      background: linear-gradient(180deg, #ebd6c5 0%, #dfb598 100%);
+      transform: translateY(3px);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 16px rgba(201, 107, 50, 0.5);
+    }
+
+    /* Black Accidental Keys */
+    .piano-key.black {
+      width: clamp(24px, 4vw, 34px);
+      height: 62%;
+      background: linear-gradient(180deg, #2b2724 0%, #0d0c0a 100%);
+      border: 1px solid rgba(201, 107, 50, 0.4);
+      border-top: none;
+      color: #f7f5f0;
+      z-index: 2;
+      position: absolute;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 -2px 0 rgba(201, 107, 50, 0.3);
+    }
+
+    .piano-key.black:hover {
+      background: linear-gradient(180deg, #3d3733 0%, #171512 100%);
+    }
+
+    .piano-key.black.pressed, .piano-key.black:active {
+      background: linear-gradient(180deg, #7a3a14 0%, #4a210a 100%);
+      transform: translateY(2px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6), 0 0 16px rgba(233, 161, 111, 0.6);
+    }
+
+    /* Black keys exact horizontal positioning across the 8-key octave */
+    /* C4 = 0, D4 = 1, E4 = 2, F4 = 3, G4 = 4, A4 = 5, B4 = 6, C5 = 7 */
+    .piano-key.black[data-note="Cs4"] { left: calc(12.5% * 1 - clamp(12px, 2vw, 17px)); }
+    .piano-key.black[data-note="Ds4"] { left: calc(12.5% * 2 - clamp(12px, 2vw, 17px)); }
+    .piano-key.black[data-note="Fs4"] { left: calc(12.5% * 4 - clamp(12px, 2vw, 17px)); }
+    .piano-key.black[data-note="Gs4"] { left: calc(12.5% * 5 - clamp(12px, 2vw, 17px)); }
+    .piano-key.black[data-note="As4"] { left: calc(12.5% * 6 - clamp(12px, 2vw, 17px)); }
+
+    .key-note-label {
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .key-hint-badge {
+      font-size: 9px;
+      font-weight: 600;
+      opacity: 0.6;
+      margin-top: 3px;
+      pointer-events: none;
+    }
+
+    .piano-key.black .key-note-label {
+      font-size: 9.5px;
+      color: var(--gold-light);
+    }
+
+    .piano-key.black .key-hint-badge {
+      font-size: 8px;
+      color: #ffffff;
+      opacity: 0.75;
+    }
+
+    /* ── Priority Early Access Form ───────────────────────────────────── */
     .notify-wrapper {
       width: 100%;
-      max-width: 540px;
-      margin: 0 auto clamp(36px, 5vw, 54px);
+      max-width: 560px;
+      margin: 0 auto clamp(32px, 5vw, 48px);
       text-align: center;
     }
 
@@ -439,7 +667,7 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
       width: 100%;
-      margin-bottom: clamp(36px, 5vw, 54px);
+      margin-bottom: clamp(32px, 5vw, 48px);
     }
 
     .highlight-card {
@@ -454,7 +682,7 @@
     }
 
     .highlight-card:hover {
-      border-color: rgba(201, 107, 50, 0.3);
+      border-color: rgba(201, 107, 50, 0.35);
       background: var(--bg-card-hover);
       transform: translateY(-2px);
     }
@@ -494,7 +722,7 @@
       align-items: center;
       justify-content: center;
       gap: 14px;
-      margin-bottom: clamp(36px, 5vw, 54px);
+      margin-bottom: clamp(32px, 5vw, 48px);
     }
 
     .whatsapp-btn {
@@ -545,7 +773,7 @@
     .page-footer {
       width: 100%;
       border-top: 1px solid var(--border-subtle);
-      padding-top: 28px;
+      padding-top: 26px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -603,6 +831,13 @@
       .countdown-card {
         padding: 14px 6px;
       }
+      .piano-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .piano-keyboard {
+        height: 135px;
+      }
       .highlights-grid {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -626,14 +861,29 @@
 </head>
 <body>
 
-  <!-- Ambient Light Effects -->
+  <!-- Ambient Light Effects & Reactive Waveform Canvas -->
   <div class="ambient-bg" aria-hidden="true">
+    <canvas id="soundwave-canvas"></canvas>
     <div class="ambient-glow-top"></div>
     <div class="ambient-glow-bottom"></div>
     <div class="ambient-grid"></div>
   </div>
 
   <div class="page-wrapper">
+
+    <!-- Top Toolbar: Audio Sound Toggle -->
+    <div class="top-toolbar">
+      <button
+        id="sound-toggle-btn"
+        class="sound-toggle-btn active"
+        onclick="toggleSound()"
+        aria-label="Toggle Interactive Audio"
+        aria-pressed="true"
+      >
+        <span id="sound-icon">🔊</span>
+        <span id="sound-label">Audio: ON</span>
+      </button>
+    </div>
 
     <!-- Brand Header -->
     <header class="brand-header">
@@ -703,6 +953,78 @@
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <span>Opening <strong>Friday, October 30, 2026 • 09:00 AM WAT</strong></span>
+      </div>
+    </section>
+
+    <!-- Immersive Interactive Playable Mini-Piano Bar -->
+    <section class="piano-section" aria-label="Interactive Music School Piano">
+      <div class="piano-header">
+        <div class="piano-title-wrap">
+          <span class="piano-icon">🎹</span>
+          <span class="piano-heading">Play Vivadoxa Acoustic Keys</span>
+        </div>
+        <div class="piano-instructions">
+          <span>Tap keys or use keyboard:</span>
+          <kbd>A</kbd><kbd>W</kbd><kbd>S</kbd><kbd>E</kbd><kbd>D</kbd><kbd>F</kbd><kbd>T</kbd><kbd>G</kbd><kbd>Y</kbd><kbd>H</kbd><kbd>U</kbd><kbd>J</kbd><kbd>K</kbd>
+        </div>
+      </div>
+
+      <div class="piano-keyboard" id="piano-keyboard">
+        <!-- Natural White Keys -->
+        <button class="piano-key white" data-note="C4" data-key="a" aria-label="Piano key C4">
+          <span class="key-note-label">C</span>
+          <span class="key-hint-badge">A</span>
+        </button>
+        <button class="piano-key white" data-note="D4" data-key="s" aria-label="Piano key D4">
+          <span class="key-note-label">D</span>
+          <span class="key-hint-badge">S</span>
+        </button>
+        <button class="piano-key white" data-note="E4" data-key="d" aria-label="Piano key E4">
+          <span class="key-note-label">E</span>
+          <span class="key-hint-badge">D</span>
+        </button>
+        <button class="piano-key white" data-note="F4" data-key="f" aria-label="Piano key F4">
+          <span class="key-note-label">F</span>
+          <span class="key-hint-badge">F</span>
+        </button>
+        <button class="piano-key white" data-note="G4" data-key="g" aria-label="Piano key G4">
+          <span class="key-note-label">G</span>
+          <span class="key-hint-badge">G</span>
+        </button>
+        <button class="piano-key white" data-note="A4" data-key="h" aria-label="Piano key A4">
+          <span class="key-note-label">A</span>
+          <span class="key-hint-badge">H</span>
+        </button>
+        <button class="piano-key white" data-note="B4" data-key="j" aria-label="Piano key B4">
+          <span class="key-note-label">B</span>
+          <span class="key-hint-badge">J</span>
+        </button>
+        <button class="piano-key white" data-note="C5" data-key="k" aria-label="Piano key C5">
+          <span class="key-note-label">C</span>
+          <span class="key-hint-badge">K</span>
+        </button>
+
+        <!-- Accidental Black Keys (Sharps) -->
+        <button class="piano-key black" data-note="Cs4" data-key="w" aria-label="Piano key C sharp 4">
+          <span class="key-note-label">C♯</span>
+          <span class="key-hint-badge">W</span>
+        </button>
+        <button class="piano-key black" data-note="Ds4" data-key="e" aria-label="Piano key D sharp 4">
+          <span class="key-note-label">D♯</span>
+          <span class="key-hint-badge">E</span>
+        </button>
+        <button class="piano-key black" data-note="Fs4" data-key="t" aria-label="Piano key F sharp 4">
+          <span class="key-note-label">F♯</span>
+          <span class="key-hint-badge">T</span>
+        </button>
+        <button class="piano-key black" data-note="Gs4" data-key="y" aria-label="Piano key G sharp 4">
+          <span class="key-note-label">G♯</span>
+          <span class="key-hint-badge">Y</span>
+        </button>
+        <button class="piano-key black" data-note="As4" data-key="u" aria-label="Piano key A sharp 4">
+          <span class="key-note-label">A♯</span>
+          <span class="key-hint-badge">U</span>
+        </button>
       </div>
     </section>
 
@@ -841,9 +1163,9 @@
 
   </div>
 
-  <!-- Countdown & Interaction Logic -->
+  <!-- Countdown & Interactive Logic -->
   <script>
-    // ── Target Date: Next Week Friday, October 30, 2026 at 09:00:00 WAT (UTC+1)
+    // ── 1. Target Date: Next Week Friday, October 30, 2026 at 09:00:00 WAT (UTC+1)
     const TARGET_DATE = new Date("2026-10-30T09:00:00+01:00").getTime();
 
     const daysEl = document.getElementById("cd-days");
@@ -885,7 +1207,265 @@
     updateCountdown();
     setInterval(updateCountdown, 1000);
 
-    // ── Notification Form Handler ──────────────────────────────────────
+    // ── 2. Web Audio Synthesis Engine ──────────────────────────────────
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    try {
+      const savedMute = localStorage.getItem("vivadoxa_sound_muted");
+      if (savedMute === "true") soundEnabled = false;
+    } catch (e) {}
+
+    function updateSoundToggleUI() {
+      const btn = document.getElementById("sound-toggle-btn");
+      const icon = document.getElementById("sound-icon");
+      const label = document.getElementById("sound-label");
+      if (!btn) return;
+
+      if (soundEnabled) {
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+        if (icon) icon.textContent = "🔊";
+        if (label) label.textContent = "Audio: ON";
+      } else {
+        btn.classList.remove("active");
+        btn.setAttribute("aria-pressed", "false");
+        if (icon) icon.textContent = "🔇";
+        if (label) label.textContent = "Audio: Muted";
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      try {
+        localStorage.setItem("vivadoxa_sound_muted", String(!soundEnabled));
+      } catch (e) {}
+      updateSoundToggleUI();
+      if (soundEnabled) {
+        playNote("E4", 0.6);
+      }
+    }
+
+    updateSoundToggleUI();
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) {
+          audioCtx = new AudioCtxClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    // Exact Note Frequencies (C4 to C5):
+    const NOTE_FREQS = {
+      "C4": 261.63,
+      "Cs4": 277.18,
+      "D4": 293.66,
+      "Ds4": 311.13,
+      "E4": 329.63,
+      "F4": 349.23,
+      "Fs4": 369.99,
+      "G4": 392.00,
+      "Gs4": 415.30,
+      "A4": 440.00,
+      "As4": 466.16,
+      "B4": 493.88,
+      "C5": 523.25
+    };
+
+    function playNote(noteName, duration = 1.3) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const freq = NOTE_FREQS[noteName];
+      if (!freq) return;
+
+      const now = audioCtx.currentTime;
+
+      // Master Envelope Gain Node:
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.38, now + 0.015);
+      gainNode.gain.exponentialRampToValueAtTime(0.14, now + 0.3);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      // 1. Fundamental Sine Oscillator
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(freq, now);
+
+      // 2. Harmonic Triangle (Warm Rhodes / Acoustic Overtones)
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(freq * 2, now);
+      const osc2Gain = audioCtx.createGain();
+      osc2Gain.gain.setValueAtTime(0.18, now);
+
+      // 3. Acoustic Lowpass Filter (mellow warmth)
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(Math.min(freq * 5, 3600), now);
+      filter.frequency.exponentialRampToValueAtTime(freq * 1.5, now + duration);
+
+      osc1.connect(filter);
+      osc2.connect(osc2Gain);
+      osc2Gain.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + duration);
+      osc2.stop(now + duration);
+
+      // Trigger wave ripple in the background canvas:
+      if (window.triggerWavePulse) {
+        window.triggerWavePulse(freq);
+      }
+    }
+
+    // Play a gentle major 7th chord chime on form submission
+    function playSuccessChime() {
+      if (!soundEnabled) return;
+      const chord = ["C4", "E4", "G4", "B4", "C5"];
+      chord.forEach((note, index) => {
+        setTimeout(() => playNote(note, 1.8), index * 110);
+      });
+    }
+
+    // ── 3. Interactive Piano Keyboard Event Binding ────────────────────
+    const keyElements = document.querySelectorAll(".piano-key");
+    const keyMap = {}; // physical key to note
+    const noteElementMap = {};
+
+    keyElements.forEach(keyEl => {
+      const note = keyEl.dataset.note;
+      const char = keyEl.dataset.key;
+      if (char) keyMap[char.toLowerCase()] = note;
+      noteElementMap[note] = keyEl;
+
+      function triggerKey(e) {
+        if (e) e.preventDefault();
+        playNote(note);
+        keyEl.classList.add("pressed");
+        setTimeout(() => keyEl.classList.remove("pressed"), 180);
+      }
+
+      keyEl.addEventListener("mousedown", triggerKey);
+      keyEl.addEventListener("touchstart", triggerKey, { passive: false });
+    });
+
+    // Keyboard binding (A, W, S, E, D, F, T, G, Y, H, U, J, K)
+    window.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      const pressedKey = e.key.toLowerCase();
+      const note = keyMap[pressedKey];
+      if (note && !e.repeat) {
+        playNote(note);
+        const el = noteElementMap[note];
+        if (el) {
+          el.classList.add("pressed");
+          setTimeout(() => el.classList.remove("pressed"), 180);
+        }
+      }
+    });
+
+    // ── 4. Reactive Soundwave Visualizer Canvas ────────────────────────
+    (function initWaveCanvas() {
+      const canvas = document.getElementById("soundwave-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      let width = 0;
+      let height = 0;
+      let mouseX = 0;
+      let mouseY = 0;
+      let targetEnergy = 1;
+      let currentEnergy = 1;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      // Mouse & Touch Tracking
+      window.addEventListener("mousemove", (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        targetEnergy = Math.min(targetEnergy + 0.15, 3.2);
+      });
+
+      window.addEventListener("touchmove", (e) => {
+        if (e.touches[0]) {
+          mouseX = e.touches[0].clientX;
+          mouseY = e.touches[0].clientY;
+          targetEnergy = Math.min(targetEnergy + 0.2, 3.2);
+        }
+      }, { passive: true });
+
+      // Note strike pulse trigger:
+      window.triggerWavePulse = function(freq) {
+        const boost = (freq / 300) * 1.5;
+        targetEnergy = Math.min(targetEnergy + boost, 4.5);
+      };
+
+      let step = 0;
+
+      function render() {
+        requestAnimationFrame(render);
+
+        // Smooth energy decay:
+        currentEnergy += (targetEnergy - currentEnergy) * 0.04;
+        targetEnergy += (1 - targetEnergy) * 0.02;
+
+        step += 0.015 * currentEnergy;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Render 3 harmonically overlapping waves:
+        const waves = [
+          { color: "rgba(201, 107, 50, 0.42)", freq: 0.0035, amp: 48 * currentEnergy, speed: 1.0, yOffset: height * 0.45 },
+          { color: "rgba(233, 161, 111, 0.32)", freq: 0.0055, amp: 35 * currentEnergy, speed: 1.35, yOffset: height * 0.48 },
+          { color: "rgba(201, 107, 50, 0.22)", freq: 0.0022, amp: 65 * currentEnergy, speed: 0.7, yOffset: height * 0.52 }
+        ];
+
+        waves.forEach(w => {
+          ctx.beginPath();
+          ctx.lineWidth = 1.8;
+          ctx.strokeStyle = w.color;
+
+          for (let x = 0; x <= width; x += 6) {
+            // Mouse distance influence:
+            const distFromMouse = Math.abs(x - mouseX);
+            const mouseProximity = Math.max(0, 1 - distFromMouse / 380);
+
+            const y = w.yOffset +
+                      Math.sin(x * w.freq + step * w.speed) * w.amp +
+                      Math.cos(x * w.freq * 0.6 + step) * (w.amp * 0.3) +
+                      (mouseProximity * 24 * Math.sin(step * 3));
+
+            if (x === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+        });
+      }
+
+      render();
+    })();
+
+    // ── 5. Notification Form Handler ──────────────────────────────────
     function handleNotifySubmit(e) {
       e.preventDefault();
       const emailInput = document.getElementById("notify-email");
@@ -897,9 +1477,10 @@
       const email = emailInput.value.trim();
       try {
         localStorage.setItem("vivadoxa_notify_email", email);
-      } catch (err) {
-        // Storage unavailable
-      }
+      } catch (err) {}
+
+      // Play joyful harmonic confirmation chime:
+      playSuccessChime();
 
       btn.disabled = true;
       btn.style.opacity = "0.7";
@@ -912,7 +1493,7 @@
       emailInput.value = "";
     }
 
-    // Check if already subscribed in localStorage
+    // Check if already subscribed in localStorage:
     (function checkSubscribed() {
       try {
         const saved = localStorage.getItem("vivadoxa_notify_email");
