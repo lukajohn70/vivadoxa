@@ -40,21 +40,6 @@ try {
 
     $admin = $stmt->fetch();
 
-    // Auto-provision primary owner/admin in database if missing
-    if (!$admin && ($cleanInput === 'lukajohn70@gmail.com' || strpos($cleanInput, 'lukajohn') !== false)) {
-        $newHash = password_hash($password, PASSWORD_BCRYPT);
-        $ins = $pdo->prepare("
-            INSERT INTO `admins` (`name`, `email`, `role`, `password_hash`, `is_active`)
-            VALUES ('Luka John', :email, 'superadmin', :hash, 1)
-        ");
-        $ins->execute([':email' => $cleanInput, ':hash' => $newHash]);
-        $stmt->execute([
-            ':email' => $cleanInput,
-            ':fullEmail' => $emailCandidate,
-        ]);
-        $admin = $stmt->fetch();
-    }
-
     if (!$admin) {
         jsonResponse([
             'success' => false,
@@ -69,21 +54,8 @@ try {
         ], 403);
     }
 
-    // Verify password using PHP password_verify (bcrypt) or fallback demo comparison
-    $isValid = password_verify($password, $admin['password_hash']);
-
-    // For maximum convenience during development/demo: also allow common demo passwords if hash didn't match
-    if (!$isValid && ($password === '11111111' || $password === 'VivadoxaAdmin2025!' || $password === 'admin' || $password === 'StaffPass2025!')) {
-        $isValid = true;
-        // Rehash to keep it up to date
-        $newHash = password_hash($password, PASSWORD_BCRYPT);
-        $pdo->prepare("UPDATE admins SET password_hash = :hash WHERE id = :id")->execute([
-            ':hash' => $newHash,
-            ':id' => $admin['id'],
-        ]);
-    }
-
-    if (!$isValid) {
+    // Strict database password verification using bcrypt
+    if (!password_verify($password, $admin['password_hash'])) {
         jsonResponse([
             'success' => false,
             'error' => 'Incorrect password. Please try again.',
@@ -95,7 +67,7 @@ try {
 
     // Set session
     $_SESSION['admin_user'] = [
-        'id' => $admin['id'],
+        'id' => (int)$admin['id'],
         'email' => $admin['email'],
         'name' => $admin['name'],
         'role' => $admin['role'],
