@@ -15,6 +15,7 @@ import {
   testEmailNotification,
   testWhatsAppNotification,
   fetchNotificationLogs,
+  purgeMockData,
 } from "@/lib/api"
 
 // ═════════════════════════════════════════════════════════════════════════════════
@@ -879,6 +880,40 @@ export function GeneralSettingsView({
   const [logs, setLogs] = useState<any[]>([])
   const [loadingLogs, setLoadingLogs] = useState(false)
 
+  // Database purge state
+  const [purging, setPurging] = useState(false)
+  const [showPurgeModal, setShowPurgeModal] = useState(false)
+  const [purgeConfirmationInput, setPurgeConfirmationInput] = useState("")
+  const [purgeError, setPurgeError] = useState("")
+  const [purgeSuccess, setPurgeSuccess] = useState("")
+
+  async function handleExecutePurge() {
+    if (purgeConfirmationInput.trim().toUpperCase() !== "PURGE") {
+      setPurgeError('Please type "PURGE" in all uppercase to confirm.')
+      return
+    }
+    setPurging(true)
+    setPurgeError("")
+    try {
+      const res = await purgeMockData("PURGE")
+      if (res.success) {
+        setPurgeSuccess("Database successfully purged! All mock and test customer records have been wiped clean.")
+        setActionNotice("Database successfully purged of all mock records.")
+        setShowPurgeModal(false)
+        setPurgeConfirmationInput("")
+        setTimeout(() => {
+          window.location.reload()
+        }, 1200)
+      } else {
+        setPurgeError(res.error || "Failed to purge database.")
+      }
+    } catch (err: any) {
+      setPurgeError(err.message || "Network error while purging.")
+    } finally {
+      setPurging(false)
+    }
+  }
+
   const loadLogs = async () => {
     setLoadingLogs(true)
     try {
@@ -1611,6 +1646,216 @@ export function GeneralSettingsView({
             )}
           </div>
         </div>
+
+        {/* Database Hygiene & Mock Data Purge */}
+        <div
+          className="editor-section"
+          style={{
+            borderColor: "rgba(201, 107, 50, 0.3)",
+            background: "#fbfaf8",
+            marginTop: 18,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "var(--navy)",
+                  color: "var(--gold)",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Icon name="trash" size={17} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, paddingBottom: 0, border: "none", color: "var(--navy)", fontSize: 14, fontWeight: 700 }}>
+                  Database Hygiene &amp; Test Data Purge
+                </h3>
+                <small style={{ color: "var(--muted)", display: "block", marginTop: 2, fontSize: 12 }}>
+                  Safely wipes all test admissions, mock payments, repairs, contact messages, and schedules from MySQL.
+                  Administrator accounts, academic courses, instructors, and settings are strictly preserved.
+                </small>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setShowPurgeModal(true)
+                setPurgeError("")
+                setPurgeConfirmationInput("")
+              }}
+              style={{
+                borderColor: "#a24a18",
+                color: "#a24a18",
+                background: "white",
+              }}
+            >
+              Purge Online Mock Data…
+            </Button>
+          </div>
+
+          {purgeSuccess && (
+            <div
+              style={{
+                marginTop: 14,
+                padding: "10px 14px",
+                borderRadius: 6,
+                background: "#f4ece4",
+                color: "#a24a18",
+                fontSize: 12,
+                fontWeight: 600,
+                border: "1px solid #ebdcd0",
+              }}
+            >
+              ✓ {purgeSuccess}
+            </div>
+          )}
+        </div>
+
+        {/* Purge Confirmation Modal */}
+        {showPurgeModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(4px)",
+              zIndex: 9999,
+              display: "grid",
+              placeItems: "center",
+              padding: 16,
+            }}
+          >
+            <div
+              style={{
+                background: "white",
+                maxWidth: 480,
+                width: "100%",
+                borderRadius: 12,
+                padding: 28,
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: "#fdf5ec",
+                    color: "var(--gold-text)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <Icon name="trash" size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, color: "var(--navy)", fontWeight: 700 }}>
+                    Confirm Database Purge
+                  </h3>
+                  <small style={{ color: "var(--muted)", fontSize: 12 }}>
+                    This action wipes all mock and test customer records
+                  </small>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: "#faf9f6",
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  padding: 14,
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  color: "var(--ink)",
+                  marginBottom: 18,
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "var(--gold-text)", marginBottom: 4 }}>
+                  The following MySQL tables will be truncated to 0:
+                </div>
+                <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
+                  <li><code>applications</code> (all test admissions)</li>
+                  <li><code>payments</code> (all mock transaction records)</li>
+                  <li><code>repairs</code> (all test repair workshop requests)</li>
+                  <li><code>enquiries</code> (all contact inquiries)</li>
+                  <li><code>students</code> &amp; <code>schedule_requests</code></li>
+                </ul>
+                <div style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}>
+                  ✓ <strong>Preserved:</strong> Your admin accounts, passwords, academy course catalog, faculty instructors, and cohorts will remain untouched.
+                </div>
+              </div>
+
+              {purgeError && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                    fontSize: 12,
+                    borderRadius: 6,
+                    marginBottom: 14,
+                    border: "1px solid #fecaca",
+                  }}
+                >
+                  {purgeError}
+                </div>
+              )}
+
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6, color: "var(--navy)" }}>
+                To confirm, please type <code style={{ color: "var(--gold-text)" }}>PURGE</code> in uppercase:
+              </label>
+              <input
+                type="text"
+                value={purgeConfirmationInput}
+                onChange={(e) => setPurgeConfirmationInput(e.target.value)}
+                placeholder="Type PURGE"
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  letterSpacing: "1px",
+                  marginBottom: 18,
+                }}
+              />
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowPurgeModal(false)}
+                  disabled={purging}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleExecutePurge}
+                  disabled={purging || purgeConfirmationInput.trim().toUpperCase() !== "PURGE"}
+                  style={{
+                    background: "var(--navy)",
+                    color: "white",
+                  }}
+                >
+                  {purging ? "Purging Database…" : "Permanently Purge Mock Records"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Global Save Bar */}
         <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14, background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>

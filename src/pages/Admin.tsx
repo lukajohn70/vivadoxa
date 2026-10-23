@@ -317,37 +317,6 @@ export function Admin({ go }: { go: (p: Page) => void }) {
   )
 }
 
-// ─── Cross-Browser Activity Time Formatter ────────────────────────────────────
-function formatActivityTime(dateStr: string): string {
-  try {
-    const d = new Date(dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T"))
-    if (isNaN(d.getTime())) return dateStr
-
-    const now = new Date()
-    const isToday =
-      d.getDate() === now.getDate() &&
-      d.getMonth() === now.getMonth() &&
-      d.getFullYear() === now.getFullYear()
-
-    const yesterday = new Date(now)
-    yesterday.setDate(now.getDate() - 1)
-    const isYesterday =
-      d.getDate() === yesterday.getDate() &&
-      d.getMonth() === yesterday.getMonth() &&
-      d.getFullYear() === yesterday.getFullYear()
-
-    const timeStr = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
-
-    if (isToday) return `Today, ${timeStr}`
-    if (isYesterday) return `Yesterday, ${timeStr}`
-
-    const dateFormatted = d.toLocaleDateString([], { day: "numeric", month: "short" })
-    return `${dateFormatted}, ${timeStr}`
-  } catch {
-    return dateStr
-  }
-}
-
 // ─── Dashboard overview ────────────────────────────────────────────────────────
 function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
   const { session } = useAdminAuth()
@@ -385,7 +354,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           ? `${liveStats.pending_applications} pending review`
           : "All evaluated"
         : "Loading…",
-      tone: liveStats && liveStats.pending_applications > 0 ? "warning" : "success",
+      tone: liveStats && liveStats.pending_applications > 0 ? "gold" : "muted",
       badge: liveStats && liveStats.pending_applications > 0 ? `${liveStats.pending_applications} new` : null,
       target: "Applications",
       icon: "academic",
@@ -394,7 +363,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
       title: "Active Students",
       count: liveStats ? String(liveStats.active_students ?? 0) : "—",
       sub: "Enrolled in training",
-      tone: "info",
+      tone: "muted",
       badge: null,
       target: "Students",
       icon: "users",
@@ -407,7 +376,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           ? "Requires verification"
           : "All verified"
         : "Checking…",
-      tone: liveStats && liveStats.pending_payments > 0 ? "warning" : "success",
+      tone: liveStats && liveStats.pending_payments > 0 ? "gold" : "muted",
       badge: liveStats && liveStats.pending_payments > 0 ? "Action req." : null,
       target: "Payments",
       icon: "creditCard",
@@ -416,7 +385,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
       title: "Verified Revenue",
       count: liveStats ? liveStats.formatted_revenue : "—",
       sub: "Cleared payments in DB",
-      tone: "success",
+      tone: "gold",
       badge: null,
       target: "Payments",
       icon: "dollar",
@@ -429,7 +398,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           ? "In workshop queue"
           : "No pending repairs"
         : "Checking…",
-      tone: liveStats && liveStats.active_repairs > 0 ? "info" : "muted",
+      tone: liveStats && liveStats.active_repairs > 0 ? "gold" : "muted",
       badge: null,
       target: "Repairs",
       icon: "wrench",
@@ -439,14 +408,16 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
   const monthlyData =
     liveStats?.monthly_revenue && liveStats.monthly_revenue.length > 0
       ? liveStats.monthly_revenue
-      : [
-          { month: "May", key: "2026-05", amount: 0, formatted: "₦0" },
-          { month: "Jun", key: "2026-06", amount: 0, formatted: "₦0" },
-          { month: "Jul", key: "2026-07", amount: 0, formatted: "₦0" },
-          { month: "Aug", key: "2026-08", amount: 0, formatted: "₦0" },
-          { month: "Sep", key: "2026-09", amount: 0, formatted: "₦0" },
-          { month: "Oct", key: "2026-10", amount: 250000, formatted: "₦250,000" },
-        ]
+      : Array.from({ length: 6 }, (_, i) => {
+          const d = new Date()
+          d.setMonth(d.getMonth() - (5 - i))
+          return {
+            month: d.toLocaleDateString("en-US", { month: "short" }),
+            key: d.toISOString().slice(0, 7),
+            amount: 0,
+            formatted: "₦0",
+          }
+        })
 
   const maxRevenue = Math.max(1, ...monthlyData.map((m) => m.amount || 0))
   const total6Months = monthlyData.reduce((acc, m) => acc + (m.amount || 0), 0)
@@ -487,13 +458,15 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               {card.badge && (
                 <span
                   style={{
-                    background: card.tone === "warning" ? "#fef3c7" : "#dcfce7",
-                    color: card.tone === "warning" ? "#92400e" : "#166534",
+                    background: "#fdf5ec",
+                    color: "var(--gold-text)",
+                    border: "1px solid #ebdcd0",
                     fontSize: 9,
                     fontWeight: 700,
-                    padding: "2px 6px",
+                    padding: "2px 7px",
                     borderRadius: 99,
                     textTransform: "uppercase",
+                    letterSpacing: "0.5px",
                   }}
                 >
                   {card.badge}
@@ -558,7 +531,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
                         transition: "height 0.4s ease",
                         background:
                           m.amount > 0
-                            ? "linear-gradient(var(--gold), #efd997)"
+                            ? "linear-gradient(180deg, var(--gold) 0%, #8f471e 100%)"
                             : "#e5e7eb",
                         borderRadius: "5px 5px 0 0",
                       }}
@@ -583,7 +556,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
                 Peak Month
               </span>
-              <strong style={{ fontSize: 16, color: "var(--gold)" }}>
+              <strong style={{ fontSize: 16, color: "var(--gold-text)" }}>
                 {peakMonth && peakMonth.amount > 0
                   ? `${peakMonth.month} (${peakMonth.formatted})`
                   : "—"}
@@ -596,239 +569,6 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               <strong style={{ fontSize: 16, color: "var(--navy)" }}>
                 ₦{avgMonthly.toLocaleString()} / mo
               </strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="recent-panel">
-          <div className="panel-title">
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <h2>Live Database Stream</h2>
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 4,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "#166534",
-                    background: "#dcfce7",
-                    padding: "2px 7px",
-                    borderRadius: 99,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: "#22c55e",
-                    }}
-                  />
-                  Live
-                </span>
-              </div>
-              <p>Real-time admissions, payments, repairs &amp; reschedule requests</p>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
-            {liveStats?.recent_activity && liveStats.recent_activity.length > 0 ? (
-              liveStats.recent_activity.slice(0, 6).map((act, idx) => {
-                const targetTab =
-                  act.type === "application"
-                    ? "Applications"
-                    : act.type === "payment"
-                      ? "Payments"
-                      : act.type === "repair"
-                        ? "Repairs"
-                        : "Class Schedule"
-
-                const isGood =
-                  act.status === "approved" || act.status === "verified" || act.status === "ready"
-                const isWarn =
-                  act.status === "pending" || act.status === "in_progress"
-
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => setActive(targetTab)}
-                    title={`View in ${targetTab}`}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      background: "#faf9f6",
-                      borderRadius: 8,
-                      border: "1px solid var(--line)",
-                      fontSize: 12,
-                      cursor: "pointer",
-                      transition:
-                        "transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "#f2efe9"
-                      e.currentTarget.style.borderColor = "var(--gold)"
-                      e.currentTarget.style.transform = "translateX(2px)"
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "#faf9f6"
-                      e.currentTarget.style.borderColor = "var(--line)"
-                      e.currentTarget.style.transform = "none"
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 10,
-                        minWidth: 0,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 30,
-                          height: 30,
-                          borderRadius: 6,
-                          background: "white",
-                          border: "1px solid var(--line)",
-                          display: "grid",
-                          placeItems: "center",
-                          color: "var(--navy)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon
-                          name={
-                            act.type === "application"
-                              ? "academic"
-                              : act.type === "payment"
-                                ? "creditCard"
-                                : act.type === "repair"
-                                  ? "wrench"
-                                  : "calendar"
-                          }
-                          size={15}
-                        />
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <strong
-                          style={{
-                            color: "var(--navy)",
-                            display: "block",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {act.title}
-                        </strong>
-                        <small
-                          style={{
-                            color: "var(--muted)",
-                            display: "block",
-                            marginTop: 2,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {act.subtitle}
-                        </small>
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
-                      <span
-                        style={{
-                          padding: "3px 8px",
-                          borderRadius: 4,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.4px",
-                          background: isGood ? "#dcfce7" : isWarn ? "#fef9c3" : "#f1f5f9",
-                          color: isGood ? "#166534" : isWarn ? "#854d0e" : "#475569",
-                          display: "inline-block",
-                        }}
-                      >
-                        {act.status.replace("_", " ")}
-                      </span>
-                      <small
-                        style={{
-                          display: "block",
-                          marginTop: 3,
-                          color: "var(--muted)",
-                          fontSize: 10,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {formatActivityTime(act.created_at)}
-                      </small>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <p style={{ color: "var(--muted)", fontSize: 13, padding: "12px 0" }}>
-                Loading live transaction log…
-              </p>
-            )}
-
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 8,
-                marginTop: 6,
-                paddingTop: 12,
-                borderTop: "1px solid var(--line)",
-              }}
-            >
-              <button
-                className="btn btn-secondary"
-                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
-                onClick={() => setActive("Applications")}
-              >
-                Applications{" "}
-                {liveStats && liveStats.pending_applications > 0
-                  ? `(${liveStats.pending_applications})`
-                  : ""}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
-                onClick={() => setActive("Payments")}
-              >
-                Payments{" "}
-                {liveStats && liveStats.pending_payments > 0
-                  ? `(${liveStats.pending_payments})`
-                  : ""}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
-                onClick={() => setActive("Repairs")}
-              >
-                Repairs{" "}
-                {liveStats && liveStats.active_repairs > 0
-                  ? `(${liveStats.active_repairs})`
-                  : ""}
-              </button>
-              <button
-                className="btn btn-secondary"
-                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
-                onClick={() => setActive("Class Schedule")}
-              >
-                Schedules{" "}
-                {liveStats && (liveStats.pending_schedules ?? 0) > 0
-                  ? `(${liveStats.pending_schedules})`
-                  : ""}
-              </button>
             </div>
           </div>
         </section>
@@ -985,16 +725,17 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
                         borderRadius: 99,
                         background:
                           item.badgeType === "warn"
-                            ? "#fef3c7"
+                            ? "#fdf5ec"
                             : item.badgeType === "good"
-                              ? "#dcfce7"
-                              : "#dbeafe",
+                              ? "#f4ece4"
+                              : "#f0ece5",
                         color:
                           item.badgeType === "warn"
-                            ? "#92400e"
+                            ? "var(--gold-text)"
                             : item.badgeType === "good"
-                              ? "#166534"
-                              : "#1e40af",
+                              ? "#8f471e"
+                              : "var(--muted)",
+                        border: "1px solid #ebdcd0",
                       }}
                     >
                       {item.badge}
@@ -1910,8 +1651,9 @@ function AdminManager({ title }: { title: string }) {
                                   fontWeight: 700,
                                   padding: "2px 6px",
                                   borderRadius: 4,
-                                  background: "#fef3c7",
-                                  color: "#92400e",
+                                  background: "#fdf5ec",
+                                  color: "var(--gold-text)",
+                                  border: "1px solid #ebdcd0",
                                 }}
                               >
                                 Director
@@ -1960,8 +1702,9 @@ function AdminManager({ title }: { title: string }) {
                                   fontWeight: 700,
                                   padding: "2px 6px",
                                   borderRadius: 4,
-                                  background: "#fef3c7",
-                                  color: "#92400e",
+                                  background: "#fdf5ec",
+                                  color: "var(--gold-text)",
+                                  border: "1px solid #ebdcd0",
                                 }}
                               >
                                 Featured
@@ -2350,7 +2093,7 @@ function AdminManager({ title }: { title: string }) {
                             <div>
                               <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
                               {row.is_director ? (
-                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fef3c7", color: "#92400e" }}>
+                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
                                   Director
                                 </span>
                               ) : null}
@@ -2397,7 +2140,7 @@ function AdminManager({ title }: { title: string }) {
                             <div>
                               <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.title}</strong>
                               {row.is_featured ? (
-                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fef3c7", color: "#92400e" }}>
+                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
                                   Featured
                                 </span>
                               ) : null}

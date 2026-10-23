@@ -1588,3 +1588,19 @@ export async function respondToScheduleRequest(data: {
     return { success: false, error: err.message || "Failed to respond to request." };
   }
 }
+
+// ── Purge Test & Mock Data ───────────────────────────────────────────────────
+export async function purgeMockData(confirmation = "PURGE"): Promise<ApiResponse> {
+  try {
+    const res = await fetch(`${getApiUrl("purge.php")}?confirm=${encodeURIComponent(confirmation)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ confirm: confirmation }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to purge database." };
+  }
+}
+
