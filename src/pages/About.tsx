@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { PageHero, SectionHead, Cta, Button, Icon, WhatsAppIcon } from "@/components/ui"
-import { drumsImg, trumpetImg, portraitImg, heroImg } from "@/lib/data"
+import { drumsImg, trumpetImg, portraitImg, heroImg, cohortImg, rcBadgeImg, repairSaxImg } from "@/lib/data"
 import { fetchAcademics } from "@/lib/api"
 import { WHATSAPP_URL } from "@/lib/utils"
 import type { Page } from "@/types"
@@ -16,10 +16,10 @@ interface FacultyMember {
 
 const defaultFaculty: FacultyMember[] = [
   {
-    name: "Tosin Adewale",
+    name: "Frederick Chrysantius",
     title: "Founder & Artistic Director",
     specialization: "Classical, Contemporary & Jazz / Composition",
-    bio: "Pianist, composer, and educator with over 15 years guiding aspiring musicians, church music directors, and concert pianists across West Africa.",
+    bio: "Pianist, composer, and educator guiding aspiring musicians, church music directors, and concert instrumentalists in Kaduna.",
     image: portraitImg,
     is_director: 1,
   },
@@ -73,7 +73,7 @@ export function About({ go }: { go: (p: Page) => void }) {
         eyebrow="About Vivadoxa"
         title="Music changes people. We help that happen."
         body="Since 2013, we have helped young people, church music leaders, and adults in Kaduna discover their voice, master an instrument, and perform with confidence."
-        image={drumsImg}
+        image={cohortImg}
       />
 
       {/* Origin Story */}
@@ -97,29 +97,156 @@ export function About({ go }: { go: (p: Page) => void }) {
             </p>
           </div>
           <div className="mission-card">
-            <span>Our mission</span>
-            <h3>To nurture skilled, expressive, and confident musicians.</h3>
-            <hr />
-            <span>Our vision</span>
-            <h3>
-              To become Northern Nigeria&apos;s most trusted benchmark for modern music
-              education and instrument craftsmanship.
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+              <span>Our Motto</span>
+              <span className="badge badge-gold" style={{ fontSize: 10, padding: "2px 8px", textTransform: "none", letterSpacing: "normal" }}>Official Credo</span>
+            </div>
+            <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "1.65rem", color: "var(--navy)", margin: "4px 0 16px" }}>
+              &ldquo;Actualize your passion&rdquo;
             </h3>
+
+            <hr style={{ margin: "20px 0" }} />
+
+            <span>Our mission</span>
+            <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: "1.2rem", lineHeight: 1.45, color: "var(--navy)", margin: "8px 0 12px" }}>
+              To deliver exceptional musical experiences through four core pillars: <strong>innovative lessons</strong>, <strong>curated instrument sales</strong>, <strong>dependable repair services</strong>, and a <strong>state-of-the-art recording studio</strong>.
+            </p>
+            <p style={{ color: "var(--gold)", fontWeight: 700, fontStyle: "italic", fontSize: "0.92rem", margin: "0 0 4px" }}>
+              &ldquo;At Vivadoxa, we don&apos;t just sell music. We create it, teach it, and preserve it.&rdquo;
+            </p>
+
+            <hr style={{ margin: "20px 0" }} />
+
+            <span>Our vision</span>
+            <h3 style={{ fontSize: "1.2rem", lineHeight: 1.45, margin: "8px 0 0" }}>
+              &ldquo;A world where every musician, from beginner to pro, has access to the tools, knowledge, and environment to bring their unique sound to life.&rdquo;
+            </h3>
+          </div>
+        </div>
+      </section>
+
+      {/* Four Core Pillars of Vivadoxa */}
+      <section className="section alt" style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+        <div className="container">
+          <SectionHead
+            center
+            eyebrow="The Vivadoxa Framework"
+            title="Four Pillars of Musical Excellence"
+            body="How we deliver exceptional musical experiences across Northern Nigeria and beyond—uniting world-class instruction, premium equipment, master repairs, and audio production."
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+            {/* Pillar 1 */}
+            <div style={{ background: "white", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <div>
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(201,107,50,0.12)", color: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                  <Icon name="music" size={22} />
+                </div>
+                <span className="eyebrow" style={{ color: "var(--gold)", fontSize: 11 }}>Pillar 01</span>
+                <h3 style={{ fontSize: 20, margin: "6px 0 10px", color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>
+                  Innovative Lessons
+                </h3>
+                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  Structured pedagogy spanning classical techniques, contemporary praise medleys, and graded syllabi (ABRSM &amp; Trinity). Tailored cohorts for children, teens, and adults.
+                </p>
+              </div>
+              <button
+                onClick={() => go("programs")}
+                className="btn btn-secondary"
+                style={{ marginTop: 22, width: "100%", justifyContent: "center", fontSize: 13 }}
+              >
+                Explore Programs →
+              </button>
+            </div>
+
+            {/* Pillar 2 */}
+            <div style={{ background: "white", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <div>
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(30,58,95,0.1)", color: "var(--navy)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                  <Icon name="home" size={22} />
+                </div>
+                <span className="eyebrow" style={{ color: "var(--gold)", fontSize: 11 }}>Pillar 02</span>
+                <h3 style={{ fontSize: 20, margin: "6px 0 10px", color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>
+                  Studio &amp; Home Coaching
+                </h3>
+                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  Learn at our fully equipped Angwan Sunday studio or request certified instructors for private doorstep music lessons across Kaduna, as well as Sunday Specials for church instrumentalists.
+                </p>
+              </div>
+              <button
+                onClick={() => go("modes")}
+                className="btn btn-secondary"
+                style={{ marginTop: 22, width: "100%", justifyContent: "center", fontSize: 13 }}
+              >
+                Explore Study Modes →
+              </button>
+            </div>
+
+            {/* Pillar 3 */}
+            <div style={{ background: "white", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <div>
+                <div style={{ height: 140, borderRadius: 8, overflow: "hidden", marginBottom: 16, background: "#0a192f" }}>
+                  <img
+                    src={repairSaxImg}
+                    alt="Vivadoxa instrument hospital craftsman repairing saxophone"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    loading="lazy"
+                  />
+                </div>
+                <span className="eyebrow" style={{ color: "var(--gold)", fontSize: 11 }}>Pillar 03</span>
+                <h3 style={{ fontSize: 20, margin: "6px 0 10px", color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>
+                  Dependable Repair Services
+                </h3>
+                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  Kaduna&apos;s premier instrument hospital. Comprehensive diagnostics, piano action regulation, brass ultrasonic flushes, electronic keyboard servicing, and courier pickup right to your doorstep.
+                </p>
+              </div>
+              <button
+                onClick={() => go("repairs")}
+                className="btn btn-secondary"
+                style={{ marginTop: 22, width: "100%", justifyContent: "center", fontSize: 13 }}
+              >
+                Book Instrument Clinic →
+              </button>
+            </div>
+
+            {/* Pillar 4 */}
+            <div style={{ background: "white", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "space-between", boxShadow: "0 4px 16px rgba(0,0,0,0.04)" }}>
+              <div>
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: "rgba(30,58,95,0.1)", color: "var(--navy)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
+                  <Icon name="video" size={22} />
+                </div>
+                <span className="eyebrow" style={{ color: "var(--gold)", fontSize: 11 }}>Pillar 04</span>
+                <h3 style={{ fontSize: 20, margin: "6px 0 10px", color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>
+                  State-of-the-Art Studio
+                </h3>
+                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  A dedicated, acoustically treated recording studio for recital preservation, vocal tracking, gospel and band production, audio mixing, and multi-track session capture.
+                </p>
+              </div>
+              <button
+                onClick={() => go("contact")}
+                className="btn btn-secondary"
+                style={{ marginTop: 22, width: "100%", justifyContent: "center", fontSize: 13 }}
+              >
+                Inquire Studio Sessions →
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CEO & Founder Spotlight Section */}
       <section className="section" style={{ background: "var(--navy)", color: "white" }}>
-        <div className="container" style={{ display: "grid", gridTemplateColumns: "0.9fr 1.1fr", gap: 70, alignItems: "center" }}>
+        <div className="container grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-center">
           <div style={{ position: "relative" }}>
             <div style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid rgba(201,107,50,0.3)", boxShadow: "0 25px 60px rgba(0,0,0,0.5)" }}>
               <img
                 src={director.image || portraitImg}
                 alt={`${director.name}, ${director.title} of Vivadoxa Music School`}
-                style={{ height: 460, width: "100%", objectFit: "cover" }}
+                className="h-72 sm:h-96 lg:h-[460px] w-full object-cover"
               />
-              <div style={{ padding: "20px 24px", background: "var(--navy2)", borderTop: "1px solid rgba(201,107,50,0.2)" }}>
+              <div style={{ padding: "18px 20px", background: "var(--navy2)", borderTop: "1px solid rgba(201,107,50,0.2)" }}>
                 <strong style={{ fontSize: 20, color: "white", display: "block", fontFamily: "'DM Serif Display', serif" }}>
                   {director.name}
                 </strong>
@@ -135,25 +262,25 @@ export function About({ go }: { go: (p: Page) => void }) {
 
           <div>
             <span className="eyebrow" style={{ color: "var(--gold2)" }}>Executive Leadership</span>
-            <h2 style={{ color: "white", fontSize: "clamp(34px, 4vw, 50px)", margin: "12px 0 18px" }}>
+            <h2 style={{ color: "white", fontSize: "clamp(30px, 4vw, 50px)", margin: "12px 0 18px" }}>
               A letter from our Artistic Director.
             </h2>
-            <blockquote style={{ color: "#c1ccd5", fontSize: 16, lineHeight: 1.7, fontStyle: "italic", margin: "0 0 20px", borderLeft: "3px solid var(--gold)", paddingLeft: 20 }}>
+            <blockquote style={{ color: "#c1ccd5", fontSize: 15, lineHeight: 1.7, fontStyle: "italic", margin: "0 0 20px", borderLeft: "3px solid var(--gold)", paddingLeft: 16 }}>
               &ldquo;Music is not merely entertainment—it is a language that shapes intellect, character, and spiritual expression. When we founded Vivadoxa in 2013, our aim was clear: to raise music stars with authentic technical discipline, giving African talents the foundation to stand on any global stage.&rdquo;
             </blockquote>
             <p style={{ color: "#9dacb8", fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
               {director.bio}
             </p>
 
-            <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-3.5">
               <Button onClick={() => go("apply")}>
                 Start Your Journey <Icon name="arrow" />
               </Button>
               <a
-                href={`${WHATSAPP_URL}?text=Hello%20Director%20Tosin,%20I%20read%20your%20note%20on%20the%20Vivadoxa%20About%20page%20and%20would%20like%20to%20connect.`}
+                href={`${WHATSAPP_URL}?text=Hello%20Director%20Frederick,%20I%20read%20your%20note%20on%20the%20Vivadoxa%20About%20page%20and%20would%20like%20to%20connect.`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-secondary inline-flex items-center gap-2"
+                className="btn btn-secondary inline-flex items-center justify-center gap-2"
                 style={{ borderColor: "rgba(37,211,102,0.4)", color: "#25D366", background: "rgba(37,211,102,0.08)" }}
               >
                 <WhatsAppIcon size={18} /> Connect with the Director
@@ -198,40 +325,6 @@ export function About({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
 
-      {/* Examination standards */}
-      <section className="section" style={{ background: "white" }}>
-        <div className="container">
-          <SectionHead
-            center
-            eyebrow="Pedagogical Standard"
-            title="Graded Exam & Performance Syllabus"
-            body="Every Vivadoxa curriculum prepares candidates for internationally recognized examination boards including ABRSM and Trinity College London."
-          />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, marginTop: 32 }}>
-            <div style={{ padding: 24, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <span className="eyebrow">ABRSM UK</span>
-              <h4 style={{ margin: "8px 0 6px", fontSize: 18, color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>Classical & Theory Syllabus</h4>
-              <p style={{ color: "var(--muted)", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
-                Rigorous scales, sight-reading, aural training, and graded classical repertoire.
-              </p>
-            </div>
-            <div style={{ padding: 24, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <span className="eyebrow">Trinity College London</span>
-              <h4 style={{ margin: "8px 0 6px", fontSize: 18, color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>Rock & Pop Standards</h4>
-              <p style={{ color: "var(--muted)", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
-                Contemporary drum groove assessment, lead guitar improvisation, and vocal styling.
-              </p>
-            </div>
-            <div style={{ padding: 24, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <span className="eyebrow">African & Western Fusion</span>
-              <h4 style={{ margin: "8px 0 6px", fontSize: 18, color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>MUSON Alignment</h4>
-              <p style={{ color: "var(--muted)", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
-                Rooted in authentic African rhythm, praise medleys, and contemporary stage performance.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <Cta go={go} />
     </main>

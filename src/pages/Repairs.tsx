@@ -12,7 +12,7 @@ import {
   Badge,
   WhatsAppIcon,
 } from "@/components/ui"
-import { trumpetImg } from "@/lib/data"
+import { repairSaxImg, repairElectronicsImg } from "@/lib/data"
 import { isValidEmail } from "@/lib/utils"
 import { submitRepairRequest, fetchRepairByCode } from "@/lib/api"
 
@@ -146,7 +146,7 @@ export function Repairs() {
           eyebrow="Repairs & maintenance"
           title="Give your instrument its voice back."
           body="Careful diagnostics, expert repairs and transparent pricing for the instruments you love."
-          image={trumpetImg}
+          image={repairSaxImg}
         />
         <section className="section">
           <div className="container">
@@ -156,7 +156,7 @@ export function Repairs() {
                 body={
                   sentMethod === "pickup"
                     ? "Your repair request has been logged. Our logistics team will call your phone number to coordinate pickup at your specified address."
-                    : "Your repair order has been logged. Please bring your instrument to our Kaduna studio (U/Sunday, Television) during opening hours."
+                    : "Your repair order has been logged. Please bring your instrument to Vivadoxa Music at No. 49B Umaru Ibrahim Street, off Super Market Street beside Angwan Sunday Market, Angwan Sunday, Kaduna during opening hours."
                 }
                 extra={`Tracking code: ${sentCode}`}
                 onReset={() => {
@@ -207,7 +207,7 @@ export function Repairs() {
         eyebrow="Repairs & maintenance"
         title="Give your instrument its voice back."
         body="Careful diagnostics, expert repairs and transparent pricing for the instruments you love."
-        image={trumpetImg}
+        image={repairSaxImg}
       />
 
       <section className="section">
@@ -242,7 +242,7 @@ export function Repairs() {
                 flexWrap: "wrap",
               }}
             >
-              <div style={{ flex: 1, minWidth: 260 }}>
+              <div className="flex-1 w-full min-w-0">
                 <input
                   id="track-input"
                   placeholder="e.g. REP-2026-042"
@@ -374,6 +374,267 @@ export function Repairs() {
             ))}
           </div>
 
+          {/* Workshop Craftsmanship & Electronics Showcase */}
+          <div style={{ margin: "60px 0 65px" }}>
+            <div style={{ textAlign: "center", maxWidth: 740, margin: "0 auto 28px" }}>
+              <span className="eyebrow">Inside the Vivadoxa Workshop</span>
+              <h2 style={{ fontSize: "clamp(26px, 3.5vw, 36px)", margin: "8px 0 10px", color: "var(--navy)" }}>
+                Precision Acoustic, Electrical &amp; Mechanical Restoration
+              </h2>
+              <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                Every instrument brought to our Kaduna clinic undergoes systematic diagnostic inspection by experienced technicians using dedicated precision tools, leak-lights, and digital multimeters.
+              </p>
+            </div>
+
+            {/* Crucial Scope Clarification Banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(201,107,50,0.1) 0%, rgba(10,25,47,0.04) 100%)",
+                border: "1.5px solid rgba(201,107,50,0.35)",
+                borderRadius: 12,
+                padding: "20px 24px",
+                marginBottom: 32,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "var(--gold)",
+                  color: "var(--navy)",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 20,
+                  flexShrink: 0,
+                  fontWeight: 700,
+                }}
+              >
+                <Icon name="tool" size={20} className="text-amber-800" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: 15, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                  Comprehensive Repair Coverage Across All Instruments &amp; Accessories
+                </strong>
+                <p style={{ fontSize: 13, color: "#334155", margin: 0, lineHeight: 1.6 }}>
+                  <strong>Please note:</strong> The workshop photos below feature our saxophone overhaul and keyboard synthesizer benches as illustrative showcases of our craftsmanship. Our repair services cover a <strong>wide, comprehensive spectrum of musical instruments and accessories</strong>—including Trumpets, Euphoniums, Flutes, Clarinets, Guitars, Bass, Violins, Full Drum Sets, African Talking Drums, and Audio Cables &amp; Hardware!
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              {/* Workshop Card 1: Brass & Woodwinds */}
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: "var(--radius)",
+                  overflow: "hidden",
+                  border: "1px solid var(--line)",
+                  boxShadow: "var(--shadow)",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div className="h-56 sm:h-72 md:h-80 overflow-hidden relative bg-[#0a192f]">
+                  <img
+                    src={repairSaxImg}
+                    alt="Vivadoxa master technician repairing a golden brass saxophone at the workbench"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    loading="lazy"
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 16,
+                      left: 16,
+                      background: "rgba(10, 25, 47, 0.88)",
+                      backdropFilter: "blur(4px)",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      border: "1px solid rgba(201,107,50,0.4)",
+                    }}
+                  >
+                    <span style={{ color: "var(--gold2)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Acoustic &amp; Brass Bench
+                    </span>
+                  </div>
+                </div>
+                <div style={{ padding: "26px 28px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <h3 style={{ fontSize: 20, color: "var(--navy)", margin: "0 0 10px", fontFamily: "'DM Serif Display', serif" }}>
+                      Brass, Woodwinds &amp; String Overhauls
+                    </h3>
+                    <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+                      Precision pad seating, key regulation, cork replacement, valve alignment, leak-light inspection, and fretboard restoration for saxophones, flutes, trumpets, violins, and guitars.
+                    </p>
+                  </div>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                    <li style={{ fontSize: 12, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ color: "var(--gold)", fontWeight: 700 }}>✓</span> Pad leveling &amp; acoustic leak sealing
+                    </li>
+                    <li style={{ fontSize: 12, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ color: "var(--gold)", fontWeight: 700 }}>✓</span> Fret dressing, action lowering &amp; bridge setup
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Workshop Card 2: Electronics & Keyboards */}
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: "var(--radius)",
+                  overflow: "hidden",
+                  border: "1px solid var(--line)",
+                  boxShadow: "var(--shadow)",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div className="h-56 sm:h-72 md:h-80 overflow-hidden relative bg-[#0a192f]">
+                  <img
+                    src={repairElectronicsImg}
+                    alt="Vivadoxa electronics technician using multimeter diagnosing synthesizer keyboard circuit board"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    loading="lazy"
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 16,
+                      left: 16,
+                      background: "rgba(10, 25, 47, 0.88)",
+                      backdropFilter: "blur(4px)",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      border: "1px solid rgba(201,107,50,0.4)",
+                    }}
+                  >
+                    <span style={{ color: "var(--gold2)", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Electronics &amp; Circuit Bench
+                    </span>
+                  </div>
+                </div>
+                <div style={{ padding: "26px 28px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <h3 style={{ fontSize: 20, color: "var(--navy)", margin: "0 0 10px", fontFamily: "'DM Serif Display', serif" }}>
+                      Digital Keyboards &amp; Audio Circuit Diagnostics
+                    </h3>
+                    <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.6, margin: "0 0 16px" }}>
+                      Multimeter component testing, PCB circuit repairs, key contact strip replacement, power supply diagnostics, audio jack soldering, and speaker reconing for workstations and synthesizers.
+                    </p>
+                  </div>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                    <li style={{ fontSize: 12, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <span style={{ color: "var(--gold)", fontWeight: 700 }}>✓</span> Sticky keys &amp; rubber contact strip replacement
+                    </li>
+                    <li style={{ fontSize: 12, color: "var(--ink)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ color: "var(--gold)", fontWeight: 700 }}>✓</span> Power circuit, fuse &amp; audio output restoration
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Full Instrument Family Repair Matrix */}
+            <div
+              style={{
+                marginTop: 36,
+                background: "var(--cream)",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "28px 30px",
+              }}
+            >
+              <div style={{ maxWidth: 700, marginBottom: 20 }}>
+                <span className="eyebrow">Comprehensive Clinic Services</span>
+                <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "var(--navy)", margin: "4px 0 6px" }}>
+                  What We Service Across All Musical Disciplines
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--muted)", margin: 0, lineHeight: 1.5 }}>
+                  From individual student instruments to church sound equipment and school fleets across Kaduna:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Woodwinds &amp; Reeds
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Alto, Tenor, Soprano &amp; Baritone Saxophones, Flutes, Clarinets &amp; Piccolos.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    Pad reseating • Leak sealing • Key regulation • Tenon corks
+                  </small>
+                </div>
+
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Brass &amp; Horns
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Trumpets, Euphoniums, Trombones, Baritones &amp; Tubas.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    Valve alignment • Ultrasonic wash • Slide tuning • Dent rolling
+                  </small>
+                </div>
+
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Keyboards &amp; Workstations
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Yamaha, Roland, Korg, Casio, Kurzweil &amp; MIDI controllers.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    Rubber contact strips • Sticky keys • PCB circuit repair • Jacks
+                  </small>
+                </div>
+
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Fretted &amp; Bowed Strings
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Acoustic, Electric, Bass Guitars, Violins, Violas &amp; Cellos.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    Fret leveling • Intonation • Pickup wiring • Bridge &amp; soundpost
+                  </small>
+                </div>
+
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Percussion &amp; Drums
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Acoustic Drum Kits, Snare Drums, Cymbals &amp; African Talking Drums.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    Head tuning • Lug tightening • Pedal linkage • Goatskin lacing
+                  </small>
+                </div>
+
+                <div style={{ background: "white", padding: "16px 18px", borderRadius: 8, border: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 4 }}>
+                    Audio Gear &amp; Accessories
+                  </strong>
+                  <p style={{ fontSize: 11, color: "var(--muted)", margin: "0 0 8px", lineHeight: 1.4 }}>
+                    Instrument cables, microphone jacks, stage snakes, pedals &amp; stands.
+                  </p>
+                  <small style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700 }}>
+                    XLR/TRS soldering • Switchcraft jacks • Amp grounding • Stands
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="form-shell">
             <SectionHead
               eyebrow="Request a repair"
@@ -417,12 +678,17 @@ export function Repairs() {
                   onChange={(v) => set("instrumentType", v)}
                   required
                 >
-                  <option value="Piano / Keyboard">Piano / Keyboard</option>
-                  <option value="Guitar">Guitar</option>
-                  <option value="Brass">Brass</option>
-                  <option value="Drums">Drums</option>
-                  <option value="Strings">Strings</option>
-                  <option value="Other">Other</option>
+                  <option value="Piano / Digital Keyboard / Synthesizer">Piano / Digital Keyboard / Synthesizer</option>
+                  <option value="Saxophone (Alto / Tenor / Soprano)">Saxophone (Alto / Tenor / Soprano)</option>
+                  <option value="Trumpet, Euphonium & Brass Horns">Trumpet, Euphonium & Brass Horns</option>
+                  <option value="Flute, Clarinet & Woodwinds">Flute, Clarinet & Woodwinds</option>
+                  <option value="Acoustic & Classical Guitar">Acoustic & Classical Guitar</option>
+                  <option value="Electric & Bass Guitar">Electric & Bass Guitar</option>
+                  <option value="Violin & Bowed Strings">Violin & Bowed Strings</option>
+                  <option value="Drum Kit & Percussion Hardware">Drum Kit & Percussion Hardware</option>
+                  <option value="African Talking Drums">African Talking Drums</option>
+                  <option value="Audio Cables, Pedals & Accessories">Audio Cables, Pedals & Accessories</option>
+                  <option value="Other Instrument / Gear">Other Instrument / Gear</option>
                 </SelectField>
 
                 {/* Intake Method Option: Drop-off vs Pickup */}
@@ -449,8 +715,7 @@ export function Repairs() {
                       <span>
                         <strong>I will bring it to the studio</strong>
                         <small>
-                          Drop off at Vivadoxa Studio (U/Sunday, Television,
-                          Kaduna)
+                          Drop off at Vivadoxa Music (No. 49B Umaru Ibrahim St., beside Angwan Sunday Market, Kaduna)
                         </small>
                       </span>
                     </label>

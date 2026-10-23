@@ -1,6 +1,30 @@
 import { useState, useRef, useEffect } from "react";
-import { Icon, Logo, Button, WhatsAppIcon } from "@/components/ui";
-import { WHATSAPP_URL } from "@/lib/utils";
+import {
+  Icon,
+  Logo,
+  Button,
+  WhatsAppIcon,
+  GoogleIcon,
+  TikTokIcon,
+  FacebookIcon,
+  YouTubeIcon,
+  InstagramIcon,
+  GmailIcon,
+} from "@/components/ui";
+import {
+  WHATSAPP_URL,
+  SCHOOL_PHONE,
+  SCHOOL_PHONE_2,
+  SCHOOL_WHATSAPP,
+  SCHOOL_EMAIL,
+  SCHOOL_ADDRESS,
+  GOOGLE_REVIEWS_URL,
+  GOOGLE_MAPS_DIRECTIONS_URL,
+  YOUTUBE_URL,
+  TIKTOK_URL,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+} from "@/lib/utils";
 import type { Page } from "@/types";
 
 type NavPage = Exclude<Page, "apply" | "payment" | "admin" | "admin-login">;
@@ -11,6 +35,7 @@ const NAV_ITEMS: [string, NavPage][] = [
   ["Performances", "performances"],
   ["Study Modes", "modes"],
   ["Repairs", "repairs"],
+  ["Reviews", "reviews"],
   ["Check Status", "status"],
   ["Contact", "contact"],
 ];
@@ -31,14 +56,59 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Lock background body scroll when mobile navigation is open & listen for Escape
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        setProgramsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const handleProgramsToggle = (e: React.MouseEvent) => {
+    // On mobile screens (<= 800px), toggle the accordion drawer
+    if (typeof window !== "undefined" && window.innerWidth <= 800) {
+      e.preventDefault();
+      setProgramsOpen((prev) => !prev);
+    } else {
+      go("programs");
+      setProgramsOpen(false);
+      setOpen(false);
+    }
+  };
+
   return (
     <header className="nav" role="banner">
+      {/* Mobile backdrop overlay */}
+      {open && (
+        <div
+          className="nav-backdrop"
+          onClick={() => {
+            setOpen(false);
+            setProgramsOpen(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
+
       <div className="container nav-inner">
         <button
           className="logo-button"
           onClick={() => {
             go("home");
             setOpen(false);
+            setProgramsOpen(false);
           }}
           aria-label="Vivadoxa Music School Home"
         >
@@ -65,24 +135,30 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
 
             {/* Programs with Dropdown Menu */}
             <div
-              className="nav-dropdown-wrapper"
+              className={`nav-dropdown-wrapper ${programsOpen ? "expanded" : ""}`}
               ref={dropdownRef}
-              onMouseEnter={() => setProgramsOpen(true)}
-              onMouseLeave={() => setProgramsOpen(false)}
+              onMouseEnter={() => {
+                if (typeof window !== "undefined" && window.innerWidth > 800) {
+                  setProgramsOpen(true);
+                }
+              }}
+              onMouseLeave={() => {
+                if (typeof window !== "undefined" && window.innerWidth > 800) {
+                  setProgramsOpen(false);
+                }
+              }}
             >
               <button
-                className={`nav-dropdown-trigger flex items-center gap-1 ${
+                className={`nav-dropdown-trigger flex items-center justify-between w-full md:w-auto gap-1 ${
                   page === "programs" || page === "modes" ? "active" : ""
                 }`}
-                onClick={() => {
-                  go("programs");
-                  setOpen(false);
-                }}
+                onClick={handleProgramsToggle}
                 aria-expanded={programsOpen}
+                aria-haspopup="true"
               >
-                <span>Programs</span>
+                <span>Programs &amp; Curriculum</span>
                 <svg
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     programsOpen ? "rotate-180" : ""
                   }`}
                   viewBox="0 0 24 24"
@@ -100,12 +176,12 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
               <div
                 className={`nav-dropdown-panel ${
                   programsOpen
-                    ? "opacity-100 visible translate-y-0"
-                    : "opacity-0 invisible -translate-y-2 pointer-events-none"
+                    ? "open opacity-100 visible translate-y-0 max-h-[500px]"
+                    : "opacity-0 invisible -translate-y-2 pointer-events-none md:pointer-events-none max-h-0 md:max-h-none overflow-hidden md:overflow-visible"
                 }`}
               >
                 <div className="dropdown-section">
-                  <span className="dropdown-heading">Curriculum Tracks</span>
+                  <span className="dropdown-heading">Curriculum &amp; Fee Schedule</span>
                   <button
                     onClick={() => {
                       go("programs");
@@ -116,59 +192,39 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
                   >
                     <div
                       className="dropdown-icon-box"
-                      style={{ background: "rgba(201,107,50,0.18)", color: "var(--gold2)" }}
-                    >
-                      <Icon name="music" size={16} />
-                    </div>
-                    <div>
-                      <strong>All Programs &amp; Courses</strong>
-                      <small>Piano, Guitar, Vocals, Production &amp; Theory</small>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      go("programs");
-                      setProgramsOpen(false);
-                      setOpen(false);
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{ background: "rgba(201,107,50,0.14)", color: "var(--gold2)" }}
-                    >
-                      <Icon name="sparkles" size={16} />
-                    </div>
-                    <div>
-                      <strong>Kids &amp; Teens Academy</strong>
-                      <small>Ages 4 to 19 • Playful Ear, Graded Prep &amp; Stagecraft</small>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      go("programs");
-                      setProgramsOpen(false);
-                      setOpen(false);
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{ background: "rgba(201,107,50,0.14)", color: "var(--gold2)" }}
+                      style={{ background: "rgba(201,107,50,0.12)", color: "var(--gold)" }}
                     >
                       <Icon name="calendar" size={16} />
                     </div>
                     <div>
-                      <strong>Adults &amp; Working Pros</strong>
-                      <small>Flexible Evening &amp; Weekend Schedules</small>
+                      <strong>Official Fee Schedule</strong>
+                      <small>1 Mo · 3 Mos · 6 Mos · 1 Year Diplomas</small>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      go("programs");
+                      setProgramsOpen(false);
+                      setOpen(false);
+                    }}
+                    className="dropdown-item"
+                  >
+                    <div
+                      className="dropdown-icon-box"
+                      style={{ background: "rgba(30,58,95,0.08)", color: "var(--navy)" }}
+                    >
+                      <Icon name="music" size={16} />
+                    </div>
+                    <div>
+                      <strong>13 Musical Disciplines</strong>
+                      <small>Sax, Trumpet, Piano, Bass, Flute, Drums, Voice &amp; more</small>
                     </div>
                   </button>
                 </div>
 
-                <div className="dropdown-section border-t border-white/5 pt-2 mt-2">
-                  <span className="dropdown-heading">Formats &amp; Clinic</span>
+                <div className="dropdown-section border-t border-[var(--line)] pt-2.5 mt-2">
+                  <span className="dropdown-heading">Instruction Formats</span>
                   <button
                     onClick={() => {
                       go("modes");
@@ -179,19 +235,19 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
                   >
                     <div
                       className="dropdown-icon-box"
-                      style={{ background: "rgba(255,255,255,0.06)", color: "#c1ccd5" }}
+                      style={{ background: "rgba(30,58,95,0.08)", color: "var(--navy)" }}
                     >
-                      <Icon name="video" size={16} />
+                      <Icon name="pin" size={16} />
                     </div>
                     <div>
-                      <strong>Study Modes</strong>
-                      <small>Studio Onsite in Kaduna, Live Online &amp; Hybrid</small>
+                      <strong>Studio Academy (Kaduna)</strong>
+                      <small>Hands-on lessons at Angwan Sunday studio</small>
                     </div>
                   </button>
 
                   <button
                     onClick={() => {
-                      go("repairs");
+                      go("modes");
                       setProgramsOpen(false);
                       setOpen(false);
                     }}
@@ -199,16 +255,13 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
                   >
                     <div
                       className="dropdown-icon-box"
-                      style={{ background: "rgba(201,107,50,0.2)", color: "var(--gold2)" }}
+                      style={{ background: "rgba(201,107,50,0.12)", color: "var(--gold)" }}
                     >
-                      <Icon name="tool" size={16} />
+                      <Icon name="sparkles" size={16} />
                     </div>
                     <div>
-                      <strong className="flex items-center gap-1.5">
-                        Instrument Hospital
-                        <span className="badge badge-gold !py-0.5 !px-1.5 !text-[9px]">Clinic</span>
-                      </strong>
-                      <small>Precision Diagnostics, Repairs &amp; Courier Pickup</small>
+                      <strong>Private Home Lessons</strong>
+                      <small>1-on-1 coaching delivered to your home (₦50,000/mo)</small>
                     </div>
                   </button>
                 </div>
@@ -264,7 +317,7 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
             </button>
           </div>
 
-          {/* Action Group: Check Status + WhatsApp + Apply */}
+          {/* Action Group: Check Status + Portal + WhatsApp + Apply */}
           <div className="nav-actions">
             <button
               className={`nav-status-btn ${page === "status" ? "active" : ""}`}
@@ -277,6 +330,25 @@ export function Navbar({ page, go }: { page: Page; go: (p: Page) => void }) {
             >
               <Icon name="search" size={13} />
               <span>Check Status</span>
+            </button>
+
+            <button
+              className={`nav-status-btn ${page === "portal" ? "active" : ""}`}
+              onClick={() => {
+                go("portal");
+                setOpen(false);
+              }}
+              title="Student & Client Portal"
+              aria-label="Student & Client Portal"
+              style={{
+                background: page === "portal" ? "var(--cream)" : "white",
+                borderColor: page === "portal" ? "var(--gold)" : "var(--line)",
+                color: page === "portal" ? "var(--gold-text)" : "var(--navy)",
+                fontWeight: 700,
+              }}
+            >
+              <Icon name="sparkles" size={13} />
+              <span>Portal</span>
             </button>
 
             <a
@@ -321,95 +393,266 @@ export function Footer({ go }: { go: (p: Page) => void }) {
   return (
     <footer>
       <div className="container footer-grid">
-        <div>
+        {/* Column 1: Brand & Mission */}
+        <div className="flex flex-col items-start gap-2.5">
           <Logo light />
-          <p>Expert music education for every age, ambition and stage.</p>
-          <div className="socials flex items-center gap-2 mt-4" aria-label="Social media links">
-            <a
-              href="https://www.instagram.com/vivadoxa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon-btn group"
-              aria-label="Follow Vivadoxa on Instagram"
-              title="Instagram"
-            >
-              <svg className="w-4 h-4 fill-current group-hover:text-pink-400 transition-colors" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--gold)]/15 border border-[var(--gold)]/30 text-[var(--gold-text-dark)] font-bold text-[11px] uppercase tracking-wider my-1">
+            <span>Motto:</span>
+            <span>&ldquo;Actualize your passion&rdquo;</span>
+          </div>
+          <p className="text-xs leading-relaxed text-slate-300 m-0">
+            &ldquo;To deliver exceptional musical experiences through our core pillars: practical instrumental and vocal instruction, dependable instrument repair clinic, and high-fidelity recital recording. At Vivadoxa, we help you master your sound and actualize your musical passion.&rdquo;
+          </p>
+          <p className="text-[11px] italic text-slate-400 border-l-2 border-[var(--gold)] pl-2.5 leading-relaxed m-0 mt-1">
+            Vision: &ldquo;A world where every musician, from beginner to pro, has access to the tools, knowledge, and environment to bring their unique sound to life.&rdquo;
+          </p>
+        </div>
+
+        {/* Column 2: Explore */}
+        <div className="w-full">
+          <strong className="text-white text-sm font-bold tracking-wide uppercase mb-3 block">Explore</strong>
+          <div className="flex flex-col gap-2 w-full">
+            {(
+              [
+                ["About Vivadoxa", "about"],
+                ["Programs & Tuition", "programs"],
+                ["Student Recitals", "performances"],
+                ["Study Modes", "modes"],
+                ["Instrument Repairs", "repairs"],
+              ] as [string, Page][]
+            ).map(([x, p]) => (
+              <button
+                key={x}
+                onClick={() => go(p)}
+                className="text-left py-2 px-3 rounded-lg bg-white/[0.04] hover:bg-white/10 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-between w-full"
+              >
+                <span>{x}</span>
+                <span className="text-[var(--gold)] text-xs">→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Column 3: Studio & Opening Hours */}
+        <div className="w-full">
+          <strong className="text-white text-sm font-bold tracking-wide uppercase mb-3 block">Get in touch</strong>
+          <span className="text-xs leading-relaxed text-slate-300 block mb-2">
+            No. 49B Umaru Ibrahim Street,
+            <br />
+            off Super Market Street beside Angwan Sunday Market,
+            <br />
+            Angwan Sunday, Kaduna, Nigeria
+          </span>
+          <a
+            href={GOOGLE_MAPS_DIRECTIONS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-semibold hover:bg-amber-400/20 transition-colors mb-3"
+          >
+            <Icon name="pin" size={12} />
+            <span>Open in Google Maps</span>
+            <Icon name="external" size={11} />
+          </a>
+          <div className="flex flex-col gap-1.5 text-xs w-full">
+            <a href={`tel:${SCHOOL_PHONE}`} className="hover:text-white transition-colors py-1 flex items-center gap-2">
+              <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE}</span>
             </a>
-            <a
-              href="https://www.facebook.com/vivadoxa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="social-icon-btn group"
-              aria-label="Vivadoxa Facebook Page"
-              title="Facebook"
-            >
-              <svg className="w-4 h-4 fill-current group-hover:text-blue-400 transition-colors" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
+            <a href={`tel:${SCHOOL_PHONE_2}`} className="hover:text-white transition-colors py-1 flex items-center gap-2">
+              <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE_2}</span>
             </a>
             <a
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="social-icon-btn whatsapp-social group"
-              aria-label="Direct WhatsApp Admissions Desk"
-              title="Chat on WhatsApp"
+              className="text-emerald-400 hover:text-emerald-300 transition-colors font-medium py-1 flex items-center gap-2"
             >
-              <WhatsAppIcon size={18} className="text-[#25D366] group-hover:scale-110 transition-transform" />
+              <WhatsAppIcon size={14} className="text-emerald-400 shrink-0" /> <span>WhatsApp: {SCHOOL_WHATSAPP}</span>
+            </a>
+            <a href={`mailto:${SCHOOL_EMAIL}`} className="hover:text-white transition-colors py-1 flex items-center gap-2">
+              <Icon name="mail" size={13} className="text-slate-400" /> <span>{SCHOOL_EMAIL}</span>
             </a>
           </div>
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/25 transition-all text-decoration-none"
-          >
-            <WhatsAppIcon size={14} className="text-[#25D366]" />
-            <span>Chat Admissions Desk</span>
-          </a>
+
+          <div className="mt-3.5 p-3 rounded-lg bg-white/[0.04] border border-white/10 w-full">
+            <strong className="text-[11px] uppercase tracking-wider text-[var(--gold2)] block mb-1">
+              Studio Hours
+            </strong>
+            <div className="text-xs text-slate-300 flex flex-col gap-0.5">
+              <span>Mon–Fri · 9:00 AM – 7:00 PM</span>
+              <span>Saturday · 9:00 AM – 5:00 PM</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mt-2.5 pt-2.5 border-t border-white/10 text-xs">
+              <button
+                onClick={() => go("portal")}
+                aria-label="Student & Client portal"
+                className="text-amber-300 hover:text-white cursor-pointer font-semibold underline underline-offset-2 py-0.5"
+              >
+                Student &amp; Client Portal →
+              </button>
+              <span className="text-zinc-600">·</span>
+              <button
+                onClick={() => go("admin-login")}
+                aria-label="Staff portal login"
+                className="text-zinc-400 hover:text-white cursor-pointer underline underline-offset-2 py-0.5"
+              >
+                Staff Portal →
+              </button>
+            </div>
+          </div>
         </div>
-        <div>
-          <strong>Explore</strong>
-          {(
-            [
-              ["About", "about"],
-              ["Programs", "programs"],
-              ["Performances", "performances"],
-              ["Study modes", "modes"],
-              ["Repairs", "repairs"],
-            ] as [string, Page][]
-          ).map(([x, p]) => (
-            <button key={x} onClick={() => go(p)}>
-              {x}
-            </button>
-          ))}
-        </div>
-        <div>
-          <strong>Get in touch</strong>
-          <span>
-            U/Sunday, Television
-            <br />
-            Kaduna, Nigeria
+
+        {/* Column 4: Official Social Media & Online */}
+        <div className="w-full">
+          <strong className="text-white text-sm font-bold tracking-wide uppercase mb-1 block">Social Media &amp; Online</strong>
+          <span className="text-xs text-slate-400 block mb-3">
+            Follow and message us directly:
           </span>
-          <a href="tel:+2348031308881">+234 803 130 8881</a>
-          <a href="mailto:hello@vivadoxa.ng">hello@vivadoxa.ng</a>
-        </div>
-        <div>
-          <strong>Opening hours</strong>
-          <span>Mon–Fri · 9am–7pm</span>
-          <span>Saturday · 9am–5pm</span>
-          <button onClick={() => go("admin-login")} aria-label="Staff portal login">
-            Staff portal
-          </button>
+
+          <div className="flex flex-col gap-2 w-full">
+            {/* TikTok */}
+            <a
+              href={TIKTOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-cyan-400 hover:bg-white/10 transition-all text-xs text-white group w-full"
+              title="Vivadoxa on TikTok: @vivadoxa"
+            >
+              <TikTokIcon size={18} className="text-cyan-400 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold leading-tight text-xs truncate">TikTok</span>
+                <span className="text-[11px] text-cyan-300 truncate">@vivadoxa</span>
+              </div>
+            </a>
+
+            {/* Facebook */}
+            <a
+              href={FACEBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-blue-400 hover:bg-white/10 transition-all text-xs text-white group w-full"
+              title="Vivadoxa on Facebook: @vivadoxa music"
+            >
+              <FacebookIcon size={18} className="text-blue-400 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold leading-tight text-xs truncate">Facebook</span>
+                <span className="text-[11px] text-blue-300 truncate">@vivadoxa music</span>
+              </div>
+            </a>
+
+            {/* YouTube */}
+            <a
+              href={YOUTUBE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-red-500 hover:bg-white/10 transition-all text-xs text-white group w-full"
+              title="Vivadoxa on YouTube: Vivadoxa Music"
+            >
+              <YouTubeIcon size={18} className="text-red-500 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold leading-tight text-xs truncate">YouTube</span>
+                <span className="text-[11px] text-red-300 truncate">Vivadoxa Music</span>
+              </div>
+            </a>
+
+            {/* Instagram */}
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-pink-400 hover:bg-white/10 transition-all text-xs text-white group w-full"
+              title="Vivadoxa on Instagram: @vivadoxa music"
+            >
+              <InstagramIcon size={18} className="text-pink-400 group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold leading-tight text-xs truncate">Instagram</span>
+                <span className="text-[11px] text-pink-300 truncate">@vivadoxa music</span>
+              </div>
+            </a>
+
+            {/* WhatsApp */}
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all text-xs text-white group w-full"
+              title="Direct WhatsApp: 08031308881"
+            >
+              <WhatsAppIcon size={18} className="text-[#25D366] group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-emerald-300 leading-tight text-xs truncate">WhatsApp Desk</span>
+                <span className="text-[11px] text-emerald-200/80 truncate">08031308881</span>
+              </div>
+            </a>
+
+            {/* Gmail */}
+            <a
+              href={`mailto:${SCHOOL_EMAIL}`}
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400 hover:bg-white/10 transition-all text-xs text-white group w-full"
+              title={`Email Vivadoxa: ${SCHOOL_EMAIL}`}
+            >
+              <GmailIcon size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold leading-tight text-xs truncate">Official Email</span>
+                <span className="text-[11px] text-amber-200/80 truncate">{SCHOOL_EMAIL}</span>
+              </div>
+            </a>
+
+            {/* Google Reviews */}
+            <a
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-amber-950/30 border border-amber-400/40 hover:border-amber-300 hover:bg-amber-900/40 transition-all text-xs text-white group w-full"
+              title="Google Reviews for Vivadoxa Music Kaduna"
+            >
+              <GoogleIcon size={20} className="shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-amber-300 leading-tight flex items-center gap-1.5 text-xs">
+                  Google Reviews <span className="text-amber-400 text-[10px] tracking-wider">★★★★★</span>
+                </span>
+                <span className="text-[11px] text-amber-200/80">4.9 ★ Rating (130+ Verified Reviews)</span>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
+
       <div className="container footer-bottom">
-        <span>© {new Date().getFullYear()} Vivadoxa Music School</span>
-        <div>
-          <button>Privacy</button>
-          <button>Terms</button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-center sm:text-left w-full">
+          <div className="text-xs text-slate-400 leading-relaxed">
+            <span>© {new Date().getFullYear()} Vivadoxa Music School (RC 3184525). All rights reserved.</span>
+            <span className="mx-2 hidden sm:inline text-slate-600">·</span>
+            <span className="block sm:inline mt-0.5 sm:mt-0">
+              Designed &amp; developed by{" "}
+              <a
+                href="https://jlm.com.ng"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-300 hover:text-white underline underline-offset-2 font-medium"
+              >
+                JLM
+              </a>
+              .
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-1.5 text-xs text-slate-400 pt-1 sm:pt-0">
+            <button onClick={() => go("privacy")} className="hover:text-white transition-colors cursor-pointer py-1">
+              Privacy Policy
+            </button>
+            <span className="text-slate-600 hidden sm:inline" aria-hidden="true">·</span>
+            <button onClick={() => go("terms")} className="hover:text-white transition-colors cursor-pointer py-1">
+              Terms of Service
+            </button>
+            <span className="text-slate-600 hidden sm:inline" aria-hidden="true">·</span>
+            <button onClick={() => go("tuition-policy")} className="hover:text-white transition-colors cursor-pointer py-1">
+              Tuition &amp; Refunds
+            </button>
+            <span className="text-slate-600 hidden sm:inline" aria-hidden="true">·</span>
+            <button onClick={() => go("safeguarding")} className="hover:text-white transition-colors cursor-pointer py-1">
+              Child Safeguarding
+            </button>
+          </div>
         </div>
       </div>
     </footer>

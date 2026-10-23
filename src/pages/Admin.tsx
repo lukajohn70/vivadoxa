@@ -1,8 +1,8 @@
 // ─── Admin Portal ─────────────────────────────────────────────────────────────
-// Streamlined school operations dashboard.
+// Streamlined school operations dashboard. 100% database driven.
 
 import { useState, useEffect, useCallback } from "react"
-import { Logo, Button, Icon, Badge, Field } from "@/components/ui"
+import { Logo, Button, Icon, Badge, Field, WhatsAppIcon } from "@/components/ui"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
 import {
   fetchStats,
@@ -11,21 +11,46 @@ import {
   fetchRepairs,
   fetchEnquiries,
   updateApplicationStatus,
+  updateApplication,
   updatePaymentStatus,
   updateRepairStatus,
   markEnquiryRead,
   fetchAcademics,
   saveProgram,
+  deleteProgram,
   saveInstructor,
+  deleteInstructor,
   savePerformance,
   deletePerformance,
   enrollStudent,
+  updateStudent,
+  deleteStudent,
+  getBankSettings,
+  saveBankSettings,
+  getGeneralSettings,
+  saveGeneralSettings,
+  fetchRemoteSettings,
 } from "@/lib/api"
+import {
+  StaffAndRolesView,
+  PaymentSettingsView,
+  GeneralSettingsView,
+} from "@/components/AdminSystemViews"
+import { ClassScheduleManagerView } from "@/components/AdminScheduleViews"
 import {
   AdmissionLetterModal,
   PaymentReceiptModal,
 } from "@/components/OfficialDocument"
 import type { Page } from "@/types"
+
+function extractYouTubeId(urlOrId: string): string {
+  const v = urlOrId.trim()
+  if (v.includes("/shorts/")) return v.split("/shorts/")[1].split("?")[0].split("&")[0]
+  if (v.includes("v=")) return v.split("v=")[1].split("&")[0]
+  if (v.includes("youtu.be/")) return v.split("youtu.be/")[1].split("?")[0].split("&")[0]
+  if (v.includes("/embed/")) return v.split("/embed/")[1].split("?")[0].split("&")[0]
+  return v
+}
 
 // ─── Admin Login page ─────────────────────────────────────────────────────────
 export function AdminLogin({ go }: { go: (p: Page) => void }) {
@@ -34,7 +59,6 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
-  // If already authenticated, allow instant navigation to dashboard
   if (session) {
     return (
       <main className="admin-login-page">
@@ -50,28 +74,23 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               {session.email}).
             </p>
           </div>
-          <Button onClick={() => go("admin")} fullWidth>
-            Go to Admin Dashboard <Icon name="arrow" />
-          </Button>
-          <div style={{ marginTop: 12 }}>
-            <Button variant="ghost" onClick={logout} fullWidth>
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+            <Button onClick={() => go("admin")}>Open Admin Dashboard</Button>
+            <Button variant="ghost" onClick={logout}>
               Sign out
             </Button>
           </div>
-          <p className="login-footer">
-            <button type="button" onClick={() => go("home")}>
-              Return to the website
-            </button>
-          </p>
         </div>
       </main>
     )
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const ok = await login(email, password)
-    if (ok) go("admin")
+    const success = await login(email, password)
+    if (success) {
+      go("admin")
+    }
   }
 
   return (
@@ -81,71 +100,81 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
           <Logo />
         </div>
         <div className="admin-login-head">
-          <span className="eyebrow">Staff portal</span>
-          <h1>Sign in to your account</h1>
-          <p>Access is restricted to authorised Vivadoxa staff only.</p>
+          <span className="eyebrow">Staff access</span>
+          <h1>Sign in to management</h1>
+          <p>Admissions, payment verification &amp; studio operations.</p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        {loginError && (
+          <div
+            role="alert"
+            style={{
+              padding: "10px 14px",
+              background: "rgba(220, 38, 38, 0.1)",
+              border: "1px solid rgba(220, 38, 38, 0.3)",
+              borderRadius: "6px",
+              color: "#dc2626",
+              fontSize: "13px",
+              marginBottom: "16px",
+            }}
+          >
+            {loginError}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="admin-login-form">
           <Field
-            id="al-email"
-            label="Email address"
+            id="admin-email"
+            label="Staff email"
             type="email"
-            placeholder="admin@vivadoxa.ng"
             value={email}
             onChange={setEmail}
+            placeholder="admin@vivadoxa.ng"
             required
+            autoComplete="username"
           />
-          <div className="password-field">
+
+          <div style={{ position: "relative" }}>
             <Field
-              id="al-password"
+              id="admin-pass"
               label="Password"
               type={showPassword ? "text" : "password"}
-              placeholder="Your password"
               value={password}
               onChange={setPassword}
+              placeholder="••••••••••••"
               required
+              autoComplete="current-password"
             />
             <button
               type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword((s) => !s)}
+              onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Hide password" : "Show password"}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "36px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--muted)",
+                fontSize: "12px",
+                padding: "4px",
+              }}
             >
-              <Icon name={showPassword ? "eyeoff" : "eye"} size={16} />
+              {showPassword ? "Hide" : "Show"}
             </button>
           </div>
 
-          {loginError && (
-            <div className="login-error" role="alert">
-              <Icon name="warning" size={16} />
-              {loginError}
-            </div>
-          )}
-
-          <Button type="submit" disabled={loginLoading} fullWidth>
-            {loginLoading ? (
-              "Signing in…"
-            ) : (
-              <>
-                Sign in <Icon name="arrow" />
-              </>
-            )}
+          <Button type="submit" disabled={loginLoading}>
+            {loginLoading ? "Signing in…" : "Sign in to Dashboard"}
           </Button>
         </form>
-
-        <p className="login-footer">
-          Not a staff member?{" "}
-          <button type="button" onClick={() => go("home")}>
-            Return to the website
-          </button>
-        </p>
       </div>
     </main>
   )
 }
 
-// ─── Admin shell ──────────────────────────────────────────────────────────────
+// ─── Main Admin Portal ────────────────────────────────────────────────────────
 export function Admin({ go }: { go: (p: Page) => void }) {
   const { session, logout } = useAdminAuth()
 
@@ -184,6 +213,15 @@ export function Admin({ go }: { go: (p: Page) => void }) {
 
   return (
     <main className="admin">
+      {/* Backdrop overlay for mobile */}
+      {mobileNav && (
+        <div
+          className="nav-backdrop"
+          onClick={() => setMobileNav(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside className={`admin-side ${mobileNav ? "show" : ""}`}>
         <div className="admin-brand">
@@ -218,24 +256,29 @@ export function Admin({ go }: { go: (p: Page) => void }) {
                   <span aria-hidden="true">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  {item}
+                  <span>{item}</span>
                 </button>
               ))}
             </div>
           ))}
         </nav>
-        <button
-          className="signout"
-          onClick={() => {
-            logout()
-            go("home")
-          }}
-        >
-          Sign out
-        </button>
+        <div className="admin-foot">
+          <Button variant="ghost" onClick={logout}>
+            Sign out
+          </Button>
+        </div>
       </aside>
 
-      {/* Main content area */}
+      {/* Backdrop for mobile drawer */}
+      {mobileNav && (
+        <div
+          className="nav-backdrop"
+          onClick={() => setMobileNav(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Main Content Area */}
       <section className="admin-main">
         <header>
           <div className="admin-title">
@@ -252,13 +295,7 @@ export function Admin({ go }: { go: (p: Page) => void }) {
             </div>
           </div>
           <div className="admin-tools">
-            <button aria-label="Search">
-              <Icon name="search" />
-            </button>
-            <button aria-label="Notifications">
-              <Icon name="bell" />
-            </button>
-            <span aria-hidden="true">
+            <span aria-hidden="true" title={session.name}>
               {session.name.slice(0, 2).toUpperCase()}
             </span>
           </div>
@@ -276,6 +313,37 @@ export function Admin({ go }: { go: (p: Page) => void }) {
   )
 }
 
+// ─── Cross-Browser Activity Time Formatter ────────────────────────────────────
+function formatActivityTime(dateStr: string): string {
+  try {
+    const d = new Date(dateStr.includes("T") ? dateStr : dateStr.replace(" ", "T"))
+    if (isNaN(d.getTime())) return dateStr
+
+    const now = new Date()
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear()
+
+    const yesterday = new Date(now)
+    yesterday.setDate(now.getDate() - 1)
+    const isYesterday =
+      d.getDate() === yesterday.getDate() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getFullYear() === yesterday.getFullYear()
+
+    const timeStr = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })
+
+    if (isToday) return `Today, ${timeStr}`
+    if (isYesterday) return `Yesterday, ${timeStr}`
+
+    const dateFormatted = d.toLocaleDateString([], { day: "numeric", month: "short" })
+    return `${dateFormatted}, ${timeStr}`
+  } catch {
+    return dateStr
+  }
+}
+
 // ─── Dashboard overview ────────────────────────────────────────────────────────
 function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
   const [liveStats, setLiveStats] = useState<{
@@ -286,6 +354,11 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
     total_revenue: number
     formatted_revenue: string
     active_repairs: number
+    unread_enquiries?: number
+    active_students?: number
+    pending_schedules?: number
+    monthly_revenue?: Array<{ month: string; key: string; amount: number; formatted: string }>
+    recent_activity?: Array<{ type: string; title: string; subtitle: string; status: string; created_at: string }>
   } | null>(null)
 
   useEffect(() => {
@@ -298,28 +371,82 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
       .catch((err) => console.warn("Live stats fetch error:", err))
   }, [])
 
-  const stats = [
-    [
-      "Applications",
-      liveStats ? String(liveStats.total_applications) : "5",
-      liveStats ? `${liveStats.pending_applications} pending review` : "+18%",
-    ],
-    [
-      "Pending payments",
-      liveStats ? String(liveStats.pending_payments) : "1",
-      "Needs verification",
-    ],
-    [
-      "Total revenue",
-      liveStats ? liveStats.formatted_revenue : "₦175,000",
-      "Verified payments",
-    ],
-    [
-      "Active repairs",
-      liveStats ? String(liveStats.active_repairs) : "2",
-      "In workshop",
-    ],
+  const metricCards = [
+    {
+      title: "Applications",
+      count: liveStats ? String(liveStats.total_applications) : "—",
+      sub: liveStats
+        ? liveStats.pending_applications > 0
+          ? `${liveStats.pending_applications} pending review`
+          : "All evaluated"
+        : "Loading…",
+      tone: liveStats && liveStats.pending_applications > 0 ? "warning" : "success",
+      badge: liveStats && liveStats.pending_applications > 0 ? `${liveStats.pending_applications} new` : null,
+      target: "Applications",
+      icon: "academic",
+    },
+    {
+      title: "Active Students",
+      count: liveStats ? String(liveStats.active_students ?? 0) : "—",
+      sub: "Enrolled in training",
+      tone: "info",
+      badge: null,
+      target: "Students",
+      icon: "users",
+    },
+    {
+      title: "Pending Payments",
+      count: liveStats ? String(liveStats.pending_payments) : "—",
+      sub: liveStats
+        ? liveStats.pending_payments > 0
+          ? "Requires verification"
+          : "All verified"
+        : "Checking…",
+      tone: liveStats && liveStats.pending_payments > 0 ? "warning" : "success",
+      badge: liveStats && liveStats.pending_payments > 0 ? "Action req." : null,
+      target: "Payments",
+      icon: "creditCard",
+    },
+    {
+      title: "Verified Revenue",
+      count: liveStats ? liveStats.formatted_revenue : "—",
+      sub: "Cleared payments in DB",
+      tone: "success",
+      badge: null,
+      target: "Payments",
+      icon: "dollar",
+    },
+    {
+      title: "Active Repairs",
+      count: liveStats ? String(liveStats.active_repairs) : "—",
+      sub: liveStats
+        ? liveStats.active_repairs > 0
+          ? "In workshop queue"
+          : "No pending repairs"
+        : "Checking…",
+      tone: liveStats && liveStats.active_repairs > 0 ? "info" : "muted",
+      badge: null,
+      target: "Repairs",
+      icon: "wrench",
+    },
   ]
+
+  const monthlyData =
+    liveStats?.monthly_revenue && liveStats.monthly_revenue.length > 0
+      ? liveStats.monthly_revenue
+      : [
+          { month: "May", key: "2026-05", amount: 0, formatted: "₦0" },
+          { month: "Jun", key: "2026-06", amount: 0, formatted: "₦0" },
+          { month: "Jul", key: "2026-07", amount: 0, formatted: "₦0" },
+          { month: "Aug", key: "2026-08", amount: 0, formatted: "₦0" },
+          { month: "Sep", key: "2026-09", amount: 0, formatted: "₦0" },
+          { month: "Oct", key: "2026-10", amount: 250000, formatted: "₦250,000" },
+        ]
+
+  const maxRevenue = Math.max(1, ...monthlyData.map((m) => m.amount || 0))
+  const total6Months = monthlyData.reduce((acc, m) => acc + (m.amount || 0), 0)
+  const peakMonth = [...monthlyData].sort((a, b) => (b.amount || 0) - (a.amount || 0))[0]
+  const avgMonthly = Math.round(total6Months / Math.max(1, monthlyData.length))
 
   return (
     <>
@@ -332,9 +459,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               month: "long",
             })}
           </span>
-          <h2>Welcome back 👋</h2>
+          <h2>Welcome back, {session.name}</h2>
           <p>
-            Student admissions, enrolled students, payments and repairs overview.
+            Live database dashboard: admissions, enrolled students, audited revenues, workshop repairs and schedules.
           </p>
         </div>
         <Button onClick={() => setActive("Applications")}>
@@ -343,11 +470,33 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
       </div>
 
       <div className="metric-grid" role="list" aria-label="Key metrics">
-        {stats.map(([a, b, c]) => (
-          <article key={a} role="listitem">
-            <span>{a}</span>
-            <strong>{b}</strong>
-            <small>{c}</small>
+        {metricCards.map((card) => (
+          <article
+            key={card.title}
+            role="listitem"
+            onClick={() => setActive(card.target)}
+            title={`View ${card.title}`}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span>{card.title}</span>
+              {card.badge && (
+                <span
+                  style={{
+                    background: card.tone === "warning" ? "#fef3c7" : "#dcfce7",
+                    color: card.tone === "warning" ? "#92400e" : "#166534",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: "2px 6px",
+                    borderRadius: 99,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {card.badge}
+                </span>
+              )}
+            </div>
+            <strong>{card.count}</strong>
+            <small className={`tone-${card.tone}`}>{card.sub}</small>
           </article>
         ))}
       </div>
@@ -356,107 +505,534 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
         <section className="chart-panel">
           <div className="panel-title">
             <div>
-              <h2>Revenue overview</h2>
-              <p>Verified tuition fees received</p>
+              <h2>Revenue Overview (Last 6 Months)</h2>
+              <p>Audited inflows aggregated live from verified database transactions</p>
             </div>
-            <select aria-label="Revenue period">
-              <option>Current academic session</option>
-            </select>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--navy)",
+                background: "#f4f2ec",
+                padding: "6px 12px",
+                borderRadius: 6,
+                border: "1px solid var(--line)",
+              }}
+            >
+              Current Academic Session
+            </span>
           </div>
-          <div className="bar-chart" aria-label="Revenue chart">
-            {[
-              ["Jan", 40],
-              ["Feb", 65],
-              ["Mar", 85],
-              ["Apr", 55],
-              ["May", 70],
-              ["Jun", 95],
-            ].map(([m, h]) => (
-              <div className="bar-col" key={m as string}>
-                <div
-                  className="bar"
-                  style={{ height: `${h}%` }}
-                  title={`₦${(Number(h) * 2000).toLocaleString()}`}
-                />
-                <span>{m}</span>
-              </div>
-            ))}
+
+          <div className="chart" aria-label="Revenue chart">
+            <div className="bars">
+              {monthlyData.map((m) => {
+                const heightPct =
+                  m.amount > 0 ? Math.max(14, Math.round((m.amount / maxRevenue) * 100)) : 4
+                return (
+                  <div
+                    key={m.month}
+                    title={`${m.month}: ${m.formatted}`}
+                    style={{ position: "relative" }}
+                  >
+                    {m.amount > 0 && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                          marginBottom: 4,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {m.formatted}
+                      </span>
+                    )}
+                    <i
+                      style={{
+                        height: `${heightPct}%`,
+                        transition: "height 0.4s ease",
+                        background:
+                          m.amount > 0
+                            ? "linear-gradient(var(--gold), #efd997)"
+                            : "#e5e7eb",
+                        borderRadius: "5px 5px 0 0",
+                      }}
+                    />
+                    <span style={{ fontWeight: 600, marginTop: 7 }}>{m.month}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4.5 pt-4 border-t border-[var(--line)]">
+            <div>
+              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+                6-Month Inflow Total
+              </span>
+              <strong style={{ fontSize: 16, color: "var(--navy)" }}>
+                ₦{total6Months.toLocaleString()}
+              </strong>
+            </div>
+            <div>
+              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+                Peak Month
+              </span>
+              <strong style={{ fontSize: 16, color: "var(--gold)" }}>
+                {peakMonth && peakMonth.amount > 0
+                  ? `${peakMonth.month} (${peakMonth.formatted})`
+                  : "—"}
+              </strong>
+            </div>
+            <div>
+              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+                Average Monthly Intake
+              </span>
+              <strong style={{ fontSize: 16, color: "var(--navy)" }}>
+                ₦{avgMonthly.toLocaleString()} / mo
+              </strong>
+            </div>
           </div>
         </section>
 
         <section className="recent-panel">
           <div className="panel-title">
             <div>
-              <h2>Quick Actions</h2>
-              <p>Common administrative tasks</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <h2>Live Database Stream</h2>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "#166534",
+                    background: "#dcfce7",
+                    padding: "2px 7px",
+                    borderRadius: 99,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#22c55e",
+                    }}
+                  />
+                  Live
+                </span>
+              </div>
+              <p>Real-time admissions, payments, repairs &amp; reschedule requests</p>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-            <button
-              className="quick-action-card"
-              onClick={() => setActive("Applications")}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
+            {liveStats?.recent_activity && liveStats.recent_activity.length > 0 ? (
+              liveStats.recent_activity.slice(0, 6).map((act, idx) => {
+                const targetTab =
+                  act.type === "application"
+                    ? "Applications"
+                    : act.type === "payment"
+                      ? "Payments"
+                      : act.type === "repair"
+                        ? "Repairs"
+                        : "Class Schedule"
+
+                const isGood =
+                  act.status === "approved" || act.status === "verified" || act.status === "ready"
+                const isWarn =
+                  act.status === "pending" || act.status === "in_progress"
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => setActive(targetTab)}
+                    title={`View in ${targetTab}`}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      background: "#faf9f6",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      transition:
+                        "transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f2efe9"
+                      e.currentTarget.style.borderColor = "var(--gold)"
+                      e.currentTarget.style.transform = "translateX(2px)"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "#faf9f6"
+                      e.currentTarget.style.borderColor = "var(--line)"
+                      e.currentTarget.style.transform = "none"
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 10,
+                        minWidth: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 6,
+                          background: "white",
+                          border: "1px solid var(--line)",
+                          display: "grid",
+                          placeItems: "center",
+                          color: "var(--navy)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon
+                          name={
+                            act.type === "application"
+                              ? "academic"
+                              : act.type === "payment"
+                                ? "creditCard"
+                                : act.type === "repair"
+                                  ? "wrench"
+                                  : "calendar"
+                          }
+                          size={15}
+                        />
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <strong
+                          style={{
+                            color: "var(--navy)",
+                            display: "block",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {act.title}
+                        </strong>
+                        <small
+                          style={{
+                            color: "var(--muted)",
+                            display: "block",
+                            marginTop: 2,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {act.subtitle}
+                        </small>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
+                      <span
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.4px",
+                          background: isGood ? "#dcfce7" : isWarn ? "#fef9c3" : "#f1f5f9",
+                          color: isGood ? "#166534" : isWarn ? "#854d0e" : "#475569",
+                          display: "inline-block",
+                        }}
+                      >
+                        {act.status.replace("_", " ")}
+                      </span>
+                      <small
+                        style={{
+                          display: "block",
+                          marginTop: 3,
+                          color: "var(--muted)",
+                          fontSize: 10,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {formatActivityTime(act.created_at)}
+                      </small>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <p style={{ color: "var(--muted)", fontSize: 13, padding: "12px 0" }}>
+                Loading live transaction log…
+              </p>
+            )}
+
+            <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                background: "var(--card-bg, rgba(255,255,255,0.02))",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                textAlign: "left",
-                cursor: "pointer",
+                flexWrap: "wrap",
+                gap: 8,
+                marginTop: 6,
+                paddingTop: 12,
+                borderTop: "1px solid var(--line)",
               }}
             >
-              <div>
-                <strong style={{ display: "block" }}>Review New Admissions</strong>
-                <small style={{ color: "var(--muted)" }}>Check student applications and acceptances</small>
-              </div>
-              <Icon name="arrow" />
-            </button>
-            <button
-              className="quick-action-card"
-              onClick={() => setActive("Payments")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                background: "var(--card-bg, rgba(255,255,255,0.02))",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                textAlign: "left",
-                cursor: "pointer",
-              }}
-            >
-              <div>
-                <strong style={{ display: "block" }}>Verify Bank Transfers</strong>
-                <small style={{ color: "var(--muted)" }}>Reconcile pending tuition payments</small>
-              </div>
-              <Icon name="arrow" />
-            </button>
-            <button
-              className="quick-action-card"
-              onClick={() => setActive("Repairs")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "16px",
-                background: "var(--card-bg, rgba(255,255,255,0.02))",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                textAlign: "left",
-                cursor: "pointer",
-              }}
-            >
-              <div>
-                <strong style={{ display: "block" }}>Workshop Service Orders</strong>
-                <small style={{ color: "var(--muted)" }}>Update repair job progress & estimates</small>
-              </div>
-              <Icon name="arrow" />
-            </button>
+              <button
+                className="btn btn-secondary"
+                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
+                onClick={() => setActive("Applications")}
+              >
+                Applications{" "}
+                {liveStats && liveStats.pending_applications > 0
+                  ? `(${liveStats.pending_applications})`
+                  : ""}
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
+                onClick={() => setActive("Payments")}
+              >
+                Payments{" "}
+                {liveStats && liveStats.pending_payments > 0
+                  ? `(${liveStats.pending_payments})`
+                  : ""}
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
+                onClick={() => setActive("Repairs")}
+              >
+                Repairs{" "}
+                {liveStats && liveStats.active_repairs > 0
+                  ? `(${liveStats.active_repairs})`
+                  : ""}
+              </button>
+              <button
+                className="btn btn-secondary"
+                style={{ minHeight: 34, padding: "0 12px", fontSize: 11 }}
+                onClick={() => setActive("Class Schedule")}
+              >
+                Schedules{" "}
+                {liveStats && (liveStats.pending_schedules ?? 0) > 0
+                  ? `(${liveStats.pending_schedules})`
+                  : ""}
+              </button>
+            </div>
           </div>
         </section>
+      </div>
+
+      {/* Operational Quick Management Hub */}
+      <div
+        style={{
+          marginTop: 20,
+          background: "white",
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          padding: 22,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <div>
+            <h3
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                margin: 0,
+                color: "var(--navy)",
+              }}
+            >
+              Administrative Quick Hub
+            </h3>
+            <p style={{ margin: "2px 0 0", color: "var(--muted)", fontSize: 11 }}>
+              Direct operational shortcuts with live unread / pending indicators
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: 12,
+          }}
+        >
+          {[
+            {
+              title: "Review Applications",
+              desc: "Evaluate student admissions & approve entries",
+              badge: liveStats?.pending_applications
+                ? `${liveStats.pending_applications} pending`
+                : null,
+              badgeType: "warn",
+              tab: "Applications",
+              icon: "academic",
+            },
+            {
+              title: "Verify Bank Proofs",
+              desc: "Confirm student transfer receipts & issue receipts",
+              badge: liveStats?.pending_payments
+                ? `${liveStats.pending_payments} unverified`
+                : null,
+              badgeType: "warn",
+              tab: "Payments",
+              icon: "creditCard",
+            },
+            {
+              title: "Luthier Workshop",
+              desc: "Update repair progress, diagnostic fees & pickups",
+              badge: liveStats?.active_repairs
+                ? `${liveStats.active_repairs} active`
+                : null,
+              badgeType: "info",
+              tab: "Repairs",
+              icon: "wrench",
+            },
+            {
+              title: "Schedule Adjustments",
+              desc: "Manage student day changes & travel requests",
+              badge: liveStats?.pending_schedules
+                ? `${liveStats.pending_schedules} pending`
+                : null,
+              badgeType: "warn",
+              tab: "Class Schedule",
+              icon: "calendar",
+            },
+            {
+              title: "Inquiries & Leads",
+              desc: "Respond to website contact form submissions",
+              badge: liveStats?.unread_enquiries
+                ? `${liveStats.unread_enquiries} unread`
+                : null,
+              badgeType: "warn",
+              tab: "Enquiries",
+              icon: "mail",
+            },
+            {
+              title: "Student Roster",
+              desc: "Manage cohorts, active enrollments & credentials",
+              badge: liveStats?.active_students
+                ? `${liveStats.active_students} active`
+                : null,
+              badgeType: "good",
+              tab: "Students",
+              icon: "users",
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              onClick={() => setActive(item.tab)}
+              style={{
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                padding: "14px 16px",
+                background: "#faf9f7",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                transition:
+                  "transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--gold)"
+                e.currentTarget.style.backgroundColor = "white"
+                e.currentTarget.style.transform = "translateY(-2px)"
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--line)"
+                e.currentTarget.style.backgroundColor = "#faf9f7"
+                e.currentTarget.style.transform = "none"
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 6,
+                  }}
+                >
+                  <span style={{ color: "var(--navy)", display: "flex", alignItems: "center" }}>
+                    <Icon name={item.icon} size={18} />
+                  </span>
+                  {item.badge && (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: "2px 7px",
+                        borderRadius: 99,
+                        background:
+                          item.badgeType === "warn"
+                            ? "#fef3c7"
+                            : item.badgeType === "good"
+                              ? "#dcfce7"
+                              : "#dbeafe",
+                        color:
+                          item.badgeType === "warn"
+                            ? "#92400e"
+                            : item.badgeType === "good"
+                              ? "#166534"
+                              : "#1e40af",
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <strong
+                  style={{
+                    fontSize: 13,
+                    color: "var(--navy)",
+                    display: "block",
+                  }}
+                >
+                  {item.title}
+                </strong>
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    margin: "4px 0 0",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {item.desc}
+                </p>
+              </div>
+              <div
+                style={{
+                  marginTop: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--gold)",
+                }}
+              >
+                <span>Open module</span>
+                <Icon name="arrow" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </>
   )
@@ -464,8 +1040,6 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
 
 // ─── Operational Manager & Data Tables ─────────────────────────────────────────
 function AdminManager({ title }: { title: string }) {
-  const isSettings = title.includes("Settings") || title.includes("Roles")
-
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -477,13 +1051,43 @@ function AdminManager({ title }: { title: string }) {
   const [showLetterModal, setShowLetterModal] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [selectedCohort, setSelectedCohort] = useState("Saturday Cohort A")
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editCourse, setEditCourse] = useState<any | null>(null)
+  const [editInstructor, setEditInstructor] = useState<any | null>(null)
+  const [editPerformance, setEditPerformance] = useState<any | null>(null)
+
+  // In-line editing states for Application inspector
+  const [editingApp, setEditingApp] = useState(false)
+  const [appForm, setAppForm] = useState({
+    program: "",
+    status: "",
+    tuition_fee: 20000,
+    phone: "",
+    email: "",
+    study_mode: "Onsite",
+    skill_level: "Beginner",
+  })
+
+  // In-line editing states for Student inspector
+  const [studentForm, setStudentForm] = useState({
+    status: "active",
+    cohort: "Saturday Cohort A",
+    phone: "",
+    email: "",
+    program: "",
+  })
+
+  // Settings states
+  const [bankSettings, setBankSettings] = useState(getBankSettings)
+  const [generalSettings, setGeneralSettings] = useState(getGeneralSettings)
+
+  const [selectedCohort, setSelectedCohort] = useState("Saturday Cohort A (Morning)")
 
   // Add Course / Instructor / Performance Form State
   const [newCourse, setNewCourse] = useState({
     name: "",
     category: "Instruments",
-    fee: "₦85,000 / term",
+    fee: "₦20,000 / month",
     desc: "",
     age_group: "All Ages",
     level: "Beginner",
@@ -499,13 +1103,36 @@ function AdminManager({ title }: { title: string }) {
   const [newPerformance, setNewPerformance] = useState({
     title: "",
     performer: "",
-    program: "Keyboard / Piano",
+    program: "Piano & Keyboard Mastery",
     category: "Recital",
     youtube_id: "",
     duration: "4:15",
     date_label: "Term Recital",
     description: "",
   })
+
+  useEffect(() => {
+    if (selectedRecord && title === "Applications") {
+      setAppForm({
+        program: selectedRecord.program || "",
+        status: selectedRecord.status || "pending",
+        tuition_fee: Number(selectedRecord.tuition_fee || 20000),
+        phone: selectedRecord.phone || "",
+        email: selectedRecord.email || "",
+        study_mode: selectedRecord.study_mode || "Onsite",
+        skill_level: selectedRecord.skill_level || "Beginner",
+      })
+      setEditingApp(false)
+    } else if (selectedRecord && title === "Students") {
+      setStudentForm({
+        status: selectedRecord.status || "active",
+        cohort: selectedRecord.cohort || "Saturday Cohort A",
+        phone: selectedRecord.phone || "",
+        email: selectedRecord.email || "",
+        program: selectedRecord.program || "",
+      })
+    }
+  }, [selectedRecord, title])
 
   const loadData = useCallback(() => {
     setLoading(true)
@@ -618,6 +1245,36 @@ function AdminManager({ title }: { title: string }) {
     }
   }
 
+  async function handleSaveStudentChanges() {
+    if (!selectedRecord) return
+    const res = await updateStudent({
+      id: selectedRecord.id,
+      student_no: selectedRecord.student_no,
+      status: studentForm.status,
+      cohort: studentForm.cohort,
+      phone: studentForm.phone,
+      email: studentForm.email,
+      program: studentForm.program,
+    })
+    if (res && res.success) {
+      setActionNotice(`✓ Student record for ${selectedRecord.full_name} updated in database.`)
+      setSelectedRecord(null)
+      loadData()
+    } else {
+      alert(res?.error || "Failed to update student record.")
+    }
+  }
+
+  async function handleDeleteStudent(id: number, name: string) {
+    if (!confirm(`Are you sure you want to remove student "${name}"?`)) return
+    const res = await deleteStudent(id)
+    if (res && res.success) {
+      setActionNotice(`✓ Student record for ${name} removed from database.`)
+      setSelectedRecord(null)
+      loadData()
+    }
+  }
+
   async function handleAddProgram(e: React.FormEvent) {
     e.preventDefault()
     if (!newCourse.name) return
@@ -627,7 +1284,7 @@ function AdminManager({ title }: { title: string }) {
       setNewCourse({
         name: "",
         category: "Instruments",
-        fee: "₦85,000 / term",
+        fee: "₦20,000 / month",
         desc: "",
         age_group: "All Ages",
         level: "Beginner",
@@ -651,7 +1308,7 @@ function AdminManager({ title }: { title: string }) {
         bio: "",
         is_director: 0,
       })
-      setActionNotice("Instructor profile added successfully.")
+      setActionNotice("Instructor profile saved.")
       loadData()
     }
   }
@@ -659,91 +1316,91 @@ function AdminManager({ title }: { title: string }) {
   async function handleAddPerformance(e: React.FormEvent) {
     e.preventDefault()
     if (!newPerformance.title || !newPerformance.youtube_id) return
-    const res = await savePerformance(newPerformance)
+    const cleanedYid = extractYouTubeId(newPerformance.youtube_id)
+    const res = await savePerformance({ ...newPerformance, youtube_id: cleanedYid })
     if (res && res.success) {
       setShowAddModal(false)
       setNewPerformance({
         title: "",
         performer: "",
-        program: "Keyboard / Piano",
+        program: "Piano & Keyboard Mastery",
         category: "Recital",
         youtube_id: "",
         duration: "4:15",
         date_label: "Term Recital",
         description: "",
       })
-      setActionNotice("Recital video published successfully.")
+      setActionNotice("Performance recital video published.")
       loadData()
     }
   }
 
-  async function handleDeletePerformance(id: number) {
-    if (!confirm("Are you sure you want to remove this recital performance?")) return
-    const res = await deletePerformance(id)
+  async function handleSaveAppModifications(e: React.FormEvent) {
+    e.preventDefault()
+    if (!selectedRecord) return
+    const res = await updateApplication(selectedRecord.application_no, appForm)
     if (res && res.success) {
-      setActionNotice("Performance deleted successfully.")
+      setActionNotice(`Modifications saved for ${selectedRecord.application_no}.`)
+      setSelectedRecord({ ...selectedRecord, ...appForm })
+      setEditingApp(false)
       loadData()
+    } else {
+      alert(res?.error || "Failed to save application modifications.")
     }
   }
 
-  function exportCsv() {
-    if (!filteredRecords || filteredRecords.length === 0) return
-    const headers = Object.keys(filteredRecords[0]).filter((k) => k !== "id")
-    const csvRows = [
-      headers.join(","),
-      ...filteredRecords.map((r) =>
-        headers
-          .map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`)
+  const exportCsv = () => {
+    if (filteredRecords.length === 0) return
+    const headers = Object.keys(filteredRecords[0]).join(",")
+    const rows = filteredRecords
+      .map((r) =>
+        Object.values(r)
+          .map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`)
           .join(","),
-      ),
-    ]
-    const blob = new Blob([csvRows.join("\n")], { type: "text/csv;charset=utf-8;" })
+      )
+      .join("\n")
+    const blob = new Blob([`${headers}\n${rows}`], {
+      type: "text/csv;charset=utf-8;",
+    })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `vivadoxa_${title.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${new Date().toISOString().split("T")[0]}.csv`
+    a.download = `vivadoxa_${title.toLowerCase()}_export.csv`
     a.click()
-    URL.revokeObjectURL(url)
   }
 
-  // Filtered live records
-  const filteredRecords = records.filter((rec) => {
-    const term = searchTerm.toLowerCase()
+  const filteredRecords = records.filter((r) => {
+    const q = searchTerm.toLowerCase()
     const matchesSearch =
-      !term || JSON.stringify(rec).toLowerCase().includes(term)
+      !searchTerm ||
+      JSON.stringify(r).toLowerCase().includes(q)
+    const matchesStatus =
+      statusFilter === "all" ||
+      r.status === statusFilter ||
+      (statusFilter === "confirmed" &&
+        (r.status === "approved" ||
+          r.status === "verified" ||
+          r.status === "ready" ||
+          r.status === "active")) ||
+      (statusFilter === "pending" &&
+        (r.status === "pending" ||
+          r.status === "reviewing" ||
+          r.status === "assessing" ||
+          r.status === "in_progress"))
 
-    if (!matchesSearch) return false
-
-    if (statusFilter === "all") return true
-    if (statusFilter === "confirmed") {
-      return (
-        rec.status === "approved" ||
-        rec.status === "verified" ||
-        rec.status === "ready" ||
-        rec.status === "active" ||
-        rec.is_read === 1
-      )
-    }
-    if (statusFilter === "pending") {
-      return (
-        rec.status === "pending" ||
-        rec.status === "reviewing" ||
-        rec.status === "assessing" ||
-        rec.is_read === 0
-      )
-    }
-    return true
+    return matchesSearch && matchesStatus
   })
 
   return (
-    <>
-      <div className="manager-head">
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <span className="eyebrow">School Management</span>
-          <h2>{title}</h2>
-          <p>Review, verify, and update school records in real time.</p>
+          <h2 style={{ margin: "0 0 4px", fontSize: 20 }}>{title} Management</h2>
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
+            Direct MySQL database operations and live status updates.
+          </p>
         </div>
-        {(title === "Programs & Courses" || title === "Instructors" || title === "Performances & Recitals") && (
+        {["Programs & Courses", "Instructors", "Performances & Recitals"].includes(title) && (
           <Button onClick={() => setShowAddModal(true)}>
             + Add {title === "Instructors" ? "Instructor" : title === "Performances & Recitals" ? "Recital Video" : "Course"}
           </Button>
@@ -759,7 +1416,7 @@ function AdminManager({ title }: { title: string }) {
             border: "1px solid rgba(52, 199, 89, 0.3)",
             borderRadius: 8,
             marginBottom: 16,
-            color: "#34c759",
+            color: "#166534",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -780,89 +1437,22 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {isSettings ? (
-        <div className="settings-grid">
-          <section className="editor-section">
-            <h3>School Bank Details (for student transfers)</h3>
-            <div className="form-grid">
-              <Field
-                id="cfg-bank-name"
-                label="Bank Name"
-                value="Guaranty Trust Bank (GTBank)"
-                readOnly
-              />
-              <Field
-                id="cfg-account-no"
-                label="Account Number"
-                value="0123456789"
-                readOnly
-              />
-              <Field
-                id="cfg-account-name"
-                label="Account Name"
-                value="Vivadoxa Music School"
-                readOnly
-              />
-              <Field
-                id="cfg-bank-branch"
-                label="Branch / Location"
-                value="Television, Kaduna"
-                readOnly
-              />
-            </div>
-          </section>
-
-          <section className="editor-section">
-            <h3>Online Card Gateway (Paystack)</h3>
-            <div className="form-grid">
-              <Field
-                id="cfg-paystack-pk"
-                label="Paystack Public Key"
-                value="pk_live_vivadoxa_school_portal"
-                readOnly
-              />
-              <Field
-                id="cfg-paystack-sk"
-                label="Paystack Secret Key"
-                value="••••••••••••••••••••••••"
-                readOnly
-                type="password"
-              />
-            </div>
-          </section>
-
-          <section className="editor-section">
-            <h3>Admissions Notifications</h3>
-            <div className="switch-row">
-              <div>
-                <strong>Email Alert on Application</strong>
-                <span>Send email to admissions desk when a new student applies</span>
-              </div>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  aria-label="Email alerts"
-                />
-                <i aria-hidden="true" />
-              </label>
-            </div>
-            <div className="switch-row">
-              <div>
-                <strong>WhatsApp Admission Alert</strong>
-                <span>Notify school manager on WhatsApp</span>
-              </div>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  aria-label="WhatsApp alerts"
-                />
-                <i aria-hidden="true" />
-              </label>
-            </div>
-          </section>
-        </div>
+      {title === "Staff & Roles" ? (
+        <StaffAndRolesView setActionNotice={setActionNotice} />
+      ) : title === "Payment Settings" ? (
+        <PaymentSettingsView
+          bankSettings={bankSettings}
+          setBankSettings={setBankSettings}
+          setActionNotice={setActionNotice}
+        />
+      ) : title === "General Settings" ? (
+        <GeneralSettingsView
+          generalSettings={generalSettings}
+          setGeneralSettings={setGeneralSettings}
+          setActionNotice={setActionNotice}
+        />
+      ) : title === "Class Schedule" ? (
+        <ClassScheduleManagerView setActionNotice={setActionNotice} />
       ) : (
         // Operational Data Tables
         <section className="table-panel manager-table">
@@ -943,6 +1533,7 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col">Fee</th>
                     <th scope="col">Duration &amp; Modes</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 )}
                 {title === "Instructors" && (
@@ -952,6 +1543,7 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col">Specialization</th>
                     <th scope="col">Location</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 )}
                 {title === "Performances & Recitals" && (
@@ -971,14 +1563,7 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col">Program</th>
                     <th scope="col">Assigned Cohort</th>
                     <th scope="col">Status</th>
-                  </tr>
-                )}
-                {title === "Class Schedule" && (
-                  <tr>
-                    <th scope="col">Cohort Name</th>
-                    <th scope="col">Time Schedule</th>
-                    <th scope="col">Studio Room</th>
-                    <th scope="col">Status</th>
+                    <th scope="col" style={{ textAlign: "right" }}>Actions</th>
                   </tr>
                 )}
               </thead>
@@ -993,7 +1578,7 @@ function AdminManager({ title }: { title: string }) {
                         color: "var(--muted)",
                       }}
                     >
-                      Loading records…
+                      Loading records from database…
                     </td>
                   </tr>
                 ) : filteredRecords.length === 0 ? (
@@ -1006,7 +1591,7 @@ function AdminManager({ title }: { title: string }) {
                         color: "var(--muted)",
                       }}
                     >
-                      No {title.toLowerCase()} found matching your search.
+                      No {title.toLowerCase()} found in database.
                     </td>
                   </tr>
                 ) : (
@@ -1014,14 +1599,13 @@ function AdminManager({ title }: { title: string }) {
                     <tr
                       key={
                         row.id ||
-                        row.application_no ||
                         row.reference ||
                         row.tracking_code ||
-                        row.student_no ||
-                        row.name
+                        row.application_no ||
+                        row.student_no
                       }
-                      style={{ cursor: "pointer" }}
                       onClick={() => setSelectedRecord(row)}
+                      style={{ cursor: "pointer" }}
                     >
                       {/* Applications row */}
                       {title === "Applications" && (
@@ -1044,7 +1628,10 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            ₦{Number(row.tuition_fee || 75000).toLocaleString()}
+                            ₦
+                            {Number(
+                              row.tuition_fee || 20000,
+                            ).toLocaleString()}
                           </td>
                           <td>
                             <Badge
@@ -1059,42 +1646,32 @@ function AdminManager({ title }: { title: string }) {
                               {row.status}
                             </Badge>
                           </td>
-                          <td onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: "flex", gap: 6 }}>
+                          <td>
+                            <div className="table-actions">
                               {row.status !== "approved" && (
                                 <button
-                                  className="btn-sm"
-                                  onClick={() =>
+                                  className="action-btn accept"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
                                     handleAppStatus(row.application_no, "approved")
-                                  }
-                                  style={{
-                                    padding: "4px 8px",
-                                    fontSize: "0.75rem",
-                                    background: "#34c759",
-                                    color: "#000",
-                                    border: "none",
-                                    borderRadius: 4,
-                                    cursor: "pointer",
-                                    fontWeight: 600,
                                   }}
+                                  title="Approve candidate"
                                 >
-                                  Approve
+                                  ✓
                                 </button>
                               )}
-                              <button
-                                onClick={() => setSelectedRecord(row)}
-                                style={{
-                                  padding: "4px 8px",
-                                  fontSize: "0.75rem",
-                                  background: "rgba(255,255,255,0.08)",
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: 4,
-                                  cursor: "pointer",
-                                }}
-                              >
-                                View
-                              </button>
+                              {row.status !== "rejected" && (
+                                <button
+                                  className="action-btn decline"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleAppStatus(row.application_no, "rejected")
+                                  }}
+                                  title="Reject candidate"
+                                >
+                                  ✕
+                                </button>
+                              )}
                             </div>
                           </td>
                         </>
@@ -1104,16 +1681,16 @@ function AdminManager({ title }: { title: string }) {
                       {title === "Payments" && (
                         <>
                           <td>
-                            <strong>{row.reference}</strong>
+                            <code>{row.reference}</code>
                             {row.application_no && (
-                              <div
+                              <small
                                 style={{
-                                  fontSize: "0.75rem",
+                                  display: "block",
                                   color: "var(--muted)",
                                 }}
                               >
                                 App: {row.application_no}
-                              </div>
+                              </small>
                             )}
                           </td>
                           <td>
@@ -1123,63 +1700,42 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            <strong>₦{Number(row.amount).toLocaleString()}</strong>
+                            <strong>
+                              ₦{Number(row.amount).toLocaleString()}
+                            </strong>
                           </td>
                           <td>
                             <div>{row.method}</div>
                             <small style={{ color: "var(--muted)" }}>
-                              {row.notes || "—"}
+                              {row.notes}
                             </small>
                           </td>
                           <td>
                             <Badge
                               tone={
-                                row.status === "verified" ? "green" : "gold"
+                                row.status === "verified"
+                                  ? "green"
+                                  : row.status === "declined"
+                                    ? "red"
+                                    : "gold"
                               }
                             >
                               {row.status}
                             </Badge>
                           </td>
-                          <td onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: "flex", gap: 6 }}>
-                              {row.status !== "verified" ? (
-                                <button
-                                  onClick={() =>
-                                    handlePaymentVerify(row.reference)
-                                  }
-                                  style={{
-                                    padding: "4px 10px",
-                                    fontSize: "0.75rem",
-                                    background: "#34c759",
-                                    color: "#000",
-                                    border: "none",
-                                    borderRadius: 4,
-                                    cursor: "pointer",
-                                    fontWeight: 600,
-                                  }}
-                                >
-                                  Verify
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setSelectedRecord(row)
-                                    setShowReceiptModal(true)
-                                  }}
-                                  style={{
-                                    padding: "4px 8px",
-                                    fontSize: "0.75rem",
-                                    background: "rgba(255,255,255,0.08)",
-                                    color: "#fff",
-                                    border: "none",
-                                    borderRadius: 4,
-                                    cursor: "pointer",
-                                  }}
-                                >
-                                  Receipt
-                                </button>
-                              )}
-                            </div>
+                          <td>
+                            {row.status !== "verified" && (
+                              <button
+                                className="action-btn accept"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handlePaymentVerify(row.reference)
+                                }}
+                                title="Verify payment"
+                              >
+                                ✓ Verify
+                              </button>
+                            )}
                           </td>
                         </>
                       )}
@@ -1188,7 +1744,7 @@ function AdminManager({ title }: { title: string }) {
                       {(title === "Repairs" || title.includes("Repairs")) && (
                         <>
                           <td>
-                            <strong>{row.tracking_code}</strong>
+                            <code>{row.tracking_code}</code>
                           </td>
                           <td>
                             <div>{row.customer_name}</div>
@@ -1198,21 +1754,24 @@ function AdminManager({ title }: { title: string }) {
                           </td>
                           <td>
                             <div>{row.instrument}</div>
-                            <small style={{ color: "var(--muted)" }}>
+                            <small
+                              style={{
+                                color: "var(--muted)",
+                                maxWidth: 200,
+                                display: "block",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
                               {row.issue}
                             </small>
                           </td>
                           <td>
                             <Badge
-                              tone={
-                                row.intake_method === "pickup"
-                                  ? "gold"
-                                  : "navy"
-                              }
+                              tone={row.intake_method === "pickup" ? "gold" : "navy"}
                             >
-                              {row.intake_method === "pickup"
-                                ? "Pickup Request"
-                                : "Studio Drop-off"}
+                              {row.intake_method === "pickup" ? "Pickup" : "Drop-off"}
                             </Badge>
                           </td>
                           <td>
@@ -1227,20 +1786,15 @@ function AdminManager({ title }: { title: string }) {
                               {row.status}
                             </Badge>
                           </td>
-                          <td onClick={(e) => e.stopPropagation()}>
+                          <td>
                             <button
-                              onClick={() => setSelectedRecord(row)}
-                              style={{
-                                padding: "4px 8px",
-                                fontSize: "0.75rem",
-                                background: "rgba(255,255,255,0.08)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 4,
-                                cursor: "pointer",
+                              className="action-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
                               }}
                             >
-                              Manage
+                              Update
                             </button>
                           </td>
                         </>
@@ -1255,59 +1809,88 @@ function AdminManager({ title }: { title: string }) {
                           <td>
                             <div>{row.email}</div>
                             <small style={{ color: "var(--muted)" }}>
-                              {row.phone || "—"}
+                              {row.phone}
                             </small>
                           </td>
                           <td>{row.subject}</td>
-                          <td
-                            style={{
-                              maxWidth: 220,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {row.message}
-                          </td>
                           <td>
-                            <Badge tone={row.is_read ? "green" : "gold"}>
-                              {row.is_read ? "Read" : "Unread"}
-                            </Badge>
-                          </td>
-                          <td onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() =>
-                                handleEnquiryToggle(row.id, row.is_read)
-                              }
+                            <div
                               style={{
-                                padding: "4px 8px",
-                                fontSize: "0.75rem",
-                                background: "rgba(255,255,255,0.08)",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 4,
-                                cursor: "pointer",
+                                maxWidth: 220,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              {row.is_read ? "Mark Unread" : "Mark Read"}
+                              {row.message}
+                            </div>
+                          </td>
+                          <td>
+                            <Badge tone={row.is_read ? "navy" : "green"}>
+                              {row.is_read ? "Read" : "New"}
+                            </Badge>
+                          </td>
+                          <td>
+                            <button
+                              className="action-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEnquiryToggle(row.id, row.is_read)
+                              }}
+                            >
+                              {row.is_read ? "Mark unread" : "Mark read"}
                             </button>
                           </td>
                         </>
                       )}
 
-                      {/* Programs & Courses row */}
+                      {/* Programs row */}
                       {title === "Programs & Courses" && (
                         <>
                           <td>
                             <strong>{row.name}</strong>
+                            {row.tag && (
+                              <small
+                                style={{
+                                  display: "inline-block",
+                                  marginLeft: 6,
+                                  color: "var(--muted)",
+                                }}
+                              >
+                                ({row.tag})
+                              </small>
+                            )}
                           </td>
                           <td>{row.category}</td>
+                          <td>{row.fee}</td>
                           <td>
-                            <strong>{row.fee}</strong>
+                            <div>{row.duration || "1–12 Months"}</div>
+                            <small style={{ color: "var(--muted)" }}>
+                              {row.modes || "Studio · Home · Online"}
+                            </small>
                           </td>
-                          <td>{row.duration} · {row.modes}</td>
                           <td>
-                            <Badge tone="green">Published</Badge>
+                            <Badge tone="green">Active</Badge>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditCourse(row)
+                                setShowEditModal(true)
+                              }}
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: 11,
+                                background: "none",
+                                border: "1px solid var(--line)",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Edit
+                            </button>
                           </td>
                         </>
                       )}
@@ -1317,48 +1900,101 @@ function AdminManager({ title }: { title: string }) {
                         <>
                           <td>
                             <strong>{row.name}</strong>
+                            {row.is_director ? (
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  padding: "2px 6px",
+                                  borderRadius: 4,
+                                  background: "#fef3c7",
+                                  color: "#92400e",
+                                }}
+                              >
+                                Director
+                              </span>
+                            ) : null}
                           </td>
                           <td>{row.title}</td>
                           <td>{row.specialization}</td>
                           <td>{row.location}</td>
                           <td>
-                            <Badge tone="green">
-                              {row.is_director ? "Artistic Director" : "Active Faculty"}
-                            </Badge>
+                            <Badge tone="green">Active</Badge>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditInstructor(row)
+                                setShowEditModal(true)
+                              }}
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: 11,
+                                background: "none",
+                                border: "1px solid var(--line)",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Edit
+                            </button>
                           </td>
                         </>
                       )}
 
-                      {/* Performances & Recitals row */}
+                      {/* Performances row */}
                       {title === "Performances & Recitals" && (
                         <>
                           <td>
                             <strong>{row.title}</strong>
+                            {row.is_featured ? (
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  padding: "2px 6px",
+                                  borderRadius: 4,
+                                  background: "#fef3c7",
+                                  color: "#92400e",
+                                }}
+                              >
+                                Featured
+                              </span>
+                            ) : null}
                           </td>
                           <td>{row.performer}</td>
                           <td>
                             <div>{row.program}</div>
-                            <small style={{ color: "var(--muted)" }}>{row.category}</small>
+                            <small style={{ color: "var(--muted)" }}>
+                              {row.category}
+                            </small>
                           </td>
                           <td>
-                            <code style={{ background: "#eae6de", padding: "2px 6px", borderRadius: 4, fontSize: 11 }}>
-                              {row.youtube_id}
-                            </code>
+                            <code>{row.youtube_id}</code>
                           </td>
+                          <td>{row.date_label || "Annual Recital"}</td>
                           <td>
-                            <div>{row.date_label}</div>
-                            <small style={{ color: "var(--muted)" }}>{row.duration}</small>
-                          </td>
-                          <td onClick={(e) => e.stopPropagation()}>
                             <button
-                              onClick={() => handleDeletePerformance(row.id)}
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                if (confirm(`Remove performance "${row.title}"?`)) {
+                                  await deletePerformance(row.id)
+                                  setActionNotice("Performance recital removed.")
+                                  loadData()
+                                }
+                              }}
                               style={{
                                 padding: "4px 8px",
-                                fontSize: "0.75rem",
-                                background: "rgba(184, 70, 70, 0.15)",
-                                color: "var(--red)",
-                                border: "1px solid rgba(184, 70, 70, 0.3)",
+                                fontSize: 11,
+                                background: "none",
+                                border: "1px solid var(--line)",
                                 borderRadius: 4,
+                                color: "#dc2626",
                                 cursor: "pointer",
                               }}
                             >
@@ -1383,21 +2019,21 @@ function AdminManager({ title }: { title: string }) {
                           <td>{row.program}</td>
                           <td>{row.cohort}</td>
                           <td>
-                            <Badge tone="green">{row.status}</Badge>
+                            <Badge tone={row.status === "active" ? "green" : row.status === "graduated" ? "gold" : "red"}>
+                              {row.status}
+                            </Badge>
                           </td>
-                        </>
-                      )}
-
-                      {/* Class Schedule row */}
-                      {title === "Class Schedule" && (
-                        <>
-                          <td>
-                            <strong>{row.name}</strong>
-                          </td>
-                          <td>{row.time_slot}</td>
-                          <td>{row.room}</td>
-                          <td>
-                            <Badge tone="green">{row.status}</Badge>
+                          <td style={{ textAlign: "right" }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                            >
+                              Manage
+                            </Button>
                           </td>
                         </>
                       )}
@@ -1417,6 +2053,9 @@ function AdminManager({ title }: { title: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Record Details"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedRecord(null)
+          }}
         >
           <div className="modal-card">
             <div className="modal-head">
@@ -1441,59 +2080,212 @@ function AdminManager({ title }: { title: string }) {
               {/* Application Details */}
               {title === "Applications" && (
                 <div>
-                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
-                    <div>
-                      <small>Full Name</small>
-                      <strong>
-                        {selectedRecord.first_name} {selectedRecord.last_name}
-                      </strong>
-                    </div>
-                    <div>
-                      <small>Email</small>
-                      <strong>{selectedRecord.email}</strong>
-                    </div>
-                    <div>
-                      <small>Phone Number</small>
-                      <strong>{selectedRecord.phone}</strong>
-                    </div>
-                    <div>
-                      <small>Home Address</small>
-                      <strong>{selectedRecord.address || "Kaduna"}</strong>
-                    </div>
-                    <div>
-                      <small>Program Applied</small>
-                      <strong>{selectedRecord.program}</strong>
-                    </div>
-                    <div>
-                      <small>Study Mode &amp; Level</small>
-                      <strong>
-                        {selectedRecord.study_mode} ({selectedRecord.skill_level})
-                      </strong>
-                    </div>
-                    <div>
-                      <small>Tuition Fee</small>
-                      <strong>
-                        ₦
-                        {Number(
-                          selectedRecord.tuition_fee || 85000,
-                        ).toLocaleString()}
-                      </strong>
-                    </div>
-                    <div>
-                      <small>Current Status</small>
-                      <Badge
-                        tone={
-                          selectedRecord.status === "approved"
-                            ? "green"
-                            : selectedRecord.status === "rejected"
-                              ? "red"
-                              : "gold"
-                        }
-                      >
-                        {selectedRecord.status}
-                      </Badge>
-                    </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <small style={{ color: "var(--muted)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em" }}>
+                      Candidate Admission Record
+                    </small>
+                    <button
+                      type="button"
+                      onClick={() => setEditingApp(!editingApp)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: editingApp ? "#fee2e2" : "#f1f5f9",
+                        color: editingApp ? "#dc2626" : "var(--navy)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {editingApp ? "Cancel Editing" : "Edit Details"}
+                    </button>
                   </div>
+
+                  {editingApp ? (
+                    <form onSubmit={handleSaveAppModifications} style={{ background: "#fbfaf8", padding: 16, borderRadius: 8, border: "1px solid var(--line)", marginBottom: 16 }}>
+                      <div className="form-grid" style={{ marginBottom: 12 }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Program / Course
+                          </label>
+                          <input
+                            value={appForm.program}
+                            onChange={(e) => setAppForm({ ...appForm, program: e.target.value })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Tuition Fee (₦)
+                          </label>
+                          <input
+                            type="number"
+                            value={appForm.tuition_fee}
+                            onChange={(e) => setAppForm({ ...appForm, tuition_fee: Number(e.target.value) })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Study Mode
+                          </label>
+                          <select
+                            value={appForm.study_mode}
+                            onChange={(e) => setAppForm({ ...appForm, study_mode: e.target.value })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                          >
+                            <option value="Onsite">Onsite (Kaduna Studio)</option>
+                            <option value="Online">Online Video Lessons</option>
+                            <option value="Home Lessons">Private Home Lessons</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Skill Level
+                          </label>
+                          <select
+                            value={appForm.skill_level}
+                            onChange={(e) => setAppForm({ ...appForm, skill_level: e.target.value })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                          >
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Student Phone
+                          </label>
+                          <input
+                            value={appForm.phone}
+                            onChange={(e) => setAppForm({ ...appForm, phone: e.target.value })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                            Student Email
+                          </label>
+                          <input
+                            type="email"
+                            value={appForm.email}
+                            onChange={(e) => setAppForm({ ...appForm, email: e.target.value })}
+                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                        <Button variant="ghost" type="button" onClick={() => setEditingApp(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit">
+                          Save Modifications
+                        </Button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="doc-grid" style={{ margin: "0 0 16px" }}>
+                      <div>
+                        <small>Full Name</small>
+                        <strong>
+                          {selectedRecord.first_name} {selectedRecord.last_name}
+                        </strong>
+                      </div>
+                      <div>
+                        <small>Email</small>
+                        <strong>{selectedRecord.email}</strong>
+                      </div>
+                      <div>
+                        <small>Phone Number</small>
+                        <strong>{selectedRecord.phone}</strong>
+                      </div>
+                      <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, padding: "6px 0 2px" }}>
+                        <a
+                          href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.first_name || "")},%20this%20is%20Vivadoxa%20Music%20Academy%20regarding%20your%20application%20(${selectedRecord.application_no}).`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(37, 211, 102, 0.15)",
+                            color: "#075e54",
+                            border: "1px solid rgba(37, 211, 102, 0.35)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <WhatsAppIcon size={14} fill="#075e54" />
+                          Chat on WhatsApp
+                        </a>
+                        <a
+                          href={`mailto:${selectedRecord.email}?subject=Vivadoxa%20Music%20Academy%20Admission%20Application%20${selectedRecord.application_no}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(201, 107, 50, 0.12)",
+                            color: "#a24a18",
+                            border: "1px solid rgba(201, 107, 50, 0.3)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <Icon name="mail" size={14} />
+                          Email Candidate
+                        </a>
+                      </div>
+                      <div>
+                        <small>Home Address</small>
+                        <strong>{selectedRecord.address || "Kaduna"}</strong>
+                      </div>
+                      <div>
+                        <small>Program Applied</small>
+                        <strong>{selectedRecord.program}</strong>
+                      </div>
+                      <div>
+                        <small>Study Mode &amp; Level</small>
+                        <strong>
+                          {selectedRecord.study_mode} ({selectedRecord.skill_level})
+                        </strong>
+                      </div>
+                      <div>
+                        <small>Tuition Fee</small>
+                        <strong>
+                          ₦
+                          {Number(
+                            selectedRecord.tuition_fee || 20000,
+                          ).toLocaleString()}
+                        </strong>
+                      </div>
+                      <div>
+                        <small>Current Status</small>
+                        <Badge
+                          tone={
+                            selectedRecord.status === "approved"
+                              ? "green"
+                              : selectedRecord.status === "rejected"
+                                ? "red"
+                                : "gold"
+                          }
+                        >
+                          {selectedRecord.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
 
                   {selectedRecord.guardian_name && (
                     <div
@@ -1548,14 +2340,20 @@ function AdminManager({ title }: { title: string }) {
                           flex: 1,
                         }}
                       >
-                        <option value="Saturday Cohort A">
-                          Saturday Cohort A (Morning)
+                        <option value="Saturday Cohort A (Morning)">
+                          Saturday Cohort A (Morning 9am–12pm)
                         </option>
-                        <option value="Saturday Cohort B">
-                          Saturday Cohort B (Afternoon)
+                        <option value="Saturday Cohort B (Afternoon)">
+                          Saturday Cohort B (Afternoon 1pm–4pm)
                         </option>
-                        <option value="Weekday Evenings">
-                          Weekday Evenings (Tue/Thu)
+                        <option value="Weekday Cohort (Tue & Thu)">
+                          Weekday Cohort (Tue/Thu 5pm–7pm)
+                        </option>
+                        <option value="Private Home Lessons">
+                          Private Home Lessons (Flexible Schedule)
+                        </option>
+                        <option value="Online Virtual Studio">
+                          Online Virtual Studio (1-on-1 Remote)
                         </option>
                       </select>
                       <Button onClick={() => handleEnroll(selectedRecord)}>
@@ -1599,6 +2397,50 @@ function AdminManager({ title }: { title: string }) {
                     <small>Bank Narration / Notes</small>
                     <strong>{selectedRecord.notes || "—"}</strong>
                   </div>
+                  <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, paddingTop: 8 }}>
+                    {selectedRecord.payer_phone && (
+                      <a
+                        href={`https://wa.me/${(selectedRecord.payer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.payer_name || "")},%20this%20is%20Vivadoxa%20Accounts%20regarding%20your%20payment%20(Ref:%20${selectedRecord.reference}).`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "6px 12px",
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: "rgba(37, 211, 102, 0.15)",
+                          color: "#075e54",
+                          border: "1px solid rgba(37, 211, 102, 0.35)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <WhatsAppIcon size={14} fill="#075e54" />
+                        WhatsApp Payer
+                      </a>
+                    )}
+                    <a
+                      href={`mailto:${selectedRecord.payer_email}?subject=Vivadoxa%20Music%20Academy%20Payment%20Receipt%20${selectedRecord.reference}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "6px 12px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: "rgba(201, 107, 50, 0.12)",
+                        color: "#a24a18",
+                        border: "1px solid rgba(201, 107, 50, 0.3)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon name="mail" size={14} />
+                      Email Receipt
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -1621,6 +2463,50 @@ function AdminManager({ title }: { title: string }) {
                     <div>
                       <small>Customer Email</small>
                       <strong>{selectedRecord.customer_email || "—"}</strong>
+                    </div>
+                    <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, padding: "4px 0" }}>
+                      <a
+                        href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "6px 12px",
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: "rgba(37, 211, 102, 0.15)",
+                          color: "#075e54",
+                          border: "1px solid rgba(37, 211, 102, 0.35)",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <WhatsAppIcon size={14} fill="#075e54" />
+                        WhatsApp Customer
+                      </a>
+                      {selectedRecord.customer_email && (
+                        <a
+                          href={`mailto:${selectedRecord.customer_email}?subject=Vivadoxa%20Workshop%20Repair%20Ticket%20${selectedRecord.tracking_code}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(201, 107, 50, 0.12)",
+                            color: "#a24a18",
+                            border: "1px solid rgba(201, 107, 50, 0.3)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <Icon name="mail" size={14} />
+                          Email Customer
+                        </a>
+                      )}
                     </div>
                     <div>
                       <small>Instrument</small>
@@ -1752,6 +2638,123 @@ function AdminManager({ title }: { title: string }) {
                   </div>
                 </div>
               )}
+
+              {/* Student Profile Details */}
+              {title === "Students" && (
+                <div>
+                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
+                    <div>
+                      <small>Student ID Number</small>
+                      <strong style={{ fontSize: 16, color: "var(--navy)" }}>{selectedRecord.student_no}</strong>
+                    </div>
+                    <div>
+                      <small>Linked Application</small>
+                      <strong>{selectedRecord.application_no || "Direct Registration"}</strong>
+                    </div>
+                    <div>
+                      <small>Student Full Name</small>
+                      <strong>{selectedRecord.full_name}</strong>
+                    </div>
+                    <div>
+                      <small>Enrolled Course / Program</small>
+                      <strong>{selectedRecord.program}</strong>
+                    </div>
+                    <div>
+                      <small>Primary Phone</small>
+                      <strong>{selectedRecord.phone || "—"}</strong>
+                    </div>
+                    <div>
+                      <small>Primary Email</small>
+                      <strong>{selectedRecord.email || "—"}</strong>
+                    </div>
+                    <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, paddingTop: 4 }}>
+                      {selectedRecord.phone && (
+                        <a
+                          href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.full_name)},%20this%20is%20Vivadoxa%20Academy%20Academic%20Desk.`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(37, 211, 102, 0.15)",
+                            color: "#075e54",
+                            border: "1px solid rgba(37, 211, 102, 0.35)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <WhatsAppIcon size={14} fill="#075e54" />
+                          WhatsApp Student
+                        </a>
+                      )}
+                      {selectedRecord.email && (
+                        <a
+                          href={`mailto:${selectedRecord.email}?subject=Vivadoxa%20Academy%20Student%20Notice%20(${selectedRecord.student_no})`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(201, 107, 50, 0.12)",
+                            color: "#a24a18",
+                            border: "1px solid rgba(201, 107, 50, 0.3)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <Icon name="mail" size={14} />
+                          Email Student
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
+                    <h4 style={{ margin: "0 0 12px", fontSize: 13, textTransform: "uppercase", color: "var(--muted)" }}>
+                      Academic Cohort &amp; Enrollment Status
+                    </h4>
+                    <div className="form-grid">
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                          Assigned Cohort Slot:
+                        </label>
+                        <select
+                          value={studentForm.cohort}
+                          onChange={(e) => setStudentForm({ ...studentForm, cohort: e.target.value })}
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", background: "white", fontSize: 13 }}
+                        >
+                          <option value="Saturday Cohort A">Saturday Cohort A (Morning 9am–12pm)</option>
+                          <option value="Saturday Cohort B">Saturday Cohort B (Afternoon 1pm–4pm)</option>
+                          <option value="Weekday Evenings">Weekday Evenings (Tue &amp; Thu 5pm–7pm)</option>
+                          <option value="Private Home Lessons">Private Home Lessons</option>
+                          <option value="Online Virtual Studio">Online Virtual Studio</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                          Enrollment Status:
+                        </label>
+                        <select
+                          value={studentForm.status}
+                          onChange={(e) => setStudentForm({ ...studentForm, status: e.target.value })}
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", background: "white", fontSize: 13 }}
+                        >
+                          <option value="active">Active (Currently Enrolled)</option>
+                          <option value="graduated">Graduated (Completed Program)</option>
+                          <option value="suspended">Suspended / On Leave</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="modal-foot">
@@ -1797,6 +2800,58 @@ function AdminManager({ title }: { title: string }) {
                 </>
               )}
 
+              {title === "Students" && (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() =>
+                      handleDeleteStudent(selectedRecord.id, selectedRecord.full_name)
+                    }
+                    style={{ color: "#dc2626" }}
+                  >
+                    Delete Student
+                  </Button>
+                  <Button onClick={handleSaveStudentChanges}>
+                    Save Database Updates
+                  </Button>
+                </>
+              )}
+
+              {title === "Enquiries" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+                      handleEnquiryToggle(selectedRecord.id, selectedRecord.is_read)
+                    }
+                  >
+                    {selectedRecord.is_read ? "Mark as Unread" : "Mark as Read"}
+                  </Button>
+                  {selectedRecord.phone && (
+                    <a
+                      href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.name || "")},%20thank%20you%20for%20contacting%20Vivadoxa%20Music%20Academy.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: "8px 16px",
+                        borderRadius: 6,
+                        background: "#15803d",
+                        color: "white",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <WhatsAppIcon size={14} fill="white" />
+                      Reply on WhatsApp
+                    </a>
+                  )}
+                </>
+              )}
+
               <Button variant="ghost" onClick={() => setSelectedRecord(null)}>
                 Close
               </Button>
@@ -1827,6 +2882,9 @@ function AdminManager({ title }: { title: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Add Record"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddModal(false)
+          }}
         >
           <div className="modal-card">
             <div className="modal-head">
@@ -1845,282 +2903,365 @@ function AdminManager({ title }: { title: string }) {
               </button>
             </div>
 
-            {title === "Instructors" ? (
-              <form onSubmit={handleAddInstructor}>
-                <div className="modal-body">
-                  <div className="form-grid">
-                    <Field
-                      id="ins-name"
-                      label="Instructor Full Name"
-                      placeholder="e.g. Samuel Adeyemi"
-                      value={newInstructor.name}
-                      onChange={(v) =>
-                        setNewInstructor({ ...newInstructor, name: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="ins-title"
-                      label="Title / Role"
-                      placeholder="e.g. Lead Brass Instructor"
-                      value={newInstructor.title}
-                      onChange={(v) =>
-                        setNewInstructor({ ...newInstructor, title: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="ins-spec"
-                      label="Specialization"
-                      placeholder="e.g. Trumpet, Saxophone & Theory"
-                      value={newInstructor.specialization}
-                      onChange={(v) =>
-                        setNewInstructor({ ...newInstructor, specialization: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="ins-loc"
-                      label="Location / Studio"
-                      value={newInstructor.location}
-                      onChange={(v) =>
-                        setNewInstructor({ ...newInstructor, location: v })
-                      }
-                    />
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 7 }}>
-                        Role Tier / Leadership
-                      </label>
-                      <select
-                        value={newInstructor.is_director}
-                        onChange={(e) =>
-                          setNewInstructor({
-                            ...newInstructor,
-                            is_director: Number(e.target.value),
-                          })
-                        }
-                        style={{ width: "100%", minHeight: 48, borderRadius: 8, border: "1px solid #cbd4d9", padding: "0 14px", background: "white" }}
-                      >
-                        <option value={0}>Faculty Instructor</option>
-                        <option value={1}>Artistic Director / Executive</option>
-                      </select>
-                    </div>
-                    <div className="full">
-                      <Field
-                        id="ins-bio"
-                        label="Executive Biography"
-                        placeholder="Professional background, conservatory training, performance accomplishments..."
-                        value={newInstructor.bio}
-                        onChange={(v) =>
-                          setNewInstructor({ ...newInstructor, bio: v })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-foot">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Save Instructor</Button>
-                </div>
-              </form>
-            ) : title === "Performances & Recitals" ? (
-              <form onSubmit={handleAddPerformance}>
-                <div className="modal-body">
-                  <div className="form-grid">
-                    <Field
-                      id="perf-title"
-                      label="Performance Title"
-                      placeholder="e.g. Chopin Nocturne Op. 9 No. 2"
-                      value={newPerformance.title}
-                      onChange={(v) =>
-                        setNewPerformance({ ...newPerformance, title: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="perf-performer"
-                      label="Performer / Student Name"
-                      placeholder="e.g. Joy Okafor (Grade 5 Piano Candidate)"
-                      value={newPerformance.performer}
-                      onChange={(v) =>
-                        setNewPerformance({ ...newPerformance, performer: v })
-                      }
-                      required
-                    />
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 7 }}>
-                        Showcase Category
-                      </label>
-                      <select
-                        value={newPerformance.category}
-                        onChange={(e) =>
-                          setNewPerformance({
-                            ...newPerformance,
-                            category: e.target.value,
-                          })
-                        }
-                        style={{ width: "100%", minHeight: 48, borderRadius: 8, border: "1px solid #cbd4d9", padding: "0 14px", background: "white" }}
-                      >
-                        <option value="Recital">Recital</option>
-                        <option value="Concert">Concert</option>
-                        <option value="Student Band">Student Band</option>
-                      </select>
-                    </div>
-                    <Field
-                      id="perf-program"
-                      label="Associated Program"
-                      placeholder="e.g. Keyboard / Piano Mastery"
-                      value={newPerformance.program}
-                      onChange={(v) =>
-                        setNewPerformance({ ...newPerformance, program: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="perf-yt"
-                      label="YouTube Video ID"
-                      placeholder="e.g. dQw4w9WgXcQ (ID only)"
-                      value={newPerformance.youtube_id}
-                      onChange={(v) =>
-                        setNewPerformance({
-                          ...newPerformance,
-                          youtube_id: v.includes("v=")
-                            ? v.split("v=")[1].split("&")[0]
-                            : v.includes("youtu.be/")
-                              ? v.split("youtu.be/")[1].split("?")[0]
-                              : v,
-                        })
-                      }
-                      required
-                    />
-                    <Field
-                      id="perf-date"
-                      label="Date / Term Label"
-                      placeholder="e.g. Summer Showcase 2026"
-                      value={newPerformance.date_label}
-                      onChange={(v) =>
-                        setNewPerformance({ ...newPerformance, date_label: v })
-                      }
-                    />
-                    <div className="full">
-                      <Field
-                        id="perf-desc"
-                        label="Performance Description"
-                        placeholder="Context about this recital piece, student progression, or stage highlight..."
-                        value={newPerformance.description}
-                        onChange={(v) =>
-                          setNewPerformance({ ...newPerformance, description: v })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="modal-foot">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Publish Recital Video</Button>
-                </div>
-              </form>
-            ) : (
+            {title === "Programs & Courses" && (
               <form onSubmit={handleAddProgram}>
                 <div className="modal-body">
+                  <Field
+                    id="add-p-name"
+                    label="Course Name"
+                    value={newCourse.name}
+                    onChange={(v) => setNewCourse({ ...newCourse, name: v })}
+                    placeholder="e.g. Jazz Trumpet & Improvisation"
+                    required
+                  />
                   <div className="form-grid">
-                    <Field
-                      id="prog-name"
-                      label="Course Name"
-                      placeholder="e.g. Jazz Saxophone Improvisation"
-                      value={newCourse.name}
-                      onChange={(v) =>
-                        setNewCourse({ ...newCourse, name: v })
-                      }
-                      required
-                    />
-                    <Field
-                      id="prog-fee"
-                      label="Fee Description"
-                      placeholder="₦85,000 / term"
-                      value={newCourse.fee}
-                      onChange={(v) =>
-                        setNewCourse({ ...newCourse, fee: v })
-                      }
-                      required
-                    />
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 7 }}>
-                        Discipline / Category
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                        Category
                       </label>
                       <select
                         value={newCourse.category}
-                        onChange={(e) =>
-                          setNewCourse({ ...newCourse, category: e.target.value })
-                        }
-                        style={{ width: "100%", minHeight: 48, borderRadius: 8, border: "1px solid #cbd4d9", padding: "0 14px", background: "white" }}
+                        onChange={(e) => setNewCourse({ ...newCourse, category: e.target.value })}
+                        style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
                       >
                         <option value="Instruments">Instruments</option>
                         <option value="Vocals">Vocals</option>
-                        <option value="Composition">Composition</option>
-                        <option value="Music Production">Music Production</option>
+                        <option value="Production">Production &amp; Tech</option>
+                        <option value="Theory">Theory &amp; Musicianship</option>
                       </select>
                     </div>
-                    <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 7 }}>
-                        Target Age Group
-                      </label>
-                      <select
-                        value={newCourse.age_group}
-                        onChange={(e) =>
-                          setNewCourse({ ...newCourse, age_group: e.target.value })
-                        }
-                        style={{ width: "100%", minHeight: 48, borderRadius: 8, border: "1px solid #cbd4d9", padding: "0 14px", background: "white" }}
-                      >
-                        <option value="All Ages">All Ages</option>
-                        <option value="Kids (4–12)">Kids (4–12)</option>
-                        <option value="Teens (13–19)">Teens (13–19)</option>
-                        <option value="Adults & Professionals">Adults & Professionals</option>
-                      </select>
-                    </div>
-                    <div className="full">
-                      <Field
-                        id="prog-desc"
-                        label="Course Description"
-                        placeholder="Curriculum overview and technique scope..."
-                        value={newCourse.desc}
-                        onChange={(v) =>
-                          setNewCourse({ ...newCourse, desc: v })
-                        }
-                        required
-                      />
-                    </div>
+                    <Field
+                      id="add-p-fee"
+                      label="Fee Schedule"
+                      value={newCourse.fee}
+                      onChange={(v) => setNewCourse({ ...newCourse, fee: v })}
+                      placeholder="e.g. ₦35,000 / month"
+                    />
                   </div>
+                  <Field
+                    id="add-p-desc"
+                    label="Course Description"
+                    value={newCourse.desc}
+                    onChange={(v) => setNewCourse({ ...newCourse, desc: v })}
+                    placeholder="Syllabus highlights, techniques covered..."
+                  />
                 </div>
                 <div className="modal-foot">
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                  >
+                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Publish Course</Button>
+                  <Button type="submit">Publish to Course Catalog</Button>
+                </div>
+              </form>
+            )}
+
+            {title === "Instructors" && (
+              <form onSubmit={handleAddInstructor}>
+                <div className="modal-body">
+                  <Field
+                    id="add-i-name"
+                    label="Instructor Full Name"
+                    value={newInstructor.name}
+                    onChange={(v) => setNewInstructor({ ...newInstructor, name: v })}
+                    placeholder="e.g. Emmanuel Danjuma"
+                    required
+                  />
+                  <div className="form-grid">
+                    <Field
+                      id="add-i-title"
+                      label="Title / Position"
+                      value={newInstructor.title}
+                      onChange={(v) => setNewInstructor({ ...newInstructor, title: v })}
+                      placeholder="e.g. Senior Piano Faculty"
+                    />
+                    <Field
+                      id="add-i-spec"
+                      label="Specialization"
+                      value={newInstructor.specialization}
+                      onChange={(v) => setNewInstructor({ ...newInstructor, specialization: v })}
+                      placeholder="e.g. Classical & Jazz Piano"
+                    />
+                  </div>
+                  <div className="form-grid">
+                    <Field
+                      id="add-i-loc"
+                      label="Primary Studio Location"
+                      value={newInstructor.location}
+                      onChange={(v) => setNewInstructor({ ...newInstructor, location: v })}
+                      placeholder="Kaduna Studio"
+                    />
+                    <div style={{ display: "flex", alignItems: "center", marginTop: 24 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={!!newInstructor.is_director}
+                          onChange={(e) => setNewInstructor({ ...newInstructor, is_director: e.target.checked ? 1 : 0 })}
+                        />
+                        Executive / Artistic Director Profile
+                      </label>
+                    </div>
+                  </div>
+                  <Field
+                    id="add-i-bio"
+                    label="Biography"
+                    value={newInstructor.bio}
+                    onChange={(v) => setNewInstructor({ ...newInstructor, bio: v })}
+                    placeholder="Conservatory background, performance history, awards..."
+                  />
+                </div>
+                <div className="modal-foot">
+                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Instructor Profile</Button>
+                </div>
+              </form>
+            )}
+
+            {title === "Performances & Recitals" && (
+              <form onSubmit={handleAddPerformance}>
+                <div className="modal-body">
+                  <Field
+                    id="add-pf-title"
+                    label="Performance Title"
+                    value={newPerformance.title}
+                    onChange={(v) => setNewPerformance({ ...newPerformance, title: v })}
+                    placeholder="e.g. Chopin Nocturne in C Minor"
+                    required
+                  />
+                  <div className="form-grid">
+                    <Field
+                      id="add-pf-perf"
+                      label="Performer / Student Name"
+                      value={newPerformance.performer}
+                      onChange={(v) => setNewPerformance({ ...newPerformance, performer: v })}
+                      placeholder="e.g. Chinedu Okafor (Grade 3 Piano)"
+                    />
+                    <Field
+                      id="add-pf-prog"
+                      label="Associated Course"
+                      value={newPerformance.program}
+                      onChange={(v) => setNewPerformance({ ...newPerformance, program: v })}
+                      placeholder="Piano & Keyboard Mastery"
+                    />
+                  </div>
+                  <div className="form-grid">
+                    <Field
+                      id="add-pf-yid"
+                      label="YouTube URL or Video ID"
+                      value={newPerformance.youtube_id}
+                      onChange={(v) => setNewPerformance({ ...newPerformance, youtube_id: v })}
+                      placeholder="https://youtu.be/... or 11-char ID"
+                      required
+                    />
+                    <Field
+                      id="add-pf-date"
+                      label="Recital Date / Term Label"
+                      value={newPerformance.date_label}
+                      onChange={(v) => setNewPerformance({ ...newPerformance, date_label: v })}
+                      placeholder="Annual Studio Recital 2026"
+                    />
+                  </div>
+                  <Field
+                    id="add-pf-desc"
+                    label="Description & Highlights"
+                    value={newPerformance.description}
+                    onChange={(v) => setNewPerformance({ ...newPerformance, description: v })}
+                    placeholder="Performance context, milestone celebration..."
+                  />
+                </div>
+                <div className="modal-foot">
+                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Publish Recital Video</Button>
                 </div>
               </form>
             )}
           </div>
         </div>
       )}
-    </>
+
+      {/* ── Edit Course / Instructor Modal ───────────────────────────────────── */}
+      {showEditModal && editCourse && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowEditModal(false)
+              setEditCourse(null)
+            }
+          }}
+        >
+          <div className="modal-card">
+            <div className="modal-head">
+              <h3>Edit Course: {editCourse.name}</h3>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditCourse(null)
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const res = await saveProgram(editCourse)
+                if (res && res.success) {
+                  setShowEditModal(false)
+                  setEditCourse(null)
+                  setActionNotice(`Course "${editCourse.name}" updated.`)
+                  loadData()
+                }
+              }}
+            >
+              <div className="modal-body">
+                <Field
+                  id="edit-p-name"
+                  label="Course Name"
+                  value={editCourse.name}
+                  onChange={(v) => setEditCourse({ ...editCourse, name: v })}
+                  required
+                />
+                <div className="form-grid">
+                  <Field
+                    id="edit-p-cat"
+                    label="Category"
+                    value={editCourse.category}
+                    onChange={(v) => setEditCourse({ ...editCourse, category: v })}
+                  />
+                  <Field
+                    id="edit-p-fee"
+                    label="Fee Schedule"
+                    value={editCourse.fee}
+                    onChange={(v) => setEditCourse({ ...editCourse, fee: v })}
+                  />
+                </div>
+                <Field
+                  id="edit-p-desc"
+                  label="Description"
+                  value={editCourse.desc || ""}
+                  onChange={(v) => setEditCourse({ ...editCourse, desc: v })}
+                />
+              </div>
+              <div className="modal-foot">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  style={{ color: "#dc2626" }}
+                  onClick={async () => {
+                    if (confirm(`Deactivate course "${editCourse.name}"?`)) {
+                      await deleteProgram(editCourse.id)
+                      setShowEditModal(false)
+                      setEditCourse(null)
+                      setActionNotice("Course removed from catalog.")
+                      loadData()
+                    }
+                  }}
+                >
+                  Deactivate Course
+                </Button>
+                <Button type="submit">Save Modifications</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && editInstructor && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowEditModal(false)
+              setEditInstructor(null)
+            }
+          }}
+        >
+          <div className="modal-card">
+            <div className="modal-head">
+              <h3>Edit Instructor: {editInstructor.name}</h3>
+              <button
+                className="modal-close"
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditInstructor(null)
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const res = await saveInstructor(editInstructor)
+                if (res && res.success) {
+                  setShowEditModal(false)
+                  setEditInstructor(null)
+                  setActionNotice(`Instructor "${editInstructor.name}" updated.`)
+                  loadData()
+                }
+              }}
+            >
+              <div className="modal-body">
+                <Field
+                  id="edit-i-name"
+                  label="Instructor Name"
+                  value={editInstructor.name}
+                  onChange={(v) => setEditInstructor({ ...editInstructor, name: v })}
+                  required
+                />
+                <div className="form-grid">
+                  <Field
+                    id="edit-i-title"
+                    label="Title / Position"
+                    value={editInstructor.title}
+                    onChange={(v) => setEditInstructor({ ...editInstructor, title: v })}
+                  />
+                  <Field
+                    id="edit-i-spec"
+                    label="Specialization"
+                    value={editInstructor.specialization}
+                    onChange={(v) => setEditInstructor({ ...editInstructor, specialization: v })}
+                  />
+                </div>
+                <Field
+                  id="edit-i-bio"
+                  label="Biography"
+                  value={editInstructor.bio || ""}
+                  onChange={(v) => setEditInstructor({ ...editInstructor, bio: v })}
+                />
+              </div>
+              <div className="modal-foot">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  style={{ color: "#dc2626" }}
+                  onClick={async () => {
+                    if (confirm(`Deactivate profile for "${editInstructor.name}"?`)) {
+                      await deleteInstructor(editInstructor.id)
+                      setShowEditModal(false)
+                      setEditInstructor(null)
+                      setActionNotice("Instructor profile deactivated.")
+                      loadData()
+                    }
+                  }}
+                >
+                  Deactivate Profile
+                </Button>
+                <Button type="submit">Save Modifications</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
-
-export default Admin

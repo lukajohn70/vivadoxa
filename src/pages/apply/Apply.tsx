@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
   Logo,
   Button,
@@ -8,7 +8,14 @@ import {
   SelectField,
 } from "@/components/ui"
 import { programs } from "@/lib/data"
-import { isValidEmail } from "@/lib/utils"
+import {
+  isValidEmail,
+  SCHOOL_PHONE,
+  SCHOOL_PHONE_2,
+  SCHOOL_WHATSAPP,
+  SCHOOL_EMAIL,
+  WHATSAPP_URL,
+} from "@/lib/utils"
 import { submitApplication } from "@/lib/api"
 import type { ApplicationData, Page } from "@/types"
 
@@ -72,6 +79,76 @@ function ReviewRow({
   )
 }
 
+export const OFFICIAL_APPLY_DISCIPLINES = [
+  // Instruments (13 official disciplines)
+  { name: "Piano & Keyboard Mastery", category: "Instruments" },
+  { name: "Acoustic Guitar Foundations", category: "Instruments" },
+  { name: "Lead & Electric Guitar", category: "Instruments" },
+  { name: "Bass Guitar Groove & Harmony", category: "Instruments" },
+  { name: "Violin & Classical Strings", category: "Instruments" },
+  { name: "Saxophone (Alto & Tenor)", category: "Instruments" },
+  { name: "Trumpet & Brass Fundamentals", category: "Instruments" },
+  { name: "Euphonium & Low Brass", category: "Instruments" },
+  { name: "Clarinet & Woodwinds", category: "Instruments" },
+  { name: "Concert Flute", category: "Instruments" },
+  { name: "Contemporary Drum Kit", category: "Instruments" },
+  { name: "Talking Drums (Traditional Percussion)", category: "Instruments" },
+  // Vocals
+  { name: "Voice Training & Vocal Stagecraft", category: "Vocals" },
+  // Composition
+  { name: "Sight Reading & Music Theory", category: "Composition" },
+  // Production
+  { name: "Music Production & Audio Engineering", category: "Music Production" },
+]
+
+export const ENROLLMENT_DURATION_PLANS = [
+  {
+    id: "1-month",
+    name: "1 Month Intensive Foundation",
+    duration: "1 Month",
+    fee: 20000,
+    feeLabel: "₦20,000",
+    badge: "Foundation",
+    inclusions: "4 weekly intensive sessions, foundational technique & practice sheet",
+  },
+  {
+    id: "3-months",
+    name: "3 Months Certificate Program",
+    duration: "3 Months",
+    fee: 55000,
+    feeLabel: "₦55,000",
+    badge: "Most Popular",
+    inclusions: "Full Vivadoxa study kit, textbooks, recital preparation & Certificate",
+  },
+  {
+    id: "6-months",
+    name: "6 Months Diploma Program",
+    duration: "6 Months",
+    fee: 95000,
+    feeLabel: "₦95,000",
+    badge: "Professional Track",
+    inclusions: "Complete textbooks, Vivadoxa Academy T-Shirt, ensemble concerts & Diploma",
+  },
+  {
+    id: "1-year",
+    name: "1 Year Advance Diploma",
+    duration: "12 Months (1 Year)",
+    fee: 185000,
+    feeLabel: "₦185,000",
+    badge: "Mastery Level",
+    inclusions: "Flagship conservatory training, live studio recording & Advance Diploma",
+  },
+  {
+    id: "home-lessons",
+    name: "Private Home Lessons (Monthly)",
+    duration: "Monthly",
+    fee: 50000,
+    feeLabel: "₦50,000 / month",
+    badge: "1-on-1 at Residence",
+    inclusions: "Instructor visits your home in Kaduna for personalized 1-on-1 coaching",
+  },
+]
+
 const defaultData = (): ApplicationData => ({
   fullName: "",
   dateOfBirth: "",
@@ -85,23 +162,28 @@ const defaultData = (): ApplicationData => ({
   guardianPhone: "",
   guardianEmail: "",
   category: "Instruments",
-  program: "Piano & Keyboard",
+  program: "Piano & Keyboard Mastery",
+  planTier: "1-month",
   level: "Beginner",
   schedule: "Weekday evenings",
   studyMode: "Onsite",
   referenceNo: "",
-  amount: 85000,
+  amount: 20000,
 })
 
 export function Apply({ go }: { go: (p: Page | string) => void }) {
   const navigate = useNavigate()
-  const [step, setStep] = useState(1)
+  const [searchParams] = useSearchParams()
+  const stepParam = parseInt(searchParams.get("step") || "1", 10)
+  const initialStep = stepParam >= 1 && stepParam <= 4 ? stepParam : 1
+  const [step, setStep] = useState(initialStep)
   const [data, setData] = useState<ApplicationData>(defaultData)
   const [errors, setErrors] = useState<
     Partial<Record<keyof ApplicationData, string>>
   >({})
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [termsError, setTermsError] = useState("")
+  const [accountPassword, setAccountPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const formRef = useRef<HTMLDivElement>(null)
@@ -112,10 +194,44 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
     setSubmitError("")
   }
 
-  function handleProgramChange(name: string) {
-    const prog = programs.find((p) => p.name === name)
-    set("program", name)
-    if (prog) set("amount", prog.feeAmount)
+  function handleCategoryChange(cat: string) {
+    set("category", cat)
+    const matchingProgs = OFFICIAL_APPLY_DISCIPLINES.filter((p) => p.category === cat)
+    if (matchingProgs.length > 0) {
+      set("program", matchingProgs[0].name)
+    }
+  }
+
+  function handlePlanChange(planId: string) {
+    const plan = ENROLLMENT_DURATION_PLANS.find((p) => p.id === planId)
+    if (plan) {
+      set("planTier", planId)
+      if (planId === "home-lessons") {
+        set("studyMode", "Home Lessons")
+        set("amount", 50000)
+      } else {
+        if (data.studyMode === "Home Lessons") {
+          set("studyMode", "Onsite")
+        }
+        set("amount", plan.fee)
+      }
+    }
+  }
+
+  function handleStudyModeChange(mode: "Onsite" | "Online" | "Home Lessons") {
+    set("studyMode", mode)
+    if (mode === "Home Lessons") {
+      set("planTier", "home-lessons")
+      set("amount", 50000)
+    } else {
+      if (data.planTier === "home-lessons") {
+        set("planTier", "1-month")
+        set("amount", 20000)
+      } else {
+        const plan = ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)
+        set("amount", plan ? plan.fee : 20000)
+      }
+    }
   }
 
   function validateStep(): boolean {
@@ -187,6 +303,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
         studyMode: data.studyMode,
         level: data.level,
         amount: data.amount,
+        password: accountPassword.trim() || undefined,
       })
 
       if (res && res.success && res.application_no) {
@@ -217,14 +334,29 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
     <main className="application">
       <div className="container">
         <div className="application-head">
-          <button
-            className="logo-button"
-            onClick={() => go("home")}
-            aria-label="Go to homepage"
-          >
-            <Logo />
-          </button>
-          <span>Official Admissions Portal</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1)
+                else go("programs")
+              }}
+              className="btn btn-secondary !min-h-[36px] !py-1 !px-3 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
+              title="Return to previous page"
+              aria-label="Go back to previous page"
+            >
+              <Icon name="arrow" size={13} className="rotate-180" />
+              <span>Back</span>
+            </button>
+            <button
+              className="logo-button"
+              onClick={() => go("home")}
+              aria-label="Go to homepage"
+            >
+              <Logo />
+            </button>
+          </div>
+          <span className="text-xs text-[var(--muted)] hidden sm:inline">Official Admissions Portal</span>
         </div>
 
         <div className="apply-layout">
@@ -236,9 +368,21 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
               audition and class placement.
             </p>
             <div className="support">
-              <strong>Admissions Desk</strong>
-              <a href="tel:+2348031308881">+234 803 130 8881</a>
-              <a href="mailto:admissions@vivadoxa.ng">admissions@vivadoxa.ng</a>
+              <strong className="block text-white font-semibold text-sm mb-3">Admissions Desk</strong>
+              <div className="flex flex-col gap-2.5 text-xs text-[#9dacb8]">
+                <a href={`tel:${SCHOOL_PHONE}`} className="inline-flex items-center gap-2 hover:text-white transition-colors">
+                  <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE}</span>
+                </a>
+                <a href={`tel:${SCHOOL_PHONE_2}`} className="inline-flex items-center gap-2 hover:text-white transition-colors">
+                  <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE_2}</span>
+                </a>
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white transition-colors">
+                  <WhatsAppIcon size={14} className="text-emerald-400 shrink-0" /> <span>{SCHOOL_WHATSAPP} (WhatsApp)</span>
+                </a>
+                <a href={`mailto:${SCHOOL_EMAIL}`} className="inline-flex items-center gap-2 hover:text-white transition-colors break-all">
+                  <Icon name="mail" size={13} className="text-slate-400" /> <span>{SCHOOL_EMAIL}</span>
+                </a>
+              </div>
             </div>
           </aside>
 
@@ -396,26 +540,26 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                     id="ap-cat"
                     label="Category"
                     value={data.category}
-                    onChange={(v) => set("category", v)}
+                    onChange={handleCategoryChange}
                     required
                   >
-                    <option value="Instruments">Instruments</option>
-                    <option value="Vocals">Vocals</option>
-                    <option value="Composition">Composition</option>
-                    <option value="Music Production">Music Production</option>
+                    <option value="Instruments">Musical Instruments (13 Official Disciplines)</option>
+                    <option value="Vocals">Voice Training & Vocal Stagecraft</option>
+                    <option value="Composition">Sight Reading & Music Theory</option>
+                    <option value="Music Production">Music Production & Audio Engineering</option>
                   </SelectField>
                   <SelectField
                     id="ap-prog"
-                    label="Program / instrument"
+                    label="Program / Instrument"
                     value={data.program}
-                    onChange={handleProgramChange}
+                    onChange={(v) => set("program", v)}
                     required
                   >
-                    {programs
+                    {OFFICIAL_APPLY_DISCIPLINES
                       .filter((p) => p.category === data.category)
                       .map((p) => (
                         <option key={p.name} value={p.name}>
-                          {p.name} — {p.fee}
+                          {p.name}
                         </option>
                       ))}
                   </SelectField>
@@ -426,9 +570,9 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                     onChange={(v) => set("level", v)}
                     required
                   >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
+                    <option value="Beginner">Beginner (No prior experience)</option>
+                    <option value="Intermediate">Intermediate (Basic chords / scales)</option>
+                    <option value="Advanced">Advanced (Performance & repertoire)</option>
                   </SelectField>
                   <SelectField
                     id="ap-sched"
@@ -443,9 +587,118 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       Saturday afternoons
                     </option>
                     <option value="Flexible (discuss with instructor)">
-                      Flexible
+                      Flexible (discuss with instructor)
                     </option>
                   </SelectField>
+
+                  {/* Enrollment Duration Plan Selection */}
+                  <div className="full">
+                    <span className="field-label">
+                      Enrollment Duration & Program Track{" "}
+                      <span className="required-star" aria-hidden="true">
+                        *
+                      </span>
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-2">
+                      {ENROLLMENT_DURATION_PLANS.map((plan) => {
+                        const isSelected = data.planTier === plan.id;
+                        const isHomeLessons = plan.id === "home-lessons";
+                        return (
+                          <button
+                            key={plan.id}
+                            type="button"
+                            onClick={() => handlePlanChange(plan.id)}
+                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                              isHomeLessons ? "sm:col-span-2" : "sm:col-span-1"
+                            } ${
+                              isSelected
+                                ? "border-[var(--gold)] bg-[var(--gold)]/10 ring-2 ring-[var(--gold)]/30"
+                                : "border-[var(--border,#e5e7eb)] bg-[var(--card,#ffffff)] hover:border-[var(--gold)]/50"
+                            }`}
+                          >
+                            {isHomeLessons ? (
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                    <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gold)]/20 text-[var(--gold2)] border border-[var(--gold)]/30">
+                                      {plan.badge}
+                                    </span>
+                                    <span className="font-bold text-sm text-[var(--navy,#0f2438)]">
+                                      {plan.name}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-[var(--muted,#64748b)] leading-relaxed">
+                                    {plan.inclusions}
+                                  </p>
+                                </div>
+                                <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-[var(--border,#e5e7eb)]/60 sm:pl-3.5">
+                                  <div className="text-left sm:text-right">
+                                    <span className="block text-[11px] text-[var(--muted,#64748b)] font-medium">
+                                      {plan.duration}
+                                    </span>
+                                    <strong className="text-sm font-bold text-[var(--gold)]">
+                                      {plan.feeLabel}
+                                    </strong>
+                                  </div>
+                                  <span
+                                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                                      isSelected
+                                        ? "border-[var(--gold)] bg-[var(--gold)] text-white shadow-xs"
+                                        : "border-zinc-300 bg-white"
+                                    }`}
+                                  >
+                                    {isSelected && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-full">
+                                  <div className="flex items-center justify-between gap-2 mb-2">
+                                    {plan.badge ? (
+                                      <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gold)]/20 text-[var(--gold2)] border border-[var(--gold)]/30">
+                                        {plan.badge}
+                                      </span>
+                                    ) : (
+                                      <span />
+                                    )}
+                                    <span
+                                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                                        isSelected
+                                          ? "border-[var(--gold)] bg-[var(--gold)] text-white shadow-xs"
+                                          : "border-zinc-300 bg-white"
+                                      }`}
+                                    >
+                                      {isSelected && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                      )}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-bold text-sm text-[var(--navy,#0f2438)] leading-snug mb-1">
+                                    {plan.name}
+                                  </h4>
+                                  <p className="text-xs text-[var(--muted,#64748b)] leading-relaxed mb-3">
+                                    {plan.inclusions}
+                                  </p>
+                                </div>
+                                <div className="w-full pt-2 border-t border-[var(--border,#e5e7eb)]/60 flex items-center justify-between mt-auto">
+                                  <span className="text-xs text-[var(--muted,#64748b)] font-medium">
+                                    {plan.duration}
+                                  </span>
+                                  <strong className="text-sm font-bold text-[var(--gold)]">
+                                    {plan.feeLabel}
+                                  </strong>
+                                </div>
+                              </>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div className="full">
                     <span className="field-label">
                       Study mode{" "}
@@ -466,16 +719,16 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                               name="mode"
                               value={x}
                               checked={data.studyMode === x}
-                              onChange={() => set("studyMode", x)}
+                              onChange={() => handleStudyModeChange(x)}
                             />
                             <span>
                               <strong>{x}</strong>
                               <small>
                                 {x === "Onsite"
-                                  ? "At our Kaduna studio"
+                                  ? "At Vivadoxa Kaduna Studio"
                                   : x === "Online"
-                                    ? "Live video lessons"
-                                    : "Instructor visits you"}
+                                    ? "Live Interactive Video Coaching"
+                                    : "Instructor visits your residence (₦50,000/mo)"}
                               </small>
                             </span>
                           </label>
@@ -514,6 +767,11 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                     value={`${data.studyMode} · ${data.schedule}`}
                     onEdit={() => setStep(3)}
                   />
+                  <ReviewRow
+                    title="Plan & Duration"
+                    value={ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)?.name || "1 Month Intensive Foundation"}
+                    onEdit={() => setStep(3)}
+                  />
                   {data.guardianName && (
                     <ReviewRow
                       title="Guardian"
@@ -523,10 +781,30 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   )}
                   <div className="total">
                     <div>
-                      <span>Program tuition (one 12-week term)</span>
+                      <span>{ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)?.name || "Program Tuition"}</span>
+                      <small className="block text-xs text-[var(--muted)] font-normal mt-0.5">
+                        Uniform tuition policy across all 13 official instruments and vocal disciplines
+                      </small>
                     </div>
                     <strong>₦{data.amount.toLocaleString("en-NG")}</strong>
                   </div>
+                  <div style={{ margin: "20px 0 16px", padding: 16, background: "#faf9f6", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <Icon name="lock" size={15} className="text-amber-800" />
+                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>Student Portal Account (Optional)</strong>
+                    </div>
+                    <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--muted)", lineHeight: 1.4 }}>
+                      Create a password to access your Student Portal anytime to track your admission review, download official admission letters, and view payment receipts.
+                    </p>
+                    <input
+                      type="password"
+                      placeholder="Choose a password (leave blank for automatic credentials)"
+                      value={accountPassword}
+                      onChange={(e) => setAccountPassword(e.target.value)}
+                      style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd5e1", padding: "0 12px", background: "white", fontSize: 13 }}
+                    />
+                  </div>
+
                   <label className="terms">
                     <input
                       type="checkbox"
@@ -537,8 +815,49 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       }}
                       aria-invalid={!!termsError}
                     />
-                    I agree to Vivadoxa Music School admission terms and
-                    policies.
+                    <span>
+                      I agree to the Vivadoxa Music School{" "}
+                      <a
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Terms of Service
+                      </a>
+                      ,{" "}
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Privacy Policy
+                      </a>
+                      ,{" "}
+                      <a
+                        href="/tuition-policy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Tuition &amp; Refund Policy
+                      </a>
+                      , and{" "}
+                      <a
+                        href="/safeguarding"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Child Safeguarding Guidelines
+                      </a>
+                      .
+                    </span>
                   </label>
                   {termsError && (
                     <p className="field-hint error" role="alert">
@@ -565,7 +884,17 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   Back
                 </Button>
               ) : (
-                <span />
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => {
+                    if (window.history.length > 1) navigate(-1)
+                    else go("programs")
+                  }}
+                  disabled={submitting}
+                >
+                  ← Back to Programs
+                </Button>
               )}
               <Button
                 onClick={step < 4 ? next : handleSubmit}

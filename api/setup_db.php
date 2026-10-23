@@ -2,23 +2,31 @@
 // ─── Database Setup and Migration Script for Vivadoxa ─────────────────────────
 header('Content-Type: application/json');
 
-$host = '127.0.0.1';
-$port = 3306;
-$user = 'root';
-$pass = 'root';
+require_once __DIR__ . '/db.php';
 
 try {
-    // 1. Connect without database to create it
-    $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-
-    // 2. Create database
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS `vivadoxa` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
-    $pdo->exec("USE `vivadoxa`;");
+    $pdo = getDb();
 
     // 3. Create tables
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `users` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `email` VARCHAR(191) NOT NULL UNIQUE,
+            `phone` VARCHAR(50) NOT NULL,
+            `password_hash` VARCHAR(255) NOT NULL,
+            `full_name` VARCHAR(150) NOT NULL,
+            `role` ENUM('student', 'client', 'all') NOT NULL DEFAULT 'student',
+            `avatar` VARCHAR(255) NULL,
+            `address` TEXT NULL,
+            `guardian_name` VARCHAR(150) NULL,
+            `guardian_phone` VARCHAR(50) NULL,
+            `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+            `last_login` DATETIME NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;
+    ");
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `admins` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -117,14 +125,14 @@ try {
             `name` VARCHAR(150) NOT NULL UNIQUE,
             `category` VARCHAR(50) NOT NULL,
             `tag` VARCHAR(50) NOT NULL DEFAULT 'Popular',
-            `fee` VARCHAR(50) NOT NULL DEFAULT '₦85,000',
+            `fee` VARCHAR(50) NOT NULL DEFAULT '85,000',
             `fee_amount` DECIMAL(12, 2) NOT NULL DEFAULT 85000.00,
             `duration` VARCHAR(50) NOT NULL DEFAULT '12 weeks',
             `modes` VARCHAR(100) NOT NULL DEFAULT 'Onsite + Online',
             `desc` TEXT NOT NULL,
             `is_active` TINYINT(1) NOT NULL DEFAULT 1,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB;
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
     // Migration for programs table
@@ -180,6 +188,7 @@ try {
             `date_label` VARCHAR(100) NOT NULL DEFAULT 'Annual Recital',
             `description` TEXT NOT NULL,
             `is_featured` TINYINT(1) NOT NULL DEFAULT 0,
+            `is_short` TINYINT(1) NOT NULL DEFAULT 0,
             `is_active` TINYINT(1) NOT NULL DEFAULT 1,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB;
@@ -210,6 +219,55 @@ try {
             `time_slot` VARCHAR(100) NOT NULL,
             `room` VARCHAR(100) NOT NULL,
             `status` VARCHAR(50) NOT NULL DEFAULT 'Active'
+        ) ENGINE=InnoDB;
+    ");
+
+    // ── Student Schedule, Absence & Reschedule Requests ───────────────────────
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `schedule_requests` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `student_id` INT NULL,
+            `user_id` INT NULL,
+            `student_name` VARCHAR(150) NOT NULL,
+            `student_email` VARCHAR(191) NOT NULL,
+            `student_phone` VARCHAR(50) NOT NULL,
+            `program` VARCHAR(150) NOT NULL,
+            `request_type` ENUM('absence_travel', 'one_off_reschedule', 'permanent_change') NOT NULL DEFAULT 'absence_travel',
+            `current_schedule` VARCHAR(150) NOT NULL,
+            `affected_date` DATE NULL,
+            `return_date` DATE NULL,
+            `reason` VARCHAR(100) NOT NULL,
+            `makeup_requested` TINYINT(1) NOT NULL DEFAULT 1,
+            `preferred_makeup_slot` VARCHAR(150) NULL,
+            `notes` TEXT NULL,
+            `status` ENUM('pending', 'approved', 'declined', 'completed') NOT NULL DEFAULT 'pending',
+            `allocated_makeup_date` DATETIME NULL,
+            `allocated_room` VARCHAR(50) NULL,
+            `staff_notes` TEXT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;
+    ");
+
+    // ── System Settings & Notification Logs ──────────────────────────────────
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `system_settings` (
+            `setting_key` VARCHAR(100) PRIMARY KEY,
+            `setting_value` MEDIUMTEXT NOT NULL,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;
+    ");
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `system_notifications` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `channel` ENUM('email', 'whatsapp') NOT NULL,
+            `recipient` VARCHAR(191) NOT NULL,
+            `subject` VARCHAR(255) NOT NULL,
+            `message` TEXT NOT NULL,
+            `status` ENUM('sent', 'failed', 'logged') NOT NULL DEFAULT 'sent',
+            `error_message` TEXT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB;
     ");
 
@@ -325,19 +383,31 @@ try {
         }
     }
 
-    // 9. Seed Performances if empty
+    // 9. Seed Performances if empty or containing stale placeholders
+    $pdo->exec("DELETE FROM `performances` WHERE `youtube_id` IN ('FbnNOOE3ET4', 'olo4Ax3HPv8', '47Ina4YxXnY', 'JGUCSB0q0nE')");
     $perfCount = $pdo->query("SELECT COUNT(*) FROM `performances`")->fetchColumn();
     if ($perfCount == 0) {
         $seedPerformances = [
-            ['Chamber Strings & Piano Recital', 'Vivadoxa Youth Ensemble', 'Violin & Piano', 'Concert', 'FbnNOOE3ET4', '4:15', 'Annual Mid-Term Showcase', 'Our intermediate violin and keyboard candidates perform an uplifting chamber medley at the Kaduna studio recital hall.', 1],
-            ['Contemporary Keyboard Rendition', 'Junior Recitalists (Ages 7–11)', 'Piano & Keyboard', 'Recital', 'olo4Ax3HPv8', '3:40', 'Junior Music Festival', 'Young learners demonstrate two-hand coordination, dynamic phrasing, and sight-reading after their 12-week foundation term.', 0],
-            ['Acoustic Fingerstyle & Rhythm Ensemble', 'David O. & Teen Guitarists', 'Guitar', 'Recital', '47Ina4YxXnY', '3:10', 'Kaduna Youth Recital', 'Clean fretboard transitions, chord melodies, and rhythmic syncopation performed live on acoustic guitars.', 0],
-            ['Student Band Live Performance — Believer', 'Vivadoxa Senior Student Band', 'Drums, Bass & Vocals', 'Student Band', 'JGUCSB0q0nE', '4:30', 'End of Year Concert', 'High-octane ensemble performance showcasing stage discipline, tight pocket drumming, and dynamic vocal delivery.', 0],
+            ['Vivadoxa Music Worship Session featuring Min. Uche', 'Min. Uche & Vivadoxa Live Ensemble', 'Vocal & Instrumental Ensemble', 'Concert', '-IcdMT9uCLU', 'Live Session', 'Live Studio Session', 'An inspiring live worship and vocal ensemble session featuring Min. Uche and Vivadoxa student instrumentalists live in the Kaduna studio.', 1, 0],
+            ['Students Praise Session & Live Band Recital', 'Vivadoxa Student Ensemble', 'Drums, Bass & Keyboard', 'Student Band', 'XU917wI9sDg', 'Live Band', 'Student Praise Showcase', 'Vivadoxa candidates unite for an authentic praise session and live band showcase, demonstrating tempo lock, group dynamics, and rhythm control.', 0, 1],
+            ['Multi-Instrument Showcase: Bringing Musical Passions to Life', 'Vivadoxa Instructors & Students', 'Multi-Disciplinary Ensemble', 'Concert', 'FZydqxYOpF0', 'Academy Showcase', 'Kaduna Studio Showcase', 'Highlighting the comprehensive range of musical disciplines taught at Vivadoxa Music Kaduna, from keyboard and strings to percussion.', 0, 1],
+            ['Acoustic Guitar Foundations & Worship Chord Melody', 'Vivadoxa Guitar Faculty & Students', 'Acoustic Guitar', 'Recital', 'vjVEDq9oITE', 'Guitar Recital', 'Guitar Studio Showcase', 'Practical acoustic guitar demonstration playing worship songs, showing smooth open chord changes and rhythmic strumming dynamics.', 0, 1],
+            ['Electric Bass Guitar Groove & Harmony Masterclass', 'Vivadoxa Bass Faculty', 'Bass Guitar', 'Recital', 'G4c81H_UeXM', 'Bass Workshop', 'Fretboard Workshop', 'In-depth electric bass groove training, fretboard positioning, root-fifth-octave pocket playing, and gospel bass foundation.', 0, 1],
+            ['Makossa & African Highlife Bass Groove Showcase', 'Vivadoxa Rhythm Section', 'Bass Guitar & Percussion', 'Student Band', 'Adt0rd5uGaM', 'Groove Lab', 'Live Rhythm Lab', 'High-energy Makossa and African Highlife syncopated bass grooves, demonstrating finger dexterity, slap-pop nuances, and pocket timing.', 0, 1],
+            ['Highlife Piano & African Praise Phrasing', 'Vivadoxa Keyboard Department', 'Piano & Keyboard', 'Recital', 'hH8frv6klc4', 'African Praise', 'Keyboard Studio', 'Authentic African Highlife keyboard chord voicings, rhythmic syncopation, and praise progression improvisation.', 0, 1],
+            ['Makossa & Soukous Keyboard Rhythms', 'Vivadoxa Keyboard Students', 'Piano & Keyboard', 'Recital', 'Clu5E2abMgU', 'Studio Recital', 'Contemporary Keyboard Lab', 'Dynamic Makossa and Soukous rhythmic accompaniment patterns on piano, mastering two-hand independent rhythmic timing.', 0, 1],
+            ['1-4-5 Chord Progressions & Harmonic Theory for Beginners', 'Vivadoxa Foundation Learners', 'Piano & Keyboard', 'Recital', 'aokYxYryN_8', 'Theory & Recital', 'Foundation Class', 'Demystifying fundamental 1-4-5 harmonic progressions on piano, voice leading, and cadence resolution for aspiring accompanists.', 0, 0],
+            ['Beginner Piano: Playing Your First Song', 'Vivadoxa Foundation Learners', 'Piano & Keyboard', 'Recital', 'SHQFEIvnFXc', 'Early Milestone', 'Early Learner Showcase', 'Encouraging early music education milestone: building hand posture, finger numbers, and completing your first song melody.', 0, 0],
+            ['Guitar Foundations: Playing Simple Songs & Strumming', 'Vivadoxa Guitar Department', 'Acoustic Guitar', 'Recital', 'Hpx3BJ7C3QA', 'Acoustic Session', 'Kaduna Studio', 'Step-by-step guitar chord changes, rhythm timing, and playing your first full song with acoustic confidence.', 0, 1],
+            ['Heartfelt Recital Milestone: Student Breakthrough Showcase', 'Junior Student Recitalist', 'Piano & Keyboard', 'Recital', 'biosC5ZXQgI', 'Milestone Recital', 'Studio Recital', 'An emotional milestone performance celebrating student breakthrough, musical expression, and dedication to practice.', 0, 1],
+            ['Simple Piano Lesson & Melodic Phrasing', 'Vivadoxa Keyboard Department', 'Piano & Keyboard', 'Recital', 'teoKQmcuMZw', 'Piano Lesson', 'Keyboard Studio', 'Accessible foundation piano lesson breaking down melody phrasing, hand posture, and key navigation.', 0, 0],
+            ['Makossa Praise Groove & Syncopation', 'Vivadoxa Keyboard Students', 'Piano & Keyboard', 'Recital', 'Lxiwngf0YBQ', 'Praise Groove', 'Kaduna Studio', 'High-energy praise rhythm syncopation, upbeat comping, and authentic African gospel keyboard groove.', 0, 1],
+            ['Melodic Solo Expression on the Piano', 'Advanced Piano Students', 'Piano & Keyboard', 'Recital', 'hSRbektpiTQ', 'Solo Phrasing', 'Masterclass Showcase', 'Techniques for playing lyrical solo melodies on keyboard with dynamic touch and expressive ornamentation.', 0, 1],
         ];
 
         $insPerf = $pdo->prepare("
-            INSERT INTO `performances` (`title`, `performer`, `program`, `category`, `youtube_id`, `duration`, `date_label`, `description`, `is_featured`)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO `performances` (`title`, `performer`, `program`, `category`, `youtube_id`, `duration`, `date_label`, `description`, `is_featured`, `is_short`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         foreach ($seedPerformances as $pf) {
             $insPerf->execute($pf);
@@ -352,6 +422,20 @@ try {
             `bio` = 'Concert pianist, composer, and pedagogue with over 15 years guiding aspiring instrumentalists, church music leaders, and conservatory candidates across West Africa.'
         WHERE `name` LIKE '%Tosin%'
     ");
+
+    // Seed enquiries if empty
+    $enqCount = (int)$pdo->query("SELECT COUNT(*) FROM `enquiries`")->fetchColumn();
+    if ($enqCount === 0) {
+        $stmt = $pdo->prepare("
+            INSERT INTO `enquiries` (`name`, `email`, `phone`, `subject`, `message`, `is_read`, `created_at`)
+            VALUES 
+            ('Rev. Bulus Danjuma', 'bulus.d@faithchapel.org', '08032221144', 'Choir Workshop & Vocal Training', 'Good day Vivadoxa team. Our church choir in Barnawa is planning a 3-day vocal masterclass next month. Can we schedule an instructor consultation?', 0, '2026-10-21 11:15:00'),
+            ('Zainab Mohammed', 'zainab.m@gmail.com', '08053334422', 'Kids Piano Lessons in Kaduna', 'Hello, do you offer Saturday morning piano lessons for an 8-year-old beginner? We reside in Malali.', 0, '2026-10-21 12:40:00'),
+            ('Peter Akpan', 'peter.akpan@yahoo.com', '08078889900', 'Guitar Setup & Electronics Repair', 'I have a Fender Stratocaster with heavy ground hum and high string action. What is your turnaround time at the Kaduna workshop?', 1, '2026-10-20 16:30:00'),
+            ('Mrs. Grace Adebayo', 'grace.adebayo@outlook.com', '08031308881', 'Private Home Lessons Inquiry', 'Inquiring about home lesson availability for 2 siblings (Violin and Keyboard) twice weekly.', 0, '2026-10-21 14:10:00')
+        ");
+        $stmt->execute();
+    }
 
     echo json_encode([
         'success' => true,

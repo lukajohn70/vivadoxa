@@ -4,35 +4,35 @@ import type { Page } from "@/types"
 const MODES = [
   {
     name: "Onsite",
-    sub: "Learn in our purpose-built studio",
-    price: "From ₦75,000",
+    sub: "Learn in our purpose-built Kaduna studio",
+    price: "From ₦20,000",
     best: true,
     items: [
-      "Access to studio instruments",
-      "Real-time ensemble practice",
-      "Weekday and weekend slots",
+      "Access to 13 available studio instruments",
+      "Real-time ensemble practice & recitals",
+      "Weekday, weekend & Sunday Special slots",
     ],
   },
   {
     name: "Online",
     sub: "Live one-to-one video lessons",
-    price: "From ₦60,000",
+    price: "From ₦20,000",
     best: false,
     items: [
-      "Learn from anywhere",
-      "Lesson recordings included",
-      "Stable internet required",
+      "Learn from anywhere in Nigeria & diaspora",
+      "Lesson recordings & digital sheet music",
+      "WhatsApp direct feedback from faculty",
     ],
   },
   {
     name: "Home lessons",
-    sub: "We bring the lesson to you",
-    price: "From ₦95,000",
+    sub: "Certified instructor visits your residence",
+    price: "₦50,000",
     best: false,
     items: [
-      "Available across Kaduna",
-      "No commute required",
-      "Your own instrument preferred",
+      "Available across Kaduna metropolis",
+      "1-on-1 personalized learning pace",
+      "Schedule built around family & work commitments",
     ],
   },
 ]
@@ -54,7 +54,7 @@ export function Modes({ go }: { go: (p: Page) => void }) {
               <p>{m.sub}</p>
               <strong>
                 {m.price}
-                <small> / term</small>
+                <small> / month</small>
               </strong>
               <ul>
                 {m.items.map((x) => (

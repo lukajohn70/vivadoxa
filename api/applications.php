@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -141,6 +142,83 @@ if ($method === 'GET') {
         ':addr' => $address,
         ':fee' => $tuitionFee,
     ]);
+
+    // Auto-provision Student Portal Account if not existing
+    try {
+        $uCheck = $pdo->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:em) LIMIT 1");
+        $uCheck->execute([':em' => $email]);
+        if (!$uCheck->fetch()) {
+            $userPass = !empty($input['password']) ? trim($input['password']) : 'StudentPass2025!';
+            $uHash = password_hash($userPass, PASSWORD_BCRYPT);
+            $uIns = $pdo->prepare("
+                INSERT INTO users (full_name, email, phone, password_hash, role, address, guardian_name, guardian_phone, is_active)
+                VALUES (:fn, :em, :ph, :pw, 'student', :ad, :gn, :gp, 1)
+            ");
+            $uIns->execute([
+                ':fn' => trim($firstName . ' ' . $lastName),
+                ':em' => $email,
+                ':ph' => $phone,
+                ':pw' => $uHash,
+                ':ad' => $address,
+                ':gn' => $guardianName,
+                ':gp' => $guardianPhone,
+            ]);
+        }
+    } catch (Exception $uEx) {}
+
+    // Automated Notifications Pipeline
+    try {
+        $settings = getGeneralSettingsConfig();
+        $schoolEmail = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+        $schoolWhatsapp = $settings['schoolWhatsapp'] ?? '08031308881';
+
+        // 1. Email notification to Admissions Desk
+        if (!empty($settings['emailAlerts']) && !empty($settings['alertOnApplication'] ?? true)) {
+            $adminSubject = "🎵 New Application: {$firstName} {$lastName} [{$appNo}]";
+            $adminHtml = "
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
+                    <h2 style='color: #0b0b0b; margin-top: 0;'>New Student Admission Application</h2>
+                    <p>A new student application has been submitted on the portal:</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$appNo}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Applicant Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$firstName} {$lastName}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Program:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$program}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Study Mode / Level:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$studyMode} ({$skillLevel})</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Phone:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$phone}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$email}</td></tr>
+                    </table>
+                    <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #c96b32; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Open Admissions Manager</a></p>
+                </div>
+            ";
+            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings);
+
+            // Student confirmation
+            if (!empty($settings['studentEmailConfirmation'] ?? true)) {
+                $studentSubject = "Welcome to Vivadoxa — Application #{$appNo} Received";
+                $studentHtml = "
+                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
+                        <h2 style='color: #0b0b0b; margin-top: 0;'>Application Received!</h2>
+                        <p>Dear {$firstName},</p>
+                        <p>Thank you for choosing Vivadoxa Music Academy. We have successfully received your admission application for <strong>{$program}</strong>.</p>
+                        <div style='background: #f7f5f0; padding: 14px; border-radius: 6px; margin: 15px 0;'>
+                            <p style='margin: 0;'><strong>Application Reference:</strong> <span style='color: #c96b32; font-size: 16px; font-weight: bold;'>{$appNo}</span></p>
+                            <p style='margin: 6px 0 0; font-size: 13px; color: #5c5954;'>Track your admission status anytime on our website using this reference.</p>
+                        </div>
+                        <p>Our admissions committee is reviewing your details. If you have questions, reply to this email or chat with us on WhatsApp at {$schoolWhatsapp}.</p>
+                    </div>
+                ";
+                sendSystemEmail($email, $studentSubject, $studentHtml, $settings);
+            }
+        }
+
+        // 2. WhatsApp notification
+        if (!empty($settings['whatsappAlerts']) && !empty($settings['alertOnApplication'] ?? true)) {
+            $waMsg = "🔔 *New Vivadoxa Application*\n\nRef: {$appNo}\nStudent: {$firstName} {$lastName}\nProgram: {$program}\nPhone: {$phone}\nEmail: {$email}\nMode: {$studyMode}";
+            sendSystemWhatsApp($schoolWhatsapp, $waMsg, $settings);
+        }
+    } catch (Exception $notifEx) {
+        // Notification failure never blocks application submission
+    }
 
     jsonResponse([
         'success' => true,

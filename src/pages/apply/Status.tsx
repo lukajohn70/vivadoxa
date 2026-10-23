@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
-import { Button, Badge, Field, Icon } from "@/components/ui"
-import { isValidEmail } from "@/lib/utils"
+import { Button, Badge, Field, Icon, PageHero } from "@/components/ui"
+import { isValidEmail, SCHOOL_PHONE } from "@/lib/utils"
 import { checkApplicationStatus } from "@/lib/api"
 import { AdmissionLetterModal, PaymentReceiptModal } from "@/components/OfficialDocument"
 
@@ -19,12 +19,39 @@ export function Status() {
   const [showLetter, setShowLetter] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
 
-  // Auto-search if ref is in URL
+  // Auto-search if ref is in URL, or show preview if requested
   useEffect(() => {
-    if (initialRef) {
+    if (searchParams.get("previewLetter") === "1") {
+      setApplication({
+        fullName: "Chinedu Emmanuel Okonkwo",
+        application_no: "VDX-2026-0842",
+        program: "Piano & Keyboard Performance",
+        planTier: "6-months",
+        study_mode: "Onsite",
+        schedule: "Saturday Mornings (Weekly Masterclass)",
+        tuition_fee: 95000,
+        email: "c.okonkwo@example.com",
+        phone: "08031234567",
+        status: "Admitted",
+      })
+      setShowLetter(true)
+    } else if (searchParams.get("previewReceipt") === "1") {
+      setPayment({
+        reference: "VDX-PAY-2026-8819",
+        application_no: "VDX-2026-0842",
+        payer_name: "Chinedu Emmanuel Okonkwo",
+        payer_email: "c.okonkwo@example.com",
+        amount: 95000,
+        method: "Bank Transfer (Direct)",
+        status: "Confirmed",
+        program: "6 Months Diploma Program — Piano & Keyboard Mastery",
+        created_at: new Date().toISOString(),
+      })
+      setShowReceipt(true)
+    } else if (initialRef) {
       performLookup(initialRef, "")
     }
-  }, [initialRef])
+  }, [initialRef, searchParams])
 
   async function performLookup(refToFind: string, emailToFind: string) {
     if (!refToFind.trim()) {
@@ -72,18 +99,13 @@ export function Status() {
 
   return (
     <main>
-      <section className="page-hero">
-        <div className="container page-hero-inner">
-          <div>
-            <span className="eyebrow">Admissions Portal</span>
-            <h1>Track your application & enrollment.</h1>
-            <p>
-              Enter your application reference number to check your admission
-              review, audition scheduling, and tuition verification status.
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Admissions Portal"
+        title="Track your application & enrollment."
+        body="Enter your application reference number to check your admission review, audition scheduling, and tuition verification status."
+        backTo="/"
+        backLabel="Back to Home"
+      />
 
       <section className="section status-section">
         <div className="container">
@@ -183,7 +205,7 @@ export function Status() {
                         to <strong>{application.email}</strong>.
                       </li>
                       <li>
-                        Please visit our Kaduna studio (U/Sunday, Television) for
+                        Please visit Vivadoxa Music (No. 49B Umaru Ibrahim St., beside Angwan Sunday Market, Kaduna) for
                         student instrument allocation and orientation.
                       </li>
                     </ul>
@@ -197,7 +219,7 @@ export function Status() {
                         <Icon name="check" /> Download payment receipt (PDF)
                       </Button>
                     )}
-                    <a href="tel:+2348031308881">
+                    <a href={`tel:${SCHOOL_PHONE}`}>
                       <Button variant="ghost">Contact admissions desk</Button>
                     </a>
                   </div>
@@ -211,7 +233,7 @@ export function Status() {
                     For counseling and future openings, please speak with our
                     team.
                   </p>
-                  <a href="tel:+2348031308881">
+                  <a href={`tel:${SCHOOL_PHONE}`}>
                     <Button>Contact admissions</Button>
                   </a>
                 </div>

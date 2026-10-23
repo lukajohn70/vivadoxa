@@ -44,9 +44,23 @@ export const WHATSAPP_URL =
   "https://wa.me/2348031308881?text=Hello%20Vivadoxa%2C%20I%20have%20an%20enquiry%20about%20admissions.";
 
 // ─── School constants ─────────────────────────────────────────────────────────
-export const BANK_NAME = "Guaranty Trust Bank (GTBank)";
-export const BANK_ACCOUNT_NO = "0123456789";
-export const BANK_ACCOUNT_NAME = "Vivadoxa Music School";
-export const SCHOOL_PHONE = "+234 803 130 8881";
-export const SCHOOL_EMAIL = "hello@vivadoxa.ng";
-export const SCHOOL_ADDRESS = "U/Sunday, Television, Kaduna, Nigeria";
+export const BANK_NAME = "Opay";
+export const BANK_ACCOUNT_NO = "8031308881";
+export const BANK_ACCOUNT_NAME = "Fredrerick Chysantus";
+export const SCHOOL_PHONE = "09075330330";
+export const SCHOOL_PHONE_2 = "09010267234";
+export const SCHOOL_WHATSAPP = "08031308881";
+export const SCHOOL_EMAIL = "vivadoxa@gmail.com";
+export const SCHOOL_EMAIL_SECONDARY = "hello@vivadoxa.ng";
+export const SCHOOL_ADDRESS =
+  "No. 49B Umaru Ibrahim Street, off Super Market Street beside Angwan Sunday Market, Angwan Sunday, Kaduna, Nigeria";
+export const GOOGLE_REVIEWS_URL =
+  "https://www.google.com/search?q=vivadoxa+music+kaduna";
+export const GOOGLE_MAPS_EMBED_URL =
+  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d37924.33986039267!2d7.4159621583716335!3d10.484287637413248!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x104d35db9f99eb49%3A0x471df620fbec8cb4!2sVIVADOXA%20MUSIC%20SCHOOL!5e1!3m2!1sen!2sng!4v1792240428882!5m2!1sen!2sng";
+export const GOOGLE_MAPS_DIRECTIONS_URL =
+  "https://www.google.com/maps/place/VIVADOXA+MUSIC+SCHOOL/@10.4842876,7.4159622,14z/data=!4m6!3m5!1s0x104d35db9f99eb49:0x471df620fbec8cb4!8m2!3d10.4842876!4d7.4159622!16s%2Fg%2F11b8v2_y8z";
+export const YOUTUBE_URL = "https://www.youtube.com/@vivadoxa";
+export const TIKTOK_URL = "https://www.tiktok.com/@vivadoxa";
+export const FACEBOOK_URL = "https://www.facebook.com/vivadoxa";
+export const INSTAGRAM_URL = "https://www.instagram.com/vivadoxamusic";

@@ -1,0 +1,5 @@
+export { Privacy } from "./Privacy"
+export { Terms } from "./Terms"
+export { TuitionPolicy } from "./TuitionPolicy"
+export { ChildProtection } from "./ChildProtection"
+export { LegalNav } from "./LegalNav"

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import {
   Logo,
   Button,
@@ -27,6 +27,7 @@ interface PaymentProofForm {
 }
 
 export function Payment({ go }: { go: (p: Page | string) => void }) {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   const refParam = searchParams.get("ref")
@@ -42,8 +43,8 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
 
   const defaultAmount = useMemo(() => {
     const raw =
-      amountParam || sessionStorage.getItem("vdx_current_amount") || "85000"
-    return Number(raw) || 85000
+      amountParam || sessionStorage.getItem("vdx_current_amount") || "35000"
+    return Number(raw) || 35000
   }, [amountParam])
 
   const studentName = useMemo(() => {
@@ -157,13 +158,28 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     <main className="payment-page">
       <div className="container">
         <div className="payment-head">
-          <button
-            className="logo-button"
-            onClick={() => go("home")}
-            aria-label="Go to homepage"
-          >
-            <Logo />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1)
+                else go("apply")
+              }}
+              className="btn btn-secondary !min-h-[36px] !py-1 !px-3 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
+              title="Return to application"
+              aria-label="Go back to previous page"
+            >
+              <Icon name="arrow" size={13} className="rotate-180" />
+              <span>Back</span>
+            </button>
+            <button
+              className="logo-button"
+              onClick={() => go("home")}
+              aria-label="Go to homepage"
+            >
+              <Logo />
+            </button>
+          </div>
           <Badge tone="green">Verified payment channel</Badge>
         </div>
 
@@ -214,8 +230,12 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
               <div className="bank-card">
                 {/* Account details */}
                 <div className="bank-title">
-                  <div className="bank-logo" aria-hidden="true">
-                    V
+                  <div
+                    className="bank-logo"
+                    style={{ background: "#00b875", color: "white", fontWeight: 800, fontSize: 18 }}
+                    aria-hidden="true"
+                  >
+                    O
                   </div>
                   <div>
                     <strong>{BANK_NAME}</strong>
@@ -224,15 +244,31 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                     </span>
                   </div>
                 </div>
-                <div className="account-number">
+                <div className="account-number" style={{ background: "var(--navy)", borderRadius: 12, padding: "20px 24px" }}>
                   <div>
-                    <small>ACCOUNT NUMBER</small>
-                    <strong>{BANK_ACCOUNT_NO}</strong>
+                    <small style={{ color: "#9dacb8", letterSpacing: "1px", textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
+                      Official Tuition Account ({BANK_NAME})
+                    </small>
+                    <strong style={{ fontSize: "clamp(20px, 6vw, 28px)", letterSpacing: "2px", fontFamily: "monospace", color: "white" }}>
+                      {BANK_ACCOUNT_NO}
+                    </strong>
                   </div>
                   <button
                     type="button"
                     onClick={copyBankDetails}
                     aria-label="Copy account number"
+                    style={{
+                      background: "rgba(255,255,255,0.12)",
+                      border: "1px solid rgba(255,255,255,0.25)",
+                      color: "white",
+                      borderRadius: 8,
+                      padding: "8px 14px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
                   >
                     <Icon name="copy" /> {copiedAccount ? "Copied!" : "Copy"}
                   </button>
@@ -371,8 +407,8 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 <dd>{studentProgram}</dd>
               </div>
               <div>
-                <dt>Duration</dt>
-                <dd>12-week academic term</dd>
+                <dt>Billing</dt>
+                <dd>Monthly tuition schedule (4 weeks)</dd>
               </div>
               <div>
                 <dt>Campus</dt>

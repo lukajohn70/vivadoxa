@@ -9,8 +9,28 @@ import {
   Success,
   Textarea,
   WhatsAppIcon,
+  GoogleIcon,
+  TikTokIcon,
+  FacebookIcon,
+  YouTubeIcon,
+  InstagramIcon,
 } from "@/components/ui"
-import { isValidEmail, WHATSAPP_URL } from "@/lib/utils"
+import {
+  isValidEmail,
+  WHATSAPP_URL,
+  SCHOOL_PHONE,
+  SCHOOL_PHONE_2,
+  SCHOOL_WHATSAPP,
+  SCHOOL_EMAIL,
+  SCHOOL_ADDRESS,
+  GOOGLE_REVIEWS_URL,
+  GOOGLE_MAPS_EMBED_URL,
+  GOOGLE_MAPS_DIRECTIONS_URL,
+  YOUTUBE_URL,
+  TIKTOK_URL,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+} from "@/lib/utils"
 import { submitEnquiry } from "@/lib/api"
 
 interface ContactForm {
@@ -33,7 +53,7 @@ const QUICK_QUESTIONS = [
   { label: "Tuition Fees & Term Dates", text: "Hello Vivadoxa, I would like to know the current tuition fees and upcoming term dates." },
   { label: "Kids Weekend Program", text: "Hello Vivadoxa, I want to inquire about the kids music program (ages 4-12)." },
   { label: "Instrument Repair & Tuning", text: "Hello Vivadoxa, I need to bring my instrument in for repair and inspection." },
-  { label: "VIP Masterclass Mentorship", text: "Hello Director Tosin, I would like to inquire about 1-on-1 VIP studio mentorship." },
+  { label: "Private Home Coaching", text: "Hello Vivadoxa, I would like to inquire about private home music lessons in Kaduna." },
 ]
 
 export function Contact() {
@@ -172,23 +192,127 @@ export function Contact() {
                 <Icon name="pin" />
                 <p>
                   <strong>Our studio</strong>
-                  <span>U/Sunday, Television, Kaduna, Nigeria</span>
+                  <span>{SCHOOL_ADDRESS}</span>
                 </p>
               </div>
               <div>
                 <Icon name="phone" />
                 <p>
-                  <strong>Call us</strong>
-                  <a href="tel:+2348031308881">+234 803 130 8881</a>
+                  <strong>Call our direct lines</strong>
+                  <a href={`tel:${SCHOOL_PHONE}`}>{SCHOOL_PHONE}</a>
+                  <span className="mx-1">·</span>
+                  <a href={`tel:${SCHOOL_PHONE_2}`}>{SCHOOL_PHONE_2}</a>
+                </p>
+              </div>
+              <div>
+                <WhatsAppIcon size={18} className="text-[#25D366] mt-1" />
+                <p>
+                  <strong>WhatsApp desk</strong>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                    {SCHOOL_WHATSAPP} (Instant Chat)
+                  </a>
                 </p>
               </div>
               <div>
                 <Icon name="mail" />
                 <p>
                   <strong>Email us</strong>
-                  <a href="mailto:hello@vivadoxa.ng">hello@vivadoxa.ng</a>
+                  <a href={`mailto:${SCHOOL_EMAIL}`}>{SCHOOL_EMAIL}</a>
                 </p>
               </div>
+            </div>
+
+            {/* Social Media & Google Reviews Card */}
+            <div
+              style={{
+                marginTop: 20,
+                marginBottom: 20,
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "20px 22px",
+              }}
+            >
+              <strong style={{ fontSize: 13, color: "var(--navy)", display: "block", marginBottom: 10 }}>
+                Connect on Official Channels
+              </strong>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <a
+                  href={TIKTOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors inline-flex items-center gap-2 group"
+                  title="TikTok: @vivadoxa"
+                >
+                  <TikTokIcon size={14} className="group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span>@vivadoxa</span>
+                </a>
+                <a
+                  href={FACEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors inline-flex items-center gap-2 group"
+                  title="Facebook: @vivadoxa music"
+                >
+                  <FacebookIcon size={14} className="text-[#1877F2] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span>@vivadoxa music</span>
+                </a>
+                <a
+                  href={YOUTUBE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-colors inline-flex items-center gap-2 group"
+                  title="YouTube: Vivadoxa Music"
+                >
+                  <YouTubeIcon size={14} className="text-[#FF0000] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span>Vivadoxa Music</span>
+                </a>
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition-colors inline-flex items-center gap-2 group"
+                  title="Instagram: @vivadoxa music"
+                >
+                  <InstagramIcon size={14} className="text-[#E4405F] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span>@vivadoxa music</span>
+                </a>
+              </div>
+
+              {/* Google Reviews rating callout */}
+              <a
+                href={GOOGLE_REVIEWS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  background: "#FAF8F5",
+                  border: "1px solid #e6e2d8",
+                  borderRadius: 8,
+                  padding: "12px 16px",
+                  textDecoration: "none",
+                }}
+                className="hover:border-blue-400 transition-colors group"
+                title="Read verified Google reviews for Vivadoxa Music Kaduna"
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <GoogleIcon size={24} />
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ color: "#FBBC05", fontSize: 13 }}>★ ★ ★ ★ ★</span>
+                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>4.9 on Google</strong>
+                    </div>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                      130+ verified reviews from students &amp; parents in Kaduna
+                    </span>
+                  </div>
+                </div>
+                <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 700 }} className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                  Read Reviews <Icon name="external" size={11} />
+                </span>
+              </a>
             </div>
 
             <div className="hours">
@@ -198,11 +322,56 @@ export function Contact() {
             </div>
 
             <div
-              className="map"
-              aria-label="Map placeholder — Vivadoxa location"
+              style={{
+                marginTop: 20,
+                borderRadius: "var(--radius)",
+                overflow: "hidden",
+                border: "1px solid var(--line)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+                background: "white",
+              }}
             >
-              KADUNA SOUTH
-              <span>Vivadoxa Music School · U/Sunday, Television</span>
+              <div
+                style={{
+                  padding: "12px 16px",
+                  background: "var(--navy)",
+                  color: "white",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <strong style={{ fontSize: 13, display: "block", color: "white" }}>
+                    Vivadoxa Music School
+                  </strong>
+                  <span style={{ fontSize: 11, color: "var(--gold2)" }}>
+                    Angwan Sunday, Kaduna · Beside Angwan Sunday Market
+                  </span>
+                </div>
+                <a
+                  href={GOOGLE_MAPS_DIRECTIONS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold text-white/90 hover:text-white inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 transition-all flex-shrink-0"
+                  style={{ textDecoration: "none" }}
+                  title="Open directions in Google Maps"
+                >
+                  <span>Directions</span>
+                  <Icon name="external" size={11} />
+                </a>
+              </div>
+              <iframe
+                src={GOOGLE_MAPS_EMBED_URL}
+                width="100%"
+                height="320"
+                style={{ border: 0, display: "block" }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                title="Vivadoxa Music School Location Map"
+              />
             </div>
           </div>
 

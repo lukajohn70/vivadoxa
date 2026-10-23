@@ -7,12 +7,19 @@ export type Page =
   | "modes"
   | "repairs"
   | "performances"
+  | "reviews"
   | "apply"
   | "payment"
   | "status"
+  | "portal"
+  | "portal-login"
   | "contact"
   | "admin"
-  | "admin-login";
+  | "admin-login"
+  | "privacy"
+  | "terms"
+  | "tuition-policy"
+  | "safeguarding";
 
 // Application form data
 export interface ApplicationData {
@@ -32,6 +39,7 @@ export interface ApplicationData {
   // Step 3 – Program
   category: string;
   program: string;
+  planTier?: string;
   level: string;
   schedule: string;
   studyMode: "Onsite" | "Online" | "Home Lessons";

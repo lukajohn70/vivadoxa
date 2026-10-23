@@ -13,11 +13,16 @@ import {
 import { Navbar, Footer } from "@/components/Navigation"
 import { Home } from "@/pages/Home"
 import { About, Programs, Modes, Repairs, Contact, Performances } from "@/pages/StaticPages"
+import { Privacy, Terms, TuitionPolicy, ChildProtection } from "@/pages/legal"
 import { Apply, Payment, Status } from "@/pages/ApplyFlow"
 import { Admin, AdminLogin } from "@/pages/Admin"
+import { Portal } from "@/pages/Portal"
+import { PortalAuth } from "@/pages/PortalAuth"
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/useAdminAuth"
 import { WHATSAPP_URL } from "@/lib/utils"
-import { Icon, WhatsAppIcon } from "@/components/ui"
+import { Icon, WhatsAppIcon, Cta } from "@/components/ui"
+import { BackToTop } from "@/components/BackToTop"
+import { ReviewsHub } from "@/components/ReviewsHub"
 import type { Page } from "@/types"
 
 function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
@@ -39,15 +44,18 @@ function AppShell() {
         ? "/"
         : p === "admin-login"
           ? "/admin/login"
-          : p.startsWith("/")
-            ? p
-            : `/${p}`
+          : p === "portal-login"
+            ? "/portal/login"
+            : p.startsWith("/")
+              ? p
+              : `/${p}`
     navigate(route)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const isStandalone =
     location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/portal") ||
     location.pathname === "/apply" ||
     location.pathname === "/payment"
 
@@ -74,10 +82,24 @@ function AppShell() {
           <Route path="/modes" element={<Modes go={go} />} />
           <Route path="/repairs" element={<Repairs />} />
           <Route path="/performances" element={<Performances go={go} />} />
+          <Route path="/reviews" element={<main><ReviewsHub /><Cta go={go} /></main>} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/apply" element={<Apply go={go} />} />
           <Route path="/payment" element={<Payment go={go} />} />
           <Route path="/status" element={<Status />} />
+
+          {/* Legal Compliance & Regulatory Pages */}
+          <Route path="/privacy" element={<Privacy go={go} />} />
+          <Route path="/terms" element={<Terms go={go} />} />
+          <Route path="/tuition-policy" element={<TuitionPolicy go={go} />} />
+          <Route path="/safeguarding" element={<ChildProtection go={go} />} />
+          <Route path="/child-protection" element={<Navigate to="/safeguarding" replace />} />
+          <Route path="/legal" element={<Navigate to="/terms" replace />} />
+
+          {/* Student & Client Portal routes */}
+          <Route path="/portal" element={<Portal go={go} />} />
+          <Route path="/portal/login" element={<PortalAuth go={go} />} />
+          <Route path="/portal-login" element={<Navigate to="/portal/login" replace />} />
 
           {/* Admin portal routes */}
           <Route path="/admin/login" element={<AdminLogin go={go} />} />
@@ -102,6 +124,8 @@ function AppShell() {
       {!isStandalone && (
         <>
           <Footer go={go} />
+          {/* Back to top floating button */}
+          <BackToTop />
           {/* WhatsApp floating button with official WhatsApp brand icon, pulse aura & hover tooltip */}
           <a
             href={WHATSAPP_URL}

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -100,6 +101,44 @@ if ($method === 'GET') {
         ':method' => $methodType,
         ':notes' => $notes,
     ]);
+
+    // Automated Notifications Pipeline
+    try {
+        $settings = getGeneralSettingsConfig();
+        $schoolEmail = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+        $schoolWhatsapp = $settings['schoolWhatsapp'] ?? '08031308881';
+
+        // 1. Email notification to Finance / Admissions
+        if (!empty($settings['emailAlerts']) && !empty($settings['alertOnPayment'] ?? true)) {
+            $formattedAmt = '₦' . number_format($amount, 2);
+            $adminSubject = "💰 New Payment Proof Submitted: {$payerName} ({$formattedAmt})";
+            $adminHtml = "
+                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
+                    <h2 style='color: #0b0b0b; margin-top: 0;'>New Payment Verification Needed</h2>
+                    <p>A student has submitted transfer payment proof:</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Enrollment') . "</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerEmail}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Method:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
+                    </table>
+                    <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #157054; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Verify in Admin Portal</a></p>
+                </div>
+            ";
+            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings);
+        }
+
+        // 2. WhatsApp notification
+        if (!empty($settings['whatsappAlerts']) && !empty($settings['alertOnPayment'] ?? true)) {
+            $formattedAmt = '₦' . number_format($amount, 2);
+            $waMsg = "💰 *New Vivadoxa Payment Submitted*\n\nRef: {$reference}\nPayer: {$payerName}\nAmount: {$formattedAmt}\nMethod: {$methodType}\nStatus: Pending Verification";
+            sendSystemWhatsApp($schoolWhatsapp, $waMsg, $settings);
+        }
+    } catch (Exception $payNotifEx) {
+        // Notification failure never blocks payment submission
+    }
 
     jsonResponse([
         'success' => true,

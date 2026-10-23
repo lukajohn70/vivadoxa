@@ -102,6 +102,29 @@ if ($method === 'GET') {
         ':pickup_addr' => !empty($pickupAddress) ? $pickupAddress : null,
     ]);
 
+    // Auto-provision Client Portal Account if not existing
+    try {
+        if (!empty($email)) {
+            $uCheck = $pdo->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:em) LIMIT 1");
+            $uCheck->execute([':em' => $email]);
+            if (!$uCheck->fetch()) {
+                $userPass = !empty($input['password']) ? trim($input['password']) : 'ClientPass2025!';
+                $uHash = password_hash($userPass, PASSWORD_BCRYPT);
+                $uIns = $pdo->prepare("
+                    INSERT INTO users (full_name, email, phone, password_hash, role, address, is_active)
+                    VALUES (:fn, :em, :ph, :pw, 'client', :ad, 1)
+                ");
+                $uIns->execute([
+                    ':fn' => $name,
+                    ':em' => $email,
+                    ':ph' => $phone,
+                    ':pw' => $uHash,
+                    ':ad' => !empty($pickupAddress) ? $pickupAddress : null,
+                ]);
+            }
+        }
+    } catch (Exception $uEx) {}
+
     jsonResponse([
         'success' => true,
         'tracking_code' => $trackingCode,
