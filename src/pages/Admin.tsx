@@ -233,36 +233,14 @@ export function Admin({ go }: { go: (p: Page) => void }) {
             <Icon name="close" />
           </button>
         </div>
-        <div className="admin-profile" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <span aria-hidden="true">
-              {(session?.name || "AD").slice(0, 2).toUpperCase()}
-            </span>
-            <div style={{ minWidth: 0 }}>
-              <strong style={{ display: "block", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                {session?.name || "Administrator"}
-              </strong>
-              <small>Staff Administrator</small>
-            </div>
+        <div className="admin-profile">
+          <span aria-hidden="true">
+            {(session?.name || "AD").slice(0, 2).toUpperCase()}
+          </span>
+          <div>
+            <strong>{session?.name || "Administrator"}</strong>
+            <small>Staff Administrator</small>
           </div>
-          <button
-            type="button"
-            onClick={logout}
-            title="Sign out"
-            style={{
-              background: "rgba(220, 38, 38, 0.08)",
-              border: "1px solid rgba(220, 38, 38, 0.2)",
-              color: "#dc2626",
-              cursor: "pointer",
-              fontSize: 11,
-              fontWeight: 700,
-              padding: "4px 8px",
-              borderRadius: 4,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Sign out
-          </button>
         </div>
         <nav aria-label="Admin navigation">
           {navGroups.map(([group, items]) => (
@@ -320,28 +298,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
               <p>Vivadoxa Music School Management Portal</p>
             </div>
           </div>
-          <div className="admin-tools" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="admin-tools">
             <span aria-hidden="true" title={session?.name || "Admin"}>
               {(session?.name || "AD").slice(0, 2).toUpperCase()}
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={logout}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                color: "#dc2626",
-                borderColor: "#fecaca",
-                fontSize: 12,
-                fontWeight: 600,
-                padding: "6px 12px",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Sign out
-            </Button>
           </div>
         </header>
 

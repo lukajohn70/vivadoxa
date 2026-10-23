@@ -4,27 +4,30 @@
 // automatic synchronization to localStorage cache for seamless operation.
 
 export const getApiUrl = (endpoint: string): string => {
-  if (import.meta.env.VITE_API_URL) {
-    const base = (import.meta.env.VITE_API_URL as string).replace(/\/$/, "");
-    return `${base}/${endpoint.replace(/^\//, "")}`;
-  }
+  const clean = endpoint.replace(/^\//, "");
 
+  // When deployed to production (running on domain other than localhost/127.0.0.1)
   const isDevHost =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1");
 
-  // If local development on Vite dev server (e.g. localhost:8443 or localhost:5173 hitting local MAMP)
-  if (isDevHost && window.location.port !== "80" && window.location.port !== "") {
-    return `http://${window.location.hostname}/Vivadoxa/api/${endpoint.replace(/^\//, "")}`;
+  // On production (cPanel domain or remote server), ALWAYS use same-origin relative `/api/...`
+  if (!isDevHost) {
+    return `/api/${clean}`;
   }
 
-  // If running inside MAMP under /Vivadoxa/ subfolder
-  if (window.location.pathname.startsWith("/Vivadoxa")) {
-    return `/Vivadoxa/api/${endpoint.replace(/^\//, "")}`;
+  // Local development: if running inside MAMP under /Vivadoxa/ subfolder
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/Vivadoxa")) {
+    return `/Vivadoxa/api/${clean}`;
   }
 
-  // Root domain in production (e.g. https://yourdomain.com/api/...)
-  return `/api/${endpoint.replace(/^\//, "")}`;
+  // Local development on Vite dev server (e.g. localhost:8443 hitting local MAMP on port 80)
+  if (typeof window !== "undefined" && window.location.port && window.location.port !== "80") {
+    return `http://${window.location.hostname}/Vivadoxa/api/${clean}`;
+  }
+
+  return `/api/${clean}`;
 };
 
 export interface ApiResponse<T = any> {
@@ -582,6 +585,15 @@ export async function loginAdmin(email: string, password: string): Promise<ApiRe
     return {
       success: true,
       user: { id: match.id, email: match.email, name: match.name, role: match.role || "staff" },
+      message: "Authenticated successfully.",
+    };
+  }
+
+  // Pre-configured administrator accounts
+  if (cleanEmail === "lukajohn70@gmail.com" && (cleanPassword === "11111111" || cleanPassword === "admin123" || cleanPassword === "VivadoxaAdmin2025!")) {
+    return {
+      success: true,
+      user: { id: 3, email: cleanEmail, name: "Luka John", role: "superadmin" },
       message: "Authenticated successfully.",
     };
   }
@@ -1718,6 +1730,14 @@ export async function fetchAdmins(): Promise<any[]> {
       email: "staff@vivadoxa.ng",
       name: "Admissions Staff",
       role: "staff",
+      is_active: 1,
+      last_login: null,
+    },
+    {
+      id: 3,
+      email: "lukajohn70@gmail.com",
+      name: "Luka John",
+      role: "superadmin",
       is_active: 1,
       last_login: null,
     },

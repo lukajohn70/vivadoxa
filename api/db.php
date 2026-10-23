@@ -28,7 +28,7 @@ function getEnvVar(string $key, string $default = ''): string {
                 $line = trim($line);
                 if ($line && $line[0] !== '#' && strpos($line, '=') !== false) {
                     list($k, $v) = explode('=', $line, 2);
-                    $env[trim($k)] = trim($v);
+                    $env[trim($k)] = trim($v, " \t\n\r\0\x0B\"'");
                 }
             }
         }
