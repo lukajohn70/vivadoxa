@@ -306,6 +306,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                   src={ins.image || trumpetImg}
                   alt={`${ins.name}, ${ins.title} at Vivadoxa`}
                   loading="lazy"
+                  style={{ width: "100%", height: 320, objectFit: "cover" }}
                 />
                 <h3>{ins.name}</h3>
                 <p style={{ color: "var(--gold)", fontWeight: 700, fontSize: 12 }}>{ins.title}</p>

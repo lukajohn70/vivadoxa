@@ -34,11 +34,18 @@ export function ClassScheduleManagerView({
   const [staffNotes, setStaffNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
-  // Cohort creation modal
+  // Cohort creation & edit modal
   const [showAddCohortModal, setShowAddCohortModal] = useState(false)
   const [newCohortName, setNewCohortName] = useState("")
   const [newCohortTime, setNewCohortTime] = useState("")
   const [newCohortRoom, setNewCohortRoom] = useState("Studio Hall 1 & Piano Lab")
+
+  const [showEditCohortModal, setShowEditCohortModal] = useState(false)
+  const [editingCohort, setEditingCohort] = useState<any | null>(null)
+  const [editCohortName, setEditCohortName] = useState("")
+  const [editCohortTime, setEditCohortTime] = useState("")
+  const [editCohortRoom, setEditCohortRoom] = useState("")
+  const [editCohortStatus, setEditCohortStatus] = useState("Active")
 
   const loadData = async () => {
     setLoading(true)
@@ -164,6 +171,40 @@ export function ClassScheduleManagerView({
       }
     } catch (err: any) {
       alert(err.message || "Failed to save cohort.")
+    }
+  }
+
+  const handleOpenEditCohort = (c: any) => {
+    setEditingCohort(c)
+    setEditCohortName(c.name || "")
+    setEditCohortTime(c.time_slot || "")
+    setEditCohortRoom(c.room || "")
+    setEditCohortStatus(c.status || "Active")
+    setShowEditCohortModal(true)
+  }
+
+  const handleSaveEditCohort = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingCohort || !editCohortName || !editCohortTime) return
+
+    try {
+      const res = await saveCohort({
+        id: editingCohort.id,
+        name: editCohortName,
+        time_slot: editCohortTime,
+        room: editCohortRoom,
+        status: editCohortStatus,
+      })
+      if (res.success) {
+        setShowEditCohortModal(false)
+        setEditingCohort(null)
+        setActionNotice(`✓ Cohort slot "${editCohortName}" updated successfully.`)
+        loadData()
+      } else {
+        alert(res.error || "Failed to update cohort slot.")
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to update cohort.")
     }
   }
 
@@ -717,20 +758,38 @@ export function ClassScheduleManagerView({
                       <Badge tone="green">{c.status || "Active"}</Badge>
                     </td>
                     <td style={{ padding: "14px 18px", textAlign: "right" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCohort(c.id, c.name)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#dc2626",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditCohort(c)}
+                          style={{
+                            background: "none",
+                            border: "1px solid var(--line)",
+                            borderRadius: 4,
+                            padding: "4px 10px",
+                            color: "var(--navy)",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCohort(c.id, c.name)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#dc2626",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -770,22 +829,40 @@ export function ClassScheduleManagerView({
                         <div style={{ color: "var(--navy)", fontWeight: 600 }}>{c.time_slot}</div>
                         <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>{c.room}</div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCohort(c.id, c.name)}
-                        style={{
-                          background: "none",
-                          border: "1px solid #fee2e2",
-                          color: "#dc2626",
-                          fontSize: 11,
-                          fontWeight: 600,
-                          padding: "4px 8px",
-                          borderRadius: 4,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditCohort(c)}
+                          style={{
+                            background: "white",
+                            border: "1px solid var(--line)",
+                            color: "var(--navy)",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCohort(c.id, c.name)}
+                          style={{
+                            background: "none",
+                            border: "1px solid #fee2e2",
+                            color: "#dc2626",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "4px 8px",
+                            borderRadius: 4,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1054,6 +1131,104 @@ export function ClassScheduleManagerView({
                   }}
                 >
                   Create Cohort Slot
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT COHORT / TIMETABLE MODAL */}
+      {showEditCohortModal && editingCohort && (
+        <div className="modal-backdrop" onClick={() => setShowEditCohortModal(false)}>
+          <div
+            className="modal"
+            style={{ maxWidth: 480, width: "95%" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-head">
+              <h3 style={{ margin: 0, fontSize: 17, color: "var(--navy)" }}>Edit Timetable Cohort Slot</h3>
+              <button className="modal-close" onClick={() => setShowEditCohortModal(false)}>
+                ✕
+              </button>
+            </div>
+            <form onSubmit={handleSaveEditCohort} className="modal-body" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                  Cohort Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editCohortName}
+                  onChange={(e) => setEditCohortName(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                  Time Schedule *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editCohortTime}
+                  onChange={(e) => setEditCohortTime(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                  Studio Room / Location
+                </label>
+                <input
+                  type="text"
+                  value={editCohortRoom}
+                  onChange={(e) => setEditCohortRoom(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                  Status
+                </label>
+                <select
+                  value={editCohortStatus}
+                  onChange={(e) => setEditCohortStatus(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13, background: "white" }}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Full">Full / Closed</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditCohortModal(false)}
+                  style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid var(--line)", background: "white", cursor: "pointer", fontSize: 13 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "8px 18px",
+                    borderRadius: 6,
+                    border: "none",
+                    background: "var(--navy)",
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

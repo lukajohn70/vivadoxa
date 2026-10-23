@@ -499,6 +499,24 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 </div>
               </div>
 
+              {/* ── Complete Course Catalog & Syllabi ── */}
+              <div style={{ textAlign: "center", maxWidth: 740, margin: "64px auto 32px" }}>
+                <Badge tone="gold">Interactive Syllabus</Badge>
+                <h2
+                  style={{
+                    fontFamily: "'DM Serif Display', serif",
+                    fontSize: "clamp(28px, 4vw, 38px)",
+                    color: "var(--navy)",
+                    margin: "12px 0 10px",
+                  }}
+                >
+                  All Academic Programs &amp; Study Tracks
+                </h2>
+                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, margin: 0 }}>
+                  Explore Vivadoxa&apos;s accredited curriculum across keyboards, strings, vocals, winds, and audio engineering. Filter by learner stage and proficiency level to find your path.
+                </p>
+              </div>
+
               {/* Learner Stage Switcher - Pure Vivadoxa Luxury Theme */}
               <div
                 style={{
@@ -568,18 +586,83 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 ))}
               </div>
 
-              {/* Filter Bar */}
-              <div className="filter-row">
-                <p>
-                  <strong>{category === "All" ? "All Programs" : category}</strong>
-                  {ageGroup !== "All Ages" && ` · ${ageGroup}`}
-                  {` · ${filtered.length} course${filtered.length !== 1 ? "s" : ""}`}
-                </p>
-                <div className="flex items-center gap-3">
+              {/* Filter Row with Uniform Vivadoxa Luxury Styling */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 14,
+                  background: "white",
+                  padding: "16px 20px",
+                  borderRadius: "var(--radius)",
+                  border: "1px solid var(--line)",
+                  marginBottom: 28,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: "var(--gold)",
+                    }}
+                  />
+                  <strong style={{ fontSize: 14, color: "var(--navy)" }}>
+                    {category === "All" ? "All Programs" : category}
+                  </strong>
+                  {ageGroup !== "All Ages" && (
+                    <span
+                      style={{
+                        fontSize: 12,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                        background: "var(--cream)",
+                        color: "var(--navy)",
+                        fontWeight: 600,
+                        border: "1px solid var(--line)",
+                      }}
+                    >
+                      {ageGroup}
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      fontSize: 12,
+                      padding: "2px 10px",
+                      borderRadius: 99,
+                      background: "rgba(201, 107, 50, 0.12)",
+                      color: "var(--gold-text)",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {filtered.length} course{filtered.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <label htmlFor="course-level-filter" style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
+                    Difficulty Level:
+                  </label>
                   <select
+                    id="course-level-filter"
                     aria-label="Filter by level"
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
+                    style={{
+                      border: "1px solid var(--line)",
+                      background: "white",
+                      padding: "8px 14px",
+                      borderRadius: 8,
+                      fontSize: 13,
+                      color: "var(--navy)",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
                   >
                     <option value="">All difficulty levels</option>
                     <option value="Beginner">Beginner</option>

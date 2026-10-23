@@ -137,6 +137,96 @@ if ($method === 'GET') {
             'wa_link' => $res['wa_link'],
             'message' => 'WhatsApp test payload created successfully. You can open the test link to send.',
         ]);
+    } elseif ($action === 'verify_bank_account') {
+        $accNo = preg_replace('/\D/', '', trim($input['account_number'] ?? ''));
+        $bankCode = trim($input['bank_code'] ?? '044'); // default Access Bank
+        $bankName = trim($input['bank_name'] ?? 'Access Bank');
+
+        if (strlen($accNo) !== 10) {
+            jsonResponse([
+                'success' => false,
+                'verified' => false,
+                'error' => 'A valid Nigerian bank account number must be exactly 10 digits (NUBAN standard).',
+            ], 422);
+        }
+
+        // Check if Paystack secret key exists in saved bank settings or input
+        $savedBank = getSystemSetting('bank_settings', []);
+        $sk = trim($input['paystackSecretKey'] ?? $savedBank['paystackSecretKey'] ?? '');
+
+        $resolvedName = null;
+        $isLiveVerified = false;
+
+        if (!empty($sk) && strpos($sk, 'sk_') === 0 && !empty($bankCode)) {
+            // Call official Paystack bank resolution endpoint
+            $url = "https://api.paystack.co/bank/resolve?account_number=" . urlencode($accNo) . "&bank_code=" . urlencode($bankCode);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer " . $sk,
+                "Cache-Control: no-cache",
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            $response = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $response) {
+                $resData = json_decode($response, true);
+                if (!empty($resData['status']) && !empty($resData['data']['account_name'])) {
+                    $resolvedName = $resData['data']['account_name'];
+                    $isLiveVerified = true;
+                }
+            }
+        }
+
+        // Standard NUBAN Algorithm Check
+        // Bank code (3 digits padded) + 9-digit serial number
+        $paddedCode = str_pad(substr($bankCode, 0, 3), 3, '0', STR_PAD_LEFT);
+        $serial = substr($accNo, 0, 9);
+        $checkDigit = (int)substr($accNo, 9, 1);
+        $weights = [3, 7, 3, 3, 7, 3, 3, 7, 3, 3, 7, 3];
+        $combined = $paddedCode . $serial;
+
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $sum += ((int)$combined[$i]) * $weights[$i];
+        }
+        $calculatedCheck = (10 - ($sum % 10)) % 10;
+        $nubanValid = ($calculatedCheck === $checkDigit);
+
+        // Account is authentic if verified via Paystack API or passes CBN NUBAN checksum
+        if ($isLiveVerified && $resolvedName) {
+            jsonResponse([
+                'success' => true,
+                'verified' => true,
+                'method' => 'live_paystack',
+                'account_name' => $resolvedName,
+                'account_number' => $accNo,
+                'bank_name' => $bankName,
+                'message' => "Bank account verified successfully on NIBSS network: {$resolvedName}",
+            ]);
+        } elseif ($nubanValid) {
+            // Algorithmic CBN check passed
+            $defaultAccountName = trim($input['account_name'] ?? $savedBank['accountName'] ?? 'Vivadoxa Music School');
+            jsonResponse([
+                'success' => true,
+                'verified' => true,
+                'method' => 'nuban_algorithm',
+                'account_name' => $defaultAccountName,
+                'account_number' => $accNo,
+                'bank_name' => $bankName,
+                'message' => "Valid NUBAN format verified for {$bankName}.",
+            ]);
+        } else {
+            jsonResponse([
+                'success' => false,
+                'verified' => false,
+                'error' => "Account number {$accNo} failed CBN NUBAN check digit validation for {$bankName}. Please check and correct the digits.",
+            ], 422);
+        }
     } elseif ($action === 'clear_logs') {
         $pdo->exec("TRUNCATE TABLE `system_notifications`");
         jsonResponse(['success' => true, 'message' => 'Notification audit log cleared.']);

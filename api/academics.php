@@ -106,7 +106,11 @@ if ($method === 'GET') {
     ensureCatalogTables($pdo);
 
     if ($type === 'instructors') {
-        $stmt = $pdo->query("SELECT * FROM `instructors` WHERE `is_active` = 1 ORDER BY `is_director` DESC, id ASC");
+        $includeAll = !empty($_GET['all']) || !empty($_GET['admin']);
+        $sql = $includeAll
+            ? "SELECT * FROM `instructors` ORDER BY `is_director` DESC, id ASC"
+            : "SELECT * FROM `instructors` WHERE `is_active` = 1 ORDER BY `is_director` DESC, id ASC";
+        $stmt = $pdo->query($sql);
         jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
     } elseif ($type === 'students') {
         $stmt = $pdo->query("SELECT * FROM `students` ORDER BY enrolled_at DESC");
@@ -141,10 +145,11 @@ if ($method === 'GET') {
         $name = trim($input['name'] ?? '');
         $category = trim($input['category'] ?? 'Instruments');
         $tag = trim($input['tag'] ?? 'Featured');
-        $fee = trim($input['fee'] ?? '₦35,000 / month');
+        $fee = trim($input['fee'] ?? '₦20,000 / month');
         $desc = trim($input['desc'] ?? '');
         $ageGroup = trim($input['age_group'] ?? 'All Ages');
         $level = trim($input['level'] ?? 'Beginner');
+        $image = trim($input['image'] ?? '');
 
         if (empty($name)) {
             jsonResponse(['success' => false, 'error' => 'Program name is required.'], 400);
@@ -154,7 +159,7 @@ if ($method === 'GET') {
             $stmt = $pdo->prepare("
                 UPDATE `programs`
                 SET `name` = :name, `category` = :cat, `tag` = :tag, `fee` = :fee, `desc` = :desc,
-                    `age_group` = :ag, `level` = :lvl, `is_active` = 1
+                    `age_group` = :ag, `level` = :lvl, `image` = CASE WHEN :img != '' THEN :img ELSE `image` END, `is_active` = 1
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -165,12 +170,13 @@ if ($method === 'GET') {
                 ':desc' => $desc,
                 ':ag' => $ageGroup,
                 ':lvl' => $level,
+                ':img' => $image,
                 ':id' => $id,
             ]);
         } else {
             $stmt = $pdo->prepare("
-                INSERT INTO `programs` (`name`, `category`, `tag`, `fee`, `desc`, `age_group`, `level`, `is_active`)
-                VALUES (:name, :cat, :tag, :fee, :desc, :ag, :lvl, 1)
+                INSERT INTO `programs` (`name`, `category`, `tag`, `fee`, `desc`, `age_group`, `level`, `image`, `is_active`)
+                VALUES (:name, :cat, :tag, :fee, :desc, :ag, :lvl, :img, 1)
                 ON DUPLICATE KEY UPDATE
                     `category` = VALUES(`category`),
                     `tag` = VALUES(`tag`),
@@ -178,6 +184,7 @@ if ($method === 'GET') {
                     `desc` = VALUES(`desc`),
                     `age_group` = VALUES(`age_group`),
                     `level` = VALUES(`level`),
+                    `image` = CASE WHEN VALUES(`image`) != '' THEN VALUES(`image`) ELSE `image` END,
                     `is_active` = 1
             ");
             $stmt->execute([
@@ -188,6 +195,7 @@ if ($method === 'GET') {
                 ':desc' => $desc,
                 ':ag' => $ageGroup,
                 ':lvl' => $level,
+                ':img' => $image,
             ]);
         }
 
@@ -195,11 +203,20 @@ if ($method === 'GET') {
     } elseif ($type === 'instructors') {
         $id = (int)($input['id'] ?? 0);
 
-        if ($action === 'delete') {
+        if ($action === 'delete' || $action === 'toggle_status') {
             if ($id > 0) {
-                $stmt = $pdo->prepare("UPDATE `instructors` SET `is_active` = 0 WHERE id = :id");
-                $stmt->execute([':id' => $id]);
-                jsonResponse(['success' => true, 'message' => 'Instructor profile deactivated.']);
+                $curr = $pdo->prepare("SELECT `is_active` FROM `instructors` WHERE id = :id");
+                $curr->execute([':id' => $id]);
+                $curActive = (int)$curr->fetchColumn();
+                $newActive = $curActive === 1 ? 0 : 1;
+
+                $stmt = $pdo->prepare("UPDATE `instructors` SET `is_active` = :st WHERE id = :id");
+                $stmt->execute([':st' => $newActive, ':id' => $id]);
+                jsonResponse([
+                    'success' => true,
+                    'is_active' => $newActive,
+                    'message' => $newActive === 1 ? 'Instructor profile activated.' : 'Instructor profile deactivated (profile preserved).'
+                ]);
             }
             jsonResponse(['success' => false, 'error' => 'Valid ID required.'], 400);
         }
@@ -209,6 +226,7 @@ if ($method === 'GET') {
         $specialization = trim($input['specialization'] ?? '');
         $location = trim($input['location'] ?? 'Kaduna Studio');
         $bio = trim($input['bio'] ?? '');
+        $image = trim($input['image'] ?? '');
         $isDirector = !empty($input['is_director']) ? 1 : 0;
 
         if (empty($name)) {
@@ -219,7 +237,8 @@ if ($method === 'GET') {
             $stmt = $pdo->prepare("
                 UPDATE `instructors`
                 SET `name` = :name, `title` = :title, `specialization` = :spec, `location` = :loc,
-                    `bio` = :bio, `is_director` = :is_dir, `is_active` = 1
+                    `bio` = :bio, `image` = CASE WHEN :img != '' THEN :img ELSE `image` END,
+                    `is_director` = :is_dir, `is_active` = 1
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -228,18 +247,20 @@ if ($method === 'GET') {
                 ':spec' => $specialization,
                 ':loc' => $location,
                 ':bio' => $bio,
+                ':img' => $image,
                 ':is_dir' => $isDirector,
                 ':id' => $id,
             ]);
         } else {
             $stmt = $pdo->prepare("
-                INSERT INTO `instructors` (`name`, `title`, `specialization`, `location`, `bio`, `is_director`, `is_active`)
-                VALUES (:name, :title, :spec, :loc, :bio, :is_dir, 1)
+                INSERT INTO `instructors` (`name`, `title`, `specialization`, `location`, `bio`, `image`, `is_director`, `is_active`)
+                VALUES (:name, :title, :spec, :loc, :bio, :img, :is_dir, 1)
                 ON DUPLICATE KEY UPDATE
                     `title` = VALUES(`title`),
                     `specialization` = VALUES(`specialization`),
                     `location` = VALUES(`location`),
                     `bio` = VALUES(`bio`),
+                    `image` = CASE WHEN VALUES(`image`) != '' THEN VALUES(`image`) ELSE `image` END,
                     `is_director` = VALUES(`is_director`),
                     `is_active` = 1
             ");
@@ -249,6 +270,7 @@ if ($method === 'GET') {
                 ':spec' => $specialization,
                 ':loc' => $location,
                 ':bio' => $bio,
+                ':img' => $image,
                 ':is_dir' => $isDirector,
             ]);
         }
@@ -256,6 +278,18 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'message' => 'Instructor profile saved.']);
     } elseif ($type === 'performances') {
         $id = (int)($input['id'] ?? 0);
+
+        if ($action === 'batch_delete') {
+            $ids = is_array($input['ids'] ?? null) ? array_map('intval', $input['ids']) : [];
+            $validIds = array_filter($ids, function($i) { return $i > 0; });
+            if (!empty($validIds)) {
+                $placeholders = implode(',', array_fill(0, count($validIds), '?'));
+                $stmt = $pdo->prepare("UPDATE `performances` SET `is_active` = 0 WHERE id IN ($placeholders)");
+                $stmt->execute(array_values($validIds));
+                jsonResponse(['success' => true, 'count' => count($validIds), 'message' => count($validIds) . ' recital videos removed successfully.']);
+            }
+            jsonResponse(['success' => false, 'error' => 'No valid IDs provided for batch deletion.'], 400);
+        }
 
         if ($action === 'delete') {
             if ($id > 0) {

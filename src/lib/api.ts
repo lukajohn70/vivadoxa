@@ -71,6 +71,10 @@ export interface ApiResponse<T = any> {
     formatted_revenue: string;
     active_repairs: number;
     unread_enquiries: number;
+    active_students?: number;
+    pending_schedules?: number;
+    monthly_revenue?: Array<{ month: string; key: string; amount: number; formatted: string }>;
+    recent_activity?: Array<{ type: string; title: string; subtitle: string; status: string; created_at: string }>;
   };
 }
 
@@ -825,10 +829,15 @@ export async function deleteEnquiry(id: number): Promise<ApiResponse> {
 
 // ── Academics (Programs, Instructors, Students, Cohorts, Performances) ─────────
 export async function fetchAcademics(
-  type: "programs" | "instructors" | "students" | "cohorts" | "performances"
+  type: "programs" | "instructors" | "students" | "cohorts" | "performances",
+  params?: Record<string, string | number | boolean>
 ): Promise<any[]> {
   try {
-    const url = `${getApiUrl("academics.php")}?type=${type}`;
+    let url = `${getApiUrl("academics.php")}?type=${type}`;
+    if (params) {
+      const q = new URLSearchParams(params as any).toString();
+      url += `&${q}`;
+    }
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
@@ -946,6 +955,42 @@ export async function deletePerformance(id: number): Promise<ApiResponse> {
     return { success: false, error: err.message || "Failed to connect to database server." };
   }
   return { success: false, error: "Failed to delete performance from database." };
+}
+
+export async function deletePerformancesBatch(ids: number[]): Promise<ApiResponse & { count?: number }> {
+  try {
+    const url = `${getApiUrl("academics.php")}?type=performances`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "batch_delete", ids }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to delete performances from database." };
+}
+
+export async function toggleInstructorStatus(id: number): Promise<ApiResponse & { is_active?: number }> {
+  try {
+    const url = `${getApiUrl("academics.php")}?type=instructors`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_status", id }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to toggle instructor status." };
 }
 
 export async function enrollStudent(data: {
@@ -1105,6 +1150,24 @@ export function saveBankSettings(settings: BankSettings): ApiResponse {
   return { success: true, message: "Bank & gateway settings saved successfully." };
 }
 
+export async function verifyBankAccount(data: {
+  account_number: string;
+  bank_code?: string;
+  bank_name?: string;
+  paystackSecretKey?: string;
+}): Promise<ApiResponse & { verified?: boolean; account_name?: string; bank_name?: string; method?: string }> {
+  try {
+    const res = await fetch(getApiUrl("settings.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "verify_bank_account", ...data }),
+    });
+    return await res.json();
+  } catch (err: any) {
+    return { success: false, verified: false, error: err.message || "Failed to verify bank account." };
+  }
+}
+
 export interface GeneralSettings {
   schoolPhone: string;
   schoolPhone2: string;
@@ -1177,6 +1240,7 @@ export function saveGeneralSettings(settings: GeneralSettings): ApiResponse {
 }
 
 // ── Remote Settings & Testing Helpers ─────────────────────────────────────────
+export const fetchSettings = fetchRemoteSettings;
 export async function fetchRemoteSettings(): Promise<{ general: GeneralSettings; payment: BankSettings }> {
   try {
     const res = await fetch(getApiUrl("settings.php?type=all"));

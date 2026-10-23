@@ -20,8 +20,10 @@ import {
   deleteProgram,
   saveInstructor,
   deleteInstructor,
+  toggleInstructorStatus,
   savePerformance,
   deletePerformance,
+  deletePerformancesBatch,
   enrollStudent,
   updateStudent,
   deleteStudent,
@@ -190,6 +192,41 @@ export function Admin({ go }: { go: (p: Page) => void }) {
 
   const [active, setActive] = useState("Dashboard")
   const [mobileNav, setMobileNav] = useState(false)
+  const [liveStats, setLiveStats] = useState<any>(null)
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
+
+  const refreshStats = useCallback(() => {
+    fetchStats()
+      .then((res) => {
+        if (res && res.success && res.stats) {
+          setLiveStats(res.stats)
+        }
+      })
+      .catch((err) => console.warn("Live stats fetch error:", err))
+  }, [])
+
+  useEffect(() => {
+    refreshStats()
+    const interval = setInterval(refreshStats, 15000)
+    return () => clearInterval(interval)
+  }, [refreshStats])
+
+  function getBadgeCount(item: string): number {
+    if (!liveStats) return 0
+    if (item === "Applications") return liveStats.pending_applications || 0
+    if (item === "Payments") return liveStats.pending_payments || 0
+    if (item === "Repairs") return liveStats.active_repairs || 0
+    if (item === "Enquiries") return liveStats.unread_enquiries || 0
+    if (item === "Class Schedule") return liveStats.pending_schedules || 0
+    return 0
+  }
+
+  const totalPending =
+    (liveStats?.pending_applications || 0) +
+    (liveStats?.pending_payments || 0) +
+    (liveStats?.active_repairs || 0) +
+    (liveStats?.unread_enquiries || 0) +
+    (liveStats?.pending_schedules || 0)
 
   const navGroups: [string, string[]][] = [
     [
@@ -209,6 +246,7 @@ export function Admin({ go }: { go: (p: Page) => void }) {
   function closeNav(item: string) {
     setActive(item)
     setMobileNav(false)
+    setShowNotifDropdown(false)
   }
 
   return (
@@ -246,19 +284,39 @@ export function Admin({ go }: { go: (p: Page) => void }) {
           {navGroups.map(([group, items]) => (
             <div className="admin-nav-group" key={group}>
               <small>{group}</small>
-              {items.map((item, i) => (
-                <button
-                  className={active === item ? "active" : ""}
-                  onClick={() => closeNav(item)}
-                  key={item}
-                  aria-current={active === item ? "page" : undefined}
-                >
-                  <span aria-hidden="true">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span>{item}</span>
-                </button>
-              ))}
+              {items.map((item, i) => {
+                const count = getBadgeCount(item)
+                return (
+                  <button
+                    className={active === item ? "active" : ""}
+                    onClick={() => closeNav(item)}
+                    key={item}
+                    aria-current={active === item ? "page" : undefined}
+                    style={{ display: "flex", alignItems: "center", width: "100%" }}
+                  >
+                    <span aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span style={{ flex: 1, textAlign: "left" }}>{item}</span>
+                    {count > 0 && (
+                      <span
+                        style={{
+                          marginLeft: 6,
+                          padding: "2px 7px",
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          background: item === "Payments" || item === "Applications" ? "#dc2626" : "var(--gold)",
+                          color: "white",
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           ))}
         </nav>
@@ -298,7 +356,127 @@ export function Admin({ go }: { go: (p: Page) => void }) {
               <p>Vivadoxa Music School Management Portal</p>
             </div>
           </div>
-          <div className="admin-tools">
+          <div className="admin-tools" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Notification Bell */}
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+                aria-label="Pending notifications"
+                style={{
+                  position: "relative",
+                  width: 38,
+                  height: 38,
+                  borderRadius: "50%",
+                  border: "1px solid var(--line)",
+                  background: showNotifDropdown ? "var(--cream)" : "white",
+                  display: "grid",
+                  placeItems: "center",
+                  cursor: "pointer",
+                  color: "var(--navy)",
+                }}
+              >
+                <Icon name="bell" size={18} />
+                {totalPending > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: -2,
+                      right: -2,
+                      background: "#dc2626",
+                      color: "white",
+                      borderRadius: 999,
+                      padding: "1px 5px",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      minWidth: 16,
+                      height: 16,
+                      display: "grid",
+                      placeItems: "center",
+                      border: "2px solid white",
+                    }}
+                  >
+                    {totalPending}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Popover Menu */}
+              {showNotifDropdown && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 46,
+                    right: 0,
+                    width: 290,
+                    background: "white",
+                    borderRadius: 10,
+                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.18)",
+                    border: "1px solid var(--line)",
+                    padding: "12px 14px",
+                    zIndex: 100,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 8 }}>
+                    <strong style={{ fontSize: 13, color: "var(--navy)" }}>Pending Action Alerts</strong>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>{totalPending} action item{totalPending === 1 ? "" : "s"}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setActive("Applications"); setShowNotifDropdown(false); }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    >
+                      <span style={{ fontSize: 12 }}>New Applications</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_applications || 0) > 0 ? "rgba(220,38,38,0.12)" : "#f1f5f9", color: (liveStats?.pending_applications || 0) > 0 ? "#dc2626" : "var(--muted)" }}>
+                        {liveStats?.pending_applications || 0} pending
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActive("Payments"); setShowNotifDropdown(false); }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    >
+                      <span style={{ fontSize: 12 }}>Payment Proofs</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_payments || 0) > 0 ? "rgba(201,107,50,0.15)" : "#f1f5f9", color: (liveStats?.pending_payments || 0) > 0 ? "var(--gold-text)" : "var(--muted)" }}>
+                        {liveStats?.pending_payments || 0} pending
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActive("Repairs"); setShowNotifDropdown(false); }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    >
+                      <span style={{ fontSize: 12 }}>Active Repairs</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.active_repairs || 0) > 0 ? "rgba(37,99,235,0.12)" : "#f1f5f9", color: (liveStats?.active_repairs || 0) > 0 ? "#2563eb" : "var(--muted)" }}>
+                        {liveStats?.active_repairs || 0} active
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActive("Enquiries"); setShowNotifDropdown(false); }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    >
+                      <span style={{ fontSize: 12 }}>Unread Enquiries</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.unread_enquiries || 0) > 0 ? "rgba(16,185,129,0.12)" : "#f1f5f9", color: (liveStats?.unread_enquiries || 0) > 0 ? "#059669" : "var(--muted)" }}>
+                        {liveStats?.unread_enquiries || 0} unread
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setActive("Class Schedule"); setShowNotifDropdown(false); }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                    >
+                      <span style={{ fontSize: 12 }}>Schedule Requests</span>
+                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_schedules || 0) > 0 ? "rgba(147,51,234,0.12)" : "#f1f5f9", color: (liveStats?.pending_schedules || 0) > 0 ? "#7c3aed" : "var(--muted)" }}>
+                        {liveStats?.pending_schedules || 0} pending
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <span aria-hidden="true" title={session?.name || "Admin"}>
               {(session?.name || "AD").slice(0, 2).toUpperCase()}
             </span>
@@ -844,6 +1022,7 @@ function AdminManager({ title }: { title: string }) {
     specialization: "",
     location: "Kaduna Studio",
     bio: "",
+    image: "",
     is_director: 0,
   })
   const [newPerformance, setNewPerformance] = useState({
@@ -856,6 +1035,50 @@ function AdminManager({ title }: { title: string }) {
     date_label: "Term Recital",
     description: "",
   })
+  const [selectedRecitalIds, setSelectedRecitalIds] = useState<number[]>([])
+
+  async function handleBatchDeleteRecitals() {
+    if (selectedRecitalIds.length === 0) return
+    if (!confirm(`Are you sure you want to delete ${selectedRecitalIds.length} selected recital video${selectedRecitalIds.length === 1 ? "" : "s"}?`)) {
+      return
+    }
+    const res = await deletePerformancesBatch(selectedRecitalIds)
+    if (res && res.success) {
+      setActionNotice(res.message || `${selectedRecitalIds.length} recital videos removed.`)
+      setSelectedRecitalIds([])
+      loadData()
+    } else {
+      setActionNotice(res?.error || "Failed to delete selected recitals.")
+    }
+  }
+
+  function handleToggleRecital(id: number) {
+    setSelectedRecitalIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  function handleToggleAllRecitals() {
+    if (selectedRecitalIds.length === filteredRecords.length) {
+      setSelectedRecitalIds([])
+    } else {
+      setSelectedRecitalIds(filteredRecords.map((r: any) => r.id))
+    }
+  }
+
+  async function handleToggleInstructor(inst: any) {
+    const actionText = inst.is_active === 0 ? "activate" : "deactivate"
+    if (!confirm(`Are you sure you want to ${actionText} the profile for "${inst.name}"? The profile record will be preserved.`)) {
+      return
+    }
+    const res = await toggleInstructorStatus(inst.id)
+    if (res && res.success) {
+      setActionNotice(res.message || `Instructor profile ${actionText}d.`)
+      loadData()
+    } else {
+      setActionNotice(res?.error || `Failed to update instructor status.`)
+    }
+  }
 
   useEffect(() => {
     if (selectedRecord && title === "Applications") {
@@ -903,7 +1126,7 @@ function AdminManager({ title }: { title: string }) {
         .then((progs) => setRecords(progs || []))
         .finally(() => setLoading(false))
     } else if (title === "Instructors") {
-      fetchAcademics("instructors")
+      fetchAcademics("instructors", { all: 1 })
         .then((insts) => setRecords(insts || []))
         .finally(() => setLoading(false))
     } else if (title === "Performances & Recitals") {
@@ -926,6 +1149,7 @@ function AdminManager({ title }: { title: string }) {
   useEffect(() => {
     setRecords([])
     setSelectedRecord(null)
+    setSelectedRecitalIds([])
     setActionNotice("")
     loadData()
   }, [title, loadData])
@@ -1139,15 +1363,39 @@ function AdminManager({ title }: { title: string }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 20 }}>{title} Management</h2>
         </div>
-        {["Programs & Courses", "Instructors", "Performances & Recitals"].includes(title) && (
-          <Button onClick={() => setShowAddModal(true)}>
-            + Add {title === "Instructors" ? "Instructor" : title === "Performances & Recitals" ? "Recital Video" : "Course"}
-          </Button>
-        )}
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {title === "Performances & Recitals" && selectedRecitalIds.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBatchDeleteRecitals}
+              style={{
+                padding: "8px 14px",
+                borderRadius: 6,
+                background: "#dc2626",
+                color: "white",
+                border: "none",
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Icon name="trash" size={14} />
+              Delete Selected ({selectedRecitalIds.length})
+            </button>
+          )}
+          {["Programs & Courses", "Instructors", "Performances & Recitals"].includes(title) && (
+            <Button onClick={() => setShowAddModal(true)}>
+              + Add {title === "Instructors" ? "Instructor" : title === "Performances & Recitals" ? "Recital Video" : "Course"}
+            </Button>
+          )}
+        </div>
       </div>
 
       {actionNotice && (
@@ -1291,6 +1539,15 @@ function AdminManager({ title }: { title: string }) {
                 )}
                 {title === "Performances & Recitals" && (
                   <tr>
+                    <th scope="col" style={{ width: 40, textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={filteredRecords.length > 0 && selectedRecitalIds.length === filteredRecords.length}
+                        onChange={handleToggleAllRecitals}
+                        title="Select all recitals"
+                        aria-label="Select all recitals"
+                      />
+                    </th>
                     <th scope="col">Performance Title</th>
                     <th scope="col">Performer / Student</th>
                     <th scope="col">Course / Category</th>
@@ -1642,49 +1899,100 @@ function AdminManager({ title }: { title: string }) {
                       {title === "Instructors" && (
                         <>
                           <td>
-                            <strong>{row.name}</strong>
-                            {row.is_director ? (
-                              <span
-                                style={{
-                                  marginLeft: 6,
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "2px 6px",
-                                  borderRadius: 4,
-                                  background: "#fdf5ec",
-                                  color: "var(--gold-text)",
-                                  border: "1px solid #ebdcd0",
-                                }}
-                              >
-                                Director
-                              </span>
-                            ) : null}
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              {row.image ? (
+                                <img
+                                  src={row.image}
+                                  alt={row.name}
+                                  style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--line)" }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: 34,
+                                    height: 34,
+                                    borderRadius: "50%",
+                                    background: "var(--navy)",
+                                    color: "var(--gold)",
+                                    display: "grid",
+                                    placeItems: "center",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {row.name.slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <strong>{row.name}</strong>
+                                {row.is_director ? (
+                                  <span
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      padding: "2px 6px",
+                                      borderRadius: 4,
+                                      background: "#fdf5ec",
+                                      color: "var(--gold-text)",
+                                      border: "1px solid #ebdcd0",
+                                    }}
+                                  >
+                                    Director
+                                  </span>
+                                ) : null}
+                              </div>
+                            </div>
                           </td>
                           <td>{row.title}</td>
                           <td>{row.specialization}</td>
                           <td>{row.location}</td>
                           <td>
-                            <Badge tone="green">Active</Badge>
+                            <Badge tone={row.is_active === 0 ? "gray" : "green"}>
+                              {row.is_active === 0 ? "Inactive" : "Active"}
+                            </Badge>
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setEditInstructor(row)
-                                setShowEditModal(true)
-                              }}
-                              style={{
-                                padding: "4px 8px",
-                                fontSize: 11,
-                                background: "none",
-                                border: "1px solid var(--line)",
-                                borderRadius: 4,
-                                cursor: "pointer",
-                              }}
-                            >
-                              Edit
-                            </button>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEditInstructor(row)
+                                  setShowEditModal(true)
+                                }}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background: "none",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleToggleInstructor(row)
+                                }}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background: "none",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  color: row.is_active === 0 ? "#166534" : "#dc2626",
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {row.is_active === 0 ? "Activate" : "Deactivate"}
+                              </button>
+                            </div>
                           </td>
                         </>
                       )}
@@ -1692,6 +2000,14 @@ function AdminManager({ title }: { title: string }) {
                       {/* Performances row */}
                       {title === "Performances & Recitals" && (
                         <>
+                          <td onClick={(e) => e.stopPropagation()} style={{ width: 40, textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedRecitalIds.includes(row.id)}
+                              onChange={() => handleToggleRecital(row.id)}
+                              aria-label={`Select recital ${row.title}`}
+                            />
+                          </td>
                           <td>
                             <strong>{row.title}</strong>
                             {row.is_featured ? (
@@ -1771,9 +2087,8 @@ function AdminManager({ title }: { title: string }) {
                           <td style={{ textAlign: "right" }}>
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={(e) => {
-                                e.stopPropagation()
+                                e?.stopPropagation?.()
                                 setSelectedRecord(row)
                               }}
                             >
@@ -2089,18 +2404,46 @@ function AdminManager({ title }: { title: string }) {
                       {/* Instructors Mobile Card */}
                       {title === "Instructors" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                            <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
-                              {row.is_director ? (
-                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
-                                  Director
-                                </span>
-                              ) : null}
-                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.title}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              {row.image ? (
+                                <img
+                                  src={row.image}
+                                  alt={row.name}
+                                  style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--line)", flexShrink: 0 }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: "50%",
+                                    background: "var(--navy)",
+                                    color: "var(--gold)",
+                                    display: "grid",
+                                    placeItems: "center",
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {row.name.slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
+                                {row.is_director ? (
+                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
+                                    Director
+                                  </span>
+                                ) : null}
+                                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.title}</div>
+                              </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone="green">Active</Badge>
+                              <Badge tone={row.is_active === 0 ? "gray" : "green"}>
+                                {row.is_active === 0 ? "Inactive" : "Active"}
+                              </Badge>
                             </span>
                           </div>
                           <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
@@ -2127,7 +2470,27 @@ function AdminManager({ title }: { title: string }) {
                                 cursor: "pointer",
                               }}
                             >
-                              Edit Instructor Profile
+                              Edit Profile
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleToggleInstructor(row)
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: "none",
+                                border: row.is_active === 0 ? "1px solid #166534" : "1px solid #dc2626",
+                                color: row.is_active === 0 ? "#166534" : "#dc2626",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                              }}
+                            >
+                              {row.is_active === 0 ? "Activate Profile" : "Deactivate Profile"}
                             </button>
                           </div>
                         </>
@@ -2137,14 +2500,23 @@ function AdminManager({ title }: { title: string }) {
                       {title === "Performances & Recitals" && (
                         <>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                            <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.title}</strong>
-                              {row.is_featured ? (
-                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
-                                  Featured
-                                </span>
-                              ) : null}
-                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Performer: {row.performer}</div>
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                              <input
+                                type="checkbox"
+                                checked={selectedRecitalIds.includes(row.id)}
+                                onChange={() => handleToggleRecital(row.id)}
+                                style={{ marginTop: 3 }}
+                                aria-label={`Select recital ${row.title}`}
+                              />
+                              <div>
+                                <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.title}</strong>
+                                {row.is_featured ? (
+                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
+                                    Featured
+                                  </span>
+                                ) : null}
+                                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Performer: {row.performer}</div>
+                              </div>
                             </div>
                             <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
                               {row.date_label || "Annual Recital"}
@@ -2209,9 +2581,8 @@ function AdminManager({ title }: { title: string }) {
                           <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                             <Button
                               variant="ghost"
-                              size="sm"
                               onClick={(e) => {
-                                e.stopPropagation()
+                                e?.stopPropagation?.()
                                 setSelectedRecord(row)
                               }}
                               style={{ flex: 1, justifyContent: "center" }}
@@ -3186,6 +3557,13 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                   </div>
                   <Field
+                    id="add-i-image"
+                    label="Instructor Photo / Avatar URL"
+                    value={newInstructor.image || ""}
+                    onChange={(v) => setNewInstructor({ ...newInstructor, image: v })}
+                    placeholder="e.g. /assets/instructors/dan.jpg or https://..."
+                  />
+                  <Field
                     id="add-i-bio"
                     label="Biography"
                     value={newInstructor.bio}
@@ -3417,6 +3795,13 @@ function AdminManager({ title }: { title: string }) {
                   />
                 </div>
                 <Field
+                  id="edit-i-image"
+                  label="Instructor Photo / Avatar URL"
+                  value={editInstructor.image || ""}
+                  onChange={(v) => setEditInstructor({ ...editInstructor, image: v })}
+                  placeholder="e.g. /assets/instructors/dan.jpg or https://..."
+                />
+                <Field
                   id="edit-i-bio"
                   label="Biography"
                   value={editInstructor.bio || ""}
@@ -3427,18 +3812,19 @@ function AdminManager({ title }: { title: string }) {
                 <Button
                   variant="ghost"
                   type="button"
-                  style={{ color: "#dc2626" }}
+                  style={{ color: editInstructor.is_active === 0 ? "#166534" : "#dc2626" }}
                   onClick={async () => {
-                    if (confirm(`Deactivate profile for "${editInstructor.name}"?`)) {
-                      await deleteInstructor(editInstructor.id)
+                    const action = editInstructor.is_active === 0 ? "activate" : "deactivate"
+                    if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} profile for "${editInstructor.name}"? (Profile will be preserved)`)) {
+                      await toggleInstructorStatus(editInstructor.id)
                       setShowEditModal(false)
                       setEditInstructor(null)
-                      setActionNotice("Instructor profile deactivated.")
+                      setActionNotice(`Instructor profile ${action}d (preserved).`)
                       loadData()
                     }
                   }}
                 >
-                  Deactivate Profile
+                  {editInstructor.is_active === 0 ? "Activate Profile" : "Deactivate Profile"}
                 </Button>
                 <Button type="submit">Save Modifications</Button>
               </div>

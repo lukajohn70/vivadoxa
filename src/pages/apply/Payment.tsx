@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
 import {
   Logo,
@@ -14,7 +14,7 @@ import {
   BANK_ACCOUNT_NO,
   BANK_ACCOUNT_NAME,
 } from "@/lib/utils"
-import { submitPaymentProof } from "@/lib/api"
+import { submitPaymentProof, getBankSettings, fetchSettings } from "@/lib/api"
 import type { Page } from "@/types"
 
 interface PaymentProofForm {
@@ -77,6 +77,36 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
   const [submitError, setSubmitError] = useState("")
   const [sent, setSent] = useState(false)
   const [copiedAccount, setCopiedAccount] = useState(false)
+  const [bankInfo, setBankInfo] = useState({
+    bankName: BANK_NAME,
+    accountNumber: BANK_ACCOUNT_NO,
+    accountName: BANK_ACCOUNT_NAME,
+    branch: "Kaduna Branch",
+  })
+
+  useEffect(() => {
+    const cached = getBankSettings()
+    if (cached && cached.accountNumber) {
+      setBankInfo({
+        bankName: cached.bankName || BANK_NAME,
+        accountNumber: cached.accountNumber || BANK_ACCOUNT_NO,
+        accountName: cached.accountName || BANK_ACCOUNT_NAME,
+        branch: cached.branch || "Kaduna Branch",
+      })
+    }
+    fetchSettings()
+      .then((res: any) => {
+        if (res && res.payment && res.payment.accountNumber) {
+          setBankInfo({
+            bankName: res.payment.bankName || BANK_NAME,
+            accountNumber: res.payment.accountNumber || BANK_ACCOUNT_NO,
+            accountName: res.payment.accountName || BANK_ACCOUNT_NAME,
+            branch: res.payment.branch || "Kaduna Branch",
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   function setP<K extends keyof PaymentProofForm>(
     k: K,
@@ -135,7 +165,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
   }
 
   function copyBankDetails() {
-    navigator.clipboard.writeText(BANK_ACCOUNT_NO).catch(() => {})
+    navigator.clipboard.writeText(bankInfo.accountNumber).catch(() => {})
     setCopiedAccount(true)
     setTimeout(() => setCopiedAccount(false), 2500)
   }
@@ -235,10 +265,10 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                     style={{ background: "#00b875", color: "white", fontWeight: 800, fontSize: 18 }}
                     aria-hidden="true"
                   >
-                    O
+                    {(bankInfo.bankName || "B").slice(0, 1).toUpperCase()}
                   </div>
                   <div>
-                    <strong>{BANK_NAME}</strong>
+                    <strong>{bankInfo.bankName}</strong>
                     <span>
                       Transfer exactly ₦{defaultAmount.toLocaleString("en-NG")}
                     </span>
@@ -247,10 +277,10 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 <div className="account-number" style={{ background: "var(--navy)", borderRadius: 12, padding: "20px 24px" }}>
                   <div>
                     <small style={{ color: "#9dacb8", letterSpacing: "1px", textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
-                      Official Tuition Account ({BANK_NAME})
+                      Official Tuition Account ({bankInfo.bankName})
                     </small>
                     <strong style={{ fontSize: "clamp(20px, 6vw, 28px)", letterSpacing: "2px", fontFamily: "monospace", color: "white" }}>
-                      {BANK_ACCOUNT_NO}
+                      {bankInfo.accountNumber}
                     </strong>
                   </div>
                   <button
@@ -276,7 +306,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 <dl>
                   <div>
                     <dt>Account Name</dt>
-                    <dd>{BANK_ACCOUNT_NAME}</dd>
+                    <dd>{bankInfo.accountName}</dd>
                   </div>
                   <div>
                     <dt>Transfer Reference / Narration</dt>

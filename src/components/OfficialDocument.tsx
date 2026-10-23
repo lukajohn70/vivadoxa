@@ -44,6 +44,7 @@ interface PaymentReceiptProps {
     created_at?: string
     notes?: string
     program?: string
+    status?: string
   }
   onClose: () => void
 }

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Button,
   Field,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui"
 import { repairSaxImg, repairElectronicsImg } from "@/lib/data"
 import { isValidEmail } from "@/lib/utils"
-import { submitRepairRequest, fetchRepairByCode } from "@/lib/api"
+import { submitRepairRequest, fetchRepairByCode, checkUserSession } from "@/lib/api"
 
 interface RepairForm {
   fullName: string
@@ -47,6 +47,25 @@ export function Repairs() {
   const [serverError, setServerError] = useState("")
   const [sentCode, setSentCode] = useState<string | null>(null)
   const [sentMethod, setSentMethod] = useState<string>("dropoff")
+  const [autofilled, setAutofilled] = useState(false)
+
+  // Autofill authenticated user details if logged in
+  useEffect(() => {
+    checkUserSession()
+      .then((user) => {
+        if (user) {
+          setForm((prev) => ({
+            ...prev,
+            fullName: prev.fullName || user.full_name || "",
+            email: prev.email || user.email || "",
+            phone: prev.phone || user.phone || "",
+            pickupAddress: prev.pickupAddress || user.address || "",
+          }))
+          setAutofilled(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Public Repair Tracker State
   const [trackCode, setTrackCode] = useState("")
@@ -641,6 +660,25 @@ export function Repairs() {
               title="Tell us what is happening"
             />
             <form onSubmit={handleSubmit} noValidate>
+              {autofilled && (
+                <div
+                  style={{
+                    marginBottom: 20,
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    background: "rgba(21, 112, 84, 0.08)",
+                    border: "1px solid rgba(21, 112, 84, 0.25)",
+                    color: "#157054",
+                    fontSize: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Icon name="check" size={14} />
+                  <span>Signed in as <strong>{form.fullName || form.email}</strong> — contact details autofilled automatically.</span>
+                </div>
+              )}
               <div className="form-grid">
                 <Field
                   id="repair-name"

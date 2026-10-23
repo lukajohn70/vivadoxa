@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import {
   Logo,
@@ -6,6 +6,7 @@ import {
   Icon,
   Field,
   SelectField,
+  WhatsAppIcon,
 } from "@/components/ui"
 import { programs } from "@/lib/data"
 import {
@@ -16,7 +17,7 @@ import {
   SCHOOL_EMAIL,
   WHATSAPP_URL,
 } from "@/lib/utils"
-import { submitApplication } from "@/lib/api"
+import { submitApplication, checkUserSession, fetchAcademics } from "@/lib/api"
 import type { ApplicationData, Page } from "@/types"
 
 // ── Multi-step stepper UI ────────────────────────────────────────────────────
@@ -186,7 +187,52 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
   const [accountPassword, setAccountPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [autofilled, setAutofilled] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
+
+  // Autofill authenticated user details if logged in
+  useEffect(() => {
+    checkUserSession()
+      .then((user) => {
+        if (user) {
+          setData((prev) => ({
+            ...prev,
+            fullName: prev.fullName || user.full_name || "",
+            email: prev.email || user.email || "",
+            phone: prev.phone || user.phone || "",
+            address: prev.address || user.address || "",
+            guardianName: prev.guardianName || user.guardian_name || "",
+            guardianPhone: prev.guardianPhone || user.guardian_phone || "",
+          }))
+          setAutofilled(true)
+        }
+      })
+      .catch(() => {})
+
+    // Sync live disciplines from database
+    fetchAcademics("programs")
+      .then((progs) => {
+        if (Array.isArray(progs) && progs.length > 0) {
+          setDisciplines((prev) => {
+            const map = new Map<string, any>()
+            prev.forEach((d) => map.set(d.name.toLowerCase(), d))
+            progs.forEach((p: any) => {
+              const key = p.name.toLowerCase()
+              map.set(key, {
+                id: p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                name: p.name,
+                category: p.category || "Instruments",
+                instruments: p.name,
+              })
+            })
+            return Array.from(map.values())
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const [disciplines, setDisciplines] = useState(OFFICIAL_APPLY_DISCIPLINES)
 
   function set<K extends keyof ApplicationData>(k: K, v: ApplicationData[K]) {
     setData((d) => ({ ...d, [k]: v }))
@@ -196,7 +242,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
 
   function handleCategoryChange(cat: string) {
     set("category", cat)
-    const matchingProgs = OFFICIAL_APPLY_DISCIPLINES.filter((p) => p.category === cat)
+    const matchingProgs = disciplines.filter((p) => p.category === cat)
     if (matchingProgs.length > 0) {
       set("program", matchingProgs[0].name)
     }
@@ -398,6 +444,25 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 title="Personal details"
                 intro="Let's start with some basic information about you."
               >
+                {autofilled && (
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      background: "rgba(21, 112, 84, 0.08)",
+                      border: "1px solid rgba(21, 112, 84, 0.25)",
+                      color: "#157054",
+                      fontSize: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <Icon name="check" size={14} />
+                    <span>Prefilled with your authenticated Vivadoxa account details.</span>
+                  </div>
+                )}
                 <div className="form-grid">
                   <Field
                     id="ap-name"
@@ -555,7 +620,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                     onChange={(v) => set("program", v)}
                     required
                   >
-                    {OFFICIAL_APPLY_DISCIPLINES
+                    {disciplines
                       .filter((p) => p.category === data.category)
                       .map((p) => (
                         <option key={p.name} value={p.name}>

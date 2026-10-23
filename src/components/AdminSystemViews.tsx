@@ -16,6 +16,7 @@ import {
   testWhatsAppNotification,
   fetchNotificationLogs,
   purgeMockData,
+  verifyBankAccount,
 } from "@/lib/api"
 
 // ═════════════════════════════════════════════════════════════════════════════════
@@ -638,8 +639,29 @@ export function StaffAndRolesView({
 }
 
 // ═════════════════════════════════════════════════════════════════════════════════
-// 2. PAYMENT SETTINGS VIEW
+// 2. PAYMENT SETTINGS VIEW (WITH REAL BANK ACCOUNT AUTHENTICATION)
 // ═════════════════════════════════════════════════════════════════════════════════
+const NIGERIAN_BANKS = [
+  { name: "Access Bank", code: "044" },
+  { name: "Guaranty Trust Bank (GTBank)", code: "058" },
+  { name: "Zenith Bank", code: "057" },
+  { name: "First Bank of Nigeria", code: "011" },
+  { name: "United Bank for Africa (UBA)", code: "033" },
+  { name: "Stanbic IBTC Bank", code: "039" },
+  { name: "First City Monument Bank (FCMB)", code: "214" },
+  { name: "Fidelity Bank", code: "070" },
+  { name: "Union Bank of Nigeria", code: "032" },
+  { name: "Sterling Bank", code: "232" },
+  { name: "Wema Bank / ALAT", code: "035" },
+  { name: "Polaris Bank", code: "076" },
+  { name: "Ecobank Nigeria", code: "050" },
+  { name: "Keystone Bank", code: "082" },
+  { name: "OPay Digital Services", code: "999992" },
+  { name: "Palmpay", code: "999991" },
+  { name: "Kuda Microfinance Bank", code: "50211" },
+  { name: "Moniepoint Microfinance Bank", code: "50515" },
+]
+
 export function PaymentSettingsView({
   bankSettings,
   setBankSettings,
@@ -652,10 +674,82 @@ export function PaymentSettingsView({
   const [showSecret, setShowSecret] = useState(false)
   const [savedNotice, setSavedNotice] = useState("")
 
+  // Bank Authentication State
+  const initialBank = NIGERIAN_BANKS.find(
+    (b) => b.name.toLowerCase() === (bankSettings.bankName || "").toLowerCase()
+  )
+  const [selectedBankCode, setSelectedBankCode] = useState(initialBank?.code || "044")
+  const [verifying, setVerifying] = useState(false)
+  const [authStatus, setAuthStatus] = useState<{
+    verified: boolean
+    accountName?: string
+    error?: string
+    method?: string
+  } | null>(null)
+
+  async function handleVerifyAccount() {
+    const rawNo = (bankSettings.accountNumber || "").replace(/\D/g, "")
+    if (rawNo.length !== 10) {
+      setAuthStatus({
+        verified: false,
+        error: "Nigerian bank account number must be exactly 10 digits.",
+      })
+      return
+    }
+
+    setVerifying(true)
+    setAuthStatus(null)
+
+    try {
+      const res = await verifyBankAccount({
+        account_number: rawNo,
+        bank_code: selectedBankCode,
+        bank_name: bankSettings.bankName,
+        paystackSecretKey: bankSettings.paystackSecretKey,
+      })
+
+      if (res.success && res.verified) {
+        setAuthStatus({
+          verified: true,
+          accountName: res.account_name,
+          method: res.method,
+        })
+        if (res.account_name) {
+          setBankSettings((prev) => ({
+            ...prev,
+            accountName: res.account_name || prev.accountName,
+          }))
+        }
+        setActionNotice(`✓ Account successfully authenticated: ${res.account_name}`)
+      } else {
+        setAuthStatus({
+          verified: false,
+          error: res.error || "Account could not be verified for this bank.",
+        })
+      }
+    } catch (err: any) {
+      setAuthStatus({
+        verified: false,
+        error: err.message || "Network error verifying account.",
+      })
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  function handleBankChange(code: string) {
+    setSelectedBankCode(code)
+    const match = NIGERIAN_BANKS.find((b) => b.code === code)
+    if (match) {
+      setBankSettings((prev) => ({ ...prev, bankName: match.name }))
+      setAuthStatus(null)
+    }
+  }
+
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
     saveBankSettings(bankSettings)
-    setActionNotice("School bank account and Paystack gateway configurations saved successfully.")
+    setActionNotice("School bank account and Paystack gateway configurations saved successfully. Reflected dynamically on website checkout.")
     setSavedNotice("Payment settings saved successfully!")
     setTimeout(() => setSavedNotice(""), 4000)
   }
@@ -669,7 +763,7 @@ export function PaymentSettingsView({
         <div>
           <h2 style={{ fontSize: 20, margin: 0 }}>Payment &amp; Tuition Configurations</h2>
           <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 13 }}>
-            Configure official bank transfer details presented to students and connect Paystack payment gateway.
+            Configure official school bank account details displayed to applicants on the website checkout.
           </p>
         </div>
       </div>
@@ -681,7 +775,7 @@ export function PaymentSettingsView({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div>
                 <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>School Bank Account &amp; Transfer Details</h3>
-                <small style={{ color: "var(--muted)" }}>Displayed to students during admission &amp; manual payment checkout.</small>
+                <small style={{ color: "var(--muted)" }}>Directly displayed on the website payment page for tuition transfers.</small>
               </div>
               <button
                 type="button"
@@ -705,28 +799,132 @@ export function PaymentSettingsView({
               </button>
             </div>
 
-            <div className="form-grid">
-              <Field
-                id="cfg-bank-name"
-                label="Bank Name"
-                value={bankSettings.bankName}
-                onChange={(v) => setBankSettings({ ...bankSettings, bankName: v })}
-                required
-              />
-              <Field
-                id="cfg-account-no"
-                label="Account Number"
-                value={bankSettings.accountNumber}
-                onChange={(v) => setBankSettings({ ...bankSettings, accountNumber: v })}
-                required
-              />
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* Bank Name Selector */}
+              <div>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5, color: "var(--navy)" }}>
+                  Bank Institution *
+                </label>
+                <select
+                  value={selectedBankCode}
+                  onChange={(e) => handleBankChange(e.target.value)}
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
+                >
+                  {NIGERIAN_BANKS.map((b) => (
+                    <option key={b.code} value={b.code}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Account Number with Verification Action */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <label htmlFor="cfg-account-no" style={{ fontSize: 11, fontWeight: 700, color: "var(--navy)" }}>
+                    NUBAN Account Number (10 Digits) *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleVerifyAccount}
+                    disabled={verifying}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "var(--gold)",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    {verifying ? "Authenticating…" : "🔍 Authenticate Account"}
+                  </button>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    id="cfg-account-no"
+                    type="text"
+                    maxLength={10}
+                    placeholder="e.g. 1906950275"
+                    value={bankSettings.accountNumber}
+                    onChange={(e) => {
+                      setBankSettings({ ...bankSettings, accountNumber: e.target.value.replace(/\D/g, "") })
+                      setAuthStatus(null)
+                    }}
+                    required
+                    style={{
+                      flex: 1,
+                      minHeight: 40,
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      padding: "0 10px",
+                      background: "white",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      letterSpacing: "1px",
+                      fontFamily: "monospace",
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleVerifyAccount}
+                    disabled={verifying}
+                    style={{ padding: "0 14px", fontSize: 12 }}
+                  >
+                    {verifying ? "Checking…" : "Verify"}
+                  </Button>
+                </div>
+
+                {/* Authentication Feedback Banner */}
+                {authStatus && (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      padding: "8px 12px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      background: authStatus.verified ? "#f0fdf4" : "#fef2f2",
+                      border: authStatus.verified ? "1px solid #86efac" : "1px solid #fecaca",
+                      color: authStatus.verified ? "#166534" : "#991b1b",
+                    }}
+                  >
+                    <Icon name={authStatus.verified ? "check" : "warning"} size={14} />
+                    <span>
+                      {authStatus.verified ? (
+                        <>
+                          <strong>Authenticated Account:</strong> {authStatus.accountName} (CBN NUBAN Verified)
+                        </>
+                      ) : (
+                        authStatus.error
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <Field
                 id="cfg-account-name"
-                label="Account Name"
+                label="Official Account Name *"
                 value={bankSettings.accountName}
                 onChange={(v) => setBankSettings({ ...bankSettings, accountName: v })}
                 required
               />
+
               <Field
                 id="cfg-bank-branch"
                 label="Branch / Location"
@@ -737,18 +935,18 @@ export function PaymentSettingsView({
             </div>
 
             {/* Student Preview Card */}
-            <div style={{ marginTop: 20, padding: 16, background: "var(--navy)", color: "white", borderRadius: 8 }}>
+            <div style={{ marginTop: 20, padding: 18, background: "var(--navy)", color: "white", borderRadius: 10, border: "1px solid rgba(201,107,50,0.3)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 11, color: "var(--gold-text-dark)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
-                  Live Student Checkout Preview
+                <span style={{ fontSize: 10, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 800 }}>
+                  Live Website Checkout Display
                 </span>
-                <span style={{ fontSize: 11, color: "#9dafbc" }}>{bankSettings.bankName}</span>
+                <span style={{ fontSize: 11, color: "#9dafbc", fontWeight: 600 }}>{bankSettings.bankName}</span>
               </div>
-              <div style={{ fontSize: 24, letterSpacing: 2, fontWeight: 700, margin: "6px 0", color: "#ffffff" }}>
-                {bankSettings.accountNumber}
+              <div style={{ fontSize: 24, letterSpacing: 2.5, fontWeight: 700, margin: "6px 0", color: "#ffffff", fontFamily: "monospace" }}>
+                {bankSettings.accountNumber || "— — — — — — — — — —"}
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#cbd5e1" }}>
-                <span>{bankSettings.accountName}</span>
+                <span style={{ fontWeight: 600 }}>{bankSettings.accountName}</span>
                 <span>{bankSettings.branch}</span>
               </div>
             </div>
@@ -759,7 +957,7 @@ export function PaymentSettingsView({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <div>
                 <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>Online Payment Gateway (Paystack)</h3>
-                <small style={{ color: "var(--muted)" }}>Enable automated debit card, bank app, and USSD payments.</small>
+                <small style={{ color: "var(--muted)" }}>Optional automated debit card, bank app, and USSD payments.</small>
               </div>
               <span
                 style={{
@@ -803,8 +1001,8 @@ export function PaymentSettingsView({
 
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                  <label htmlFor="cfg-paystack-sk" style={{ fontSize: 11, fontWeight: 700 }}>
-                    Paystack Secret Key
+                  <label htmlFor="cfg-paystack-sk" style={{ fontSize: 11, fontWeight: 700, color: "var(--navy)" }}>
+                    Paystack Secret Key (Used for Bank Account Verification)
                   </label>
                   <button
                     type="button"
@@ -1035,615 +1233,128 @@ export function GeneralSettingsView({
           </div>
         </div>
 
-        {/* SECTION 2: WHATSAPP NOTIFICATION ENGINE */}
-        <div className="editor-section" style={{ margin: 0, border: "1px solid rgba(37, 211, 102, 0.4)", background: "#fafdfb" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px solid rgba(37, 211, 102, 0.2)", paddingBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#25D366", color: "white", display: "grid", placeItems: "center" }}>
-                <WhatsAppIcon size={20} fill="white" />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, paddingBottom: 0, border: "none", color: "#075e54" }}>WhatsApp Notification Engine</h3>
-                <small style={{ color: "var(--muted)" }}>Trigger instant alerts to admissions staff and send preformatted student chats.</small>
-              </div>
-            </div>
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 700,
-                background: generalSettings.whatsappAlerts ? "rgba(37, 211, 102, 0.2)" : "#f1f5f9",
-                color: generalSettings.whatsappAlerts ? "#075e54" : "#64748b",
-              }}
-            >
-              {generalSettings.whatsappAlerts ? "● WhatsApp Alerts Active" : "○ WhatsApp Disabled"}
-            </span>
-          </div>
-
-          {/* Master Switch */}
-          <div className="switch-row" style={{ padding: 14, background: "white", borderRadius: 8, border: "1px solid var(--line)", marginBottom: 18 }}>
-            <div>
-              <strong style={{ color: "#075e54" }}>Enable WhatsApp Instant Notification Pipeline</strong>
-              <span>When enabled, alert pings are generated automatically on student submissions</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={generalSettings.whatsappAlerts}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, whatsappAlerts: e.target.checked })}
-                aria-label="WhatsApp alerts"
-              />
-              <i aria-hidden="true" />
-            </label>
-          </div>
-
-          {/* WhatsApp Event Triggers */}
-          <div style={{ marginBottom: 18 }}>
-            <small style={{ display: "block", fontWeight: 700, textTransform: "uppercase", fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
-              Automated WhatsApp Alert Triggers
-            </small>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, background: "white", borderRadius: 6, border: "1px solid var(--line)", fontSize: 12, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={generalSettings.alertOnApplication !== false}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnApplication: e.target.checked })}
-                />
-                <span><strong>New Student Application</strong> (Admissions ping)</span>
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, background: "white", borderRadius: 6, border: "1px solid var(--line)", fontSize: 12, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={generalSettings.alertOnPayment !== false}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnPayment: e.target.checked })}
-                />
-                <span><strong>Payment Proof Submission</strong> (Finance ping)</span>
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, background: "white", borderRadius: 6, border: "1px solid var(--line)", fontSize: 12, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={generalSettings.alertOnRepair !== false}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnRepair: e.target.checked })}
-                />
-                <span><strong>Instrument Repair Intake</strong> (Workshop ping)</span>
-              </label>
-
-              <label style={{ display: "flex", alignItems: "center", gap: 8, padding: 10, background: "white", borderRadius: 6, border: "1px solid var(--line)", fontSize: 12, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={generalSettings.alertOnEnquiry !== false}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnEnquiry: e.target.checked })}
-                />
-                <span><strong>General Portal Enquiry</strong> (Lead alert)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Mode & Testing */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 14 }}>
-            <div style={{ background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-              <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>WhatsApp Delivery Mode</strong>
-              <div style={{ display: "flex", gap: 10, margin: "10px 0" }}>
-                <button
-                  type="button"
-                  onClick={() => setGeneralSettings({ ...generalSettings, whatsappMode: "direct" })}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: generalSettings.whatsappMode !== "gateway" ? "2px solid #25D366" : "1px solid var(--line)",
-                    background: generalSettings.whatsappMode !== "gateway" ? "rgba(37, 211, 102, 0.1)" : "#f8fafc",
-                    color: generalSettings.whatsappMode !== "gateway" ? "#075e54" : "var(--muted)",
-                  }}
-                >
-                  Direct Click-to-Chat (wa.me)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGeneralSettings({ ...generalSettings, whatsappMode: "gateway" })}
-                  style={{
-                    flex: 1,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: generalSettings.whatsappMode === "gateway" ? "2px solid #25D366" : "1px solid var(--line)",
-                    background: generalSettings.whatsappMode === "gateway" ? "rgba(37, 211, 102, 0.1)" : "#f8fafc",
-                    color: generalSettings.whatsappMode === "gateway" ? "#075e54" : "var(--muted)",
-                  }}
-                >
-                  Automated Gateway / API
-                </button>
-              </div>
-              <small style={{ color: "var(--muted)", fontSize: 11, display: "block", lineHeight: 1.4 }}>
-                {generalSettings.whatsappMode === "gateway"
-                  ? "Webhook POST sent to third-party SMS/WhatsApp gateway (Twilio, Meta Cloud API, Termii)."
-                  : "Generates formatted WhatsApp chat links with candidate name, program, and status ready to dispatch."}
-              </small>
-
-              {generalSettings.whatsappMode === "gateway" && (
-                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-                  <Field
-                    id="cfg-wa-url"
-                    label="Gateway Webhook URL"
-                    value={generalSettings.whatsappGatewayUrl || ""}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, whatsappGatewayUrl: v })}
-                    placeholder="https://api.gateway.com/v1/messages"
-                  />
-                  <Field
-                    id="cfg-wa-token"
-                    label="API Bearer Token"
-                    value={generalSettings.whatsappApiToken || ""}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, whatsappApiToken: v })}
-                    type="password"
-                    placeholder="••••••••••••••••"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Test WhatsApp Action */}
-            <div style={{ background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)", display: "flex", flexDirection: "column" }}>
-              <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>Verify WhatsApp Dispatch</strong>
-              <small style={{ color: "var(--muted)", fontSize: 11, marginBottom: 12 }}>
-                Sends a test notification payload to <strong>{generalSettings.schoolWhatsapp}</strong>.
-              </small>
-
-              <div style={{ marginTop: "auto" }}>
-                <button
-                  type="button"
-                  onClick={handleTestWhatsApp}
-                  disabled={testingWa}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "#25D366",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 6,
-                    fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                  }}
-                >
-                  <WhatsAppIcon size={16} fill="white" />
-                  {testingWa ? "Generating Test…" : "Send Test WhatsApp Alert"}
-                </button>
-
-                {testWaResult && (
-                  <div style={{ marginTop: 12, padding: 10, background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 6 }}>
-                    <span style={{ fontSize: 11, color: "#166534", fontWeight: 600, display: "block", marginBottom: 6 }}>
-                      ✓ {testWaResult.message}
-                    </span>
-                    {testWaResult.wa_link && (
-                      <a
-                        href={testWaResult.wa_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: "inline-block",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: "#15803d",
-                          textDecoration: "underline",
-                        }}
-                      >
-                        Launch WhatsApp Web/App with Test Message ↗
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: EMAIL NOTIFICATION ENGINE */}
-        <div className="editor-section" style={{ margin: 0, border: "1px solid rgba(201, 107, 50, 0.4)", background: "#fffdfb" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px solid rgba(201, 107, 50, 0.2)", paddingBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: "var(--gold)", color: "white", display: "grid", placeItems: "center" }}>
-                <Icon name="mail" size={18} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, paddingBottom: 0, border: "none", color: "#a24a18" }}>Email Notification Engine</h3>
-                <small style={{ color: "var(--muted)" }}>Deliver instantaneous HTML alerts for new applications and payment receipts.</small>
-              </div>
-            </div>
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: 999,
-                fontSize: 11,
-                fontWeight: 700,
-                background: generalSettings.emailAlerts ? "rgba(201, 107, 50, 0.15)" : "#f1f5f9",
-                color: generalSettings.emailAlerts ? "#a24a18" : "#64748b",
-              }}
-            >
-              {generalSettings.emailAlerts ? "● Email Alerts Active" : "○ Email Alerts Disabled"}
-            </span>
-          </div>
-
-          {/* Master Email Switch */}
-          <div className="switch-row" style={{ padding: 14, background: "white", borderRadius: 8, border: "1px solid var(--line)", marginBottom: 14 }}>
-            <div>
-              <strong style={{ color: "#a24a18" }}>Enable Academy Email Alert Dispatcher</strong>
-              <span>Send instantaneous emails to admissions staff when candidates submit applications</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={generalSettings.emailAlerts}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, emailAlerts: e.target.checked })}
-                aria-label="Email alerts"
-              />
-              <i aria-hidden="true" />
-            </label>
-          </div>
-
-          {/* Student Confirmation Switch */}
-          <div className="switch-row" style={{ padding: 14, background: "white", borderRadius: 8, border: "1px solid var(--line)", marginBottom: 18 }}>
-            <div>
-              <strong>Student Automated Confirmation Email</strong>
-              <span>Automatically send candidate a welcome email with their application reference number</span>
-            </div>
-            <label className="switch">
-              <input
-                type="checkbox"
-                checked={generalSettings.studentEmailConfirmation !== false}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, studentEmailConfirmation: e.target.checked })}
-                aria-label="Student confirmation email"
-              />
-              <i aria-hidden="true" />
-            </label>
-          </div>
-
-          {/* Email Transport Configuration */}
-          <div style={{ background: "white", padding: 18, borderRadius: 8, border: "1px solid var(--line)", marginBottom: 18 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div>
-                <strong style={{ fontSize: 13, color: "var(--navy)" }}>Email Transport Method</strong>
-                <small style={{ color: "var(--muted)", display: "block" }}>Select server mail() or configure external SMTP credentials (Gmail, SendGrid, Mailgun).</small>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setSmtpActive(false)}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: 4,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: !smtpActive ? "2px solid var(--gold)" : "1px solid var(--line)",
-                    background: !smtpActive ? "rgba(201, 107, 50, 0.1)" : "#f8fafc",
-                    color: !smtpActive ? "#a24a18" : "var(--muted)",
-                  }}
-                >
-                  Server PHP mail()
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSmtpActive(true)}
-                  style={{
-                    padding: "6px 12px",
-                    borderRadius: 4,
-                    fontSize: 11,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    border: smtpActive ? "2px solid var(--gold)" : "1px solid var(--line)",
-                    background: smtpActive ? "rgba(201, 107, 50, 0.1)" : "#f8fafc",
-                    color: smtpActive ? "#a24a18" : "var(--muted)",
-                  }}
-                >
-                  Custom SMTP Server
-                </button>
-              </div>
-            </div>
-
-            {smtpActive && (
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
-                <div className="form-grid" style={{ marginBottom: 12 }}>
-                  <Field
-                    id="cfg-smtp-host"
-                    label="SMTP Host"
-                    value={generalSettings.smtpHost || ""}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, smtpHost: v })}
-                    placeholder="e.g. smtp.gmail.com or mail.vivadoxa.ng"
-                    required
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <Field
-                      id="cfg-smtp-port"
-                      label="Port"
-                      value={String(generalSettings.smtpPort || 587)}
-                      onChange={(v) => setGeneralSettings({ ...generalSettings, smtpPort: Number(v) || 587 })}
-                      placeholder="587"
-                    />
-                    <div>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                        Encryption
-                      </label>
-                      <select
-                        value={generalSettings.smtpEncryption || "tls"}
-                        onChange={(e) => setGeneralSettings({ ...generalSettings, smtpEncryption: e.target.value })}
-                        style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
-                      >
-                        <option value="tls">STARTTLS (Port 587)</option>
-                        <option value="ssl">SSL / TLS (Port 465)</option>
-                        <option value="none">None</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-grid" style={{ marginBottom: 12 }}>
-                  <Field
-                    id="cfg-smtp-user"
-                    label="SMTP Username / Account Email"
-                    value={generalSettings.smtpUser || ""}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, smtpUser: v })}
-                    placeholder="admissions@vivadoxa.ng or vivadoxa@gmail.com"
-                  />
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                      <label htmlFor="cfg-smtp-pass" style={{ fontSize: 11, fontWeight: 700 }}>
-                        SMTP Password / App Password
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowSmtpPass(!showSmtpPass)}
-                        style={{ border: "none", background: "none", color: "var(--gold)", fontSize: 11, cursor: "pointer", fontWeight: 600 }}
-                      >
-                        {showSmtpPass ? "Hide" : "Reveal"}
-                      </button>
-                    </div>
-                    <input
-                      id="cfg-smtp-pass"
-                      type={showSmtpPass ? "text" : "password"}
-                      value={generalSettings.smtpPass || ""}
-                      onChange={(e) => setGeneralSettings({ ...generalSettings, smtpPass: e.target.value })}
-                      placeholder="••••••••••••••••"
-                      style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-grid">
-                  <Field
-                    id="cfg-from-email"
-                    label="Sender 'From' Email"
-                    value={generalSettings.fromEmail || "admissions@vivadoxa.ng"}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, fromEmail: v })}
-                  />
-                  <Field
-                    id="cfg-from-name"
-                    label="Sender Display Name"
-                    value={generalSettings.fromName || "Vivadoxa Music Academy Admissions"}
-                    onChange={(v) => setGeneralSettings({ ...generalSettings, fromName: v })}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Test Email Dispatcher */}
-          <div style={{ background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
-            <strong style={{ display: "block", fontSize: 13, marginBottom: 4 }}>Verify Email Pipeline (Live Test)</strong>
-            <small style={{ color: "var(--muted)", fontSize: 11, display: "block", marginBottom: 12 }}>
-              Dispatch a styled test notification to confirm that email dispatch is fully operational.
-            </small>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-              <div style={{ flex: 1, minWidth: 260 }}>
-                <Field
-                  id="test-email-recip"
-                  label="Test Recipient Email"
-                  value={testEmailRecipient}
-                  onChange={setTestEmailRecipient}
-                  placeholder="e.g. vivadoxa@gmail.com"
-                />
-              </div>
-              <Button type="button" onClick={handleTestEmail} disabled={testingEmail}>
-                {testingEmail ? "Sending Verification…" : "Send Test Email"}
-              </Button>
-            </div>
-
-            {testEmailResult && (
-              <div
-                style={{
-                  marginTop: 14,
-                  padding: 12,
-                  borderRadius: 6,
-                  fontSize: 12,
-                  background: testEmailResult.success ? "#f0fdf4" : "#fef2f2",
-                  border: testEmailResult.success ? "1px solid #86efac" : "1px solid #fecaca",
-                  color: testEmailResult.success ? "#166534" : "#991b1b",
-                }}
-              >
-                <strong>{testEmailResult.success ? "✓ Test Dispatch Result:" : "✕ Delivery Warning:"}</strong>
-                <p style={{ margin: "4px 0 0" }}>{testEmailResult.message || testEmailResult.error}</p>
-                {testEmailResult.simulated && (
-                  <small style={{ display: "block", marginTop: 4, color: "#854d0e" }}>
-                    Note: Running on local development server without sendmail postfix daemon. The notification was verified and safely recorded in your System Notification Audit Log.
-                  </small>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* SECTION 4: SYSTEM NOTIFICATION AUDIT TRAIL */}
+        {/* SECTION 2: PRACTICAL NOTIFICATION PREFERENCES */}
         <div className="editor-section" style={{ margin: 0 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>Live System Notification Audit Trail</h3>
-              <small style={{ color: "var(--muted)" }}>Audit history of all recent WhatsApp and Email alerts triggered across Vivadoxa.</small>
+              <h3 style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}>Instant Alerts &amp; Notifications</h3>
+              <small style={{ color: "var(--muted)" }}>Toggle real-time alerts for staff and automated confirmations for incoming students.</small>
             </div>
-            <Button variant="ghost" onClick={loadLogs}>
-              Refresh Logs
-            </Button>
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block table-wrap">
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
-                  <th style={{ padding: "10px 14px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Channel</th>
-                  <th style={{ padding: "10px 14px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Recipient</th>
-                  <th style={{ padding: "10px 14px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Subject / Event</th>
-                  <th style={{ padding: "10px 14px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Status</th>
-                  <th style={{ padding: "10px 14px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingLogs ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: 20, textAlign: "center", color: "var(--muted)" }}>
-                      Loading audit records…
-                    </td>
-                  </tr>
-                ) : logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: 20, textAlign: "center", color: "var(--muted)", fontSize: 12 }}>
-                      No recent notifications recorded yet. Submit a test application or dispatch a test email above!
-                    </td>
-                  </tr>
-                ) : (
-                  logs.slice(0, 15).map((log) => (
-                    <tr key={log.id} style={{ borderBottom: "1px solid var(--line)", fontSize: 12 }}>
-                      <td style={{ padding: "10px 14px" }}>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 5,
-                            padding: "2px 8px",
-                            borderRadius: 4,
-                            fontWeight: 700,
-                            fontSize: 10,
-                            textTransform: "uppercase",
-                            background: log.channel === "whatsapp" ? "rgba(37, 211, 102, 0.15)" : "rgba(201, 107, 50, 0.15)",
-                            color: log.channel === "whatsapp" ? "#075e54" : "#a24a18",
-                          }}
-                        >
-                          {log.channel === "whatsapp" ? <WhatsAppIcon size={12} /> : <Icon name="mail" size={12} />}
-                          {log.channel}
-                        </span>
-                      </td>
-                      <td style={{ padding: "10px 14px", color: "var(--navy)" }}>
-                        <code>{log.recipient}</code>
-                      </td>
-                      <td style={{ padding: "10px 14px", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {log.subject}
-                      </td>
-                      <td style={{ padding: "10px 14px" }}>
-                        <span
-                          style={{
-                            padding: "2px 6px",
-                            borderRadius: 4,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            background: log.status === "sent" ? "#dcfce7" : log.status === "logged" ? "#fef9c3" : "#fee2e2",
-                            color: log.status === "sent" ? "#166534" : log.status === "logged" ? "#854d0e" : "#991b1b",
-                          }}
-                        >
-                          {log.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: "10px 14px", color: "var(--muted)", fontSize: 11 }}>
-                        {new Date(log.created_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
-          <div className="block md:hidden">
-            {loadingLogs ? (
-              <div style={{ padding: 20, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-                Loading audit records…
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* WhatsApp Alerts Toggle */}
+            <div className="switch-row" style={{ padding: 14, background: "#fafdfb", borderRadius: 8, border: "1px solid rgba(37, 211, 102, 0.3)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#25D366", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <WhatsAppIcon size={18} fill="white" />
+                </div>
+                <div>
+                  <strong style={{ color: "#075e54", display: "block" }}>WhatsApp Instant Staff Alerts</strong>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Generate instant WhatsApp notification alerts to <strong>{generalSettings.schoolWhatsapp || "school contact"}</strong> when forms are submitted.
+                  </span>
+                </div>
               </div>
-            ) : logs.length === 0 ? (
-              <div style={{ padding: 20, textAlign: "center", color: "var(--muted)", fontSize: 12 }}>
-                No recent notifications recorded yet. Submit a test application or dispatch a test email above!
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {logs.slice(0, 15).map((log) => (
-                  <div
-                    key={log.id}
-                    style={{
-                      background: "#fbfaf8",
-                      borderRadius: 8,
-                      border: "1px solid var(--line)",
-                      padding: 12,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          fontWeight: 700,
-                          fontSize: 10,
-                          textTransform: "uppercase",
-                          background: log.channel === "whatsapp" ? "rgba(37, 211, 102, 0.15)" : "rgba(201, 107, 50, 0.15)",
-                          color: log.channel === "whatsapp" ? "#075e54" : "#a24a18",
-                        }}
-                      >
-                        {log.channel === "whatsapp" ? <WhatsAppIcon size={12} /> : <Icon name="mail" size={12} />}
-                        {log.channel}
-                      </span>
-                      <span
-                        style={{
-                          padding: "2px 6px",
-                          borderRadius: 4,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          background: log.status === "sent" ? "#dcfce7" : log.status === "logged" ? "#fef9c3" : "#fee2e2",
-                          color: log.status === "sent" ? "#166534" : log.status === "logged" ? "#854d0e" : "#991b1b",
-                        }}
-                      >
-                        {log.status}
-                      </span>
-                    </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={generalSettings.whatsappAlerts}
+                  onChange={(e) => setGeneralSettings({ ...generalSettings, whatsappAlerts: e.target.checked })}
+                  aria-label="WhatsApp alerts"
+                />
+                <i aria-hidden="true" />
+              </label>
+            </div>
 
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)" }}>
-                      {log.subject}
-                    </div>
-
-                    <div style={{ fontSize: 11, color: "var(--muted)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
-                      <code style={{ fontSize: 11 }}>{log.recipient}</code>
-                      <span>{new Date(log.created_at).toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
+            {/* Email Alerts Toggle */}
+            <div className="switch-row" style={{ padding: 14, background: "#fffdfb", borderRadius: 8, border: "1px solid rgba(201, 107, 50, 0.3)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--gold)", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Icon name="mail" size={16} />
+                </div>
+                <div>
+                  <strong style={{ color: "#a24a18", display: "block" }}>Email Staff Notifications</strong>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Send notifications to <strong>{generalSettings.schoolEmail || "admissions email"}</strong> upon new applications and enquiries.
+                  </span>
+                </div>
               </div>
-            )}
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={generalSettings.emailAlerts}
+                  onChange={(e) => setGeneralSettings({ ...generalSettings, emailAlerts: e.target.checked })}
+                  aria-label="Email alerts"
+                />
+                <i aria-hidden="true" />
+              </label>
+            </div>
+
+            {/* Student Welcome Email Toggle */}
+            <div className="switch-row" style={{ padding: 14, background: "#f8fafc", borderRadius: 8, border: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--navy)", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Icon name="check" size={16} />
+                </div>
+                <div>
+                  <strong style={{ display: "block" }}>Student Application Confirmation</strong>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Automatically email applicant their official registration reference number upon submission.
+                  </span>
+                </div>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={generalSettings.studentEmailConfirmation !== false}
+                  onChange={(e) => setGeneralSettings({ ...generalSettings, studentEmailConfirmation: e.target.checked })}
+                  aria-label="Student confirmation email"
+                />
+                <i aria-hidden="true" />
+              </label>
+            </div>
+
+            {/* Alert Event Types */}
+            <div style={{ marginTop: 8, padding: 14, background: "#faf9f6", borderRadius: 8, border: "1px solid var(--line)" }}>
+              <span style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--gold-text)", marginBottom: 10 }}>
+                Active Alert Triggers
+              </span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={generalSettings.alertOnApplication !== false}
+                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnApplication: e.target.checked })}
+                  />
+                  <span>New Student Applications</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={generalSettings.alertOnPayment !== false}
+                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnPayment: e.target.checked })}
+                  />
+                  <span>Payment Proof Submissions</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={generalSettings.alertOnRepair !== false}
+                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnRepair: e.target.checked })}
+                  />
+                  <span>Instrument Repair Bookings</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={generalSettings.alertOnEnquiry !== false}
+                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnEnquiry: e.target.checked })}
+                  />
+                  <span>General Contact Enquiries</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 

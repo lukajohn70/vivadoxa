@@ -298,7 +298,7 @@ export function Button({
 }: {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "danger";
-  onClick?: () => void;
+  onClick?: (e?: any) => void;
   disabled?: boolean;
   type?: "button" | "submit";
   fullWidth?: boolean;
@@ -332,6 +332,7 @@ export const Field = ({
   readOnly = false,
   error,
   id,
+  autoComplete,
 }: {
   label: string;
   placeholder?: string;
@@ -343,6 +344,7 @@ export const Field = ({
   readOnly?: boolean;
   error?: string;
   id?: string;
+  autoComplete?: string;
 }) => (
   <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
@@ -358,6 +360,7 @@ export const Field = ({
       readOnly={readOnly}
       onChange={onChange ? (e) => onChange(e.target.value) : undefined}
       required={required}
+      autoComplete={autoComplete}
       aria-describedby={error ? `${id}-err` : undefined}
       aria-invalid={!!error}
     />
