@@ -1592,11 +1592,30 @@ export async function respondToScheduleRequest(data: {
 // ── Purge Test & Mock Data ───────────────────────────────────────────────────
 export async function purgeMockData(confirmation = "PURGE"): Promise<ApiResponse> {
   try {
-    const res = await fetch(`${getApiUrl("purge.php")}?confirm=${encodeURIComponent(confirmation)}`, {
+    let adminEmail = "";
+    try {
+      const stored =
+        localStorage.getItem("vdx_admin_session") ||
+        sessionStorage.getItem("vdx_admin_session");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        adminEmail = parsed.email || "";
+      }
+    } catch {}
+
+    const endpoint = `${getApiUrl("purge.php")}?confirm=${encodeURIComponent(confirmation)}&key=vivadoxa2026`;
+    const res = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Email": adminEmail,
+      },
       credentials: "include",
-      body: JSON.stringify({ confirm: confirmation }),
+      body: JSON.stringify({
+        confirm: confirmation,
+        key: "vivadoxa2026",
+        admin_email: adminEmail,
+      }),
     });
     return await res.json();
   } catch (err: any) {
