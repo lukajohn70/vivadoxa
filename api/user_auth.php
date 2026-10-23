@@ -41,53 +41,15 @@ if ($method === 'GET') {
         $user = $stmt->fetch();
 
         if (!$user) {
-            // Also check if an application exists with this reference or email, for auto-provisioning
-            $appStmt = $pdo->prepare("SELECT application_no, first_name, last_name, email, phone FROM applications WHERE application_no = :ref OR LOWER(email) = LOWER(:em) LIMIT 1");
-            $appStmt->execute([':ref' => $identifier, ':em' => $identifier]);
-            $app = $appStmt->fetch();
-
-            if ($app && ($password === 'StudentPass2025!' || $password === 'vivadoxa' || $password === $app['application_no'])) {
-                // Auto-create user account on the fly!
-                $hash = password_hash('StudentPass2025!', PASSWORD_BCRYPT);
-                $ins = $pdo->prepare("INSERT INTO users (email, phone, password_hash, full_name, role, is_active) VALUES (:em, :ph, :pw, :fn, 'student', 1)");
-                $fullName = trim($app['first_name'] . ' ' . $app['last_name']);
-                $ins->execute([
-                    ':em' => $app['email'],
-                    ':ph' => $app['phone'],
-                    ':pw' => $hash,
-                    ':fn' => $fullName,
-                ]);
-                $newId = (int)$pdo->lastInsertId();
-                $user = [
-                    'id' => $newId,
-                    'email' => $app['email'],
-                    'phone' => $app['phone'],
-                    'password_hash' => $hash,
-                    'full_name' => $fullName,
-                    'role' => 'student',
-                    'avatar' => null,
-                    'address' => null,
-                    'guardian_name' => null,
-                    'guardian_phone' => null,
-                    'is_active' => 1,
-                ];
-            } else {
-                jsonResponse(['success' => false, 'error' => 'No account found with this email or phone. Please register or check your credentials.'], 401);
-            }
+            jsonResponse(['success' => false, 'error' => 'No account found with this email or phone. Please register or check your credentials.'], 401);
         }
 
         if (!$user['is_active']) {
             jsonResponse(['success' => false, 'error' => 'Your student account is deactivated. Please contact admissions.'], 403);
         }
 
-        $valid = password_verify($password, $user['password_hash']);
-
-        // Convenient demo fallback
-        if (!$valid && ($password === 'StudentPass2025!' || $password === 'demo' || $password === 'vivadoxa')) {
-            $valid = true;
-        }
-
-        if (!$valid) {
+        // Strict database password verification using bcrypt
+        if (!password_verify($password, $user['password_hash'])) {
             jsonResponse(['success' => false, 'error' => 'Incorrect password. Please try again.'], 401);
         }
 

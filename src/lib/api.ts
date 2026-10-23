@@ -542,6 +542,36 @@ export async function loginAdmin(email: string, password: string): Promise<ApiRe
   const cleanEmail = email.trim().toLowerCase();
   const cleanPassword = password.trim();
 
+  // If there is an unsynced local staff account created offline, commit it to MySQL first
+  try {
+    const list = getLocalArray<any>("vdx_admins", []);
+    const pending = list.find(
+      (a: any) =>
+        a &&
+        a.email &&
+        a.email.toLowerCase() === cleanEmail &&
+        a.password &&
+        a.password === cleanPassword
+    );
+    if (pending) {
+      await fetch(getApiUrl("admins.php"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "add",
+          name: pending.name || "Administrator",
+          email: cleanEmail,
+          role: pending.role || "superadmin",
+          password: cleanPassword,
+        }),
+      });
+      delete pending.password;
+      localStorage.setItem("vdx_admins", JSON.stringify(list));
+    }
+  } catch {}
+
+  // Strictly authenticate against the MySQL database via login.php
   try {
     const url = getApiUrl("login.php");
     const res = await fetch(url, {
@@ -560,60 +590,17 @@ export async function loginAdmin(email: string, password: string): Promise<ApiRe
     if (data && data.error) {
       return { success: false, error: data.error };
     }
-  } catch (err) {
-    console.warn("Backend auth unavailable, checking local credentials:", err);
-  }
 
-  // Graceful fallback for staff access (local preview mode or offline)
-  const list = getLocalArray<any>("vdx_admins", []);
-  const match = list.find((a: any) => {
-    const adminEmail = (a.email || "").toLowerCase();
-    const isEmailMatch =
-      adminEmail === cleanEmail ||
-      adminEmail === `${cleanEmail}@vivadoxa.ng` ||
-      (cleanEmail.endsWith("@vivadoxa.ng") && adminEmail === cleanEmail.replace("@vivadoxa.ng", ""));
-    const isPassMatch =
-      !a.password ||
-      a.password === cleanPassword ||
-      cleanPassword === "11111111" ||
-      cleanPassword === "admin123" ||
-      cleanPassword === "VivadoxaAdmin2025!";
-    return isEmailMatch && isPassMatch;
-  });
-
-  if (match) {
     return {
-      success: true,
-      user: { id: match.id, email: match.email, name: match.name, role: match.role || "staff" },
-      message: "Authenticated successfully.",
+      success: false,
+      error: `Authentication failed (Server HTTP ${res.status}). Please check database connectivity.`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Unable to reach database authentication server. Please check your network.",
     };
   }
-
-  // Pre-configured administrator accounts
-  if (cleanEmail === "lukajohn70@gmail.com" && (cleanPassword === "11111111" || cleanPassword === "admin123" || cleanPassword === "VivadoxaAdmin2025!")) {
-    return {
-      success: true,
-      user: { id: 3, email: cleanEmail, name: "Luka John", role: "superadmin" },
-      message: "Authenticated successfully.",
-    };
-  }
-
-  if (
-    (cleanEmail === "admin@vivadoxa.ng" && cleanPassword === "VivadoxaAdmin2025!") ||
-    (cleanEmail === "staff@vivadoxa.ng" && cleanPassword === "StaffPass2025!") ||
-    cleanPassword === "admin123" ||
-    cleanPassword === "vivadoxa2026"
-  ) {
-    const name = cleanEmail.includes("staff") ? "Admissions Staff" : "Tomi Adeyemi";
-    const role = cleanEmail.includes("staff") ? "staff" : "superadmin";
-    return {
-      success: true,
-      user: { id: 1, email: cleanEmail, name, role },
-      message: "Authenticated successfully.",
-    };
-  }
-
-  return { success: false, error: "Invalid staff email or password." };
 }
 
 // ── Live KPI Stats ────────────────────────────────────────────────────────────
@@ -1707,41 +1694,41 @@ export async function fetchNotificationLogs(): Promise<any[]> {
 // ── Staff & Administrator Management ──────────────────────────────────────────
 export async function fetchAdmins(): Promise<any[]> {
   try {
-    const res = await fetch(getApiUrl("admins.php"));
+    // If there are unsynced local staff accounts in cache with credentials, commit them to MySQL first
+    const localList = getLocalArray<any>("vdx_admins", []);
+    for (const localAdmin of localList) {
+      if (localAdmin?.email && localAdmin?.password) {
+        try {
+          await fetch(getApiUrl("admins.php"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              action: "add",
+              name: localAdmin.name || "Administrator",
+              email: localAdmin.email,
+              role: localAdmin.role || "staff",
+              password: localAdmin.password,
+            }),
+          });
+        } catch {}
+      }
+    }
+
+    const res = await fetch(getApiUrl("admins.php"), {
+      credentials: "include",
+    });
     if (res.ok) {
       const data = await res.json();
-      if (data.success && data.admins) {
+      if (data.success && Array.isArray(data.admins)) {
         localStorage.setItem("vdx_admins", JSON.stringify(data.admins));
         return data.admins;
       }
     }
-  } catch {}
-  return getLocalArray("vdx_admins", [
-    {
-      id: 1,
-      email: "admin@vivadoxa.ng",
-      name: "Tomi Adeyemi",
-      role: "superadmin",
-      is_active: 1,
-      last_login: "2026-10-17 13:46:16",
-    },
-    {
-      id: 2,
-      email: "staff@vivadoxa.ng",
-      name: "Admissions Staff",
-      role: "staff",
-      is_active: 1,
-      last_login: null,
-    },
-    {
-      id: 3,
-      email: "lukajohn70@gmail.com",
-      name: "Luka John",
-      role: "superadmin",
-      is_active: 1,
-      last_login: null,
-    },
-  ]);
+  } catch (err) {
+    console.warn("fetchAdmins network error:", err);
+  }
+  return getLocalArray("vdx_admins", []);
 }
 
 export async function addStaffAdmin(data: { name: string; email: string; role: string; password: string }): Promise<ApiResponse> {
@@ -1764,28 +1751,10 @@ export async function addStaffAdmin(data: { name: string; email: string; role: s
       return { success: false, error: result.error };
     }
 
-    if (!res.ok) {
-      return { success: false, error: `Failed to create staff account (Server error ${res.status}).` };
-    }
+    return { success: false, error: `Failed to create staff account (Server error ${res.status}).` };
   } catch (err: any) {
-    console.warn("Backend add admin unreachable, falling back to local storage:", err);
+    return { success: false, error: err.message || "Failed to connect to database server. Staff account could not be created." };
   }
-
-  // Local fallback (offline/local preview mode)
-  const list = getLocalArray<any>("vdx_admins", []);
-  const newStaff = {
-    id: list.length > 0 ? Math.max(...list.map((a: any) => a.id || 0)) + 1 : 1,
-    name: data.name,
-    email: data.email,
-    role: data.role,
-    password: data.password, // preserve for local offline authentication
-    is_active: 1,
-    last_login: null,
-    created_at: new Date().toISOString(),
-  };
-  list.push(newStaff);
-  localStorage.setItem("vdx_admins", JSON.stringify(list));
-  return { success: true, message: `Staff administrator ${data.name} added.` };
 }
 
 export async function updateStaffAdmin(data: { id: number; name: string; email: string; role: string; password?: string }): Promise<ApiResponse> {
@@ -1808,28 +1777,10 @@ export async function updateStaffAdmin(data: { id: number; name: string; email: 
       return { success: false, error: result.error };
     }
 
-    if (!res.ok) {
-      return { success: false, error: `Failed to update staff account (Server error ${res.status}).` };
-    }
+    return { success: false, error: `Failed to update staff account (Server error ${res.status}).` };
   } catch (err: any) {
-    console.warn("Backend update admin unreachable, falling back to local storage:", err);
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  // Local fallback
-  const list = getLocalArray<any>("vdx_admins", []);
-  const idx = list.findIndex((a: any) => a.id === data.id);
-  if (idx !== -1) {
-    list[idx] = {
-      ...list[idx],
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      ...(data.password ? { password: data.password } : {}),
-    };
-    localStorage.setItem("vdx_admins", JSON.stringify(list));
-    return { success: true, message: `Staff account for ${data.name} updated successfully.` };
-  }
-  return { success: false, error: "Staff account not found." };
 }
 
 export async function toggleStaffActive(id: number): Promise<ApiResponse> {
@@ -1852,21 +1803,10 @@ export async function toggleStaffActive(id: number): Promise<ApiResponse> {
       return { success: false, error: result.error };
     }
 
-    if (!res.ok) {
-      return { success: false, error: `Failed to update staff status (Server error ${res.status}).` };
-    }
+    return { success: false, error: `Failed to update staff status (Server error ${res.status}).` };
   } catch (err: any) {
-    console.warn("Backend toggle admin unreachable, falling back to local storage:", err);
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  const list = getLocalArray<any>("vdx_admins", []);
-  const idx = list.findIndex((a: any) => a.id === id);
-  if (idx !== -1) {
-    list[idx].is_active = list[idx].is_active ? 0 : 1;
-    localStorage.setItem("vdx_admins", JSON.stringify(list));
-    return { success: true, message: `Staff status updated.` };
-  }
-  return { success: false, error: "Staff account not found." };
 }
 
 export async function deleteStaffAdmin(id: number): Promise<ApiResponse> {
@@ -1889,16 +1829,10 @@ export async function deleteStaffAdmin(id: number): Promise<ApiResponse> {
       return { success: false, error: result.error };
     }
 
-    if (!res.ok) {
-      return { success: false, error: `Failed to delete staff account (Server error ${res.status}).` };
-    }
+    return { success: false, error: `Failed to delete staff account (Server error ${res.status}).` };
   } catch (err: any) {
-    console.warn("Backend delete admin unreachable, falling back to local storage:", err);
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  const list = getLocalArray<any>("vdx_admins", []).filter((a: any) => a.id !== id);
-  localStorage.setItem("vdx_admins", JSON.stringify(list));
-  return { success: true, message: "Staff account removed." };
 }
 
 // ── Student & Client Portal Auth & API ─────────────────────────────────────────
