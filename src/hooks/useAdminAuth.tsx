@@ -8,7 +8,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react"
-import { loginAdmin } from "@/lib/api"
+import { loginAdmin, getApiUrl } from "@/lib/api"
 
 export interface AdminSession {
   email: string
@@ -101,6 +101,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const logout = useCallback(() => {
+    try {
+      fetch(getApiUrl("logout.php"), {
+        method: "POST",
+        credentials: "include",
+      }).catch(() => {})
+    } catch {
+      // offline/preview mode
+    }
     persistSession(null)
     setSession(null)
     setLoginError("")

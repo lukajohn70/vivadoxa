@@ -233,14 +233,36 @@ export function Admin({ go }: { go: (p: Page) => void }) {
             <Icon name="close" />
           </button>
         </div>
-        <div className="admin-profile">
-          <span aria-hidden="true">
-            {(session?.name || "AD").slice(0, 2).toUpperCase()}
-          </span>
-          <div>
-            <strong>{session?.name || "Administrator"}</strong>
-            <small>Staff Administrator</small>
+        <div className="admin-profile" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span aria-hidden="true">
+              {(session?.name || "AD").slice(0, 2).toUpperCase()}
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ display: "block", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                {session?.name || "Administrator"}
+              </strong>
+              <small>Staff Administrator</small>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={logout}
+            title="Sign out"
+            style={{
+              background: "rgba(220, 38, 38, 0.08)",
+              border: "1px solid rgba(220, 38, 38, 0.2)",
+              color: "#dc2626",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 700,
+              padding: "4px 8px",
+              borderRadius: 4,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Sign out
+          </button>
         </div>
         <nav aria-label="Admin navigation">
           {navGroups.map(([group, items]) => (
@@ -263,7 +285,11 @@ export function Admin({ go }: { go: (p: Page) => void }) {
           ))}
         </nav>
         <div className="admin-foot">
-          <Button variant="ghost" onClick={logout}>
+          <Button
+            variant="ghost"
+            onClick={logout}
+            style={{ width: "100%", color: "#dc2626", borderColor: "#fecaca", fontWeight: 700 }}
+          >
             Sign out
           </Button>
         </div>
@@ -294,10 +320,28 @@ export function Admin({ go }: { go: (p: Page) => void }) {
               <p>Vivadoxa Music School Management Portal</p>
             </div>
           </div>
-          <div className="admin-tools">
+          <div className="admin-tools" style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span aria-hidden="true" title={session?.name || "Admin"}>
               {(session?.name || "AD").slice(0, 2).toUpperCase()}
             </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                color: "#dc2626",
+                borderColor: "#fecaca",
+                fontSize: 12,
+                fontWeight: 600,
+                padding: "6px 12px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Sign out
+            </Button>
           </div>
         </header>
 
@@ -462,7 +506,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           </span>
           <h2>Welcome back{session?.name ? `, ${session.name}` : ""}</h2>
           <p>
-            Live database dashboard: admissions, enrolled students, audited revenues, workshop repairs and schedules.
+            Institutional management: admissions, enrolled students, audited revenues, workshop repairs and schedules.
           </p>
         </div>
         <Button onClick={() => setActive("Applications")}>
@@ -507,7 +551,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           <div className="panel-title">
             <div>
               <h2>Revenue Overview (Last 6 Months)</h2>
-              <p>Audited inflows aggregated live from verified database transactions</p>
+              <p>Audited inflows aggregated from verified payment transactions</p>
             </div>
             <span
               style={{
@@ -1258,7 +1302,7 @@ function AdminManager({ title }: { title: string }) {
       program: studentForm.program,
     })
     if (res && res.success) {
-      setActionNotice(`✓ Student record for ${selectedRecord.full_name} updated in database.`)
+      setActionNotice(`Student record for ${selectedRecord.full_name} updated.`)
       setSelectedRecord(null)
       loadData()
     } else {
@@ -1270,7 +1314,7 @@ function AdminManager({ title }: { title: string }) {
     if (!confirm(`Are you sure you want to remove student "${name}"?`)) return
     const res = await deleteStudent(id)
     if (res && res.success) {
-      setActionNotice(`✓ Student record for ${name} removed from database.`)
+      setActionNotice(`Student record for ${name} removed.`)
       setSelectedRecord(null)
       loadData()
     }
@@ -1396,10 +1440,7 @@ function AdminManager({ title }: { title: string }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div>
-          <h2 style={{ margin: "0 0 4px", fontSize: 20 }}>{title} Management</h2>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
-            Direct MySQL database operations and live status updates.
-          </p>
+          <h2 style={{ margin: 0, fontSize: 20 }}>{title} Management</h2>
         </div>
         {["Programs & Courses", "Instructors", "Performances & Recitals"].includes(title) && (
           <Button onClick={() => setShowAddModal(true)}>
@@ -1579,7 +1620,7 @@ function AdminManager({ title }: { title: string }) {
                         color: "var(--muted)",
                       }}
                     >
-                      Loading records from database…
+                      Loading records…
                     </td>
                   </tr>
                 ) : filteredRecords.length === 0 ? (
@@ -1592,7 +1633,7 @@ function AdminManager({ title }: { title: string }) {
                         color: "var(--muted)",
                       }}
                     >
-                      No {title.toLowerCase()} found in database.
+                      No {title.toLowerCase()} found.
                     </td>
                   </tr>
                 ) : (
@@ -2049,11 +2090,11 @@ function AdminManager({ title }: { title: string }) {
           <div className="block md:hidden" style={{ padding: 12 }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
-                Loading records from database…
+                Loading records…
               </div>
             ) : filteredRecords.length === 0 ? (
               <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
-                No {title.toLowerCase()} found in database.
+                No {title.toLowerCase()} found.
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
