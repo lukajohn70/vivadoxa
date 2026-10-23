@@ -7,7 +7,104 @@ $pdo = getDb();
 $method = $_SERVER['REQUEST_METHOD'];
 $type = trim($_GET['type'] ?? 'programs');
 
+function ensureCatalogTables(PDO $pdo): void {
+    // 1. Programs
+    $pCount = (int)$pdo->query("SELECT COUNT(*) FROM `programs`")->fetchColumn();
+    if ($pCount === 0) {
+        $programs = [
+            ['Piano & Keyboard Mastery', 'Instruments', 'Popular', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Foundational posture, classical finger dexterity, reading sheet music, chord voicings, and contemporary hymnody.', 'All Ages', 'Beginner'],
+            ['Acoustic Guitar Foundations', 'Instruments', 'Popular', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Open chords, fingerstyle patterns, rhythmic strumming, bar chords, and solo accompaniment.', 'All Ages', 'Beginner'],
+            ['Lead & Electric Guitar', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Scale mastery, pentatonic improvisation, pick control, tone sculpting, and stage presence.', 'All Ages', 'Intermediate'],
+            ['Bass Guitar Groove & Harmony', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Root note timing, slap and fingerstyle technique, rhythmic locked-in pocket, and bassline construction.', 'All Ages', 'Beginner'],
+            ['Violin & Classical Strings', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Bow grip, intonation, ear training, dynamic vibrato, and graded recital repertoire.', 'All Ages', 'Beginner'],
+            ['Saxophone (Alto & Tenor)', 'Instruments', 'Popular', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Embouchure control, breath support, tone projection, jazz articulation, and expressive soloing.', 'All Ages', 'Beginner'],
+            ['Trumpet & Brass Fundamentals', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Lip buzz resonance, valve dexterity, fanfare articulation, and breath conservation.', 'All Ages', 'Beginner'],
+            ['Euphonium & Low Brass', 'Instruments', 'Specialty', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Warm melodic tone, compensating valve navigation, brass choir harmonization, and sight-reading.', 'All Ages', 'Beginner'],
+            ['Clarinet & Woodwinds', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Single-reed embouchure, smooth register transitions, throat tone correction, and orchestral phrasing.', 'All Ages', 'Beginner'],
+            ['Concert Flute', 'Instruments', 'Core', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Clear embouchure aperture, tone focus, octave overblowing control, and lyrical phrasing.', 'All Ages', 'Beginner'],
+            ['Contemporary Drum Kit', 'Instruments', 'Popular', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons', 'Limb independence, rudiment articulation, metronome precision, groove pocket, and dynamic live accompaniment.', 'All Ages', 'Beginner'],
+            ['Talking Drums & Traditional Percussion', 'Instruments', 'Heritage', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons', 'Indigenous Nigerian percussion technique, pitch modulation via leather tension cords, and cultural praise rhythms.', 'All Ages', 'Beginner'],
+            ['Voice Training & Vocal Stagecraft', 'Vocals', 'Popular', '₦20,000 / month', 20000.00, '1–12 Months', 'Studio · Home Lessons · Online', 'Diaphragmatic breath support, vocal register blend, pitch accuracy, vibrato control, and stagecraft.', 'All Ages', 'Beginner'],
+        ];
+        $ins = $pdo->prepare("
+            INSERT INTO `programs` (`name`, `category`, `tag`, `fee`, `fee_amount`, `duration`, `modes`, `desc`, `age_group`, `level`, `is_active`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        ");
+        foreach ($programs as $p) {
+            $ins->execute($p);
+        }
+    }
+
+    // 2. Instructors
+    $iCount = (int)$pdo->query("SELECT COUNT(*) FROM `instructors`")->fetchColumn();
+    if ($iCount === 0) {
+        $instructors = [
+            ['Frederick Chrysantus', 'Founder & Artistic Director', 'Concert Piano, Conducting & Music Theory', 'Kaduna Studio', 'Pianist, composer, and educator with over 15 years cultivating musical excellence and mentoring musicians across Nigeria.', 1],
+            ['David Eze', 'Guitar & Production Instructor', 'Acoustic, Electric Guitar & Audio Engineering', 'Kaduna Studio', 'Multi-instrumentalist and session guitarist specializing in contemporary fingerstyle, jazz harmony, and audio engineering.', 0],
+            ['Morenike Bello', 'Vocal Performance Lead', 'Voice Training, Breath Mechanics & Stagecraft', 'Kaduna Studio', 'Classically trained vocal coach helping students expand their range, overcome vocal fatigue, and command the stage.', 0],
+            ['Samuel Oche', 'Brass & Woodwind Lead', 'Saxophone, Trumpet, Clarinet & Flute', 'Kaduna Studio', 'Brass and wind specialist with extensive conservatory orchestral experience and church music leadership.', 0],
+        ];
+        $ins = $pdo->prepare("
+            INSERT INTO `instructors` (`name`, `title`, `specialization`, `location`, `bio`, `is_director`, `is_active`)
+            VALUES (?, ?, ?, ?, ?, ?, 1)
+        ");
+        foreach ($instructors as $inst) {
+            $ins->execute($inst);
+        }
+    }
+
+    // 3. Cohorts
+    $cCount = (int)$pdo->query("SELECT COUNT(*) FROM `cohorts`")->fetchColumn();
+    if ($cCount === 0) {
+        $cohorts = [
+            ['Saturday Cohort A (Morning)', 'Saturdays 9:00 AM – 12:00 PM', 'Studio Hall 1 & Piano Lab', 'Active'],
+            ['Saturday Cohort B (Afternoon)', 'Saturdays 1:00 PM – 4:00 PM', 'Studio Hall 2 & Ensemble Room', 'Active'],
+            ['Weekday Cohort (Tue & Thu)', 'Tue & Thu 5:00 PM – 7:00 PM', 'Studio Hall 1', 'Active'],
+            ['Private Home Lessons', 'Flexible (Scheduled with Instructor)', 'Student Residence (Kaduna)', 'Active'],
+            ['Online Virtual Studio', 'Flexible (1-on-1 Video Session)', 'Remote Classroom', 'Active'],
+        ];
+        $ins = $pdo->prepare("
+            INSERT INTO `cohorts` (`name`, `time_slot`, `room`, `status`)
+            VALUES (?, ?, ?, ?)
+        ");
+        foreach ($cohorts as $c) {
+            $ins->execute($c);
+        }
+    }
+
+    // 4. Performances
+    $perfCount = (int)$pdo->query("SELECT COUNT(*) FROM `performances`")->fetchColumn();
+    if ($perfCount === 0) {
+        $performances = [
+            ['Vivadoxa Music Worship Session featuring Min. Uche', 'Min. Uche & Vivadoxa Live Ensemble', 'Vocal & Instrumental Ensemble', 'Concert', '-IcdMT9uCLU', 'Live Session', 'Live Studio Session', 'An inspiring live worship and vocal ensemble session featuring Min. Uche and Vivadoxa student instrumentalists live in the Kaduna studio.', 1, 0],
+            ['Students Praise Session & Live Band Recital', 'Vivadoxa Student Ensemble', 'Drums, Bass & Keyboard', 'Student Band', 'XU917wI9sDg', 'Live Band', 'Student Praise Showcase', 'Vivadoxa candidates unite for an authentic praise session and live band showcase, demonstrating tempo lock, group dynamics, and rhythm control.', 0, 1],
+            ['Multi-Instrument Showcase: Bringing Musical Passions to Life', 'Vivadoxa Instructors & Students', 'Multi-Disciplinary Ensemble', 'Concert', 'FZydqxYOpF0', 'Academy Showcase', 'Kaduna Studio Showcase', 'Highlighting the comprehensive range of musical disciplines taught at Vivadoxa Music Kaduna, from keyboard and strings to percussion.', 0, 1],
+            ['Acoustic Guitar Foundations & Worship Chord Melody', 'Vivadoxa Guitar Faculty & Students', 'Acoustic Guitar', 'Recital', 'vjVEDq9oITE', 'Guitar Recital', 'Guitar Studio Showcase', 'Practical acoustic guitar demonstration playing worship songs, showing smooth open chord changes and rhythmic strumming dynamics.', 0, 1],
+            ['Electric Bass Guitar Groove & Harmony Masterclass', 'Vivadoxa Bass Faculty', 'Bass Guitar', 'Recital', 'G4c81H_UeXM', 'Bass Workshop', 'Fretboard Workshop', 'In-depth electric bass groove training, fretboard positioning, root-fifth-octave pocket playing, and gospel bass foundation.', 0, 1],
+            ['Makossa & African Highlife Bass Groove Showcase', 'Vivadoxa Rhythm Section', 'Bass Guitar & Percussion', 'Student Band', 'Adt0rd5uGaM', 'Groove Lab', 'Live Rhythm Lab', 'High-energy Makossa and African Highlife syncopated bass grooves, demonstrating finger dexterity, slap-pop nuances, and pocket timing.', 0, 1],
+            ['Highlife Piano & African Praise Phrasing', 'Vivadoxa Keyboard Department', 'Piano & Keyboard', 'Recital', 'hH8frv6klc4', 'African Praise', 'Keyboard Studio', 'Authentic African Highlife keyboard chord voicings, rhythmic syncopation, and praise progression improvisation.', 0, 1],
+            ['Makossa & Soukous Keyboard Rhythms', 'Vivadoxa Keyboard Students', 'Piano & Keyboard', 'Recital', 'Clu5E2abMgU', 'Studio Recital', 'Contemporary Keyboard Lab', 'Dynamic Makossa and Soukous rhythmic accompaniment patterns on piano, mastering two-hand independent rhythmic timing.', 0, 1],
+            ['1-4-5 Chord Progressions & Harmonic Theory for Beginners', 'Vivadoxa Foundation Learners', 'Piano & Keyboard', 'Recital', 'aokYxYryN_8', 'Theory & Recital', 'Foundation Class', 'Demystifying fundamental 1-4-5 harmonic progressions on piano, voice leading, and cadence resolution for aspiring accompanists.', 0, 0],
+            ['Beginner Piano: Playing Your First Song', 'Vivadoxa Foundation Learners', 'Piano & Keyboard', 'Recital', 'SHQFEIvnFXc', 'Early Milestone', 'Early Learner Showcase', 'Encouraging early music education milestone: building hand posture, finger numbers, and completing your first song melody.', 0, 0],
+            ['Guitar Foundations: Playing Simple Songs & Strumming', 'Vivadoxa Guitar Department', 'Acoustic Guitar', 'Recital', 'Hpx3BJ7C3QA', 'Acoustic Session', 'Kaduna Studio', 'Step-by-step guitar chord changes, rhythm timing, and playing your first full song with acoustic confidence.', 0, 1],
+            ['Heartfelt Recital Milestone: Student Breakthrough Showcase', 'Junior Student Recitalist', 'Piano & Keyboard', 'Recital', 'biosC5ZXQgI', 'Milestone Recital', 'Studio Recital', 'An emotional milestone performance celebrating student breakthrough, musical expression, and dedication to practice.', 0, 1],
+            ['Simple Piano Lesson & Melodic Phrasing', 'Vivadoxa Keyboard Department', 'Piano & Keyboard', 'Recital', 'teoKQmcuMZw', 'Piano Lesson', 'Keyboard Studio', 'Accessible foundation piano lesson breaking down melody phrasing, hand posture, and key navigation.', 0, 0],
+            ['Makossa Praise Groove & Syncopation', 'Vivadoxa Keyboard Students', 'Piano & Keyboard', 'Recital', 'Lxiwngf0YBQ', 'Praise Groove', 'Kaduna Studio', 'High-energy praise rhythm syncopation, upbeat comping, and authentic African gospel keyboard groove.', 0, 1],
+            ['Melodic Solo Expression on the Piano', 'Advanced Piano Students', 'Piano & Keyboard', 'Recital', 'hSRbektpiTQ', 'Solo Phrasing', 'Masterclass Showcase', 'Techniques for playing lyrical solo melodies on keyboard with dynamic touch and expressive ornamentation.', 0, 1],
+        ];
+        $ins = $pdo->prepare("
+            INSERT INTO `performances` (`title`, `performer`, `program`, `category`, `youtube_id`, `duration`, `date_label`, `description`, `is_featured`, `is_short`, `is_active`)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+        ");
+        foreach ($performances as $pf) {
+            $ins->execute($pf);
+        }
+    }
+}
+
 if ($method === 'GET') {
+    ensureCatalogTables($pdo);
+
     if ($type === 'instructors') {
         $stmt = $pdo->query("SELECT * FROM `instructors` WHERE `is_active` = 1 ORDER BY `is_director` DESC, id ASC");
         jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);

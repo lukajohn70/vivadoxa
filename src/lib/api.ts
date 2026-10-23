@@ -1,7 +1,22 @@
 // ─── API client for Vivadoxa backend ───────────────────────────────────
 // Fully harmonized with the front-end admissions, payment, repairs, and academics.
-// Features a resilient hybrid engine: connects to MySQL via PHP backend, with
-// automatic synchronization to localStorage cache for seamless operation.
+// All application records are strictly queried and committed to the MySQL database.
+
+// Clear legacy mock data caches from browser localStorage so all records are strictly loaded from MySQL
+if (typeof window !== "undefined") {
+  try {
+    const mockStorageKeys = [
+      "vdx_applications",
+      "vdx_payments",
+      "vdx_repairs",
+      "vdx_enquiries",
+      "vdx_students",
+    ];
+    for (const key of mockStorageKeys) {
+      localStorage.removeItem(key);
+    }
+  } catch {}
+}
 
 export const getApiUrl = (endpoint: string): string => {
   const clean = endpoint.replace(/^\//, "");
@@ -344,199 +359,6 @@ export const DEFAULT_PERFORMANCES = [
   },
 ];
 
-export const DEFAULT_APPLICATIONS = [
-  {
-    id: 1,
-    application_no: "VDX-2026-0184",
-    first_name: "Amina",
-    last_name: "Bello",
-    email: "amina.bello@example.com",
-    phone: "08022223344",
-    program: "Piano & Keyboard Mastery",
-    study_mode: "Onsite",
-    skill_level: "Beginner",
-    guardian_name: "Alhaji Bello",
-    guardian_phone: "08033334455",
-    address: "Barnawa, Kaduna",
-    status: "approved",
-    tuition_fee: 20000,
-    created_at: "2026-10-14T10:30:00Z",
-  },
-  {
-    id: 2,
-    application_no: "VDX-2026-0205",
-    first_name: "Emmanuel",
-    last_name: "Danjuma",
-    email: "emmanuel.d@example.com",
-    phone: "08034445566",
-    program: "Saxophone (Alto & Tenor)",
-    study_mode: "Home Lessons",
-    skill_level: "Intermediate",
-    guardian_name: "",
-    guardian_phone: "",
-    address: "Malali, Kaduna",
-    status: "pending",
-    tuition_fee: 50000,
-    created_at: "2026-10-15T14:15:00Z",
-  },
-  {
-    id: 3,
-    application_no: "VDX-2026-0211",
-    first_name: "Cynthia",
-    last_name: "Eze",
-    email: "cynthia.eze@example.com",
-    phone: "08056667788",
-    program: "Voice Training & Vocal Stagecraft",
-    study_mode: "Onsite",
-    skill_level: "Beginner",
-    guardian_name: "Mrs. Nkechi Eze",
-    guardian_phone: "08051112233",
-    address: "Television, Kaduna",
-    status: "reviewing",
-    tuition_fee: 55000,
-    created_at: "2026-10-16T09:00:00Z",
-  },
-  {
-    id: 4,
-    application_no: "VDX-2026-0220",
-    first_name: "Ibrahim",
-    last_name: "Musa",
-    email: "ibrahim.musa@example.com",
-    phone: "08078889900",
-    program: "Acoustic Guitar Foundations",
-    study_mode: "Onsite",
-    skill_level: "Beginner",
-    guardian_name: "",
-    guardian_phone: "",
-    address: "Angwan Sunday, Kaduna",
-    status: "approved",
-    tuition_fee: 20000,
-    created_at: "2026-10-16T16:45:00Z",
-  },
-];
-
-export const DEFAULT_PAYMENTS = [
-  {
-    id: 1,
-    reference: "VDX-PAY-7821",
-    application_no: "VDX-2026-0184",
-    payer_name: "Amina Bello",
-    payer_email: "amina.bello@example.com",
-    amount: 20000,
-    method: "Bank Transfer (Opay to Fredrerick Chysantus)",
-    status: "verified",
-    notes: "Opay transfer ref: OPY-77821940 - Verified by admissions desk",
-    created_at: "2026-10-14T11:00:00Z",
-    verified_at: "2026-10-14T11:30:00Z",
-  },
-  {
-    id: 2,
-    reference: "VDX-PAY-7834",
-    application_no: "VDX-2026-0205",
-    payer_name: "Emmanuel Danjuma",
-    payer_email: "emmanuel.d@example.com",
-    amount: 50000,
-    method: "Bank Transfer",
-    status: "pending",
-    notes: "Home lesson 1st month tuition transfer proof uploaded",
-    created_at: "2026-10-15T15:00:00Z",
-  },
-  {
-    id: 3,
-    reference: "VDX-PAY-7840",
-    application_no: "VDX-2026-0220",
-    payer_name: "Ibrahim Musa",
-    payer_email: "ibrahim.musa@example.com",
-    amount: 20000,
-    method: "Bank Transfer (Opay to Fredrerick Chysantus)",
-    status: "verified",
-    notes: "Verified at Angwan Sunday admissions desk",
-    created_at: "2026-10-16T17:00:00Z",
-    verified_at: "2026-10-16T17:15:00Z",
-  },
-];
-
-export const DEFAULT_REPAIRS = [
-  {
-    id: 1,
-    tracking_code: "REP-2026-0081",
-    customer_name: "Michael Yakubu",
-    customer_email: "m.yakubu@example.com",
-    customer_phone: "08035556677",
-    instrument: "Yamaha YAS-280 Alto Saxophone",
-    issue: "Low C pad leaking air, neck cork requires rebinding and octave key alignment.",
-    intake_method: "dropoff",
-    pickup_address: "",
-    status: "in_progress",
-    estimated_cost: 15000,
-    created_at: "2026-10-15T11:20:00Z",
-  },
-  {
-    id: 2,
-    tracking_code: "REP-2026-0094",
-    customer_name: "Pastor Gideon Bawa",
-    customer_email: "gideon.bawa@example.com",
-    customer_phone: "08092223311",
-    instrument: "Classical Acoustic Guitar (Yamaha C40)",
-    issue: "Bridge separation from soundboard and high action at the 12th fret.",
-    intake_method: "pickup",
-    pickup_address: "Plot 14 Barnawa Close, Barnawa, Kaduna",
-    status: "assessing",
-    estimated_cost: 12000,
-    created_at: "2026-10-16T13:40:00Z",
-  },
-];
-
-export const DEFAULT_ENQUIRIES = [
-  {
-    id: 1,
-    name: "Dr. Joshua Garba",
-    email: "j.garba@example.com",
-    phone: "08031234567",
-    subject: "Weekend Trumpet Lessons for Adult Beginner",
-    message: "Good day, I am interested in private trumpet lessons on Saturday mornings. Do you supply the instrument for beginners to practice on during studio sessions?",
-    is_read: 0,
-    created_at: "2026-10-16T08:30:00Z",
-  },
-  {
-    id: 2,
-    name: "Grace Sunday",
-    email: "grace.s@example.com",
-    phone: "08076543210",
-    subject: "Private Home Violin Lessons in Malali",
-    message: "Hello Vivadoxa, I would like to inquire about enrolling my 9-year-old daughter for private home violin lessons twice a week in Malali. Please share available tutor slots.",
-    is_read: 1,
-    created_at: "2026-10-15T16:10:00Z",
-  },
-];
-
-export const DEFAULT_STUDENTS = [
-  {
-    id: 1,
-    student_no: "VD-2026-001",
-    application_no: "VDX-2026-0184",
-    full_name: "Amina Bello",
-    email: "amina.bello@example.com",
-    phone: "08022223344",
-    program: "Piano & Keyboard Mastery",
-    study_mode: "Onsite",
-    cohort: "Saturday Cohort A (Morning)",
-    status: "active",
-  },
-  {
-    id: 2,
-    student_no: "VD-2026-002",
-    application_no: "VDX-2026-0220",
-    full_name: "Ibrahim Musa",
-    email: "ibrahim.musa@example.com",
-    phone: "08078889900",
-    program: "Acoustic Guitar Foundations",
-    study_mode: "Onsite",
-    cohort: "Saturday Cohort B (Afternoon)",
-    status: "active",
-  },
-];
-
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export async function loginAdmin(email: string, password: string): Promise<ApiResponse> {
   const cleanEmail = email.trim().toLowerCase();
@@ -616,34 +438,25 @@ export async function fetchStats(): Promise<ApiResponse> {
       const json = await res.json();
       if (json.success && json.stats) return json;
     }
-  } catch {
-    // Network unavailable
+  } catch (err) {
+    console.warn("Backend stats unavailable:", err);
   }
-
-  const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  const payments = getLocalArray("vdx_payments", DEFAULT_PAYMENTS);
-  const repairs = getLocalArray("vdx_repairs", DEFAULT_REPAIRS);
-  const enquiries = getLocalArray("vdx_enquiries", DEFAULT_ENQUIRIES);
-
-  const pendingApps = apps.filter((a) => a.status === "pending" || a.status === "reviewing").length;
-  const acceptedApps = apps.filter((a) => a.status === "approved").length;
-  const pendingPayments = payments.filter((p) => p.status === "pending").length;
-  const verifiedPayments = payments.filter((p) => p.status === "verified");
-  const totalRevenue = verifiedPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-  const activeRepairs = repairs.filter((r) => r.status !== "collected").length;
-  const unreadEnquiries = enquiries.filter((e) => !e.is_read).length;
 
   return {
     success: true,
     stats: {
-      total_applications: apps.length,
-      pending_applications: pendingApps,
-      accepted_applications: acceptedApps,
-      pending_payments: pendingPayments,
-      total_revenue: totalRevenue,
-      formatted_revenue: `₦${totalRevenue.toLocaleString()}`,
-      active_repairs: activeRepairs,
-      unread_enquiries: unreadEnquiries,
+      total_applications: 0,
+      pending_applications: 0,
+      accepted_applications: 0,
+      pending_payments: 0,
+      total_revenue: 0,
+      formatted_revenue: "₦0.00",
+      active_repairs: 0,
+      unread_enquiries: 0,
+      active_students: 0,
+      pending_schedules: 0,
+      monthly_revenue: [],
+      recent_activity: [],
     },
   };
 }
@@ -659,49 +472,18 @@ export async function fetchApplications(search = "", status = ""): Promise<any[]
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json.data)) {
-        return json.data;
+      const list = Array.isArray(json.data) ? json.data : Array.isArray(json.applications) ? json.applications : null;
+      if (json.success && list !== null) {
+        return list;
       }
     }
-  } catch {
-    // Fall back to local storage
+  } catch (err) {
+    console.warn("fetchApplications error:", err);
   }
-
-  const local = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  return local.filter((item) => {
-    const matchesSearch =
-      !search || JSON.stringify(item).toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = !status || item.status === status;
-    return matchesSearch && matchesStatus;
-  });
+  return [];
 }
 
 export async function submitApplication(data: Record<string, any>): Promise<ApiResponse> {
-  const applicationNo = `VDX-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
-  const newApp = {
-    id: Date.now(),
-    application_no: applicationNo,
-    first_name: data.fullName ? data.fullName.split(" ")[0] : (data.firstName || "Applicant"),
-    last_name: data.fullName ? data.fullName.split(" ").slice(1).join(" ") : (data.lastName || ""),
-    email: data.email || "",
-    phone: data.phone || "",
-    program: data.program || "Piano & Keyboard Mastery",
-    study_mode: data.studyMode || "Onsite",
-    skill_level: data.level || "Beginner",
-    dob: data.dateOfBirth || null,
-    gender: data.gender || "",
-    guardian_name: data.guardianName || "",
-    guardian_phone: data.guardianPhone || "",
-    address: data.address || "Kaduna",
-    status: "pending",
-    tuition_fee: Number(data.amount) || 20000,
-    created_at: new Date().toISOString(),
-  };
-
-  const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  apps.unshift(newApp);
-  setLocalArray("vdx_applications", apps);
-
   try {
     const url = getApiUrl("applications.php");
     const res = await fetch(url, {
@@ -710,24 +492,17 @@ export async function submitApplication(data: Record<string, any>): Promise<ApiR
       credentials: "include",
       body: JSON.stringify(data),
     });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.application_no) {
-        newApp.application_no = json.application_no;
-        setLocalArray("vdx_applications", apps);
-        return json;
-      }
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) {
+      return result;
     }
-  } catch {
-    // Return local submission
+    if (result?.error) {
+      return { success: false, error: result.error };
+    }
+    return { success: false, error: `Failed to submit application (Server error ${res.status}).` };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return {
-    success: true,
-    application_no: applicationNo,
-    message: "Application submitted successfully.",
-    application: newApp,
-  };
 }
 
 export async function checkApplicationStatus(ref: string, email?: string): Promise<ApiResponse> {
@@ -740,32 +515,10 @@ export async function checkApplicationStatus(ref: string, email?: string): Promi
     if (res.ok) {
       const json = await res.json();
       if (json.success && json.application) return json;
+      if (json.error) return { success: false, error: json.error };
     }
-  } catch {
-    // Fall back to local lookup
-  }
-
-  const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  const payments = getLocalArray("vdx_payments", DEFAULT_PAYMENTS);
-
-  const cleanRef = ref.trim().toUpperCase();
-  const found = apps.find(
-    (a: any) =>
-      a.application_no?.toUpperCase() === cleanRef ||
-      a.reference?.toUpperCase() === cleanRef
-  );
-
-  if (found) {
-    const linkedPayment = payments.find(
-      (p) =>
-        p.application_no?.toUpperCase() === cleanRef ||
-        p.reference?.toUpperCase() === cleanRef
-    );
-    return {
-      success: true,
-      application: found,
-      payment: linkedPayment || null,
-    };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Network error fetching application status." };
   }
 
   return {
@@ -775,13 +528,6 @@ export async function checkApplicationStatus(ref: string, email?: string): Promi
 }
 
 export async function updateApplicationStatus(application_no: string, status: string): Promise<ApiResponse> {
-  const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  const idx = apps.findIndex((a) => a.application_no === application_no);
-  if (idx !== -1) {
-    apps[idx].status = status;
-    setLocalArray("vdx_applications", apps);
-  }
-
   try {
     const url = getApiUrl("applications.php");
     const res = await fetch(url, {
@@ -790,43 +536,60 @@ export async function updateApplicationStatus(application_no: string, status: st
       credentials: "include",
       body: JSON.stringify({ action: "update_status", application_no, status }),
     });
-    if (res.ok) {
-      return await res.json();
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) {
+      return result;
     }
-  } catch {
-    // Local update saved
+    if (result?.error) {
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: `Application status updated to '${status}'.` };
+  return { success: false, error: "Failed to update application status." };
 }
 
 export async function updateApplication(
   application_no: string,
   updates: Record<string, any>
 ): Promise<ApiResponse> {
-  const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-  const idx = apps.findIndex((a) => a.application_no === application_no);
-  if (idx !== -1) {
-    apps[idx] = { ...apps[idx], ...updates };
-    setLocalArray("vdx_applications", apps);
-  }
-
   try {
     const url = getApiUrl("applications.php");
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ action: "update", application_no, ...updates }),
+      body: JSON.stringify({ action: "modify", application_no, updates }),
     });
-    if (res.ok) {
-      return await res.json();
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) {
+      return result;
     }
-  } catch {
-    // Local update saved
+    if (result?.error) {
+      return { success: false, error: result.error };
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update application." };
   }
+  return { success: false, error: "Failed to update application details in database." };
+}
 
-  return { success: true, message: "Application details updated successfully." };
+export async function deleteApplication(application_no: string): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("applications.php");
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete", application_no }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to delete application from database." };
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────
@@ -836,34 +599,16 @@ export async function fetchPayments(): Promise<any[]> {
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json.data)) return json.data;
+      const list = Array.isArray(json.data) ? json.data : Array.isArray(json.payments) ? json.payments : null;
+      if (json.success && list !== null) return list;
     }
-  } catch {
-    // Fall back
+  } catch (err) {
+    console.warn("fetchPayments error:", err);
   }
-
-  return getLocalArray("vdx_payments", DEFAULT_PAYMENTS);
+  return [];
 }
 
 export async function submitPaymentProof(data: Record<string, any>): Promise<ApiResponse> {
-  const reference = data.transactionRef || `VDX-PAY-${Math.floor(1000 + Math.random() * 9000)}`;
-  const newPayment = {
-    id: Date.now(),
-    reference,
-    application_no: data.applicationNo || data.application_no || "",
-    payer_name: data.payerName || data.payer_name || "Applicant",
-    payer_email: data.payerEmail || data.payer_email || "",
-    amount: Number(data.amountPaid || data.amount || 20000),
-    method: "Bank Transfer (Opay to Fredrerick Chysantus)",
-    status: "pending",
-    notes: `Payer: ${data.payerName || ""} · Ref: ${data.transactionRef || ""}`,
-    created_at: new Date().toISOString(),
-  };
-
-  const payments = getLocalArray("vdx_payments", DEFAULT_PAYMENTS);
-  payments.unshift(newPayment);
-  setLocalArray("vdx_payments", payments);
-
   try {
     const url = getApiUrl("payments.php");
     const res = await fetch(url, {
@@ -872,36 +617,16 @@ export async function submitPaymentProof(data: Record<string, any>): Promise<Api
       credentials: "include",
       body: JSON.stringify(data),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to submit payment to database." };
   }
-
-  return {
-    success: true,
-    reference,
-    message: "Payment proof submitted successfully and queued for verification.",
-  };
+  return { success: false, error: "Payment submission failed." };
 }
 
 export async function updatePaymentStatus(reference: string, status: string): Promise<ApiResponse> {
-  const payments = getLocalArray("vdx_payments", DEFAULT_PAYMENTS);
-  const idx = payments.findIndex((p) => p.reference === reference);
-  if (idx !== -1) {
-    payments[idx].status = status;
-    payments[idx].verified_at = new Date().toISOString();
-    setLocalArray("vdx_payments", payments);
-
-    if (payments[idx].application_no && status === "verified") {
-      const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-      const appIdx = apps.findIndex((a) => a.application_no === payments[idx].application_no);
-      if (appIdx !== -1) {
-        apps[appIdx].status = "approved";
-        setLocalArray("vdx_applications", apps);
-      }
-    }
-  }
-
   try {
     const url = getApiUrl("payments.php");
     const res = await fetch(url, {
@@ -910,12 +635,31 @@ export async function updatePaymentStatus(reference: string, status: string): Pr
       credentials: "include",
       body: JSON.stringify({ action: "update_status", reference, status }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
+  return { success: false, error: `Failed to update payment ${reference}.` };
+}
 
-  return { success: true, message: `Payment ${reference} updated to '${status}'.` };
+export async function deletePayment(reference: string): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("payments.php");
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete", reference }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to delete payment from database." };
 }
 
 // ── Repairs ───────────────────────────────────────────────────────────────────
@@ -925,36 +669,16 @@ export async function fetchRepairs(): Promise<any[]> {
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json.data)) return json.data;
+      const list = Array.isArray(json.data) ? json.data : Array.isArray(json.repairs) ? json.repairs : null;
+      if (json.success && list !== null) return list;
     }
-  } catch {
-    // Fall back
+  } catch (err) {
+    console.warn("fetchRepairs error:", err);
   }
-
-  return getLocalArray("vdx_repairs", DEFAULT_REPAIRS);
+  return [];
 }
 
 export async function submitRepairRequest(data: Record<string, any>): Promise<ApiResponse> {
-  const trackingCode = `REP-2026-${String(Math.floor(1000 + Math.random() * 9000))}`;
-  const newRepair = {
-    id: Date.now(),
-    tracking_code: trackingCode,
-    customer_name: data.fullName || data.customer_name || "Customer",
-    customer_phone: data.phone || data.customer_phone || "",
-    customer_email: data.email || data.customer_email || "",
-    instrument: data.instrumentType || data.instrument || "Musical Instrument",
-    issue: data.issue || "",
-    intake_method: data.intakeMethod || data.intake_method || "dropoff",
-    pickup_address: data.pickupAddress || data.pickup_address || "",
-    status: "received",
-    estimated_cost: 0,
-    created_at: new Date().toISOString(),
-  };
-
-  const repairs = getLocalArray("vdx_repairs", DEFAULT_REPAIRS);
-  repairs.unshift(newRepair);
-  setLocalArray("vdx_repairs", repairs);
-
   try {
     const url = getApiUrl("repairs.php");
     const res = await fetch(url, {
@@ -963,23 +687,13 @@ export async function submitRepairRequest(data: Record<string, any>): Promise<Ap
       credentials: "include",
       body: JSON.stringify(data),
     });
-    if (res.ok) {
-      const json = await res.json();
-      if (json.success && json.tracking_code) {
-        newRepair.tracking_code = json.tracking_code;
-        setLocalArray("vdx_repairs", repairs);
-        return json;
-      }
-    }
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to submit repair request to database." };
   }
-
-  return {
-    success: true,
-    tracking_code: trackingCode,
-    message: "Repair request booked successfully.",
-  };
+  return { success: false, error: "Repair request failed." };
 }
 
 export async function updateRepairStatus(
@@ -987,16 +701,6 @@ export async function updateRepairStatus(
   status: string,
   estimated_cost?: number
 ): Promise<ApiResponse> {
-  const repairs = getLocalArray("vdx_repairs", DEFAULT_REPAIRS);
-  const idx = repairs.findIndex((r) => r.tracking_code === tracking_code);
-  if (idx !== -1) {
-    repairs[idx].status = status;
-    if (estimated_cost !== undefined) {
-      repairs[idx].estimated_cost = estimated_cost;
-    }
-    setLocalArray("vdx_repairs", repairs);
-  }
-
   try {
     const url = getApiUrl("repairs.php");
     const res = await fetch(url, {
@@ -1005,34 +709,47 @@ export async function updateRepairStatus(
       credentials: "include",
       body: JSON.stringify({ action: "update_status", tracking_code, status, estimated_cost }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
+  return { success: false, error: `Failed to update repair ${tracking_code}.` };
+}
 
-  return { success: true, message: `Repair ${tracking_code} status updated.` };
+export async function deleteRepair(tracking_code: string): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("repairs.php");
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete", tracking_code }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to delete repair from database." };
 }
 
 export async function fetchRepairByCode(code: string): Promise<ApiResponse> {
+  const clean = code.trim().toUpperCase();
+  if (!clean) return { success: false, error: "Please enter a tracking code." };
   try {
-    const url = `${getApiUrl("repairs.php")}?code=${encodeURIComponent(code)}`;
+    const url = `${getApiUrl("repairs.php")}?code=${encodeURIComponent(clean)}`;
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
       if (json.success && json.data) return json;
+      if (json.error) return { success: false, error: json.error };
     }
-  } catch {
-    // Fall back
+  } catch (err: any) {
+    return { success: false, error: err.message || "Error tracking repair." };
   }
-
-  const repairs = getLocalArray("vdx_repairs", DEFAULT_REPAIRS);
-  const clean = code.trim().toUpperCase();
-  const found = repairs.find((r) => r.tracking_code?.toUpperCase() === clean);
-
-  if (found) {
-    return { success: true, data: found };
-  }
-
   return { success: false, error: "No repair order found matching this tracking code." };
 }
 
@@ -1043,31 +760,16 @@ export async function fetchEnquiries(): Promise<any[]> {
     const res = await fetch(url, { credentials: "include" });
     if (res.ok) {
       const json = await res.json();
-      if (Array.isArray(json.data)) return json.data;
+      const list = Array.isArray(json.data) ? json.data : Array.isArray(json.enquiries) ? json.enquiries : null;
+      if (json.success && list !== null) return list;
     }
-  } catch {
-    // Fall back
+  } catch (err) {
+    console.warn("fetchEnquiries error:", err);
   }
-
-  return getLocalArray("vdx_enquiries", DEFAULT_ENQUIRIES);
+  return [];
 }
 
 export async function submitEnquiry(data: Record<string, any>): Promise<ApiResponse> {
-  const newEnq = {
-    id: Date.now(),
-    name: data.fullName || data.name || "Visitor",
-    email: data.email || "",
-    phone: data.phone || "",
-    subject: data.subject || "Course Enquiry",
-    message: data.message || "",
-    is_read: 0,
-    created_at: new Date().toISOString(),
-  };
-
-  const enquiries = getLocalArray("vdx_enquiries", DEFAULT_ENQUIRIES);
-  enquiries.unshift(newEnq);
-  setLocalArray("vdx_enquiries", enquiries);
-
   try {
     const url = getApiUrl("enquiries.php");
     const res = await fetch(url, {
@@ -1076,22 +778,16 @@ export async function submitEnquiry(data: Record<string, any>): Promise<ApiRespo
       credentials: "include",
       body: JSON.stringify(data),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to submit enquiry to database." };
   }
-
-  return { success: true, message: "Enquiry message received." };
+  return { success: false, error: "Enquiry message submission failed." };
 }
 
 export async function markEnquiryRead(id: number, is_read = 1): Promise<ApiResponse> {
-  const enquiries = getLocalArray("vdx_enquiries", DEFAULT_ENQUIRIES);
-  const idx = enquiries.findIndex((e) => e.id === id);
-  if (idx !== -1) {
-    enquiries[idx].is_read = is_read;
-    setLocalArray("vdx_enquiries", enquiries);
-  }
-
   try {
     const url = getApiUrl("enquiries.php");
     const res = await fetch(url, {
@@ -1100,12 +796,31 @@ export async function markEnquiryRead(id: number, is_read = 1): Promise<ApiRespo
       credentials: "include",
       body: JSON.stringify({ action: "mark_read", id, is_read }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
+  return { success: false, error: "Failed to update enquiry status." };
+}
 
-  return { success: true, message: "Enquiry updated." };
+export async function deleteEnquiry(id: number): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("enquiries.php");
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete", id }),
+    });
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to delete enquiry from database." };
 }
 
 // ── Academics (Programs, Instructors, Students, Cohorts, Performances) ─────────
@@ -1119,85 +834,31 @@ export async function fetchAcademics(
       const json = await res.json();
       if (Array.isArray(json.data)) return json.data;
     }
-  } catch {
-    // Fall back
+  } catch (err) {
+    console.warn(`fetchAcademics error for ${type}:`, err);
   }
-
-  if (type === "programs") return getLocalArray("vdx_programs", DEFAULT_PROGRAMS);
-  if (type === "instructors") return getLocalArray("vdx_instructors", DEFAULT_INSTRUCTORS);
-  if (type === "students") return getLocalArray("vdx_students", DEFAULT_STUDENTS);
-  if (type === "cohorts") return getLocalArray("vdx_cohorts", DEFAULT_COHORTS);
-  if (type === "performances") {
-    const cached = getLocalArray("vdx_performances", DEFAULT_PERFORMANCES);
-    // Automatic upgrade: replace stale placeholder IDs with authentic Vivadoxa YouTube channel videos and shorts flags
-    const needsUpgrade = cached.some(
-      (p: any) => p.youtube_id === "FbnNOOE3ET4" || p.youtube_id === "olo4Ax3HPv8" || p.youtube_id === "JGUCSB0q0nE" || p.is_short === undefined
-    );
-    if (needsUpgrade) {
-      setLocalArray("vdx_performances", DEFAULT_PERFORMANCES);
-      return DEFAULT_PERFORMANCES;
-    }
-    return cached;
-  }
-
   return [];
 }
 
 export async function saveProgram(data: Record<string, any>): Promise<ApiResponse> {
-  const programs = getLocalArray("vdx_programs", DEFAULT_PROGRAMS);
-  if (data.id) {
-    const idx = programs.findIndex((p) => p.id === data.id);
-    if (idx !== -1) {
-      programs[idx] = { ...programs[idx], ...data };
-      setLocalArray("vdx_programs", programs);
-      try {
-        const url = `${getApiUrl("academics.php")}?type=programs`;
-        await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ action: "update", ...data }),
-        });
-      } catch {}
-      return { success: true, message: "Course curriculum updated successfully." };
-    }
-  }
-
-  const newProg = {
-    id: Date.now(),
-    name: data.name,
-    category: data.category || "Instruments",
-    tag: data.tag || "Core",
-    fee: data.fee || "₦20,000 / month",
-    fee_amount: 20000,
-    duration: data.duration || "1–12 Months",
-    modes: data.modes || "Studio · Home Lessons · Online",
-    desc: data.desc || "",
-  };
-  programs.unshift(newProg);
-  setLocalArray("vdx_programs", programs);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=programs`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ action: data.id ? "update" : "add", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Program course published." };
+  return { success: false, error: "Failed to save course program." };
 }
 
 export async function deleteProgram(id: number): Promise<ApiResponse> {
-  const programs = getLocalArray("vdx_programs", DEFAULT_PROGRAMS);
-  const filtered = programs.filter((p) => p.id !== id);
-  setLocalArray("vdx_programs", filtered);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=programs`;
     const res = await fetch(url, {
@@ -1206,67 +867,34 @@ export async function deleteProgram(id: number): Promise<ApiResponse> {
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Program removed." };
+  return { success: false, error: "Failed to delete program from database." };
 }
 
 export async function saveInstructor(data: Record<string, any>): Promise<ApiResponse> {
-  const instructors = getLocalArray("vdx_instructors", DEFAULT_INSTRUCTORS);
-  if (data.id) {
-    const idx = instructors.findIndex((ins) => ins.id === data.id);
-    if (idx !== -1) {
-      instructors[idx] = { ...instructors[idx], ...data };
-      setLocalArray("vdx_instructors", instructors);
-      try {
-        const url = `${getApiUrl("academics.php")}?type=instructors`;
-        await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ action: "update", ...data }),
-        });
-      } catch {}
-      return { success: true, message: "Instructor profile updated successfully." };
-    }
-  }
-
-  const newInst = {
-    id: Date.now(),
-    name: data.name,
-    title: data.title || "Instructor",
-    specialization: data.specialization || "Music Theory & Technique",
-    location: data.location || "Kaduna Studio",
-    is_director: data.is_director ? 1 : 0,
-    bio: data.bio || "",
-  };
-  instructors.push(newInst);
-  setLocalArray("vdx_instructors", instructors);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=instructors`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ action: data.id ? "update" : "add", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Instructor profile saved." };
+  return { success: false, error: "Failed to save instructor profile." };
 }
 
 export async function deleteInstructor(id: number): Promise<ApiResponse> {
-  const instructors = getLocalArray("vdx_instructors", DEFAULT_INSTRUCTORS);
-  const filtered = instructors.filter((ins) => ins.id !== id);
-  setLocalArray("vdx_instructors", filtered);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=instructors`;
     const res = await fetch(url, {
@@ -1275,71 +903,34 @@ export async function deleteInstructor(id: number): Promise<ApiResponse> {
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Instructor removed." };
+  return { success: false, error: "Failed to delete instructor from database." };
 }
 
 export async function savePerformance(data: Record<string, any>): Promise<ApiResponse> {
-  const perfs = getLocalArray("vdx_performances", DEFAULT_PERFORMANCES);
-  if (data.id) {
-    const idx = perfs.findIndex((p) => p.id === data.id);
-    if (idx !== -1) {
-      perfs[idx] = { ...perfs[idx], ...data };
-      setLocalArray("vdx_performances", perfs);
-      try {
-        const url = `${getApiUrl("academics.php")}?type=performances`;
-        await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ action: "update", ...data }),
-        });
-      } catch {}
-      return { success: true, message: "Recital performance updated successfully." };
-    }
-  }
-
-  const newPerf = {
-    id: Date.now(),
-    title: data.title,
-    performer: data.performer,
-    program: data.program || "Piano & Keyboard Mastery",
-    category: data.category || "Recital",
-    youtube_id: data.youtube_id,
-    duration: data.duration || "3:30",
-    date_label: data.date_label || "Studio Recital",
-    description: data.description || "",
-    is_featured: data.is_featured ?? 0,
-    is_short: data.is_short ?? (data.isShort ? 1 : 0),
-  };
-  perfs.unshift(newPerf);
-  setLocalArray("vdx_performances", perfs);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=performances`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ action: data.id ? "update" : "add", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Recital performance published." };
+  return { success: false, error: "Failed to save performance recital." };
 }
 
 export async function deletePerformance(id: number): Promise<ApiResponse> {
-  const perfs = getLocalArray("vdx_performances", DEFAULT_PERFORMANCES);
-  const filtered = perfs.filter((p) => p.id !== id);
-  setLocalArray("vdx_performances", filtered);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=performances`;
     const res = await fetch(url, {
@@ -1348,12 +939,13 @@ export async function deletePerformance(id: number): Promise<ApiResponse> {
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return { success: true, message: "Performance removed." };
+  return { success: false, error: "Failed to delete performance from database." };
 }
 
 export async function enrollStudent(data: {
@@ -1364,34 +956,6 @@ export async function enrollStudent(data: {
   program: string;
   cohort: string;
 }): Promise<ApiResponse> {
-  const studentNo = `VD-2026-${String(Math.floor(100 + Math.random() * 900))}`;
-  const newStudent = {
-    id: Date.now(),
-    student_no: studentNo,
-    application_no: data.application_no || "",
-    full_name: data.full_name,
-    email: data.email,
-    phone: data.phone,
-    program: data.program,
-    study_mode: data.cohort.includes("Home") ? "Home Lessons" : "Onsite",
-    cohort: data.cohort,
-    status: "active",
-  };
-
-  const students = getLocalArray("vdx_students", DEFAULT_STUDENTS);
-  students.unshift(newStudent);
-  setLocalArray("vdx_students", students);
-
-  // Update application status to approved if linked
-  if (data.application_no) {
-    const apps = getLocalArray("vdx_applications", DEFAULT_APPLICATIONS);
-    const idx = apps.findIndex((a) => a.application_no === data.application_no);
-    if (idx !== -1) {
-      apps[idx].status = "approved";
-      setLocalArray("vdx_applications", apps);
-    }
-  }
-
   try {
     const url = `${getApiUrl("academics.php")}?type=students`;
     const res = await fetch(url, {
@@ -1400,16 +964,13 @@ export async function enrollStudent(data: {
       credentials: "include",
       body: JSON.stringify({ action: "enroll", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {
-    // Local saved
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
   }
-
-  return {
-    success: true,
-    student_no: studentNo,
-    message: `Student enrolled successfully with Student No: ${studentNo}.`,
-  };
+  return { success: false, error: "Failed to enroll student in database." };
 }
 
 export async function updateStudent(data: {
@@ -1421,13 +982,6 @@ export async function updateStudent(data: {
   email?: string;
   program?: string;
 }): Promise<ApiResponse> {
-  const students = getLocalArray("vdx_students", DEFAULT_STUDENTS);
-  const idx = students.findIndex((s) => (data.id && s.id === data.id) || (data.student_no && s.student_no === data.student_no));
-  if (idx !== -1) {
-    students[idx] = { ...students[idx], ...data };
-    setLocalArray("vdx_students", students);
-  }
-
   try {
     const url = `${getApiUrl("academics.php")}?type=students`;
     const res = await fetch(url, {
@@ -1436,17 +990,16 @@ export async function updateStudent(data: {
       credentials: "include",
       body: JSON.stringify({ action: "update", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {}
-
-  return { success: true, message: "Student record updated successfully." };
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to update student record in database." };
 }
 
 export async function deleteStudent(id: number): Promise<ApiResponse> {
-  const students = getLocalArray("vdx_students", DEFAULT_STUDENTS);
-  const filtered = students.filter((s) => s.id !== id);
-  setLocalArray("vdx_students", filtered);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=students`;
     const res = await fetch(url, {
@@ -1455,10 +1008,13 @@ export async function deleteStudent(id: number): Promise<ApiResponse> {
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     });
-    if (res.ok) return await res.json();
-  } catch {}
-
-  return { success: true, message: "Student record removed." };
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to remove student record from database." };
 }
 
 export async function saveCohort(data: {
@@ -1468,18 +1024,6 @@ export async function saveCohort(data: {
   room?: string;
   status?: string;
 }): Promise<ApiResponse> {
-  const cohorts = getLocalArray("vdx_cohorts", DEFAULT_COHORTS);
-  if (data.id) {
-    const idx = cohorts.findIndex((c) => c.id === data.id);
-    if (idx !== -1) {
-      cohorts[idx] = { ...cohorts[idx], ...data };
-      setLocalArray("vdx_cohorts", cohorts);
-    }
-  } else {
-    cohorts.unshift({ id: Date.now(), ...data, status: data.status || "Active" });
-    setLocalArray("vdx_cohorts", cohorts);
-  }
-
   try {
     const url = `${getApiUrl("academics.php")}?type=cohorts`;
     const res = await fetch(url, {
@@ -1488,17 +1032,16 @@ export async function saveCohort(data: {
       credentials: "include",
       body: JSON.stringify({ action: data.id ? "update" : "add", ...data }),
     });
-    if (res.ok) return await res.json();
-  } catch {}
-
-  return { success: true, message: "Cohort slot saved successfully." };
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to save cohort slot." };
 }
 
 export async function deleteCohort(id: number): Promise<ApiResponse> {
-  const cohorts = getLocalArray("vdx_cohorts", DEFAULT_COHORTS);
-  const filtered = cohorts.filter((c) => c.id !== id);
-  setLocalArray("vdx_cohorts", filtered);
-
   try {
     const url = `${getApiUrl("academics.php")}?type=cohorts`;
     const res = await fetch(url, {
@@ -1507,10 +1050,13 @@ export async function deleteCohort(id: number): Promise<ApiResponse> {
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     });
-    if (res.ok) return await res.json();
-  } catch {}
-
-  return { success: true, message: "Cohort slot removed." };
+    const result = await res.json().catch(() => null);
+    if (res.ok && result?.success) return result;
+    if (result?.error) return { success: false, error: result.error };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to connect to database server." };
+  }
+  return { success: false, error: "Failed to remove cohort slot from database." };
 }
 
 // ── Bank and System Settings ──────────────────────────────────────────────────

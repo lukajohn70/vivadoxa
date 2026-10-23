@@ -61,7 +61,7 @@ if ($method === 'GET') {
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
-    jsonResponse(['success' => true, 'data' => $rows]);
+    jsonResponse(['success' => true, 'data' => $rows, 'applications' => $rows]);
 } elseif ($method === 'POST') {
     $input = getJsonInput();
     $action = trim($input['action'] ?? '');
@@ -88,6 +88,46 @@ if ($method === 'GET') {
         }
 
         jsonResponse(['success' => true, 'message' => "Application status updated to '$newStatus'."]);
+    }
+
+    // ── Action: Modify application details (Admin) ────────────────────────────
+    if ($action === 'modify') {
+        $appNo = trim($input['application_no'] ?? '');
+        $updates = $input['updates'] ?? [];
+        if (!empty($appNo) && is_array($updates)) {
+            $fields = [];
+            $params = [':no' => $appNo];
+            $allowed = ['program', 'study_mode', 'skill_level', 'status', 'tuition_fee', 'phone', 'email'];
+            foreach ($allowed as $f) {
+                if (isset($updates[$f])) {
+                    $fields[] = "`$f` = :$f";
+                    $params[":$f"] = $updates[$f];
+                }
+            }
+            if (!empty($fields)) {
+                $sql = "UPDATE `applications` SET " . implode(', ', $fields) . " WHERE `application_no` = :no";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                jsonResponse(['success' => true, 'message' => "Application $appNo modified successfully."]);
+            }
+        }
+        jsonResponse(['success' => false, 'error' => 'Application reference and valid fields required.'], 400);
+    }
+
+    // ── Action: Delete application (Admin) ────────────────────────────────────
+    if ($action === 'delete') {
+        $appNo = trim($input['application_no'] ?? '');
+        $id = (int)($input['id'] ?? 0);
+        if (!empty($appNo)) {
+            $stmt = $pdo->prepare("DELETE FROM `applications` WHERE `application_no` = :no");
+            $stmt->execute([':no' => $appNo]);
+            jsonResponse(['success' => true, 'message' => "Application $appNo deleted successfully."]);
+        } elseif ($id > 0) {
+            $stmt = $pdo->prepare("DELETE FROM `applications` WHERE `id` = :id");
+            $stmt->execute([':id' => $id]);
+            jsonResponse(['success' => true, 'message' => "Application record deleted successfully."]);
+        }
+        jsonResponse(['success' => false, 'error' => 'Application reference or ID required.'], 400);
     }
 
     // ── Action: Create new application (Public Student Flow) ──────────────────
