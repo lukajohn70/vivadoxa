@@ -27,16 +27,31 @@ header('Content-Type: application/json; charset=utf-8');
 // Allow both session-authenticated admins and a dedicated secret fallback key
 $pdo = getDb();
 
+// Read parameters from GET, POST, or JSON body
+$input = getJsonInput();
+
+$providedKey = trim($_REQUEST['key'] ?? $input['key'] ?? '');
+$isKeyValid = ($providedKey === 'vivadoxa2026' || $providedKey === 'VivadoxaAdmin2025!');
+
+$adminEmail = trim($_REQUEST['admin_email'] ?? $input['admin_email'] ?? $_SERVER['HTTP_X_ADMIN_EMAIL'] ?? '');
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $isAdminLoggedIn = !empty($_SESSION['admin_user']) || !empty($_SESSION['user']);
 
-// Secret key allows one-time direct browser URL purge: /api/purge.php?confirm=PURGE&key=vivadoxa2026
-$providedKey = $_REQUEST['key'] ?? '';
-$isKeyValid = ($providedKey === 'vivadoxa2026' || $providedKey === 'VivadoxaAdmin2025!');
+// If session cookie is missing/blocked, verify active admin by email
+if (!$isAdminLoggedIn && !empty($adminEmail)) {
+    try {
+        $chk = $pdo->prepare("SELECT id FROM admins WHERE LOWER(email) = LOWER(:email) AND is_active = 1 LIMIT 1");
+        $chk->execute([':email' => $adminEmail]);
+        if ($chk->fetch()) {
+            $isAdminLoggedIn = true;
+        }
+    } catch (Exception $e) {}
+}
 
-$confirmation = strtoupper(trim($_REQUEST['confirm'] ?? $_REQUEST['confirmation'] ?? ''));
+$confirmation = strtoupper(trim($_REQUEST['confirm'] ?? $_REQUEST['confirmation'] ?? $input['confirm'] ?? $input['confirmation'] ?? ''));
 
 if (!$isAdminLoggedIn && !$isKeyValid) {
     http_response_code(401);
