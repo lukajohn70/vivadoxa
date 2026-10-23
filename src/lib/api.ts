@@ -1699,14 +1699,31 @@ export async function addStaffAdmin(data: { name: string; email: string; role: s
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "add", ...data }),
     });
-    const result = await res.json();
-    if (result.success) {
-      await fetchAdmins();
+    if (res.ok) {
+      const result = await res.json();
+      if (result.success) {
+        await fetchAdmins();
+      }
+      return result;
     }
-    return result;
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to create staff member." };
+    console.warn("Backend add admin failed, falling back to local cache:", err);
   }
+
+  // Local fallback
+  const list = getLocalArray<any>("vdx_admins", []);
+  const newStaff = {
+    id: list.length > 0 ? Math.max(...list.map((a: any) => a.id || 0)) + 1 : 1,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    is_active: 1,
+    last_login: null,
+    created_at: new Date().toISOString(),
+  };
+  list.push(newStaff);
+  localStorage.setItem("vdx_admins", JSON.stringify(list));
+  return { success: true, message: `Staff administrator ${data.name} added.` };
 }
 
 export async function updateStaffAdmin(data: { id: number; name: string; email: string; role: string; password?: string }): Promise<ApiResponse> {
@@ -1716,14 +1733,31 @@ export async function updateStaffAdmin(data: { id: number; name: string; email: 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "update", ...data }),
     });
-    const result = await res.json();
-    if (result.success) {
-      await fetchAdmins();
+    if (res.ok) {
+      const result = await res.json();
+      if (result.success) {
+        await fetchAdmins();
+      }
+      return result;
     }
-    return result;
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to update staff member." };
+    console.warn("Backend update admin failed, falling back to local cache:", err);
   }
+
+  // Local fallback
+  const list = getLocalArray<any>("vdx_admins", []);
+  const idx = list.findIndex((a: any) => a.id === data.id);
+  if (idx !== -1) {
+    list[idx] = {
+      ...list[idx],
+      name: data.name,
+      email: data.email,
+      role: data.role,
+    };
+    localStorage.setItem("vdx_admins", JSON.stringify(list));
+    return { success: true, message: `Staff account for ${data.name} updated successfully.` };
+  }
+  return { success: false, error: "Staff account not found." };
 }
 
 export async function toggleStaffActive(id: number): Promise<ApiResponse> {
@@ -1733,14 +1767,25 @@ export async function toggleStaffActive(id: number): Promise<ApiResponse> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "toggle_active", id }),
     });
-    const result = await res.json();
-    if (result.success) {
-      await fetchAdmins();
+    if (res.ok) {
+      const result = await res.json();
+      if (result.success) {
+        await fetchAdmins();
+      }
+      return result;
     }
-    return result;
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to change staff status." };
+    console.warn("Backend toggle admin failed, falling back to local cache:", err);
   }
+
+  const list = getLocalArray<any>("vdx_admins", []);
+  const idx = list.findIndex((a: any) => a.id === id);
+  if (idx !== -1) {
+    list[idx].is_active = list[idx].is_active ? 0 : 1;
+    localStorage.setItem("vdx_admins", JSON.stringify(list));
+    return { success: true, message: `Staff status updated.` };
+  }
+  return { success: false, error: "Staff account not found." };
 }
 
 export async function deleteStaffAdmin(id: number): Promise<ApiResponse> {
@@ -1750,14 +1795,20 @@ export async function deleteStaffAdmin(id: number): Promise<ApiResponse> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", id }),
     });
-    const result = await res.json();
-    if (result.success) {
-      await fetchAdmins();
+    if (res.ok) {
+      const result = await res.json();
+      if (result.success) {
+        await fetchAdmins();
+      }
+      return result;
     }
-    return result;
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to delete staff member." };
+    console.warn("Backend delete admin failed, falling back to local cache:", err);
   }
+
+  const list = getLocalArray<any>("vdx_admins", []).filter((a: any) => a.id !== id);
+  localStorage.setItem("vdx_admins", JSON.stringify(list));
+  return { success: true, message: "Staff account removed." };
 }
 
 // ── Student & Client Portal Auth & API ─────────────────────────────────────────

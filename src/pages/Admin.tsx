@@ -235,10 +235,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         </div>
         <div className="admin-profile">
           <span aria-hidden="true">
-            {session.name.slice(0, 2).toUpperCase()}
+            {(session?.name || "AD").slice(0, 2).toUpperCase()}
           </span>
           <div>
-            <strong>{session.name}</strong>
+            <strong>{session?.name || "Administrator"}</strong>
             <small>Staff Administrator</small>
           </div>
         </div>
@@ -295,8 +295,8 @@ export function Admin({ go }: { go: (p: Page) => void }) {
             </div>
           </div>
           <div className="admin-tools">
-            <span aria-hidden="true" title={session.name}>
-              {session.name.slice(0, 2).toUpperCase()}
+            <span aria-hidden="true" title={session?.name || "Admin"}>
+              {(session?.name || "AD").slice(0, 2).toUpperCase()}
             </span>
           </div>
         </header>
@@ -346,6 +346,7 @@ function formatActivityTime(dateStr: string): string {
 
 // ─── Dashboard overview ────────────────────────────────────────────────────────
 function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
+  const { session } = useAdminAuth()
   const [liveStats, setLiveStats] = useState<{
     total_applications: number
     pending_applications: number
@@ -459,7 +460,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               month: "long",
             })}
           </span>
-          <h2>Welcome back, {session.name}</h2>
+          <h2>Welcome back{session?.name ? `, ${session.name}` : ""}</h2>
           <p>
             Live database dashboard: admissions, enrolled students, audited revenues, workshop repairs and schedules.
           </p>
@@ -1483,7 +1484,7 @@ function AdminManager({ title }: { title: string }) {
             </Button>
           </div>
 
-          <div className="table-wrap">
+          <div className="hidden md:block table-wrap">
             <table>
               <thead>
                 {title === "Applications" && (
@@ -2042,6 +2043,445 @@ function AdminManager({ title }: { title: string }) {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card Feed (Responsive, No Horizontal Scrolling) */}
+          <div className="block md:hidden" style={{ padding: 12 }}>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                Loading records from database…
+              </div>
+            ) : filteredRecords.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                No {title.toLowerCase()} found in database.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredRecords.map((row) => {
+                  const key =
+                    row.id ||
+                    row.reference ||
+                    row.tracking_code ||
+                    row.application_no ||
+                    row.student_no
+
+                  return (
+                    <div
+                      key={key}
+                      onClick={() => setSelectedRecord(row)}
+                      style={{
+                        background: "white",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        padding: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {/* Applications Mobile Card */}
+                      {title === "Applications" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.application_no}</strong>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                                {row.first_name} {row.last_name}
+                              </div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone={row.status === "approved" ? "green" : row.status === "rejected" ? "red" : "gold"}>
+                                {row.status}
+                              </Badge>
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {row.email} · {row.phone}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, background: "#fbfaf8", padding: "8px 10px", borderRadius: 6 }}>
+                            <div>
+                              <span style={{ color: "var(--muted)" }}>Program: </span>
+                              <strong>{row.program}</strong>
+                              <div style={{ fontSize: 11, color: "var(--muted)" }}>{row.study_mode} ({row.skill_level})</div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ color: "var(--muted)" }}>Tuition: </span>
+                              <strong style={{ color: "var(--navy)" }}>₦{Number(row.tuition_fee || 20000).toLocaleString()}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            {row.status !== "approved" && (
+                              <button
+                                type="button"
+                                className="action-btn accept"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAppStatus(row.application_no, "approved")
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                              >
+                                ✓ Approve
+                              </button>
+                            )}
+                            {row.status !== "rejected" && (
+                              <button
+                                type="button"
+                                className="action-btn decline"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAppStatus(row.application_no, "rejected")
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                              >
+                                ✕ Reject
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                              style={{ padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Payments Mobile Card */}
+                      {title === "Payments" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{row.reference}</code>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                                {row.payer_name}
+                              </div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone={row.status === "verified" ? "green" : row.status === "declined" ? "red" : "gold"}>
+                                {row.status}
+                              </Badge>
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {row.payer_email} {row.application_no ? `· App: ${row.application_no}` : ""}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, background: "#fbfaf8", padding: "8px 10px", borderRadius: 6 }}>
+                            <div>
+                              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>METHOD</span>
+                              <strong>{row.method}</strong> {row.notes ? <small style={{ color: "var(--muted)" }}> ({row.notes})</small> : null}
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>AMOUNT</span>
+                              <strong style={{ fontSize: 15, color: "var(--navy)" }}>₦{Number(row.amount).toLocaleString()}</strong>
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            {row.status !== "verified" && (
+                              <button
+                                type="button"
+                                className="action-btn accept"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handlePaymentVerify(row.reference)
+                                }}
+                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                              >
+                                ✓ Verify Payment
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                              style={{ flex: 1, padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                            >
+                              Inspect Details
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Repairs Mobile Card */}
+                      {(title === "Repairs" || title.includes("Repairs")) && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{row.tracking_code}</code>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                                {row.customer_name}
+                              </div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone={row.status === "ready" || row.status === "collected" ? "green" : "gold"}>
+                                {row.status}
+                              </Badge>
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {row.customer_phone}
+                          </div>
+                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                            <div style={{ fontWeight: 600, color: "var(--navy)" }}>{row.instrument}</div>
+                            <div style={{ color: "var(--muted)", marginTop: 2 }}>{row.issue}</div>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <Badge tone={row.intake_method === "pickup" ? "gold" : "navy"}>
+                              {row.intake_method === "pickup" ? "Pickup" : "Drop-off"}
+                            </Badge>
+                            <button
+                              type="button"
+                              className="action-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600 }}
+                            >
+                              Update Status
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Enquiries Mobile Card */}
+                      {title === "Enquiries" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
+                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                                {row.email} · {row.phone}
+                              </div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone={row.is_read ? "navy" : "green"}>
+                                {row.is_read ? "Read" : "New"}
+                              </Badge>
+                            </span>
+                          </div>
+                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                            <strong style={{ display: "block", color: "var(--navy)", marginBottom: 3 }}>{row.subject}</strong>
+                            <p style={{ margin: 0, color: "var(--muted)" }}>{row.message}</p>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button
+                              type="button"
+                              className="action-btn"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEnquiryToggle(row.id, row.is_read)
+                              }}
+                              style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                            >
+                              {row.is_read ? "Mark unread" : "Mark read"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                              style={{ padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Programs Mobile Card */}
+                      {title === "Programs & Courses" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
+                              {row.tag && <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: 6 }}>({row.tag})</span>}
+                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.category}</div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone="green">Active</Badge>
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                            <div>
+                              <div style={{ color: "var(--muted)" }}>{row.duration || "1–12 Months"}</div>
+                              <div style={{ fontSize: 11, color: "var(--muted)" }}>{row.modes || "Studio · Home · Online"}</div>
+                            </div>
+                            <strong style={{ color: "var(--navy)" }}>{row.fee}</strong>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditCourse(row)
+                                setShowEditModal(true)
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: "var(--navy)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Edit Course
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Instructors Mobile Card */}
+                      {title === "Instructors" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
+                              {row.is_director ? (
+                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fef3c7", color: "#92400e" }}>
+                                  Director
+                                </span>
+                              ) : null}
+                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.title}</div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone="green">Active</Badge>
+                            </span>
+                          </div>
+                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                            <div><strong style={{ color: "var(--navy)" }}>Specialization:</strong> {row.specialization}</div>
+                            <div style={{ marginTop: 2 }}><strong style={{ color: "var(--navy)" }}>Location:</strong> {row.location}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setEditInstructor(row)
+                                setShowEditModal(true)
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: "var(--navy)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Edit Instructor Profile
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Performances Mobile Card */}
+                      {title === "Performances & Recitals" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.title}</strong>
+                              {row.is_featured ? (
+                                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fef3c7", color: "#92400e" }}>
+                                  Featured
+                                </span>
+                              ) : null}
+                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Performer: {row.performer}</div>
+                            </div>
+                            <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                              {row.date_label || "Annual Recital"}
+                            </span>
+                          </div>
+                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+                            <span>{row.program} ({row.category})</span>
+                            <code>{row.youtube_id}</code>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                if (confirm(`Remove performance "${row.title}"?`)) {
+                                  await deletePerformance(row.id)
+                                  setActionNotice("Performance recital removed.")
+                                  loadData()
+                                }
+                              }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: "none",
+                                border: "1px solid #dc2626",
+                                color: "#dc2626",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Delete Performance
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Students Mobile Card */}
+                      {title === "Students" && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                            <div>
+                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.student_no}</strong>
+                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                                {row.full_name}
+                              </div>
+                            </div>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <Badge tone={row.status === "active" ? "green" : row.status === "graduated" ? "gold" : "red"}>
+                                {row.status}
+                              </Badge>
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {row.email} · {row.phone}
+                          </div>
+                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+                            <div><strong style={{ color: "var(--navy)" }}>Program:</strong> {row.program}</div>
+                            <div><strong style={{ color: "var(--navy)" }}>Cohort:</strong> {row.cohort}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedRecord(row)
+                              }}
+                              style={{ flex: 1, justifyContent: "center" }}
+                            >
+                              Manage Student
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </section>
       )}

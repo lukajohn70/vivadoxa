@@ -229,7 +229,8 @@ export function StaffAndRolesView({
           </Button>
         </div>
 
-        <div className="table-wrap">
+        {/* Desktop Table View */}
+        <div className="hidden md:block table-wrap">
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
@@ -289,7 +290,7 @@ export function StaffAndRolesView({
                       <td style={{ padding: "14px 18px", color: "var(--navy)" }}>
                         <code>{staff.email}</code>
                       </td>
-                      <td style={{ padding: "14px 18px" }}>
+                      <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
                         <span
                           style={{
                             display: "inline-block",
@@ -299,12 +300,13 @@ export function StaffAndRolesView({
                             fontWeight: 700,
                             background: roleInfo.bg,
                             color: roleInfo.color,
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {roleInfo.label}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 18px" }}>
+                      <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
                         <span
                           style={{
                             display: "inline-flex",
@@ -326,7 +328,7 @@ export function StaffAndRolesView({
                           {staff.is_active ? "Active" : "Deactivated"}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 18px", color: "var(--muted)", fontSize: 12 }}>
+                      <td style={{ padding: "14px 18px", color: "var(--muted)", fontSize: 12, whiteSpace: "nowrap" }}>
                         {staff.last_login ? new Date(staff.last_login).toLocaleString() : "Never"}
                       </td>
                       <td style={{ padding: "14px 18px", textAlign: "right" }}>
@@ -391,6 +393,133 @@ export function StaffAndRolesView({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Responsive Stacked Cards View (No sideways scrolling) */}
+        <div className="block md:hidden" style={{ padding: 14 }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              Loading staff records…
+            </div>
+          ) : admins.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              No staff records found.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {admins.map((staff) => {
+                const roleInfo = roleBadges[staff.role] || roleBadges.staff
+                return (
+                  <div
+                    key={staff.id}
+                    style={{
+                      background: "#fbfaf8",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      padding: 14,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: "50%",
+                            background: staff.role === "superadmin" ? "#0b0b0b" : "var(--gold)",
+                            color: "white",
+                            display: "grid",
+                            placeItems: "center",
+                            fontWeight: 700,
+                            fontSize: 12,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {staff.name ? staff.name.slice(0, 2).toUpperCase() : "AD"}
+                        </span>
+                        <div>
+                          <strong style={{ fontSize: 14, color: "var(--navy)", display: "block" }}>{staff.name}</strong>
+                          {staff.id === 1 && (
+                            <span style={{ fontSize: 9, background: "#ffd700", color: "#000", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>
+                              Primary Admin
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          background: roleInfo.bg,
+                          color: roleInfo.color,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {roleInfo.label}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 12, color: "var(--navy)", background: "white", padding: "8px 10px", borderRadius: 6, border: "1px solid #ede8de" }}>
+                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>LOGIN EMAIL</div>
+                      <code style={{ fontSize: 12, wordBreak: "break-all" }}>{staff.email}</code>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "var(--muted)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: staff.is_active ? "#157054" : "#b84646", fontWeight: 600 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: staff.is_active ? "#157054" : "#b84646" }} />
+                        {staff.is_active ? "Active" : "Deactivated"}
+                      </span>
+                      <span>Last login: {staff.last_login ? new Date(staff.last_login).toLocaleDateString() : "Never"}</span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 10, marginTop: 2 }}>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(staff)}
+                        style={{
+                          flex: 1,
+                          padding: "8px 12px",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          background: "var(--navy)",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          textAlign: "center",
+                        }}
+                      >
+                        Edit Account
+                      </button>
+                      {staff.id !== 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActive(staff)}
+                          style={{
+                            padding: "8px 12px",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            background: staff.is_active ? "rgba(184, 70, 70, 0.1)" : "rgba(21, 112, 84, 0.1)",
+                            color: staff.is_active ? "#b84646" : "#157054",
+                            border: "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {staff.is_active ? "Deactivate" : "Activate"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1332,7 +1461,8 @@ export function GeneralSettingsView({
             </Button>
           </div>
 
-          <div className="table-wrap">
+          {/* Desktop Table View */}
+          <div className="hidden md:block table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
@@ -1407,6 +1537,78 @@ export function GeneralSettingsView({
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
+          <div className="block md:hidden">
+            {loadingLogs ? (
+              <div style={{ padding: 20, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                Loading audit records…
+              </div>
+            ) : logs.length === 0 ? (
+              <div style={{ padding: 20, textAlign: "center", color: "var(--muted)", fontSize: 12 }}>
+                No recent notifications recorded yet. Submit a test application or dispatch a test email above!
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {logs.slice(0, 15).map((log) => (
+                  <div
+                    key={log.id}
+                    style={{
+                      background: "#fbfaf8",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      padding: 12,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          fontWeight: 700,
+                          fontSize: 10,
+                          textTransform: "uppercase",
+                          background: log.channel === "whatsapp" ? "rgba(37, 211, 102, 0.15)" : "rgba(201, 107, 50, 0.15)",
+                          color: log.channel === "whatsapp" ? "#075e54" : "#a24a18",
+                        }}
+                      >
+                        {log.channel === "whatsapp" ? <WhatsAppIcon size={12} /> : <Icon name="mail" size={12} />}
+                        {log.channel}
+                      </span>
+                      <span
+                        style={{
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          background: log.status === "sent" ? "#dcfce7" : log.status === "logged" ? "#fef9c3" : "#fee2e2",
+                          color: log.status === "sent" ? "#166534" : log.status === "logged" ? "#854d0e" : "#991b1b",
+                        }}
+                      >
+                        {log.status}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)" }}>
+                      {log.subject}
+                    </div>
+
+                    <div style={{ fontSize: 11, color: "var(--muted)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+                      <code style={{ fontSize: 11 }}>{log.recipient}</code>
+                      <span>{new Date(log.created_at).toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

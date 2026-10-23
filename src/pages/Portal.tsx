@@ -691,7 +691,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
             {/* Payments Table */}
             <div style={{ background: "white", borderRadius: 10, border: "1px solid var(--line)", overflow: "hidden" }}>
-              <div className="table-wrap">
+              <div className="hidden md:block table-wrap">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
@@ -780,6 +780,98 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Stacked Card View */}
+              <div className="block md:hidden" style={{ padding: 12 }}>
+                {payments.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                    No payment transactions recorded yet.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {payments.map((pay) => (
+                      <div
+                        key={pay.id}
+                        style={{
+                          background: "#fbfaf8",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          padding: 12,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 8,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div>
+                            <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{pay.reference}</code>
+                            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{pay.application_no || "Tuition Registration"}</div>
+                          </div>
+                          <span
+                            style={{
+                              padding: "2px 7px",
+                              borderRadius: 4,
+                              fontSize: 10,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              whiteSpace: "nowrap",
+                              background:
+                                pay.status === "verified"
+                                  ? "#dcfce7"
+                                  : pay.status === "declined"
+                                    ? "#fee2e2"
+                                    : "#fef9c3",
+                              color:
+                                pay.status === "verified"
+                                  ? "#166534"
+                                  : pay.status === "declined"
+                                    ? "#991b1b"
+                                    : "#854d0e",
+                            }}
+                          >
+                            {pay.status === "verified"
+                              ? "Verified"
+                              : pay.status === "declined"
+                                ? "Declined"
+                                : "Pending Verification"}
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 10px", borderRadius: 6, border: "1px solid #ede8de" }}>
+                          <div>
+                            <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>METHOD</span>
+                            <strong style={{ fontSize: 12 }}>{pay.method}</strong>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>AMOUNT</span>
+                            <strong style={{ fontSize: 14, color: "var(--navy)" }}>₦{Number(pay.amount).toLocaleString()}</strong>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8 }}>
+                          <span style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(pay.created_at).toLocaleDateString()}</span>
+                          <button
+                            type="button"
+                            onClick={() => setReceiptData(pay)}
+                            style={{
+                              padding: "5px 12px",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              background: "var(--navy)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 4,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Official Receipt
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

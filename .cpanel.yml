@@ -5,4 +5,3 @@ deployment:
     - /bin/cp -R dist/* $DEPLOYPATH/
     - /bin/cp -R api $DEPLOYPATH/
     - /bin/cp .htaccess $DEPLOYPATH/
-    - /bin/cp install.php $DEPLOYPATH/

@@ -276,8 +276,8 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                 Because faculty schedules and studio suites are reserved exclusively for each student for the monthly cycle (4 weekly lessons), withdrawals are computed according to the following schedule:
               </p>
 
-              <div className="overflow-x-auto no-scrollbar">
-                <table className="w-full min-w-[480px] text-xs text-left border border-[var(--line)] rounded-xl overflow-hidden">
+              <div className="hidden sm:block overflow-x-auto no-scrollbar">
+                <table className="w-full text-xs text-left border border-[var(--line)] rounded-xl overflow-hidden">
                   <thead className="bg-[#fbfaf7] border-b border-[var(--line)] text-[var(--navy)] font-bold">
                     <tr>
                       <th className="p-3">Time of Written Notice</th>
@@ -308,6 +308,38 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Stacked Cards (No Sideways Scroll) */}
+              <div className="block sm:hidden space-y-3">
+                <div className="p-3.5 rounded-xl border border-[var(--line)] bg-[#fbfaf7] space-y-1.5 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-[var(--navy)]">&gt; 7 days before month begins</span>
+                    <span className="text-emerald-700 font-extrabold whitespace-nowrap">90% Refund</span>
+                  </div>
+                  <p className="text-[var(--muted)] text-[11px] m-0">10% administrative processing charge</p>
+                </div>
+                <div className="p-3.5 rounded-xl border border-[var(--line)] bg-[#fbfaf7] space-y-1.5 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-[var(--navy)]">1 to 7 days before month begins</span>
+                    <span className="text-emerald-700 font-extrabold whitespace-nowrap">75% Refund</span>
+                  </div>
+                  <p className="text-[var(--muted)] text-[11px] m-0">25% late cancellation retainer</p>
+                </div>
+                <div className="p-3.5 rounded-xl border border-[var(--line)] bg-[#fbfaf7] space-y-1.5 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-[var(--navy)]">During Week 1 of lessons</span>
+                    <span className="text-amber-700 font-extrabold whitespace-nowrap">50% Refund</span>
+                  </div>
+                  <p className="text-[var(--muted)] text-[11px] m-0">50% studio and tutor allocation</p>
+                </div>
+                <div className="p-3.5 rounded-xl border border-[var(--line)] bg-[#fbfaf7] space-y-1.5 text-xs">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-[var(--navy)]">After completion of Week 1</span>
+                    <span className="text-red-600 font-extrabold whitespace-nowrap">0% Refund</span>
+                  </div>
+                  <p className="text-[var(--muted)] text-[11px] m-0">Subsequent months cancelled at zero cost</p>
+                </div>
               </div>
 
 

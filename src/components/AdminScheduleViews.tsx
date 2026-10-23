@@ -289,7 +289,8 @@ export function ClassScheduleManagerView({
             </select>
           </div>
 
-          <div className="table-wrap">
+          {/* Desktop Table View */}
+          <div className="hidden md:block table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
@@ -492,6 +493,189 @@ export function ClassScheduleManagerView({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
+          <div className="block md:hidden" style={{ padding: 12 }}>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                Loading schedule queue…
+              </div>
+            ) : filteredRequests.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                No schedule or absence requests found.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredRequests.map((req) => {
+                  const isPending = req.status === "pending"
+                  const isApproved = req.status === "approved"
+                  const cleanPhone = (req.student_phone || "").replace(/[^0-9]/g, "")
+                  const intlPhone = cleanPhone.startsWith("0") ? "234" + cleanPhone.slice(1) : cleanPhone
+
+                  return (
+                    <div
+                      key={req.id}
+                      style={{
+                        background: "white",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        padding: 14,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                        <div>
+                          <strong style={{ fontSize: 14, color: "var(--navy)" }}>{req.student_name}</strong>
+                          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{req.program}</div>
+                        </div>
+                        <span
+                          style={{
+                            padding: "3px 8px",
+                            borderRadius: 999,
+                            fontSize: 10,
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                            whiteSpace: "nowrap",
+                            background:
+                              req.status === "approved"
+                                ? "#dcfce7"
+                                : req.status === "declined"
+                                  ? "#fee2e2"
+                                  : "#fef9c3",
+                            color:
+                              req.status === "approved"
+                                ? "#166534"
+                                : req.status === "declined"
+                                  ? "#991b1b"
+                                  : "#854d0e",
+                          }}
+                        >
+                          {req.status === "approved"
+                            ? "Approved"
+                            : req.status === "declined"
+                              ? "Declined"
+                              : "Pending Review"}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 11 }}>
+                        <span
+                          style={{
+                            padding: "2px 7px",
+                            borderRadius: 4,
+                            fontWeight: 700,
+                            background: req.request_type === "absence_travel" ? "#e0f2fe" : req.request_type === "one_off_reschedule" ? "#fef3c7" : "#ede9fe",
+                            color: req.request_type === "absence_travel" ? "#0369a1" : req.request_type === "one_off_reschedule" ? "#92400e" : "#5b21b6",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {req.request_type === "absence_travel"
+                            ? "Travel / Away"
+                            : req.request_type === "one_off_reschedule"
+                              ? "One-Off Reschedule"
+                              : "Cohort Transfer"}
+                        </span>
+                        <span style={{ color: "var(--muted)" }}>Slot: {req.current_schedule || "Saturday Cohort"}</span>
+                      </div>
+
+                      <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                        <div style={{ fontWeight: 600, color: "var(--navy)" }}>
+                          Date: {req.affected_date || "Upcoming lesson"}
+                          {req.return_date ? ` → ${req.return_date}` : ""}
+                        </div>
+                        <div style={{ color: "#475569", marginTop: 2 }}><em>{req.reason}</em></div>
+                        {req.notes && (
+                          <div style={{ color: "var(--muted)", marginTop: 4, fontStyle: "italic", fontSize: 11 }}>
+                            Note: "{req.notes}"
+                          </div>
+                        )}
+                      </div>
+
+                      {isApproved && req.allocated_makeup_date ? (
+                        <div style={{ background: "#dcfce7", padding: "6px 10px", borderRadius: 6, border: "1px solid #86efac", fontSize: 12, color: "#166534" }}>
+                          <strong>✓ Catch-Up Scheduled:</strong>
+                          <div style={{ marginTop: 2 }}>{new Date(req.allocated_makeup_date).toLocaleString()}</div>
+                          <small style={{ color: "#15803d" }}>Room: {req.allocated_room || "Studio Room 1"}</small>
+                        </div>
+                      ) : req.makeup_requested ? (
+                        <div style={{ fontSize: 11, color: "#d97706" }}>
+                          <strong>Requested Catch-Up:</strong> Pref: {req.preferred_makeup_slot || "Flexible"}
+                        </div>
+                      ) : null}
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 10, marginTop: 2 }}>
+                        <a
+                          href={`https://wa.me/${intlPhone}?text=Hello%20${encodeURIComponent(req.student_name)},%20this%20is%20Vivadoxa%20Academy%20academic%20desk%20regarding%20your%20schedule%20notice%20for%20${encodeURIComponent(req.program)}.`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: "#15803d", display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 600, fontSize: 12 }}
+                        >
+                          <WhatsAppIcon size={13} fill="#15803d" /> WhatsApp
+                        </a>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          {isPending ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openRespondModal(req, "approved")}
+                                style={{
+                                  padding: "6px 12px",
+                                  borderRadius: 6,
+                                  border: "none",
+                                  background: "#15803d",
+                                  color: "white",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Allocate Slot
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openRespondModal(req, "declined")}
+                                style={{
+                                  padding: "6px 10px",
+                                  borderRadius: 6,
+                                  border: "1px solid var(--line)",
+                                  background: "white",
+                                  color: "#991b1b",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Decline
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => openRespondModal(req, "approved")}
+                              style={{
+                                padding: "5px 10px",
+                                borderRadius: 6,
+                                border: "1px solid var(--line)",
+                                background: "#f4f2ec",
+                                color: "var(--navy)",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Edit Slot
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </section>
       )}
 
@@ -509,7 +693,8 @@ export function ClassScheduleManagerView({
             </div>
           </div>
 
-          <div className="table-wrap">
+          {/* Desktop Table View */}
+          <div className="hidden md:block table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
@@ -551,6 +736,61 @@ export function ClassScheduleManagerView({
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
+          <div className="block md:hidden" style={{ padding: 12 }}>
+            {filteredCohorts.length === 0 ? (
+              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                No cohort slots found.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {filteredCohorts.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{
+                      background: "white",
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      padding: 14,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <strong style={{ fontSize: 14, color: "var(--navy)" }}>{c.name}</strong>
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        <Badge tone="green">{c.status || "Active"}</Badge>
+                      </span>
+                    </div>
+                    <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <div style={{ color: "var(--navy)", fontWeight: 600 }}>{c.time_slot}</div>
+                        <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>{c.room}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCohort(c.id, c.name)}
+                        style={{
+                          background: "none",
+                          border: "1px solid #fee2e2",
+                          color: "#dc2626",
+                          fontSize: 11,
+                          fontWeight: 600,
+                          padding: "4px 8px",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
