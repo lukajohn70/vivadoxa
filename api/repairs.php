@@ -21,10 +21,26 @@ if ($method === 'GET') {
 
     $stmt = $pdo->query("SELECT * FROM `repairs` ORDER BY created_at DESC LIMIT 100");
     $rows = $stmt->fetchAll();
-    jsonResponse(['success' => true, 'data' => $rows]);
+    jsonResponse(['success' => true, 'data' => $rows, 'repairs' => $rows]);
 } elseif ($method === 'POST') {
     $input = getJsonInput();
     $action = trim($input['action'] ?? '');
+
+    // ── Action: Delete repair (Admin) ─────────────────────────────────────────
+    if ($action === 'delete') {
+        $code = trim($input['tracking_code'] ?? '');
+        $id = (int)($input['id'] ?? 0);
+        if (!empty($code)) {
+            $stmt = $pdo->prepare("DELETE FROM `repairs` WHERE `tracking_code` = :code");
+            $stmt->execute([':code' => $code]);
+            jsonResponse(['success' => true, 'message' => "Repair order $code deleted successfully."]);
+        } elseif ($id > 0) {
+            $stmt = $pdo->prepare("DELETE FROM `repairs` WHERE `id` = :id");
+            $stmt->execute([':id' => $id]);
+            jsonResponse(['success' => true, 'message' => "Repair order deleted successfully."]);
+        }
+        jsonResponse(['success' => false, 'error' => 'Tracking code or ID required.'], 400);
+    }
 
     // ── Action: Update repair status (Admin / Workshop) ──────────────────────
     if ($action === 'update_status') {

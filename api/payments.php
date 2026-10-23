@@ -22,10 +22,26 @@ if ($method === 'GET') {
 
     $stmt = $pdo->query("SELECT * FROM `payments` ORDER BY created_at DESC LIMIT 100");
     $rows = $stmt->fetchAll();
-    jsonResponse(['success' => true, 'data' => $rows]);
+    jsonResponse(['success' => true, 'data' => $rows, 'payments' => $rows]);
 } elseif ($method === 'POST') {
     $input = getJsonInput();
     $action = trim($input['action'] ?? '');
+
+    // ── Action: Delete payment (Admin) ────────────────────────────────────────
+    if ($action === 'delete') {
+        $ref = trim($input['reference'] ?? '');
+        $id = (int)($input['id'] ?? 0);
+        if (!empty($ref)) {
+            $stmt = $pdo->prepare("DELETE FROM `payments` WHERE `reference` = :ref");
+            $stmt->execute([':ref' => $ref]);
+            jsonResponse(['success' => true, 'message' => "Payment record $ref deleted successfully."]);
+        } elseif ($id > 0) {
+            $stmt = $pdo->prepare("DELETE FROM `payments` WHERE `id` = :id");
+            $stmt->execute([':id' => $id]);
+            jsonResponse(['success' => true, 'message' => "Payment record deleted successfully."]);
+        }
+        jsonResponse(['success' => false, 'error' => 'Payment reference or ID required.'], 400);
+    }
 
     // ── Action: Update payment status (Admin verification) ────────────────────
     if ($action === 'update_status') {
