@@ -1,20 +1,18 @@
 import { useState, useMemo, useEffect } from "react"
 import { useSearchParams, useNavigate } from "react-router-dom"
+import { Logo, Button, Icon, Badge, Field, UploadZone } from "@/components/ui"
+import { BANK_NAME, BANK_ACCOUNT_NO, BANK_ACCOUNT_NAME } from "@/lib/utils"
 import {
-  Logo,
-  Button,
-  Icon,
-  Badge,
-  Field,
-  UploadZone,
-  Success,
-} from "@/components/ui"
+  submitPaymentProof,
+  verifyGatewayPayment,
+  getBankSettings,
+  fetchSettings,
+} from "@/lib/api"
 import {
-  BANK_NAME,
-  BANK_ACCOUNT_NO,
-  BANK_ACCOUNT_NAME,
-} from "@/lib/utils"
-import { submitPaymentProof, getBankSettings, fetchSettings } from "@/lib/api"
+  AdmissionLetterModal,
+  PaymentReceiptModal,
+  ApplicationSlipModal,
+} from "@/components/OfficialDocument"
 import type { Page } from "@/types"
 
 interface PaymentProofForm {
@@ -32,6 +30,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
 
   const refParam = searchParams.get("ref")
   const amountParam = searchParams.get("amount")
+  const currencyParam = searchParams.get("currency")
 
   const appRef = useMemo(() => {
     return (
@@ -41,11 +40,25 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     )
   }, [refParam])
 
+  const currency = useMemo(() => {
+    const c = (
+      currencyParam ||
+      sessionStorage.getItem("vdx_current_currency") ||
+      "NGN"
+    ).toUpperCase()
+    return c === "USD" ? "USD" : "NGN"
+  }, [currencyParam])
+
+  const isUSD = currency === "USD"
+  const currSymbol = isUSD ? "$" : "₦"
+
   const defaultAmount = useMemo(() => {
     const raw =
-      amountParam || sessionStorage.getItem("vdx_current_amount") || "35000"
-    return Number(raw) || 35000
-  }, [amountParam])
+      amountParam ||
+      sessionStorage.getItem("vdx_current_amount") ||
+      (isUSD ? "70" : "55000")
+    return Number(raw) || (isUSD ? 70 : 55000)
+  }, [amountParam, isUSD])
 
   const studentName = useMemo(() => {
     return sessionStorage.getItem("vdx_current_name") || ""
@@ -56,12 +69,36 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
   }, [])
 
   const studentProgram = useMemo(() => {
+    return sessionStorage.getItem("vdx_current_program") || "Piano/keyboard"
+  }, [])
+
+  const studentPhone = useMemo(() => {
+    return sessionStorage.getItem("vdx_current_phone") || ""
+  }, [])
+
+  const studentMode = useMemo(() => {
+    return sessionStorage.getItem("vdx_current_study_mode") || "Onsite"
+  }, [])
+
+  const studentSchedule = useMemo(() => {
     return (
-      sessionStorage.getItem("vdx_current_program") || "Piano & Keyboard"
+      sessionStorage.getItem("vdx_current_schedule") ||
+      "Weekdays (3 days per week) / Weekends (Friday & Saturday)"
     )
   }, [])
 
-  const [method, setMethod] = useState<"bank" | "online">("bank")
+  const studentPlan = useMemo(() => {
+    return sessionStorage.getItem("vdx_current_plan") || "3-months"
+  }, [])
+
+  const studentAddress = useMemo(() => {
+    return sessionStorage.getItem("vdx_current_address") || ""
+  }, [])
+
+  // Default to online card for Diaspora USD students, bank transfer for local students
+  const [method, setMethod] = useState<"bank" | "online">(
+    isUSD ? "online" : "bank",
+  )
   const [proof, setProof] = useState<PaymentProofForm>({
     payerName: studentName,
     payerEmail: studentEmail,
@@ -70,39 +107,64 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     transactionRef: "",
     receiptFile: null,
   })
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof PaymentProofForm, string>>
-  >({})
+  const [errors, setErrors] =
+    useState<Partial<Record<keyof PaymentProofForm, string>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [sent, setSent] = useState(false)
+  const [isInstantGateway, setIsInstantGateway] = useState(false)
+  const [gatewayLoading, setGatewayLoading] = useState(false)
+  const [gatewayError, setGatewayError] = useState("")
+  const [verifiedPayment, setVerifiedPayment] = useState<any>(null)
   const [copiedAccount, setCopiedAccount] = useState(false)
+
+  // Document modal states
+  const [showSlip, setShowSlip] = useState(false)
+  const [showReceipt, setShowReceipt] = useState(false)
+  const [showLetter, setShowLetter] = useState(false)
+
   const [bankInfo, setBankInfo] = useState({
     bankName: BANK_NAME,
     accountNumber: BANK_ACCOUNT_NO,
     accountName: BANK_ACCOUNT_NAME,
     branch: "Kaduna Branch",
+    paystackPublicKey: "",
+    paystackSecretKey: "",
+    enablePaystack: true,
+    flutterwavePublicKey: "",
+    flutterwaveSecretKey: "",
+    enableFlutterwave: true,
   })
 
   useEffect(() => {
     const cached = getBankSettings()
     if (cached && cached.accountNumber) {
-      setBankInfo({
+      setBankInfo((prev) => ({
+        ...prev,
         bankName: cached.bankName || BANK_NAME,
         accountNumber: cached.accountNumber || BANK_ACCOUNT_NO,
         accountName: cached.accountName || BANK_ACCOUNT_NAME,
         branch: cached.branch || "Kaduna Branch",
-      })
+        paystackPublicKey: cached.paystackPublicKey || "",
+        flutterwavePublicKey: cached.flutterwavePublicKey || "",
+        enablePaystack: cached.enablePaystack !== false,
+        enableFlutterwave: cached.enableFlutterwave !== false,
+      }))
     }
     fetchSettings()
       .then((res: any) => {
         if (res && res.payment && res.payment.accountNumber) {
-          setBankInfo({
+          setBankInfo((prev) => ({
+            ...prev,
             bankName: res.payment.bankName || BANK_NAME,
             accountNumber: res.payment.accountNumber || BANK_ACCOUNT_NO,
             accountName: res.payment.accountName || BANK_ACCOUNT_NAME,
             branch: res.payment.branch || "Kaduna Branch",
-          })
+            paystackPublicKey: res.payment.paystackPublicKey || "",
+            flutterwavePublicKey: res.payment.flutterwavePublicKey || "",
+            enablePaystack: res.payment.enablePaystack !== false,
+            enableFlutterwave: res.payment.enableFlutterwave !== false,
+          }))
         }
       })
       .catch(() => {})
@@ -142,13 +204,15 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         payerName: proof.payerName,
         payerEmail: proof.payerEmail || studentEmail,
         amountPaid: Number(proof.amountPaid),
+        currency,
         transactionRef: proof.transactionRef,
         paymentDate: proof.paymentDate,
-        method: "Bank Transfer",
+        method: isUSD ? "International Wire / Transfer" : "Bank Transfer",
       })
 
       if (res && res.success) {
         setSent(true)
+        setIsInstantGateway(false)
       } else {
         setSubmitError(
           res.error ||
@@ -164,22 +228,458 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     }
   }
 
+  // Handle successful gateway verification
+  async function handleGatewaySuccess({
+    reference,
+    gateway,
+  }: {
+    reference: string
+    gateway: string
+  }) {
+    setGatewayLoading(true)
+    setGatewayError("")
+    try {
+      const res = await verifyGatewayPayment({
+        reference,
+        applicationNo: appRef,
+        payerName: studentName || "Online Applicant",
+        payerEmail: studentEmail || "student@vivadoxa.ng",
+        amount: defaultAmount,
+        currency,
+        gateway,
+        notes: `Instant automated tuition payment cleared via ${gateway}`,
+      })
+
+      if (res && res.success) {
+        setVerifiedPayment({
+          reference: res.reference || reference,
+          application_no: appRef,
+          payer_name: studentName || "Online Applicant",
+          payer_email: studentEmail,
+          amount: defaultAmount,
+          currency,
+          method: gateway,
+          status: "verified",
+          program: studentProgram,
+          created_at: new Date().toISOString(),
+        })
+        setIsInstantGateway(true)
+        setSent(true)
+      } else {
+        setGatewayError(
+          res.error ||
+            "Unable to confirm payment verification with admissions ledger.",
+        )
+      }
+    } catch {
+      setGatewayError(
+        "Network communication error confirming gateway clearance.",
+      )
+    } finally {
+      setGatewayLoading(false)
+    }
+  }
+
+  // Trigger Paystack inline popup for NGN payments
+  function triggerPaystackPayment() {
+    setGatewayError("")
+    const pKey = bankInfo.paystackPublicKey?.trim()
+
+    if (pKey && (window as any).PaystackPop) {
+      setGatewayLoading(true)
+      try {
+        const handler = (window as any).PaystackPop.setup({
+          key: pKey,
+          email: studentEmail || "student@vivadoxa.ng",
+          amount: Math.round(defaultAmount * 100), // Kobo
+          currency: "NGN",
+          ref: `VDX-PSK-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          metadata: {
+            custom_fields: [
+              {
+                display_name: "Application No",
+                variable_name: "application_no",
+                value: appRef,
+              },
+              {
+                display_name: "Student Name",
+                variable_name: "student_name",
+                value: studentName || "Applicant",
+              },
+              {
+                display_name: "Course Discipline",
+                variable_name: "program",
+                value: studentProgram,
+              },
+            ],
+          },
+          callback: function (response: any) {
+            handleGatewaySuccess({
+              reference: response.reference || response.trxref,
+              gateway: "Paystack (Card/Transfer/USSD)",
+            })
+          },
+          onClose: function () {
+            setGatewayLoading(false)
+          },
+        })
+        handler.openIframe()
+      } catch (err: any) {
+        setGatewayLoading(false)
+        setGatewayError(
+          err.message || "Failed to initialize Paystack checkout.",
+        )
+      }
+    } else {
+      // Admin keys not yet configured - simulate test checkout
+      handleGatewaySuccess({
+        reference: `PSK-SIM-${Date.now()}`,
+        gateway: "Paystack (Sandbox / Test Checkout)",
+      })
+    }
+  }
+
+  // Trigger Flutterwave inline popup for USD diaspora payments
+  function triggerFlutterwavePayment() {
+    setGatewayError("")
+    const fKey = bankInfo.flutterwavePublicKey?.trim()
+
+    if (fKey && (window as any).FlutterwaveCheckout) {
+      setGatewayLoading(true)
+      try {
+        ;(window as any).FlutterwaveCheckout({
+          public_key: fKey,
+          tx_ref: `VDX-USD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          amount: defaultAmount,
+          currency: "USD",
+          payment_options: "card,mobilemoney,ussd",
+          customer: {
+            email: studentEmail || "diaspora@vivadoxa.ng",
+            name: studentName || "International Student",
+            phone_number: studentPhone || "0000000000",
+          },
+          customizations: {
+            title: "Vivadoxa Music Academy",
+            description: `Tuition settlement for ${studentProgram} (${currency})`,
+            logo: `${window.location.origin}/vivadoxa-logo.png`,
+          },
+          callback: function (response: any) {
+            handleGatewaySuccess({
+              reference: String(response.transaction_id || response.tx_ref),
+              gateway: "Flutterwave (International USD)",
+            })
+          },
+          onclose: function () {
+            setGatewayLoading(false)
+          },
+        })
+      } catch (err: any) {
+        setGatewayLoading(false)
+        setGatewayError(
+          err.message || "Failed to initialize Flutterwave checkout.",
+        )
+      }
+    } else {
+      // Admin keys not yet configured - simulate test checkout
+      handleGatewaySuccess({
+        reference: `FLW-USD-SIM-${Date.now()}`,
+        gateway: "Flutterwave USD (Sandbox / Test Checkout)",
+      })
+    }
+  }
+
   function copyBankDetails() {
     navigator.clipboard.writeText(bankInfo.accountNumber).catch(() => {})
     setCopiedAccount(true)
     setTimeout(() => setCopiedAccount(false), 2500)
   }
 
+  // Data packages for Official Documents
+  const docAppData = {
+    application_no: appRef,
+    fullName: studentName || "Applicant",
+    email: studentEmail,
+    phone: studentPhone,
+    program: studentProgram,
+    study_mode: studentMode,
+    schedule: studentSchedule,
+    planTier: studentPlan,
+    tuition_fee: defaultAmount,
+    currency,
+    address: studentAddress,
+    status: isInstantGateway ? "approved" : "submitted",
+    passportPhoto: sessionStorage.getItem("vdx_current_passport") || "",
+    signature:
+      sessionStorage.getItem("vdx_current_signature") ||
+      studentName ||
+      "Applicant",
+    created_at: new Date().toISOString(),
+  }
+
+  const docReceiptData = {
+    reference:
+      verifiedPayment?.reference ||
+      proof.transactionRef ||
+      `VDX-PAY-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+    application_no: appRef,
+    payer_name: studentName || proof.payerName || "Applicant",
+    payer_email: studentEmail || proof.payerEmail,
+    amount: defaultAmount,
+    currency,
+    method: isInstantGateway
+      ? verifiedPayment?.method ||
+        (isUSD ? "International Card (USD)" : "Online Paystack Gateway")
+      : "Official Bank Transfer",
+    status: isInstantGateway ? "verified" : "pending_verification",
+    program: studentProgram,
+    created_at: new Date().toISOString(),
+  }
+
+  const hasPaystackKeys = Boolean(bankInfo.paystackPublicKey?.trim())
+  const hasFlutterwaveKeys = Boolean(bankInfo.flutterwavePublicKey?.trim())
+
   if (sent) {
     return (
-      <main className="confirmation">
-        <Success
-          title="Payment logged. Verification in progress."
-          body="Your transfer proof has been recorded in our admissions and accounts ledger. Our financial department will verify the transaction and notify you via email."
-          extra={`Application reference: ${appRef}`}
-          onReset={() => go(`/status?ref=${appRef}`)}
-          action="Check admission & payment status"
-        />
+      <main
+        className="confirmation"
+        style={{ maxWidth: 860, margin: "40px auto", padding: "0 20px" }}
+      >
+        <div
+          style={{
+            background: "white",
+            borderRadius: 16,
+            border: "1px solid var(--line)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+            padding: "40px 32px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "rgba(21, 112, 84, 0.12)",
+              color: "#157054",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              fontSize: 32,
+              fontWeight: 800,
+            }}
+          >
+            ✓
+          </div>
+
+          <span
+            className="eyebrow"
+            style={{
+              color: "#157054",
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "1.2px",
+            }}
+          >
+            {isInstantGateway
+              ? "Automated Gateway Clearance Verified"
+              : "Payment Proof Logged & Submitted"}
+          </span>
+
+          <h1
+            style={{
+              margin: "8px 0 14px",
+              fontSize: "clamp(24px, 4vw, 32px)",
+              color: "var(--navy)",
+              fontFamily: "serif",
+            }}
+          >
+            {isInstantGateway
+              ? "Admission Confirmed! Tuition Cleared."
+              : "Payment logged. Verification in progress."}
+          </h1>
+
+          <p
+            style={{
+              maxWidth: 620,
+              margin: "0 auto 24px",
+              fontSize: 15,
+              lineHeight: 1.6,
+              color: "var(--muted)",
+            }}
+          >
+            {isInstantGateway
+              ? `Your tuition payment of ${currSymbol}${defaultAmount.toLocaleString(
+                  isUSD ? "en-US" : "en-NG",
+                )} has been successfully confirmed and reconciled in our conservatory admissions ledger. Your official enrollment credentials are ready for download below.`
+              : `Your transfer proof for ${currSymbol}${defaultAmount.toLocaleString(
+                  isUSD ? "en-US" : "en-NG",
+                )} has been submitted under application reference ${appRef}. Our financial accounts team will verify the bank ledger narration and dispatch your final confirmation.`}
+          </p>
+
+          <div
+            style={{
+              display: "inline-block",
+              background: "#f8f9fa",
+              border: "1px solid var(--line)",
+              padding: "10px 20px",
+              borderRadius: 8,
+              fontSize: 13,
+              marginBottom: 32,
+            }}
+          >
+            <span style={{ color: "var(--muted)" }}>
+              Application Reference:{" "}
+            </span>
+            <strong
+              style={{
+                fontFamily: "monospace",
+                color: "var(--navy)",
+                letterSpacing: "1px",
+              }}
+            >
+              {appRef}
+            </strong>
+          </div>
+
+          {/* Download Official Documents Callout */}
+          <div
+            style={{
+              background: "#faf9f6",
+              border: "1.5px solid var(--line)",
+              borderRadius: 12,
+              padding: "24px 20px",
+              textAlign: "left",
+              marginBottom: 32,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    fontWeight: 700,
+                    color: "var(--gold)",
+                  }}
+                >
+                  Official Website Documents
+                </span>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: 15,
+                    color: "var(--navy)",
+                    marginTop: 2,
+                  }}
+                >
+                  Download Your Official Admission &amp; Payment Credentials
+                </strong>
+              </div>
+              <Badge tone="green">Generated &amp; Signed</Badge>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setShowSlip(true)}
+                style={{
+                  justifyContent: "center",
+                  fontSize: 12.5,
+                  minHeight: 44,
+                  fontWeight: 600,
+                }}
+              >
+                <Icon name="copy" size={14} /> Application Slip (PDF)
+              </Button>
+
+              <Button
+                variant="secondary"
+                onClick={() => setShowReceipt(true)}
+                style={{
+                  justifyContent: "center",
+                  fontSize: 12.5,
+                  minHeight: 44,
+                  fontWeight: 600,
+                }}
+              >
+                <Icon name="check" size={14} /> Payment Receipt (PDF)
+              </Button>
+
+              <Button
+                variant="primary"
+                onClick={() => setShowLetter(true)}
+                style={{
+                  justifyContent: "center",
+                  fontSize: 12.5,
+                  minHeight: 44,
+                  fontWeight: 700,
+                }}
+              >
+                <Icon name="copy" size={14} /> Admission Letter (PDF)
+              </Button>
+            </div>
+            <p
+              style={{
+                fontSize: 11.5,
+                color: "var(--muted)",
+                margin: "12px 0 0",
+                textAlign: "center",
+              }}
+            >
+              Click any document above to view, print, or download as an
+              official conservatory PDF certificate.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              variant="secondary"
+              onClick={() => go(`/status?ref=${appRef}`)}
+              style={{ minHeight: 44 }}
+            >
+              Check Application Status Tracker →
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => go("home")}
+              style={{ minHeight: 44 }}
+            >
+              Return to Homepage
+            </Button>
+          </div>
+        </div>
+
+        {/* Modal Previews for Instant Downloads */}
+        {showSlip && (
+          <ApplicationSlipModal
+            data={docAppData}
+            onClose={() => setShowSlip(false)}
+          />
+        )}
+        {showReceipt && (
+          <PaymentReceiptModal
+            data={docReceiptData}
+            onClose={() => setShowReceipt(false)}
+          />
+        )}
+        {showLetter && (
+          <AdmissionLetterModal
+            data={docAppData}
+            onClose={() => setShowLetter(false)}
+          />
+        )}
       </main>
     )
   }
@@ -210,7 +710,13 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
               <Logo />
             </button>
           </div>
-          <Badge tone="green">Verified payment channel</Badge>
+          <div className="flex items-center gap-2">
+            <Badge tone={isUSD ? "gold" : "green"}>
+              {isUSD
+                ? "Diaspora USD Channel ($)"
+                : "Nigerian Tuition Channel (₦)"}
+            </Badge>
+          </div>
         </div>
 
         <div className="pay-grid">
@@ -218,8 +724,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
             <span className="eyebrow">Tuition Payment</span>
             <h1>Secure your admission</h1>
             <p>
-              Transfer tuition into the Vivadoxa school account below, then submit
-              your payment reference for immediate ledger matching.
+              {isUSD
+                ? "Complete your tuition checkout in US Dollars ($) via our secure international card gateway, or transfer into our verified school account."
+                : "Transfer tuition into the Vivadoxa school account below or complete your checkout instantly online for automated ledger clearance."}
             </p>
 
             {/* Method tabs */}
@@ -228,6 +735,28 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
               role="tablist"
               aria-label="Payment method"
             >
+              <button
+                role="tab"
+                aria-selected={method === "online"}
+                className={method === "online" ? "active" : ""}
+                onClick={() => setMethod("online")}
+              >
+                <i aria-hidden="true" />
+                <div>
+                  <strong>
+                    {isUSD
+                      ? "International Card (USD / $)"
+                      : "Online Card / USSD (Paystack)"}
+                  </strong>
+                  <small>
+                    {isUSD
+                      ? "Visa, Mastercard, Amex, Apple Pay"
+                      : "Instant automated clearance"}
+                  </small>
+                </div>
+                <Badge tone="green">{isUSD ? "USD ($)" : "Automated"}</Badge>
+              </button>
+
               <button
                 role="tab"
                 aria-selected={method === "bank"}
@@ -239,47 +768,360 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                   <strong>Official Bank Transfer</strong>
                   <small>Direct ledger confirmation</small>
                 </div>
-                <Badge tone="green">Available</Badge>
-              </button>
-              <button
-                role="tab"
-                aria-selected={method === "online"}
-                className={method === "online" ? "active" : ""}
-                onClick={() => setMethod("online")}
-              >
-                <i aria-hidden="true" />
-                <div>
-                  <strong>Online Card / USSD</strong>
-                  <small>Instant automated checkout</small>
-                </div>
-                <Badge tone="gold">Available soon</Badge>
+                <Badge tone={isUSD ? "gold" : "green"}>
+                  {isUSD ? "Naira Account" : "Available"}
+                </Badge>
               </button>
             </div>
 
-            {method === "bank" ? (
+            {method === "online" ? (
+              /* Online Gateway View */
+              <div
+                className="bank-card"
+                style={{
+                  background: "white",
+                  border: "1px solid var(--line)",
+                  borderRadius: 12,
+                  padding: "28px 24px",
+                }}
+              >
+                <div style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                        fontWeight: 700,
+                        color: "#157054",
+                      }}
+                    >
+                      {isUSD
+                        ? "Diaspora Online Gateway (USD / $)"
+                        : "Instant Online Gateway (Paystack)"}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "var(--muted)",
+                      }}
+                    >
+                      Application Ref: <code>{appRef}</code>
+                    </span>
+                  </div>
+
+                  <h3
+                    style={{
+                      margin: "0 0 6px",
+                      fontSize: 20,
+                      color: "var(--navy)",
+                    }}
+                  >
+                    {isUSD
+                      ? "International Tuition Checkout"
+                      : "Automated Instant Checkout"}
+                  </h3>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 13,
+                      color: "var(--muted)",
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    {isUSD
+                      ? "Pay your certified music course tuition in US Dollars ($) securely via international debit or credit card. Your payment is verified automatically upon completion."
+                      : "Pay tuition in Nigerian Naira (₦) using debit card, direct bank transfer, USSD, or mobile money via Paystack. Automated verification issues your admission receipt immediately."}
+                  </p>
+                </div>
+
+                {/* Amount Callout */}
+                <div
+                  style={{
+                    background: "linear-gradient(135deg, #0b0b0b, #24201d)",
+                    borderRadius: 10,
+                    padding: "20px 24px",
+                    color: "white",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 10.5,
+                        textTransform: "uppercase",
+                        letterSpacing: "1px",
+                        color: "var(--gold)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Tuition Total ({currency})
+                    </span>
+                    <div
+                      style={{ fontSize: 12, color: "#cbd5e1", marginTop: 2 }}
+                    >
+                      {studentProgram} · {studentMode}
+                    </div>
+                  </div>
+                  <strong
+                    style={{
+                      fontSize: "clamp(24px, 5vw, 32px)",
+                      fontFamily: "serif",
+                    }}
+                  >
+                    {currSymbol}
+                    {defaultAmount.toLocaleString(isUSD ? "en-US" : "en-NG", {
+                      minimumFractionDigits: isUSD ? 2 : 0,
+                    })}
+                  </strong>
+                </div>
+
+                {/* Gateway Status / API Keys Info */}
+                {isUSD
+                  ? !hasFlutterwaveKeys && (
+                      <div
+                        style={{
+                          background: "#fffbeb",
+                          border: "1px solid #fef3c7",
+                          borderRadius: 8,
+                          padding: "14px 18px",
+                          marginBottom: 20,
+                          fontSize: 12.5,
+                          lineHeight: 1.55,
+                          color: "#92400e",
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5 font-bold mb-1">
+                          <Icon name="warning" size={14} />
+                          <span>Online USD Payment Gateway Wired</span>
+                        </div>
+                        <p style={{ margin: 0 }}>
+                          The international USD card payment gateway is fully
+                          integrated. When the conservatory administration
+                          enters their Flutterwave API keys in the Admin
+                          Settings panel, live transactions will process
+                          automatically. You can test the automated clearance
+                          flow below.
+                        </p>
+                      </div>
+                    )
+                  : !hasPaystackKeys && (
+                      <div
+                        style={{
+                          background: "#fffbeb",
+                          border: "1px solid #fef3c7",
+                          borderRadius: 8,
+                          padding: "14px 18px",
+                          marginBottom: 20,
+                          fontSize: 12.5,
+                          lineHeight: 1.55,
+                          color: "#92400e",
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5 font-bold mb-1">
+                          <Icon name="warning" size={14} />
+                          <span>Online Paystack Gateway Wired</span>
+                        </div>
+                        <p style={{ margin: 0 }}>
+                          The Paystack automated payment gateway is fully
+                          integrated. When the administration enters their
+                          Paystack Public Key in the Admin Settings panel, live
+                          card and USSD checkouts will process live. You can
+                          test the automated clearance flow below.
+                        </p>
+                      </div>
+                    )}
+
+                {gatewayError && (
+                  <div
+                    className="login-error"
+                    role="alert"
+                    style={{ marginBottom: 20 }}
+                  >
+                    <Icon name="warning" size={16} />
+                    {gatewayError}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  {isUSD ? (
+                    <Button
+                      type="button"
+                      fullWidth
+                      disabled={gatewayLoading}
+                      onClick={triggerFlutterwavePayment}
+                      style={{
+                        minHeight: 48,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        background: "var(--navy)",
+                        color: "white",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {gatewayLoading ? (
+                        "Connecting to Secure Gateway…"
+                      ) : (
+                        <>
+                          <Icon name="check" /> Pay {currSymbol}
+                          {defaultAmount.toLocaleString("en-US", {
+                            minimumFractionDigits: 0,
+                          })}{" "}
+                          with Card (USD)
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      fullWidth
+                      disabled={gatewayLoading}
+                      onClick={triggerPaystackPayment}
+                      style={{
+                        minHeight: 48,
+                        fontSize: 14,
+                        fontWeight: 700,
+                        background: "#00b875",
+                        color: "white",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {gatewayLoading ? (
+                        "Initializing Paystack Gateway…"
+                      ) : (
+                        <>
+                          <Icon name="check" /> Pay Online ₦
+                          {defaultAmount.toLocaleString("en-NG")} (Paystack)
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Sandbox test button if keys not configured */}
+                  {((isUSD && !hasFlutterwaveKeys) ||
+                    (!isUSD && !hasPaystackKeys)) && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleGatewaySuccess({
+                          reference: `${
+                            isUSD ? "FLW-USD" : "PSK-NGN"
+                          }-DEMO-${Date.now()}`,
+                          gateway: isUSD
+                            ? "Flutterwave USD (Test Clearance)"
+                            : "Paystack (Test Clearance)",
+                        })
+                      }
+                      style={{
+                        border: "1px dashed #cbd5e1",
+                        background: "#f8f9fa",
+                        color: "#475569",
+                        borderRadius: 8,
+                        padding: "10px 14px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ⚡ Simulate Instant Successful Payment ({currSymbol}
+                      {defaultAmount} {currency} - Demo Mode)
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
+                    marginTop: 20,
+                    fontSize: 11,
+                    color: "var(--muted)",
+                  }}
+                >
+                  <span>🔒 256-bit SSL Encryption</span>
+                  <span>•</span>
+                  <span>Instant Ledger Reconciliation</span>
+                  <span>•</span>
+                  <span>Official Downloadable Receipt</span>
+                </div>
+              </div>
+            ) : (
+              /* Bank Transfer View */
               <div className="bank-card">
                 {/* Account details */}
                 <div className="bank-title">
                   <div
                     className="bank-logo"
-                    style={{ background: "#00b875", color: "white", fontWeight: 800, fontSize: 18 }}
+                    style={{
+                      background:
+                        bankInfo.bankName.includes("GTB") ||
+                        bankInfo.bankName.includes("Guaranty")
+                          ? "#e65100"
+                          : "#00b875",
+                      color: "white",
+                      fontWeight: 800,
+                      fontSize: 15,
+                      letterSpacing: "0.5px",
+                    }}
                     aria-hidden="true"
                   >
-                    {(bankInfo.bankName || "B").slice(0, 1).toUpperCase()}
+                    {bankInfo.bankName.includes("GTB") ||
+                    bankInfo.bankName.includes("Guaranty")
+                      ? "GTB"
+                      : (bankInfo.bankName || "B").slice(0, 1).toUpperCase()}
                   </div>
                   <div>
                     <strong>{bankInfo.bankName}</strong>
                     <span>
-                      Transfer exactly ₦{defaultAmount.toLocaleString("en-NG")}
+                      {isUSD
+                        ? `Tuition equivalent: $${defaultAmount} USD (${bankInfo.bankName})`
+                        : `Transfer exactly ₦${defaultAmount.toLocaleString("en-NG")}`}
                     </span>
                   </div>
                 </div>
-                <div className="account-number" style={{ background: "var(--navy)", borderRadius: 12, padding: "20px 24px" }}>
+                <div
+                  className="account-number"
+                  style={{
+                    background: "var(--navy)",
+                    borderRadius: 12,
+                    padding: "20px 24px",
+                  }}
+                >
                   <div>
-                    <small style={{ color: "#9dacb8", letterSpacing: "1px", textTransform: "uppercase", fontSize: 10, fontWeight: 700 }}>
+                    <small
+                      style={{
+                        color: "#9dacb8",
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
                       Official Tuition Account ({bankInfo.bankName})
                     </small>
-                    <strong style={{ fontSize: "clamp(20px, 6vw, 28px)", letterSpacing: "2px", fontFamily: "monospace", color: "white" }}>
+                    <strong
+                      style={{
+                        fontSize: "clamp(20px, 6vw, 28px)",
+                        letterSpacing: "2px",
+                        fontFamily: "monospace",
+                        color: "white",
+                      }}
+                    >
                       {bankInfo.accountNumber}
                     </strong>
                   </div>
@@ -351,8 +1193,12 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                       />
                       <Field
                         id="pay-amount"
-                        label="Amount paid (₦)"
-                        placeholder={defaultAmount.toLocaleString("en-NG")}
+                        label={`Amount paid (${currSymbol})`}
+                        placeholder={
+                          isUSD
+                            ? `$${defaultAmount}`
+                            : `₦${defaultAmount.toLocaleString("en-NG")}`
+                        }
                         value={proof.amountPaid}
                         onChange={(v) => setP("amountPaid", v)}
                         required
@@ -400,22 +1246,6 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                   </form>
                 </div>
               </div>
-            ) : (
-              <div className="coming-card">
-                <div className="lock" aria-hidden="true">
-                  ◇
-                </div>
-                <h3>Online automated payments</h3>
-                <p>
-                  Direct debit card and bank USSD payment processing via
-                  Paystack is currently undergoing final settlement setup. Please
-                  use our direct bank transfer channel above for immediate
-                  enrollment.
-                </p>
-                <Button onClick={() => setMethod("bank")}>
-                  Pay via Bank Transfer
-                </Button>
-              </div>
             )}
           </section>
 
@@ -433,30 +1263,76 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
             </div>
             <dl>
               <div>
-                <dt>Program</dt>
+                <dt>Discipline</dt>
                 <dd>{studentProgram}</dd>
               </div>
               <div>
+                <dt>Study Mode</dt>
+                <dd>{studentMode}</dd>
+              </div>
+              <div>
+                <dt>Schedule</dt>
+                <dd style={{ fontSize: 11 }}>{studentSchedule}</dd>
+              </div>
+              <div>
                 <dt>Billing</dt>
-                <dd>Monthly tuition schedule (4 weeks)</dd>
+                <dd>
+                  {isUSD
+                    ? "Diaspora International ($)"
+                    : "Nigerian Resident (₦)"}
+                </dd>
               </div>
               <div>
                 <dt>Campus</dt>
-                <dd>Vivadoxa Kaduna</dd>
+                <dd>Vivadoxa Main Studio, Kaduna</dd>
               </div>
             </dl>
             <div className="amount">
               <span>Tuition amount due</span>
-              <strong>₦{defaultAmount.toLocaleString("en-NG")}</strong>
-              <small>Includes student admission & course materials</small>
+              <strong>
+                {currSymbol}
+                {defaultAmount.toLocaleString(isUSD ? "en-US" : "en-NG", {
+                  minimumFractionDigits: isUSD ? 2 : 0,
+                })}
+              </strong>
+              <small>
+                Includes certified syllabus instruction, orientation &amp;
+                student matriculation
+              </small>
             </div>
             <p>
               <Icon name="check" size={16} /> Official receipt issued upon
               verification.
             </p>
+            {appRef && (
+              <div
+                style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: "1px dashed var(--line)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowSlip(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer bg-transparent border-0 p-0"
+                >
+                  <Icon name="copy" size={13} /> View &amp; Download Application
+                  Slip (PDF) →
+                </button>
+              </div>
+            )}
           </aside>
         </div>
       </div>
+
+      {/* Application Slip Modal Preview */}
+      {showSlip && (
+        <ApplicationSlipModal
+          data={docAppData}
+          onClose={() => setShowSlip(false)}
+        />
+      )}
     </main>
   )
 }

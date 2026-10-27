@@ -15,7 +15,9 @@ export function ClassScheduleManagerView({
 }: {
   setActionNotice: (msg: string) => void
 }) {
-  const [activeTab, setActiveTab] = useState<"timetable" | "requests">("requests")
+  const [activeTab, setActiveTab] = useState<"timetable" | "requests">(
+    "requests",
+  )
   const [cohorts, setCohorts] = useState<any[]>([])
   const [requests, setRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,10 +29,14 @@ export function ClassScheduleManagerView({
 
   // Modal for responding to a schedule request
   const [selectedReq, setSelectedReq] = useState<any | null>(null)
-  const [modalStatus, setModalStatus] = useState<"approved" | "declined">("approved")
+  const [modalStatus, setModalStatus] = useState<"approved" | "declined">(
+    "approved",
+  )
   const [makeupDate, setMakeupDate] = useState("")
   const [makeupTime, setMakeupTime] = useState("16:00")
-  const [allocatedRoom, setAllocatedRoom] = useState("Studio Room 1 (Piano Lab)")
+  const [allocatedRoom, setAllocatedRoom] = useState(
+    "Studio Room 1 (Piano Lab)",
+  )
   const [staffNotes, setStaffNotes] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
@@ -38,7 +44,9 @@ export function ClassScheduleManagerView({
   const [showAddCohortModal, setShowAddCohortModal] = useState(false)
   const [newCohortName, setNewCohortName] = useState("")
   const [newCohortTime, setNewCohortTime] = useState("")
-  const [newCohortRoom, setNewCohortRoom] = useState("Studio Hall 1 & Piano Lab")
+  const [newCohortRoom, setNewCohortRoom] = useState(
+    "Studio Hall 1 & Piano Lab",
+  )
 
   const [showEditCohortModal, setShowEditCohortModal] = useState(false)
   const [editingCohort, setEditingCohort] = useState<any | null>(null)
@@ -97,8 +105,12 @@ export function ClassScheduleManagerView({
   const openRespondModal = (req: any, status: "approved" | "declined") => {
     setSelectedReq(req)
     setModalStatus(status)
-    setAllocatedRoom(req.program?.includes("Piano") ? "Studio Room 1 (Piano Lab)" : "Studio Room 2 (Strings & Winds)")
-    
+    setAllocatedRoom(
+      req.program?.includes("Piano")
+        ? "Studio Room 1 (Piano Lab)"
+        : "Studio Room 2 (Strings & Winds)",
+    )
+
     // Suggest tomorrow's date or affected date
     const today = new Date()
     today.setDate(today.getDate() + 3)
@@ -108,7 +120,7 @@ export function ClassScheduleManagerView({
     setStaffNotes(
       status === "approved"
         ? `Allocated catch-up session based on student notice. Please check in with studio desk 10 mins prior.`
-        : `Unable to accommodate makeup session due to short notice or lack of available studio slots.`
+        : `Unable to accommodate makeup session due to short notice or lack of available studio slots.`,
     )
   }
 
@@ -135,7 +147,7 @@ export function ClassScheduleManagerView({
         setActionNotice(
           modalStatus === "approved"
             ? `✓ Request for ${selectedReq.student_name} approved! Catch-up slot allocated and WhatsApp/Email sent.`
-            : `Schedule request for ${selectedReq.student_name} marked as declined.`
+            : `Schedule request for ${selectedReq.student_name} marked as declined.`,
         )
         setSelectedReq(null)
         loadData()
@@ -164,7 +176,9 @@ export function ClassScheduleManagerView({
         setShowAddCohortModal(false)
         setNewCohortName("")
         setNewCohortTime("")
-        setActionNotice(`✓ Cohort slot "${newCohortName}" saved to database timetable.`)
+        setActionNotice(
+          `✓ Cohort slot "${newCohortName}" saved to database timetable.`,
+        )
         loadData()
       } else {
         alert(res.error || "Failed to save cohort slot.")
@@ -198,7 +212,9 @@ export function ClassScheduleManagerView({
       if (res.success) {
         setShowEditCohortModal(false)
         setEditingCohort(null)
-        setActionNotice(`✓ Cohort slot "${editCohortName}" updated successfully.`)
+        setActionNotice(
+          `✓ Cohort slot "${editCohortName}" updated successfully.`,
+        )
         loadData()
       } else {
         alert(res.error || "Failed to update cohort slot.")
@@ -209,7 +225,8 @@ export function ClassScheduleManagerView({
   }
 
   const handleDeleteCohort = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete cohort slot "${name}"?`)) return
+    if (!confirm(`Are you sure you want to delete cohort slot "${name}"?`))
+      return
     try {
       const res = await deleteCohort(id)
       if (res.success) {
@@ -222,8 +239,24 @@ export function ClassScheduleManagerView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* View Switcher Tabs */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
-        <div style={{ display: "flex", gap: 8, background: "#edeae4", padding: 4, borderRadius: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 14,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            background: "#edeae4",
+            padding: 4,
+            borderRadius: 10,
+          }}
+        >
           <button
             type="button"
             onClick={() => setActiveTab("requests")}
@@ -236,7 +269,10 @@ export function ClassScheduleManagerView({
               cursor: "pointer",
               background: activeTab === "requests" ? "white" : "transparent",
               color: activeTab === "requests" ? "var(--navy)" : "var(--muted)",
-              boxShadow: activeTab === "requests" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+              boxShadow:
+                activeTab === "requests"
+                  ? "0 2px 6px rgba(0,0,0,0.08)"
+                  : "none",
               display: "flex",
               alignItems: "center",
               gap: 8,
@@ -271,20 +307,28 @@ export function ClassScheduleManagerView({
               cursor: "pointer",
               background: activeTab === "timetable" ? "white" : "transparent",
               color: activeTab === "timetable" ? "var(--navy)" : "var(--muted)",
-              boxShadow: activeTab === "timetable" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+              boxShadow:
+                activeTab === "timetable"
+                  ? "0 2px 6px rgba(0,0,0,0.08)"
+                  : "none",
               display: "flex",
               alignItems: "center",
               gap: 8,
             }}
           >
             <span>Studio Cohort Timetable</span>
-            <span style={{ fontSize: 12, opacity: 0.7 }}>({cohorts.length})</span>
+            <span style={{ fontSize: 12, opacity: 0.7 }}>
+              ({cohorts.length})
+            </span>
           </button>
         </div>
 
         <div style={{ display: "flex", gap: 10 }}>
           {activeTab === "timetable" && (
-            <Button variant="primary" onClick={() => setShowAddCohortModal(true)}>
+            <Button
+              variant="primary"
+              onClick={() => setShowAddCohortModal(true)}
+            >
               + Add Cohort Slot
             </Button>
           )}
@@ -297,7 +341,10 @@ export function ClassScheduleManagerView({
       {/* TAB 1: ABSENCE & RESCHEDULE QUEUE */}
       {activeTab === "requests" && (
         <section className="table-panel manager-table" style={{ margin: 0 }}>
-          <div className="manager-filters" style={{ flexWrap: "wrap", gap: 10 }}>
+          <div
+            className="manager-filters"
+            style={{ flexWrap: "wrap", gap: 10 }}
+          >
             <div className="search-field" style={{ minWidth: 260 }}>
               <Icon name="search" />
               <input
@@ -314,7 +361,9 @@ export function ClassScheduleManagerView({
             >
               <option value="all">All Request Statuses</option>
               <option value="pending">Pending Review Only</option>
-              <option value="approved">Approved &amp; Catch-Up Allocated</option>
+              <option value="approved">
+                Approved &amp; Catch-Up Allocated
+              </option>
               <option value="declined">Declined</option>
             </select>
 
@@ -334,25 +383,100 @@ export function ClassScheduleManagerView({
           <div className="hidden md:block table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Student &amp; Program</th>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Notice Type</th>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Dates &amp; Reason</th>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Makeup Status / Slot</th>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Status</th>
-                  <th style={{ padding: "12px 16px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)", textAlign: "right" }}>Actions</th>
+                <tr
+                  style={{
+                    background: "#fbfaf8",
+                    borderBottom: "1px solid var(--line)",
+                    textAlign: "left",
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Student &amp; Program
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Notice Type
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Dates &amp; Reason
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Makeup Status / Slot
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                      textAlign: "right",
+                    }}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: 32, color: "var(--muted)" }}>
+                    <td
+                      colSpan={6}
+                      style={{
+                        textAlign: "center",
+                        padding: 32,
+                        color: "var(--muted)",
+                      }}
+                    >
                       Loading schedule queue…
                     </td>
                   </tr>
                 ) : filteredRequests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: 36, color: "var(--muted)" }}>
+                    <td
+                      colSpan={6}
+                      style={{
+                        textAlign: "center",
+                        padding: 36,
+                        color: "var(--muted)",
+                      }}
+                    >
                       No schedule or absence requests found.
                     </td>
                   </tr>
@@ -360,24 +484,58 @@ export function ClassScheduleManagerView({
                   filteredRequests.map((req) => {
                     const isPending = req.status === "pending"
                     const isApproved = req.status === "approved"
-                    const cleanPhone = (req.student_phone || "").replace(/[^0-9]/g, "")
-                    const intlPhone = cleanPhone.startsWith("0") ? "234" + cleanPhone.slice(1) : cleanPhone
+                    const cleanPhone = (req.student_phone || "").replace(
+                      /[^0-9]/g,
+                      "",
+                    )
+                    const intlPhone = cleanPhone.startsWith("0")
+                      ? "234" + cleanPhone.slice(1)
+                      : cleanPhone
 
                     return (
-                      <tr key={req.id} style={{ borderBottom: "1px solid var(--line)", fontSize: 13 }}>
+                      <tr
+                        key={req.id}
+                        style={{
+                          borderBottom: "1px solid var(--line)",
+                          fontSize: 13,
+                        }}
+                      >
                         <td style={{ padding: "14px 16px" }}>
-                          <strong style={{ display: "block", color: "var(--navy)" }}>{req.student_name}</strong>
-                          <span style={{ fontSize: 12, color: "var(--muted)" }}>{req.program}</span>
-                          <div style={{ display: "flex", gap: 10, marginTop: 4, fontSize: 11 }}>
+                          <strong
+                            style={{ display: "block", color: "var(--navy)" }}
+                          >
+                            {req.student_name}
+                          </strong>
+                          <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                            {req.program}
+                          </span>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 10,
+                              marginTop: 4,
+                              fontSize: 11,
+                            }}
+                          >
                             <a
                               href={`https://wa.me/${intlPhone}?text=Hello%20${encodeURIComponent(req.student_name)},%20this%20is%20Vivadoxa%20Academy%20academic%20desk%20regarding%20your%20schedule%20notice%20for%20${encodeURIComponent(req.program)}.`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{ color: "#15803d", display: "inline-flex", alignItems: "center", gap: 3, textDecoration: "none", fontWeight: 600 }}
+                              style={{
+                                color: "#15803d",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 3,
+                                textDecoration: "none",
+                                fontWeight: 600,
+                              }}
                             >
-                              <WhatsAppIcon size={12} fill="#15803d" /> {req.student_phone || "WhatsApp"}
+                              <WhatsAppIcon size={12} fill="#15803d" />{" "}
+                              {req.student_phone || "WhatsApp"}
                             </a>
-                            <span style={{ color: "var(--muted)" }}>· {req.student_email}</span>
+                            <span style={{ color: "var(--muted)" }}>
+                              · {req.student_email}
+                            </span>
                           </div>
                         </td>
 
@@ -389,8 +547,18 @@ export function ClassScheduleManagerView({
                               borderRadius: 4,
                               fontSize: 11,
                               fontWeight: 700,
-                              background: req.request_type === "absence_travel" ? "#e0f2fe" : req.request_type === "one_off_reschedule" ? "#fef3c7" : "#ede9fe",
-                              color: req.request_type === "absence_travel" ? "#0369a1" : req.request_type === "one_off_reschedule" ? "#92400e" : "#5b21b6",
+                              background:
+                                req.request_type === "absence_travel"
+                                  ? "#e0f2fe"
+                                  : req.request_type === "one_off_reschedule"
+                                    ? "#fef3c7"
+                                    : "#ede9fe",
+                              color:
+                                req.request_type === "absence_travel"
+                                  ? "#0369a1"
+                                  : req.request_type === "one_off_reschedule"
+                                    ? "#92400e"
+                                    : "#5b21b6",
                             }}
                           >
                             {req.request_type === "absence_travel"
@@ -399,21 +567,48 @@ export function ClassScheduleManagerView({
                                 ? "One-Off Reschedule"
                                 : "Cohort Transfer"}
                           </span>
-                          <small style={{ display: "block", marginTop: 4, color: "var(--muted)", fontSize: 11 }}>
+                          <small
+                            style={{
+                              display: "block",
+                              marginTop: 4,
+                              color: "var(--muted)",
+                              fontSize: 11,
+                            }}
+                          >
                             Current: {req.current_schedule || "Saturday Cohort"}
                           </small>
                         </td>
 
                         <td style={{ padding: "14px 16px", maxWidth: 260 }}>
-                          <strong style={{ display: "block", fontSize: 12, color: "var(--navy)" }}>
+                          <strong
+                            style={{
+                              display: "block",
+                              fontSize: 12,
+                              color: "var(--navy)",
+                            }}
+                          >
                             Date: {req.affected_date || "Upcoming lesson"}
                             {req.return_date ? ` → ${req.return_date}` : ""}
                           </strong>
-                          <span style={{ fontSize: 12, color: "#475569", display: "block", marginTop: 2 }}>
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: "#475569",
+                              display: "block",
+                              marginTop: 2,
+                            }}
+                          >
                             <em>{req.reason}</em>
                           </span>
                           {req.notes && (
-                            <small style={{ color: "var(--muted)", display: "block", marginTop: 4, fontStyle: "italic" }}>
+                            <small
+                              style={{
+                                color: "var(--muted)",
+                                display: "block",
+                                marginTop: 4,
+                                fontStyle: "italic",
+                              }}
+                            >
                               Note: "{req.notes}"
                             </small>
                           )}
@@ -421,22 +616,53 @@ export function ClassScheduleManagerView({
 
                         <td style={{ padding: "14px 16px" }}>
                           {isApproved && req.allocated_makeup_date ? (
-                            <div style={{ background: "#dcfce7", padding: "6px 10px", borderRadius: 6, border: "1px solid #86efac", fontSize: 12, color: "#166534" }}>
+                            <div
+                              style={{
+                                background: "#dcfce7",
+                                padding: "6px 10px",
+                                borderRadius: 6,
+                                border: "1px solid #86efac",
+                                fontSize: 12,
+                                color: "#166534",
+                              }}
+                            >
                               <strong>✓ Catch-Up Scheduled:</strong>
-                              <div style={{ marginTop: 2 }}>{new Date(req.allocated_makeup_date).toLocaleString()}</div>
-                              <small style={{ color: "#15803d" }}>Room: {req.allocated_room || "Studio Room 1"}</small>
+                              <div style={{ marginTop: 2 }}>
+                                {new Date(
+                                  req.allocated_makeup_date,
+                                ).toLocaleString()}
+                              </div>
+                              <small style={{ color: "#15803d" }}>
+                                Room: {req.allocated_room || "Studio Room 1"}
+                              </small>
                             </div>
                           ) : req.makeup_requested ? (
                             <div>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: "#d97706" }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: "#d97706",
+                                }}
+                              >
                                 Requested Catch-Up
                               </span>
-                              <small style={{ display: "block", color: "var(--muted)", marginTop: 2 }}>
+                              <small
+                                style={{
+                                  display: "block",
+                                  color: "var(--muted)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 Pref: {req.preferred_makeup_slot || "Flexible"}
                               </small>
                             </div>
                           ) : (
-                            <span style={{ color: "var(--muted)", fontSize: 12 }}>No makeup requested</span>
+                            <span
+                              style={{ color: "var(--muted)", fontSize: 12 }}
+                            >
+                              No makeup requested
+                            </span>
                           )}
                         </td>
 
@@ -470,13 +696,24 @@ export function ClassScheduleManagerView({
                           </span>
                         </td>
 
-                        <td style={{ padding: "14px 16px", textAlign: "right" }}>
-                          <div style={{ display: "inline-flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <td
+                          style={{ padding: "14px 16px", textAlign: "right" }}
+                        >
+                          <div
+                            style={{
+                              display: "inline-flex",
+                              gap: 6,
+                              flexWrap: "wrap",
+                              justifyContent: "flex-end",
+                            }}
+                          >
                             {isPending ? (
                               <>
                                 <button
                                   type="button"
-                                  onClick={() => openRespondModal(req, "approved")}
+                                  onClick={() =>
+                                    openRespondModal(req, "approved")
+                                  }
                                   style={{
                                     padding: "6px 12px",
                                     borderRadius: 6,
@@ -492,7 +729,9 @@ export function ClassScheduleManagerView({
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => openRespondModal(req, "declined")}
+                                  onClick={() =>
+                                    openRespondModal(req, "declined")
+                                  }
                                   style={{
                                     padding: "6px 10px",
                                     borderRadius: 6,
@@ -510,7 +749,9 @@ export function ClassScheduleManagerView({
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => openRespondModal(req, "approved")}
+                                onClick={() =>
+                                  openRespondModal(req, "approved")
+                                }
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: 6,
@@ -538,20 +779,41 @@ export function ClassScheduleManagerView({
           {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
           <div className="block md:hidden" style={{ padding: 12 }}>
             {loading ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 24,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                }}
+              >
                 Loading schedule queue…
               </div>
             ) : filteredRequests.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 24,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                }}
+              >
                 No schedule or absence requests found.
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
                 {filteredRequests.map((req) => {
                   const isPending = req.status === "pending"
                   const isApproved = req.status === "approved"
-                  const cleanPhone = (req.student_phone || "").replace(/[^0-9]/g, "")
-                  const intlPhone = cleanPhone.startsWith("0") ? "234" + cleanPhone.slice(1) : cleanPhone
+                  const cleanPhone = (req.student_phone || "").replace(
+                    /[^0-9]/g,
+                    "",
+                  )
+                  const intlPhone = cleanPhone.startsWith("0")
+                    ? "234" + cleanPhone.slice(1)
+                    : cleanPhone
 
                   return (
                     <div
@@ -566,10 +828,29 @@ export function ClassScheduleManagerView({
                         gap: 10,
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 8,
+                        }}
+                      >
                         <div>
-                          <strong style={{ fontSize: 14, color: "var(--navy)" }}>{req.student_name}</strong>
-                          <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{req.program}</div>
+                          <strong
+                            style={{ fontSize: 14, color: "var(--navy)" }}
+                          >
+                            {req.student_name}
+                          </strong>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--muted)",
+                              marginTop: 2,
+                            }}
+                          >
+                            {req.program}
+                          </div>
                         </div>
                         <span
                           style={{
@@ -601,14 +882,32 @@ export function ClassScheduleManagerView({
                         </span>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 11 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          fontSize: 11,
+                        }}
+                      >
                         <span
                           style={{
                             padding: "2px 7px",
                             borderRadius: 4,
                             fontWeight: 700,
-                            background: req.request_type === "absence_travel" ? "#e0f2fe" : req.request_type === "one_off_reschedule" ? "#fef3c7" : "#ede9fe",
-                            color: req.request_type === "absence_travel" ? "#0369a1" : req.request_type === "one_off_reschedule" ? "#92400e" : "#5b21b6",
+                            background:
+                              req.request_type === "absence_travel"
+                                ? "#e0f2fe"
+                                : req.request_type === "one_off_reschedule"
+                                  ? "#fef3c7"
+                                  : "#ede9fe",
+                            color:
+                              req.request_type === "absence_travel"
+                                ? "#0369a1"
+                                : req.request_type === "one_off_reschedule"
+                                  ? "#92400e"
+                                  : "#5b21b6",
                             whiteSpace: "nowrap",
                           }}
                         >
@@ -618,40 +917,91 @@ export function ClassScheduleManagerView({
                               ? "One-Off Reschedule"
                               : "Cohort Transfer"}
                         </span>
-                        <span style={{ color: "var(--muted)" }}>Slot: {req.current_schedule || "Saturday Cohort"}</span>
+                        <span style={{ color: "var(--muted)" }}>
+                          Slot: {req.current_schedule || "Saturday Cohort"}
+                        </span>
                       </div>
 
-                      <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                      <div
+                        style={{
+                          background: "#fbfaf8",
+                          padding: "8px 10px",
+                          borderRadius: 6,
+                          fontSize: 12,
+                        }}
+                      >
                         <div style={{ fontWeight: 600, color: "var(--navy)" }}>
                           Date: {req.affected_date || "Upcoming lesson"}
                           {req.return_date ? ` → ${req.return_date}` : ""}
                         </div>
-                        <div style={{ color: "#475569", marginTop: 2 }}><em>{req.reason}</em></div>
+                        <div style={{ color: "#475569", marginTop: 2 }}>
+                          <em>{req.reason}</em>
+                        </div>
                         {req.notes && (
-                          <div style={{ color: "var(--muted)", marginTop: 4, fontStyle: "italic", fontSize: 11 }}>
+                          <div
+                            style={{
+                              color: "var(--muted)",
+                              marginTop: 4,
+                              fontStyle: "italic",
+                              fontSize: 11,
+                            }}
+                          >
                             Note: "{req.notes}"
                           </div>
                         )}
                       </div>
 
                       {isApproved && req.allocated_makeup_date ? (
-                        <div style={{ background: "#dcfce7", padding: "6px 10px", borderRadius: 6, border: "1px solid #86efac", fontSize: 12, color: "#166534" }}>
+                        <div
+                          style={{
+                            background: "#dcfce7",
+                            padding: "6px 10px",
+                            borderRadius: 6,
+                            border: "1px solid #86efac",
+                            fontSize: 12,
+                            color: "#166534",
+                          }}
+                        >
                           <strong>✓ Catch-Up Scheduled:</strong>
-                          <div style={{ marginTop: 2 }}>{new Date(req.allocated_makeup_date).toLocaleString()}</div>
-                          <small style={{ color: "#15803d" }}>Room: {req.allocated_room || "Studio Room 1"}</small>
+                          <div style={{ marginTop: 2 }}>
+                            {new Date(
+                              req.allocated_makeup_date,
+                            ).toLocaleString()}
+                          </div>
+                          <small style={{ color: "#15803d" }}>
+                            Room: {req.allocated_room || "Studio Room 1"}
+                          </small>
                         </div>
                       ) : req.makeup_requested ? (
                         <div style={{ fontSize: 11, color: "#d97706" }}>
-                          <strong>Requested Catch-Up:</strong> Pref: {req.preferred_makeup_slot || "Flexible"}
+                          <strong>Requested Catch-Up:</strong> Pref:{" "}
+                          {req.preferred_makeup_slot || "Flexible"}
                         </div>
                       ) : null}
 
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 10, marginTop: 2 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          borderTop: "1px solid var(--line)",
+                          paddingTop: 10,
+                          marginTop: 2,
+                        }}
+                      >
                         <a
                           href={`https://wa.me/${intlPhone}?text=Hello%20${encodeURIComponent(req.student_name)},%20this%20is%20Vivadoxa%20Academy%20academic%20desk%20regarding%20your%20schedule%20notice%20for%20${encodeURIComponent(req.program)}.`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: "#15803d", display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", fontWeight: 600, fontSize: 12 }}
+                          style={{
+                            color: "#15803d",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            fontSize: 12,
+                          }}
                         >
                           <WhatsAppIcon size={13} fill="#15803d" /> WhatsApp
                         </a>
@@ -660,7 +1010,9 @@ export function ClassScheduleManagerView({
                             <>
                               <button
                                 type="button"
-                                onClick={() => openRespondModal(req, "approved")}
+                                onClick={() =>
+                                  openRespondModal(req, "approved")
+                                }
                                 style={{
                                   padding: "6px 12px",
                                   borderRadius: 6,
@@ -676,7 +1028,9 @@ export function ClassScheduleManagerView({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => openRespondModal(req, "declined")}
+                                onClick={() =>
+                                  openRespondModal(req, "declined")
+                                }
                                 style={{
                                   padding: "6px 10px",
                                   borderRadius: 6,
@@ -738,27 +1092,95 @@ export function ClassScheduleManagerView({
           <div className="hidden md:block table-wrap">
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
-                  <th style={{ padding: "12px 18px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Cohort Name</th>
-                  <th style={{ padding: "12px 18px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Time Slot</th>
-                  <th style={{ padding: "12px 18px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Studio Room / Location</th>
-                  <th style={{ padding: "12px 18px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)" }}>Status</th>
-                  <th style={{ padding: "12px 18px", fontSize: 11, textTransform: "uppercase", color: "var(--muted)", textAlign: "right" }}>Actions</th>
+                <tr
+                  style={{
+                    background: "#fbfaf8",
+                    borderBottom: "1px solid var(--line)",
+                    textAlign: "left",
+                  }}
+                >
+                  <th
+                    style={{
+                      padding: "12px 18px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Cohort Name
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 18px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Time Slot
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 18px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Studio Room / Location
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 18px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      padding: "12px 18px",
+                      fontSize: 11,
+                      textTransform: "uppercase",
+                      color: "var(--muted)",
+                      textAlign: "right",
+                    }}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCohorts.map((c) => (
-                  <tr key={c.id} style={{ borderBottom: "1px solid var(--line)", fontSize: 13 }}>
+                  <tr
+                    key={c.id}
+                    style={{
+                      borderBottom: "1px solid var(--line)",
+                      fontSize: 13,
+                    }}
+                  >
                     <td style={{ padding: "14px 18px" }}>
                       <strong style={{ color: "var(--navy)" }}>{c.name}</strong>
                     </td>
-                    <td style={{ padding: "14px 18px", color: "var(--navy)" }}>{c.time_slot}</td>
-                    <td style={{ padding: "14px 18px", color: "var(--muted)" }}>{c.room}</td>
+                    <td style={{ padding: "14px 18px", color: "var(--navy)" }}>
+                      {c.time_slot}
+                    </td>
+                    <td style={{ padding: "14px 18px", color: "var(--muted)" }}>
+                      {c.room}
+                    </td>
                     <td style={{ padding: "14px 18px" }}>
                       <Badge tone="green">{c.status || "Active"}</Badge>
                     </td>
                     <td style={{ padding: "14px 18px", textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => handleOpenEditCohort(c)}
@@ -800,11 +1222,20 @@ export function ClassScheduleManagerView({
           {/* Mobile Stacked Card View (No Horizontal Scrolling) */}
           <div className="block md:hidden" style={{ padding: 12 }}>
             {filteredCohorts.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 24,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                }}
+              >
                 No cohort slots found.
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
                 {filteredCohorts.map((c) => (
                   <div
                     key={c.id}
@@ -818,18 +1249,52 @@ export function ClassScheduleManagerView({
                       gap: 8,
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <strong style={{ fontSize: 14, color: "var(--navy)" }}>{c.name}</strong>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <strong style={{ fontSize: 14, color: "var(--navy)" }}>
+                        {c.name}
+                      </strong>
                       <span style={{ whiteSpace: "nowrap" }}>
                         <Badge tone="green">{c.status || "Active"}</Badge>
                       </span>
                     </div>
-                    <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div
+                      style={{
+                        background: "#fbfaf8",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        fontSize: 12,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
                       <div>
-                        <div style={{ color: "var(--navy)", fontWeight: 600 }}>{c.time_slot}</div>
-                        <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>{c.room}</div>
+                        <div style={{ color: "var(--navy)", fontWeight: 600 }}>
+                          {c.time_slot}
+                        </div>
+                        <div
+                          style={{
+                            color: "var(--muted)",
+                            fontSize: 11,
+                            marginTop: 2,
+                          }}
+                        >
+                          {c.room}
+                        </div>
                       </div>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          alignItems: "center",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => handleOpenEditCohort(c)}
@@ -886,27 +1351,69 @@ export function ClassScheduleManagerView({
             <div className="modal-head">
               <div>
                 <h3 style={{ margin: 0, fontSize: 17 }}>
-                  {modalStatus === "approved" ? "Approve & Allocate Catch-Up Session" : "Decline Schedule Request"}
+                  {modalStatus === "approved"
+                    ? "Approve & Allocate Catch-Up Session"
+                    : "Decline Schedule Request"}
                 </h3>
-                <small style={{ color: "var(--muted)", display: "block", marginTop: 2 }}>
+                <small
+                  style={{
+                    color: "var(--muted)",
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
                   Student: {selectedReq.student_name} ({selectedReq.program})
                 </small>
               </div>
-              <button className="modal-close" onClick={() => setSelectedReq(null)}>
+              <button
+                className="modal-close"
+                onClick={() => setSelectedReq(null)}
+              >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveResponse} className="modal-body" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
+            <form
+              onSubmit={handleSaveResponse}
+              className="modal-body"
+              style={{
+                padding: 22,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               {/* Request Summary Box */}
-              <div style={{ padding: 12, background: "#f8fafc", borderRadius: 8, border: "1px solid var(--line)", fontSize: 13 }}>
-                <div><strong>Reason:</strong> {selectedReq.reason}</div>
-                <div><strong>Affected Session:</strong> {selectedReq.affected_date || "Upcoming session"}</div>
+              <div
+                style={{
+                  padding: 12,
+                  background: "#f8fafc",
+                  borderRadius: 8,
+                  border: "1px solid var(--line)",
+                  fontSize: 13,
+                }}
+              >
+                <div>
+                  <strong>Reason:</strong> {selectedReq.reason}
+                </div>
+                <div>
+                  <strong>Affected Session:</strong>{" "}
+                  {selectedReq.affected_date || "Upcoming session"}
+                </div>
                 {selectedReq.preferred_makeup_slot && (
-                  <div><strong>Student Preferred Slot:</strong> {selectedReq.preferred_makeup_slot}</div>
+                  <div>
+                    <strong>Student Preferred Slot:</strong>{" "}
+                    {selectedReq.preferred_makeup_slot}
+                  </div>
                 )}
                 {selectedReq.notes && (
-                  <div style={{ marginTop: 4, color: "var(--muted)", fontStyle: "italic" }}>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      color: "var(--muted)",
+                      fontStyle: "italic",
+                    }}
+                  >
                     Student Note: "{selectedReq.notes}"
                   </div>
                 )}
@@ -914,7 +1421,15 @@ export function ClassScheduleManagerView({
 
               {/* Status Selector */}
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 6 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 6,
+                  }}
+                >
                   Decision
                 </label>
                 <div style={{ display: "flex", gap: 10 }}>
@@ -925,9 +1440,14 @@ export function ClassScheduleManagerView({
                       flex: 1,
                       padding: "8px 12px",
                       borderRadius: 6,
-                      border: modalStatus === "approved" ? "2px solid #15803d" : "1px solid var(--line)",
-                      background: modalStatus === "approved" ? "#dcfce7" : "white",
-                      color: modalStatus === "approved" ? "#166534" : "var(--navy)",
+                      border:
+                        modalStatus === "approved"
+                          ? "2px solid #15803d"
+                          : "1px solid var(--line)",
+                      background:
+                        modalStatus === "approved" ? "#dcfce7" : "white",
+                      color:
+                        modalStatus === "approved" ? "#166534" : "var(--navy)",
                       fontWeight: 700,
                       fontSize: 13,
                       cursor: "pointer",
@@ -942,9 +1462,14 @@ export function ClassScheduleManagerView({
                       flex: 1,
                       padding: "8px 12px",
                       borderRadius: 6,
-                      border: modalStatus === "declined" ? "2px solid #991b1b" : "1px solid var(--line)",
-                      background: modalStatus === "declined" ? "#fee2e2" : "white",
-                      color: modalStatus === "declined" ? "#991b1b" : "var(--navy)",
+                      border:
+                        modalStatus === "declined"
+                          ? "2px solid #991b1b"
+                          : "1px solid var(--line)",
+                      background:
+                        modalStatus === "declined" ? "#fee2e2" : "white",
+                      color:
+                        modalStatus === "declined" ? "#991b1b" : "var(--navy)",
                       fontWeight: 700,
                       fontSize: 13,
                       cursor: "pointer",
@@ -959,7 +1484,15 @@ export function ClassScheduleManagerView({
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                          marginBottom: 4,
+                        }}
+                      >
                         Allocated Makeup Date *
                       </label>
                       <input
@@ -967,11 +1500,25 @@ export function ClassScheduleManagerView({
                         required
                         value={makeupDate}
                         onChange={(e) => setMakeupDate(e.target.value)}
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: 6,
+                          border: "1px solid var(--line)",
+                          fontSize: 13,
+                        }}
                       />
                     </div>
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                          marginBottom: 4,
+                        }}
+                      >
                         Allocated Time *
                       </label>
                       <input
@@ -979,53 +1526,129 @@ export function ClassScheduleManagerView({
                         required
                         value={makeupTime}
                         onChange={(e) => setMakeupTime(e.target.value)}
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                        style={{
+                          width: "100%",
+                          padding: "8px 12px",
+                          borderRadius: 6,
+                          border: "1px solid var(--line)",
+                          fontSize: 13,
+                        }}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--navy)",
+                        marginBottom: 4,
+                      }}
+                    >
                       Allocated Studio Room / Suite
                     </label>
                     <select
                       value={allocatedRoom}
                       onChange={(e) => setAllocatedRoom(e.target.value)}
-                      style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13, background: "white" }}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        border: "1px solid var(--line)",
+                        fontSize: 13,
+                        background: "white",
+                      }}
                     >
-                      <option value="Studio Room 1 (Grand Piano Lab)">Studio Room 1 (Grand Piano Lab)</option>
-                      <option value="Studio Room 2 (Strings & Winds)">Studio Room 2 (Strings & Winds)</option>
-                      <option value="Studio Room 3 (Guitar & Bass Lounge)">Studio Room 3 (Guitar & Bass Lounge)</option>
-                      <option value="Audio Engineering Suite">Audio Engineering Suite</option>
-                      <option value="Live Rehearsal Hall">Live Rehearsal Hall</option>
-                      <option value="Private Home Lesson (Kaduna)">Private Home Lesson (Kaduna)</option>
-                      <option value="Online 1-on-1 Studio">Online 1-on-1 Studio (Zoom / Google Meet)</option>
+                      <option value="Studio Room 1 (Grand Piano Lab)">
+                        Studio Room 1 (Grand Piano Lab)
+                      </option>
+                      <option value="Studio Room 2 (Strings & Winds)">
+                        Studio Room 2 (Strings & Winds)
+                      </option>
+                      <option value="Studio Room 3 (Guitar & Bass Lounge)">
+                        Studio Room 3 (Guitar & Bass Lounge)
+                      </option>
+                      <option value="Audio Engineering Suite">
+                        Audio Engineering Suite
+                      </option>
+                      <option value="Live Rehearsal Hall">
+                        Live Rehearsal Hall
+                      </option>
+                      <option value="Private Home Lesson (Kaduna)">
+                        Private Home Lesson (Kaduna)
+                      </option>
+                      <option value="Online 1-on-1 Studio">
+                        Online 1-on-1 Studio (Zoom / Google Meet)
+                      </option>
                     </select>
                   </div>
                 </>
               )}
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
-                  {modalStatus === "approved" ? "Instructor Notes (included in WhatsApp & Email)" : "Reason for Declining"}
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
+                  {modalStatus === "approved"
+                    ? "Instructor Notes (included in WhatsApp & Email)"
+                    : "Reason for Declining"}
                 </label>
                 <textarea
                   rows={2}
                   value={staffNotes}
                   onChange={(e) => setStaffNotes(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
-              <div style={{ background: "#f0fdf4", padding: 10, borderRadius: 6, fontSize: 11, color: "#166534" }}>
-                Saving will automatically dispatch a WhatsApp notification to <strong>{selectedReq.student_phone}</strong> and an email to <strong>{selectedReq.student_email}</strong>.
+              <div
+                style={{
+                  background: "#f0fdf4",
+                  padding: 10,
+                  borderRadius: 6,
+                  fontSize: 11,
+                  color: "#166534",
+                }}
+              >
+                Saving will automatically dispatch a WhatsApp notification to{" "}
+                <strong>{selectedReq.student_phone}</strong> and an email to{" "}
+                <strong>{selectedReq.student_email}</strong>.
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                  borderTop: "1px solid var(--line)",
+                  paddingTop: 14,
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setSelectedReq(null)}
-                  style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid var(--line)", background: "white", cursor: "pointer", fontSize: 13 }}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    background: "white",
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
                 >
                   Cancel
                 </button>
@@ -1036,14 +1659,19 @@ export function ClassScheduleManagerView({
                     padding: "8px 18px",
                     borderRadius: 6,
                     border: "none",
-                    background: modalStatus === "approved" ? "#15803d" : "#991b1b",
+                    background:
+                      modalStatus === "approved" ? "#15803d" : "#991b1b",
                     color: "white",
                     fontWeight: 700,
                     fontSize: 13,
                     cursor: "pointer",
                   }}
                 >
-                  {submitting ? "Saving & Notifying…" : modalStatus === "approved" ? "Confirm & Notify Student" : "Decline Request"}
+                  {submitting
+                    ? "Saving & Notifying…"
+                    : modalStatus === "approved"
+                      ? "Confirm & Notify Student"
+                      : "Decline Request"}
                 </button>
               </div>
             </form>
@@ -1064,13 +1692,33 @@ export function ClassScheduleManagerView({
           <div className="modal-card" style={{ maxWidth: 480 }}>
             <div className="modal-head">
               <h3 style={{ margin: 0, fontSize: 17 }}>Add Cohort Slot</h3>
-              <button className="modal-close" onClick={() => setShowAddCohortModal(false)}>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddCohortModal(false)}
+              >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleAddCohort} className="modal-body" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleAddCohort}
+              className="modal-body"
+              style={{
+                padding: 22,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Cohort Name *
                 </label>
                 <input
@@ -1079,12 +1727,26 @@ export function ClassScheduleManagerView({
                   placeholder="e.g. Wednesday Evening Masterclass"
                   value={newCohortName}
                   onChange={(e) => setNewCohortName(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Time Schedule *
                 </label>
                 <input
@@ -1093,27 +1755,62 @@ export function ClassScheduleManagerView({
                   placeholder="e.g. Wednesdays 5:00 PM – 7:00 PM"
                   value={newCohortTime}
                   onChange={(e) => setNewCohortTime(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Studio Room
                 </label>
                 <input
                   type="text"
                   value={newCohortRoom}
                   onChange={(e) => setNewCohortRoom(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                  borderTop: "1px solid var(--line)",
+                  paddingTop: 14,
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowAddCohortModal(false)}
-                  style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid var(--line)", background: "white", cursor: "pointer", fontSize: 13 }}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    background: "white",
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
                 >
                   Cancel
                 </button>
@@ -1140,21 +1837,46 @@ export function ClassScheduleManagerView({
 
       {/* EDIT COHORT / TIMETABLE MODAL */}
       {showEditCohortModal && editingCohort && (
-        <div className="modal-backdrop" onClick={() => setShowEditCohortModal(false)}>
+        <div
+          className="modal-backdrop"
+          onClick={() => setShowEditCohortModal(false)}
+        >
           <div
             className="modal"
             style={{ maxWidth: 480, width: "95%" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-head">
-              <h3 style={{ margin: 0, fontSize: 17, color: "var(--navy)" }}>Edit Timetable Cohort Slot</h3>
-              <button className="modal-close" onClick={() => setShowEditCohortModal(false)}>
+              <h3 style={{ margin: 0, fontSize: 17, color: "var(--navy)" }}>
+                Edit Timetable Cohort Slot
+              </h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowEditCohortModal(false)}
+              >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleSaveEditCohort} className="modal-body" style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleSaveEditCohort}
+              className="modal-body"
+              style={{
+                padding: 22,
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+              }}
+            >
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Cohort Name *
                 </label>
                 <input
@@ -1162,12 +1884,26 @@ export function ClassScheduleManagerView({
                   required
                   value={editCohortName}
                   onChange={(e) => setEditCohortName(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Time Schedule *
                 </label>
                 <input
@@ -1175,30 +1911,65 @@ export function ClassScheduleManagerView({
                   required
                   value={editCohortTime}
                   onChange={(e) => setEditCohortTime(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Studio Room / Location
                 </label>
                 <input
                   type="text"
                   value={editCohortRoom}
                   onChange={(e) => setEditCohortRoom(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    marginBottom: 4,
+                  }}
+                >
                   Status
                 </label>
                 <select
                   value={editCohortStatus}
                   onChange={(e) => setEditCohortStatus(e.target.value)}
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13, background: "white" }}
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    fontSize: 13,
+                    background: "white",
+                  }}
                 >
                   <option value="Active">Active</option>
                   <option value="Upcoming">Upcoming</option>
@@ -1207,11 +1978,26 @@ export function ClassScheduleManagerView({
                 </select>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                  borderTop: "1px solid var(--line)",
+                  paddingTop: 14,
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowEditCohortModal(false)}
-                  style={{ padding: "8px 16px", borderRadius: 6, border: "1px solid var(--line)", background: "white", cursor: "pointer", fontSize: 13 }}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    background: "white",
+                    cursor: "pointer",
+                    fontSize: 13,
+                  }}
                 >
                   Cancel
                 </button>

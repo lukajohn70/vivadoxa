@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
 import { Button, Badge, Field, Icon, PageHero } from "@/components/ui"
+import { SEO } from "@/components/SEO"
 import { isValidEmail, SCHOOL_PHONE } from "@/lib/utils"
 import { checkApplicationStatus } from "@/lib/api"
-import { AdmissionLetterModal, PaymentReceiptModal } from "@/components/OfficialDocument"
+import {
+  AdmissionLetterModal,
+  PaymentReceiptModal,
+  ApplicationSlipModal,
+} from "@/components/OfficialDocument"
 
 export function Status() {
   const [searchParams] = useSearchParams()
@@ -16,20 +21,39 @@ export function Status() {
   const [searched, setSearched] = useState(false)
   const [application, setApplication] = useState<any | null>(null)
   const [payment, setPayment] = useState<any | null>(null)
+  const [showSlip, setShowSlip] = useState(false)
   const [showLetter, setShowLetter] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
 
   // Auto-search if ref is in URL, or show preview if requested
   useEffect(() => {
-    if (searchParams.get("previewLetter") === "1") {
+    if (searchParams.get("previewSlip") === "1") {
       setApplication({
         fullName: "Chinedu Emmanuel Okonkwo",
         application_no: "VDX-2026-0842",
-        program: "Piano & Keyboard Performance",
+        program: "Piano/keyboard",
         planTier: "6-months",
         study_mode: "Onsite",
         schedule: "Saturday Mornings (Weekly Masterclass)",
-        tuition_fee: 95000,
+        tuition_fee: 100000,
+        email: "c.okonkwo@example.com",
+        phone: "08031234567",
+        address: "No. 12 Constitution Road, Kaduna",
+        guardianName: "Elder Samuel Okonkwo",
+        guardianPhone: "08029876543",
+        guardianRelationship: "Father",
+        status: "Submitted",
+      })
+      setShowSlip(true)
+    } else if (searchParams.get("previewLetter") === "1") {
+      setApplication({
+        fullName: "Chinedu Emmanuel Okonkwo",
+        application_no: "VDX-2026-0842",
+        program: "Piano/keyboard",
+        planTier: "6-months",
+        study_mode: "Onsite",
+        schedule: "Saturday Mornings (Weekly Masterclass)",
+        tuition_fee: 100000,
         email: "c.okonkwo@example.com",
         phone: "08031234567",
         status: "Admitted",
@@ -41,10 +65,10 @@ export function Status() {
         application_no: "VDX-2026-0842",
         payer_name: "Chinedu Emmanuel Okonkwo",
         payer_email: "c.okonkwo@example.com",
-        amount: 95000,
+        amount: 100000,
         method: "Bank Transfer (Direct)",
         status: "Confirmed",
-        program: "6 Months Diploma Program — Piano & Keyboard Mastery",
+        program: "6 Months Program — Piano & Keyboard Mastery",
         created_at: new Date().toISOString(),
       })
       setShowReceipt(true)
@@ -64,7 +88,10 @@ export function Status() {
     setSearched(true)
 
     try {
-      const res = await checkApplicationStatus(refToFind.trim(), emailToFind.trim() || undefined)
+      const res = await checkApplicationStatus(
+        refToFind.trim(),
+        emailToFind.trim() || undefined,
+      )
       if (res && res.success && res.application) {
         setApplication(res.application)
         setPayment(res.payment || null)
@@ -72,7 +99,8 @@ export function Status() {
         setApplication(null)
         setPayment(null)
         setSearchError(
-          res.error || "No application record found matching the provided details. Please verify and try again.",
+          res.error ||
+            "No application record found matching the provided details. Please verify and try again.",
         )
       }
     } catch {
@@ -87,7 +115,9 @@ export function Status() {
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     if (!refInput.trim()) {
-      setSearchError("Please enter your application reference (e.g. VDX-2026-0001).")
+      setSearchError(
+        "Please enter your application reference (e.g. VDX-2026-0001).",
+      )
       return
     }
     if (email.trim() && !isValidEmail(email)) {
@@ -99,6 +129,11 @@ export function Status() {
 
   return (
     <main>
+      <SEO
+        title="Check Application Status — Vivadoxa Music School Kaduna"
+        description="Check your admission application review, audition schedule, or enrollment verification status with Vivadoxa Music School."
+        canonicalUrl="/status"
+      />
       <PageHero
         eyebrow="Admissions Portal"
         title="Track your application & enrollment."
@@ -178,6 +213,97 @@ export function Status() {
                 </Badge>
               </div>
 
+              {/* ── Official Document Downloads Bar ── */}
+              <div
+                style={{
+                  background: "#fbfaf7",
+                  border: "1px solid var(--line)",
+                  borderRadius: 12,
+                  padding: "16px 18px",
+                  margin: "18px 0 24px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 12,
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    <span
+                      className="eyebrow"
+                      style={{ fontSize: 10.5, color: "var(--gold)" }}
+                    >
+                      Downloadable Website Documents
+                    </span>
+                    <strong
+                      style={{
+                        display: "block",
+                        fontSize: 14,
+                        color: "var(--navy)",
+                      }}
+                    >
+                      Official Enrollment Credentials &amp; Receipts
+                    </strong>
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                    Ref: <code>{application.application_no}</code>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowSlip(true)}
+                    style={{
+                      justifyContent: "center",
+                      fontSize: 12,
+                      minHeight: 40,
+                    }}
+                  >
+                    <Icon name="copy" size={14} /> Application Slip (PDF)
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      if (payment) setShowReceipt(true)
+                      else
+                        alert(
+                          "Payment proof is still awaiting bank ledger reconciliation.",
+                        )
+                    }}
+                    style={{
+                      justifyContent: "center",
+                      fontSize: 12,
+                      minHeight: 40,
+                    }}
+                  >
+                    <Icon name="check" size={14} /> Payment Receipt (PDF)
+                  </Button>
+
+                  <Button
+                    variant={
+                      application.status === "approved"
+                        ? "primary"
+                        : "secondary"
+                    }
+                    onClick={() => setShowLetter(true)}
+                    style={{
+                      justifyContent: "center",
+                      fontSize: 12,
+                      minHeight: 40,
+                    }}
+                  >
+                    <Icon name="copy" size={14} /> Admission Letter (PDF)
+                  </Button>
+                </div>
+              </div>
+
               {application.status === "approved" ? (
                 <div className="admitted">
                   <div className="success-icon">
@@ -199,23 +325,37 @@ export function Status() {
                     }}
                   >
                     <strong>Next Steps for Orientation:</strong>
-                    <ul style={{ margin: "8px 0 0 18px", color: "var(--muted)" }}>
+                    <ul
+                      style={{ margin: "8px 0 0 18px", color: "var(--muted)" }}
+                    >
                       <li>
-                        Class schedules and instructor allocation will be emailed
-                        to <strong>{application.email}</strong>.
+                        Class schedules and instructor allocation will be
+                        emailed to <strong>{application.email}</strong>.
                       </li>
                       <li>
-                        Please visit Vivadoxa Music (No. 49B Umaru Ibrahim St., beside Angwan Sunday Market, Kaduna) for
-                        student instrument allocation and orientation.
+                        Please visit Vivadoxa Music (No. 49B Umaru Ibrahim St.,
+                        beside Angwan Sunday Market, Kaduna) for student
+                        instrument allocation and orientation.
                       </li>
                     </ul>
                   </div>
-                  <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginTop: 20 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      justifyContent: "center",
+                      flexWrap: "wrap",
+                      marginTop: 20,
+                    }}
+                  >
                     <Button onClick={() => setShowLetter(true)}>
                       <Icon name="copy" /> Download admission letter (PDF)
                     </Button>
                     {payment && payment.status === "verified" && (
-                      <Button variant="secondary" onClick={() => setShowReceipt(true)}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowReceipt(true)}
+                      >
                         <Icon name="check" /> Download payment receipt (PDF)
                       </Button>
                     )}
@@ -228,8 +368,8 @@ export function Status() {
                 <div className="issue">
                   <h3>Admission status update</h3>
                   <p>
-                    We appreciate your interest in Vivadoxa Music School. We
-                    are unable to offer an admission place for this academic cohort.
+                    We appreciate your interest in Vivadoxa Music School. We are
+                    unable to offer an admission place for this academic cohort.
                     For counseling and future openings, please speak with our
                     team.
                   </p>
@@ -311,6 +451,12 @@ export function Status() {
             </div>
           )}
           {/* Official Document Modals */}
+          {showSlip && application && (
+            <ApplicationSlipModal
+              data={application}
+              onClose={() => setShowSlip(false)}
+            />
+          )}
           {showLetter && application && (
             <AdmissionLetterModal
               data={application}

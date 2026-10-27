@@ -148,7 +148,11 @@ export function StaffAndRolesView({
       setActionNotice("Primary Superadmin account cannot be deleted.")
       return
     }
-    if (!confirm(`Are you sure you want to permanently remove staff account for "${staff.name}" (${staff.email})?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to permanently remove staff account for "${staff.name}" (${staff.email})?`,
+      )
+    ) {
       return
     }
     const res = await deleteStaffAdmin(staff.id)
@@ -160,22 +164,55 @@ export function StaffAndRolesView({
     }
   }
 
-  const roleBadges: Record<string, { label: string; bg: string; color: string }> = {
-    superadmin: { label: "Super Administrator", bg: "#702064", color: "#ffffff" },
-    admissions: { label: "Admissions Officer", bg: "rgba(21, 112, 84, 0.15)", color: "#157054" },
-    finance: { label: "Financial Officer", bg: "rgba(201, 107, 50, 0.15)", color: "#a24a18" },
-    workshop: { label: "Workshop Lead", bg: "rgba(31, 110, 165, 0.15)", color: "#1f6ea5" },
+  interface RoleBadge {
+    label: string
+    bg: string
+    color: string
+  }
+
+  const roleBadges: Record<string, RoleBadge> = {
+    superadmin: {
+      label: "Super Administrator",
+      bg: "#702064",
+      color: "#ffffff",
+    },
+    admissions: {
+      label: "Admissions Officer",
+      bg: "rgba(21, 112, 84, 0.15)",
+      color: "#157054",
+    },
+    finance: {
+      label: "Financial Officer",
+      bg: "rgba(201, 107, 50, 0.15)",
+      color: "#a24a18",
+    },
+    workshop: {
+      label: "Workshop Lead",
+      bg: "rgba(31, 110, 165, 0.15)",
+      color: "#1f6ea5",
+    },
     staff: { label: "General Staff", bg: "#eef1f4", color: "#475569" },
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Top Banner */}
-      <div className="editor-head standalone" style={{ background: "white", padding: 24, borderRadius: 10, border: "1px solid var(--line)" }}>
+      <div
+        className="editor-head standalone"
+        style={{
+          background: "white",
+          padding: 24,
+          borderRadius: 10,
+          border: "1px solid var(--line)",
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: 20, margin: 0 }}>Staff &amp; Role Access Control</h2>
+          <h2 style={{ fontSize: 20, margin: 0 }}>
+            Staff &amp; Role Access Control
+          </h2>
           <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 13 }}>
-            Manage authorized academy staff accounts, assigned privileges, and login credentials.
+            Manage authorized academy staff accounts, assigned privileges, and
+            login credentials.
           </p>
         </div>
         <Button onClick={openAddModal} variant="primary">
@@ -184,47 +221,158 @@ export function StaffAndRolesView({
       </div>
 
       {/* Metrics Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
-        <div style={{ background: "white", padding: 18, borderRadius: 8, border: "1px solid var(--line)" }}>
-          <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 14,
+        }}
+      >
+        <div
+          style={{
+            background: "white",
+            padding: 18,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
+          <small
+            style={{
+              color: "var(--muted)",
+              textTransform: "uppercase",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}
+          >
             Total Staff Accounts
           </small>
-          <strong style={{ display: "block", fontSize: 26, color: "var(--navy)", marginTop: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              fontSize: 26,
+              color: "var(--navy)",
+              marginTop: 4,
+            }}
+          >
             {admins.length}
           </strong>
         </div>
-        <div style={{ background: "white", padding: 18, borderRadius: 8, border: "1px solid var(--line)" }}>
-          <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+        <div
+          style={{
+            background: "white",
+            padding: 18,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
+          <small
+            style={{
+              color: "var(--muted)",
+              textTransform: "uppercase",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}
+          >
             Active Accounts
           </small>
-          <strong style={{ display: "block", fontSize: 26, color: "#157054", marginTop: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              fontSize: 26,
+              color: "#157054",
+              marginTop: 4,
+            }}
+          >
             {admins.filter((a) => a.is_active).length}
           </strong>
         </div>
-        <div style={{ background: "white", padding: 18, borderRadius: 8, border: "1px solid var(--line)" }}>
-          <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+        <div
+          style={{
+            background: "white",
+            padding: 18,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
+          <small
+            style={{
+              color: "var(--muted)",
+              textTransform: "uppercase",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}
+          >
             Super Administrators
           </small>
-          <strong style={{ display: "block", fontSize: 26, color: "#702064", marginTop: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              fontSize: 26,
+              color: "#702064",
+              marginTop: 4,
+            }}
+          >
             {admins.filter((a) => a.role === "superadmin").length}
           </strong>
         </div>
-        <div style={{ background: "white", padding: 18, borderRadius: 8, border: "1px solid var(--line)" }}>
-          <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+        <div
+          style={{
+            background: "white",
+            padding: 18,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
+          <small
+            style={{
+              color: "var(--muted)",
+              textTransform: "uppercase",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}
+          >
             Admissions &amp; Operations
           </small>
-          <strong style={{ display: "block", fontSize: 26, color: "#c96b32", marginTop: 4 }}>
+          <strong
+            style={{
+              display: "block",
+              fontSize: 26,
+              color: "#c96b32",
+              marginTop: 4,
+            }}
+          >
             {admins.filter((a) => a.role !== "superadmin").length}
           </strong>
         </div>
       </div>
 
       {/* Staff Table Panel */}
-      <div style={{ background: "white", borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          background: "white",
+          borderRadius: 8,
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            padding: "16px 20px",
+            borderBottom: "1px solid var(--line)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
             <h3 style={{ margin: 0, fontSize: 15 }}>Authorized Personnel</h3>
-            <small style={{ color: "var(--muted)" }}>Click any account to edit role or update login access.</small>
+            <small style={{ color: "var(--muted)" }}>
+              Click any account to edit role or update login access.
+            </small>
           </div>
           <Button variant="ghost" onClick={loadStaff}>
             Refresh
@@ -235,25 +383,100 @@ export function StaffAndRolesView({
         <div className="hidden md:block table-wrap">
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Staff Member</th>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Email / Login Alias</th>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>System Role</th>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Status</th>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Last Login</th>
-                <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", textAlign: "right" }}>Actions</th>
+              <tr
+                style={{
+                  background: "#fbfaf8",
+                  borderBottom: "1px solid var(--line)",
+                  textAlign: "left",
+                }}
+              >
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Staff Member
+                </th>
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Email / Login Alias
+                </th>
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  System Role
+                </th>
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Status
+                </th>
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Last Login
+                </th>
+                <th
+                  style={{
+                    padding: "12px 18px",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    textTransform: "uppercase",
+                    textAlign: "right",
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>
+                  <td
+                    colSpan={6}
+                    style={{
+                      padding: 30,
+                      textAlign: "center",
+                      color: "var(--muted)",
+                    }}
+                  >
                     Loading staff records…
                   </td>
                 </tr>
               ) : admins.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>
+                  <td
+                    colSpan={6}
+                    style={{
+                      padding: 30,
+                      textAlign: "center",
+                      color: "var(--muted)",
+                    }}
+                  >
                     No staff records found.
                   </td>
                 </tr>
@@ -261,15 +484,30 @@ export function StaffAndRolesView({
                 admins.map((staff) => {
                   const roleInfo = roleBadges[staff.role] || roleBadges.staff
                   return (
-                    <tr key={staff.id} style={{ borderBottom: "1px solid var(--line)", fontSize: 13 }}>
+                    <tr
+                      key={staff.id}
+                      style={{
+                        borderBottom: "1px solid var(--line)",
+                        fontSize: 13,
+                      }}
+                    >
                       <td style={{ padding: "14px 18px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
                           <span
                             style={{
                               width: 32,
                               height: 32,
                               borderRadius: "50%",
-                              background: staff.role === "superadmin" ? "#0b0b0b" : "var(--gold)",
+                              background:
+                                staff.role === "superadmin"
+                                  ? "#0b0b0b"
+                                  : "var(--gold)",
                               color: "white",
                               display: "grid",
                               placeItems: "center",
@@ -277,22 +515,38 @@ export function StaffAndRolesView({
                               fontSize: 12,
                             }}
                           >
-                            {staff.name ? staff.name.slice(0, 2).toUpperCase() : "AD"}
+                            {staff.name
+                              ? staff.name.slice(0, 2).toUpperCase()
+                              : "AD"}
                           </span>
                           <div>
                             <strong>{staff.name}</strong>
                             {staff.id === 1 && (
-                              <span style={{ marginLeft: 6, fontSize: 10, background: "#ffd700", color: "#000", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  fontSize: 10,
+                                  background: "#ffd700",
+                                  color: "#000",
+                                  padding: "1px 6px",
+                                  borderRadius: 4,
+                                  fontWeight: 700,
+                                }}
+                              >
                                 Primary
                               </span>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: "14px 18px", color: "var(--navy)" }}>
+                      <td
+                        style={{ padding: "14px 18px", color: "var(--navy)" }}
+                      >
                         <code>{staff.email}</code>
                       </td>
-                      <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
+                      <td
+                        style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
+                      >
                         <span
                           style={{
                             display: "inline-block",
@@ -308,7 +562,9 @@ export function StaffAndRolesView({
                           {roleInfo.label}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
+                      <td
+                        style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
+                      >
                         <span
                           style={{
                             display: "inline-flex",
@@ -324,14 +580,25 @@ export function StaffAndRolesView({
                               width: 8,
                               height: 8,
                               borderRadius: "50%",
-                              background: staff.is_active ? "#157054" : "#b84646",
+                              background: staff.is_active
+                                ? "#157054"
+                                : "#b84646",
                             }}
                           />
                           {staff.is_active ? "Active" : "Deactivated"}
                         </span>
                       </td>
-                      <td style={{ padding: "14px 18px", color: "var(--muted)", fontSize: 12, whiteSpace: "nowrap" }}>
-                        {staff.last_login ? new Date(staff.last_login).toLocaleString() : "Never"}
+                      <td
+                        style={{
+                          padding: "14px 18px",
+                          color: "var(--muted)",
+                          fontSize: 12,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {staff.last_login
+                          ? new Date(staff.last_login).toLocaleString()
+                          : "Never"}
                       </td>
                       <td style={{ padding: "14px 18px", textAlign: "right" }}>
                         <div style={{ display: "inline-flex", gap: 6 }}>
@@ -358,8 +625,12 @@ export function StaffAndRolesView({
                                 style={{
                                   padding: "4px 8px",
                                   fontSize: 11,
-                                  background: staff.is_active ? "rgba(184, 70, 70, 0.1)" : "rgba(21, 112, 84, 0.1)",
-                                  color: staff.is_active ? "#b84646" : "#157054",
+                                  background: staff.is_active
+                                    ? "rgba(184, 70, 70, 0.1)"
+                                    : "rgba(21, 112, 84, 0.1)",
+                                  color: staff.is_active
+                                    ? "#b84646"
+                                    : "#157054",
                                   border: "none",
                                   borderRadius: 4,
                                   cursor: "pointer",
@@ -400,11 +671,25 @@ export function StaffAndRolesView({
         {/* Mobile Responsive Stacked Cards View (No sideways scrolling) */}
         <div className="block md:hidden" style={{ padding: 14 }}>
           {loading ? (
-            <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: 24,
+                color: "var(--muted)",
+                fontSize: 13,
+              }}
+            >
               Loading staff records…
             </div>
           ) : admins.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: 24,
+                color: "var(--muted)",
+                fontSize: 13,
+              }}
+            >
               No staff records found.
             </div>
           ) : (
@@ -424,14 +709,30 @@ export function StaffAndRolesView({
                       gap: 10,
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
                         <span
                           style={{
                             width: 34,
                             height: 34,
                             borderRadius: "50%",
-                            background: staff.role === "superadmin" ? "#0b0b0b" : "var(--gold)",
+                            background:
+                              staff.role === "superadmin"
+                                ? "#0b0b0b"
+                                : "var(--gold)",
                             color: "white",
                             display: "grid",
                             placeItems: "center",
@@ -440,12 +741,31 @@ export function StaffAndRolesView({
                             flexShrink: 0,
                           }}
                         >
-                          {staff.name ? staff.name.slice(0, 2).toUpperCase() : "AD"}
+                          {staff.name
+                            ? staff.name.slice(0, 2).toUpperCase()
+                            : "AD"}
                         </span>
                         <div>
-                          <strong style={{ fontSize: 14, color: "var(--navy)", display: "block" }}>{staff.name}</strong>
+                          <strong
+                            style={{
+                              fontSize: 14,
+                              color: "var(--navy)",
+                              display: "block",
+                            }}
+                          >
+                            {staff.name}
+                          </strong>
                           {staff.id === 1 && (
-                            <span style={{ fontSize: 9, background: "#ffd700", color: "#000", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>
+                            <span
+                              style={{
+                                fontSize: 9,
+                                background: "#ffd700",
+                                color: "#000",
+                                padding: "1px 5px",
+                                borderRadius: 4,
+                                fontWeight: 700,
+                              }}
+                            >
                               Primary Admin
                             </span>
                           )}
@@ -466,20 +786,75 @@ export function StaffAndRolesView({
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 12, color: "var(--navy)", background: "white", padding: "8px 10px", borderRadius: 6, border: "1px solid #ede8de" }}>
-                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>LOGIN EMAIL</div>
-                      <code style={{ fontSize: 12, wordBreak: "break-all" }}>{staff.email}</code>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--navy)",
+                        background: "white",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        border: "1px solid #ede8de",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          marginBottom: 2,
+                        }}
+                      >
+                        LOGIN EMAIL
+                      </div>
+                      <code style={{ fontSize: 12, wordBreak: "break-all" }}>
+                        {staff.email}
+                      </code>
                     </div>
 
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: "var(--muted)" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: staff.is_active ? "#157054" : "#b84646", fontWeight: 600 }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: staff.is_active ? "#157054" : "#b84646" }} />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                          color: staff.is_active ? "#157054" : "#b84646",
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: "50%",
+                            background: staff.is_active ? "#157054" : "#b84646",
+                          }}
+                        />
                         {staff.is_active ? "Active" : "Deactivated"}
                       </span>
-                      <span>Last login: {staff.last_login ? new Date(staff.last_login).toLocaleDateString() : "Never"}</span>
+                      <span>
+                        Last login:{" "}
+                        {staff.last_login
+                          ? new Date(staff.last_login).toLocaleDateString()
+                          : "Never"}
+                      </span>
                     </div>
 
-                    <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 10, marginTop: 2 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        borderTop: "1px solid var(--line)",
+                        paddingTop: 10,
+                        marginTop: 2,
+                      }}
+                    >
                       <button
                         type="button"
                         onClick={() => openEditModal(staff)}
@@ -506,7 +881,9 @@ export function StaffAndRolesView({
                             padding: "8px 12px",
                             fontSize: 12,
                             fontWeight: 600,
-                            background: staff.is_active ? "rgba(184, 70, 70, 0.1)" : "rgba(21, 112, 84, 0.1)",
+                            background: staff.is_active
+                              ? "rgba(184, 70, 70, 0.1)"
+                              : "rgba(21, 112, 84, 0.1)",
                             color: staff.is_active ? "#b84646" : "#157054",
                             border: "none",
                             borderRadius: 6,
@@ -526,31 +903,102 @@ export function StaffAndRolesView({
       </div>
 
       {/* Role Permissions Reference Card */}
-      <div style={{ background: "white", padding: 22, borderRadius: 8, border: "1px solid var(--line)" }}>
-        <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--navy)" }}>Role &amp; Permissions Matrix</h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
-          <div style={{ padding: 14, background: "#fcfbf9", borderRadius: 6, border: "1px solid #ebe7df" }}>
-            <strong style={{ color: "#702064", display: "block", fontSize: 13 }}>Super Administrator</strong>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              Full system control: Operations, Academics, Staff management, Payment configurations, and Notification dispatch channels.
+      <div
+        style={{
+          background: "white",
+          padding: 22,
+          borderRadius: 8,
+          border: "1px solid var(--line)",
+        }}
+      >
+        <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--navy)" }}>
+          Role &amp; Permissions Matrix
+        </h4>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 14,
+          }}
+        >
+          <div
+            style={{
+              padding: 14,
+              background: "#fcfbf9",
+              borderRadius: 6,
+              border: "1px solid #ebe7df",
+            }}
+          >
+            <strong
+              style={{ color: "#702064", display: "block", fontSize: 13 }}
+            >
+              Super Administrator
+            </strong>
+            <p
+              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+            >
+              Full system control: Operations, Academics, Staff management,
+              Payment configurations, and Notification dispatch channels.
             </p>
           </div>
-          <div style={{ padding: 14, background: "#fcfbf9", borderRadius: 6, border: "1px solid #ebe7df" }}>
-            <strong style={{ color: "#157054", display: "block", fontSize: 13 }}>Admissions Officer</strong>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              Review student applications, approve/reject candidates, generate admission offer letters, and enroll students into cohorts.
+          <div
+            style={{
+              padding: 14,
+              background: "#fcfbf9",
+              borderRadius: 6,
+              border: "1px solid #ebe7df",
+            }}
+          >
+            <strong
+              style={{ color: "#157054", display: "block", fontSize: 13 }}
+            >
+              Admissions Officer
+            </strong>
+            <p
+              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+            >
+              Review student applications, approve/reject candidates, generate
+              admission offer letters, and enroll students into cohorts.
             </p>
           </div>
-          <div style={{ padding: 14, background: "#fcfbf9", borderRadius: 6, border: "1px solid #ebe7df" }}>
-            <strong style={{ color: "#a24a18", display: "block", fontSize: 13 }}>Financial Officer</strong>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              Verify bank transfers and card payments, monitor revenue logs, generate official payment receipts, and reconcile accounts.
+          <div
+            style={{
+              padding: 14,
+              background: "#fcfbf9",
+              borderRadius: 6,
+              border: "1px solid #ebe7df",
+            }}
+          >
+            <strong
+              style={{ color: "#a24a18", display: "block", fontSize: 13 }}
+            >
+              Financial Officer
+            </strong>
+            <p
+              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+            >
+              Verify bank transfers and card payments, monitor revenue logs,
+              generate official payment receipts, and reconcile accounts.
             </p>
           </div>
-          <div style={{ padding: 14, background: "#fcfbf9", borderRadius: 6, border: "1px solid #ebe7df" }}>
-            <strong style={{ color: "#1f6ea5", display: "block", fontSize: 13 }}>Workshop Lead</strong>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>
-              Manage instrument repair requests, update repair diagnostic stages, quote repair estimates, and notify customers.
+          <div
+            style={{
+              padding: 14,
+              background: "#fcfbf9",
+              borderRadius: 6,
+              border: "1px solid #ebe7df",
+            }}
+          >
+            <strong
+              style={{ color: "#1f6ea5", display: "block", fontSize: 13 }}
+            >
+              Workshop Lead
+            </strong>
+            <p
+              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+            >
+              Manage instrument repair requests, update repair diagnostic
+              stages, quote repair estimates, and notify customers.
             </p>
           </div>
         </div>
@@ -561,14 +1009,34 @@ export function StaffAndRolesView({
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-card" style={{ maxWidth: 480 }}>
             <div className="modal-head">
-              <h3>{editingAdmin ? "Edit Staff Account" : "Add Staff Administrator"}</h3>
-              <button className="modal-close" onClick={() => setShowAddModal(false)}>
+              <h3>
+                {editingAdmin
+                  ? "Edit Staff Account"
+                  : "Add Staff Administrator"}
+              </h3>
+              <button
+                className="modal-close"
+                onClick={() => setShowAddModal(false)}
+              >
                 ✕
               </button>
             </div>
-            <form onSubmit={handleSaveStaff} className="modal-body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleSaveStaff}
+              className="modal-body"
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
               {formError && (
-                <div style={{ padding: "10px 14px", background: "#fee2e2", border: "1px solid #f87171", borderRadius: 6, color: "#991b1b", fontSize: 12 }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fee2e2",
+                    border: "1px solid #f87171",
+                    borderRadius: 6,
+                    color: "#991b1b",
+                    fontSize: 12,
+                  }}
+                >
                   {formError}
                 </div>
               )}
@@ -592,42 +1060,93 @@ export function StaffAndRolesView({
               />
 
               <div>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    marginBottom: 5,
+                  }}
+                >
                   Assigned Administrative Role
                 </label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
                 >
                   <option value="admissions">Admissions Officer</option>
                   <option value="finance">Financial Officer</option>
                   <option value="workshop">Workshop Lead</option>
                   <option value="staff">General Academy Staff</option>
-                  <option value="superadmin">Super Administrator (Full Privileges)</option>
+                  <option value="superadmin">
+                    Super Administrator (Full Privileges)
+                  </option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                  {editingAdmin ? "Reset Password (leave blank to keep current)" : "Temporary Password"}
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    marginBottom: 5,
+                  }}
+                >
+                  {editingAdmin
+                    ? "Reset Password (leave blank to keep current)"
+                    : "Temporary Password"}
                 </label>
                 <input
                   type="text"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={editingAdmin ? "Leave blank to keep unchanged" : "Create password"}
-                  style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
+                  placeholder={
+                    editingAdmin
+                      ? "Leave blank to keep unchanged"
+                      : "Create password"
+                  }
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
                   required={!editingAdmin}
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                  marginTop: 12,
+                  paddingTop: 12,
+                  borderTop: "1px solid var(--line)",
+                }}
+              >
                 <Button variant="ghost" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={saving}>
-                  {saving ? "Saving…" : editingAdmin ? "Update Account" : "Create Staff Account"}
+                  {saving
+                    ? "Saving…"
+                    : editingAdmin
+                      ? "Update Account"
+                      : "Create Staff Account"}
                 </Button>
               </div>
             </form>
@@ -672,13 +1191,16 @@ export function PaymentSettingsView({
   setActionNotice: (msg: string) => void
 }) {
   const [showSecret, setShowSecret] = useState(false)
+  const [showSecretFlutterwave, setShowSecretFlutterwave] = useState(false)
   const [savedNotice, setSavedNotice] = useState("")
 
   // Bank Authentication State
   const initialBank = NIGERIAN_BANKS.find(
-    (b) => b.name.toLowerCase() === (bankSettings.bankName || "").toLowerCase()
+    (b) => b.name.toLowerCase() === (bankSettings.bankName || "").toLowerCase(),
   )
-  const [selectedBankCode, setSelectedBankCode] = useState(initialBank?.code || "044")
+  const [selectedBankCode, setSelectedBankCode] = useState(
+    initialBank?.code || "044",
+  )
   const [verifying, setVerifying] = useState(false)
   const [authStatus, setAuthStatus] = useState<{
     verified: boolean
@@ -720,7 +1242,9 @@ export function PaymentSettingsView({
             accountName: res.account_name || prev.accountName,
           }))
         }
-        setActionNotice(`✓ Account successfully authenticated: ${res.account_name}`)
+        setActionNotice(
+          `✓ Account successfully authenticated: ${res.account_name}`,
+        )
       } else {
         setAuthStatus({
           verified: false,
@@ -749,39 +1273,80 @@ export function PaymentSettingsView({
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
     saveBankSettings(bankSettings)
-    setActionNotice("School bank account and Paystack gateway configurations saved successfully. Reflected dynamically on website checkout.")
+    setActionNotice(
+      "School bank account, Paystack (₦) and Flutterwave / USD ($) gateway configurations saved successfully. Reflected dynamically on website checkout.",
+    )
     setSavedNotice("Payment settings saved successfully!")
     setTimeout(() => setSavedNotice(""), 4000)
   }
 
   const isLive = (bankSettings.paystackPublicKey || "").startsWith("pk_live")
+  const isFlutterwaveLive =
+    (bankSettings.flutterwavePublicKey || "").startsWith("FLWPUBK-") &&
+    !(bankSettings.flutterwavePublicKey || "").includes("TEST")
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Top Banner */}
-      <div className="editor-head standalone" style={{ background: "white", padding: 24, borderRadius: 10, border: "1px solid var(--line)" }}>
+      <div
+        className="editor-head standalone"
+        style={{
+          background: "white",
+          padding: 24,
+          borderRadius: 10,
+          border: "1px solid var(--line)",
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: 20, margin: 0 }}>Payment &amp; Tuition Configurations</h2>
+          <h2 style={{ fontSize: 20, margin: 0 }}>
+            Payment &amp; Tuition Configurations
+          </h2>
           <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 13 }}>
-            Configure official school bank account details displayed to applicants on the website checkout.
+            Configure official school bank account details displayed to
+            applicants on the website checkout.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))", gap: 20 }}>
+      <form
+        onSubmit={handleSave}
+        style={{ display: "flex", flexDirection: "column", gap: 20 }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+            gap: 20,
+          }}
+        >
           {/* Section 1: Bank Transfer Details */}
           <div className="editor-section" style={{ margin: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>School Bank Account &amp; Transfer Details</h3>
-                <small style={{ color: "var(--muted)" }}>Directly displayed on the website payment page for tuition transfers.</small>
+                <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>
+                  School Bank Account &amp; Transfer Details
+                </h3>
+                <small style={{ color: "var(--muted)" }}>
+                  Directly displayed on the website payment page for tuition
+                  transfers.
+                </small>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  navigator.clipboard.writeText(`${bankSettings.accountNumber}\n${bankSettings.bankName}\n${bankSettings.accountName}`);
-                  setActionNotice("Official bank account details copied to clipboard!");
+                  navigator.clipboard.writeText(
+                    `${bankSettings.accountNumber}\n${bankSettings.bankName}\n${bankSettings.accountName}`,
+                  )
+                  setActionNotice(
+                    "Official bank account details copied to clipboard!",
+                  )
                 }}
                 className="btn-sm"
                 style={{
@@ -802,7 +1367,15 @@ export function PaymentSettingsView({
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Bank Name Selector */}
               <div>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5, color: "var(--navy)" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    marginBottom: 5,
+                    color: "var(--navy)",
+                  }}
+                >
                   Bank Institution *
                 </label>
                 <select
@@ -828,8 +1401,22 @@ export function PaymentSettingsView({
 
               {/* Account Number with Verification Action */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                  <label htmlFor="cfg-account-no" style={{ fontSize: 11, fontWeight: 700, color: "var(--navy)" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <label
+                    htmlFor="cfg-account-no"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                    }}
+                  >
                     NUBAN Account Number (10 Digits) *
                   </label>
                   <button
@@ -856,10 +1443,13 @@ export function PaymentSettingsView({
                     id="cfg-account-no"
                     type="text"
                     maxLength={10}
-                    placeholder="e.g. 1906950275"
+                    placeholder="e.g. 0236649229"
                     value={bankSettings.accountNumber}
                     onChange={(e) => {
-                      setBankSettings({ ...bankSettings, accountNumber: e.target.value.replace(/\D/g, "") })
+                      setBankSettings({
+                        ...bankSettings,
+                        accountNumber: e.target.value.replace(/\D/g, ""),
+                      })
                       setAuthStatus(null)
                     }}
                     required
@@ -899,15 +1489,21 @@ export function PaymentSettingsView({
                       alignItems: "center",
                       gap: 8,
                       background: authStatus.verified ? "#f0fdf4" : "#fef2f2",
-                      border: authStatus.verified ? "1px solid #86efac" : "1px solid #fecaca",
+                      border: authStatus.verified
+                        ? "1px solid #86efac"
+                        : "1px solid #fecaca",
                       color: authStatus.verified ? "#166534" : "#991b1b",
                     }}
                   >
-                    <Icon name={authStatus.verified ? "check" : "warning"} size={14} />
+                    <Icon
+                      name={authStatus.verified ? "check" : "warning"}
+                      size={14}
+                    />
                     <span>
                       {authStatus.verified ? (
                         <>
-                          <strong>Authenticated Account:</strong> {authStatus.accountName} (CBN NUBAN Verified)
+                          <strong>Authenticated Account:</strong>{" "}
+                          {authStatus.accountName} (CBN NUBAN Verified)
                         </>
                       ) : (
                         authStatus.error
@@ -921,7 +1517,9 @@ export function PaymentSettingsView({
                 id="cfg-account-name"
                 label="Official Account Name *"
                 value={bankSettings.accountName}
-                onChange={(v) => setBankSettings({ ...bankSettings, accountName: v })}
+                onChange={(v) =>
+                  setBankSettings({ ...bankSettings, accountName: v })
+                }
                 required
               />
 
@@ -929,35 +1527,97 @@ export function PaymentSettingsView({
                 id="cfg-bank-branch"
                 label="Branch / Location"
                 value={bankSettings.branch}
-                onChange={(v) => setBankSettings({ ...bankSettings, branch: v })}
+                onChange={(v) =>
+                  setBankSettings({ ...bankSettings, branch: v })
+                }
                 required
               />
             </div>
 
             {/* Student Preview Card */}
-            <div style={{ marginTop: 20, padding: 18, background: "var(--navy)", color: "white", borderRadius: 10, border: "1px solid rgba(201,107,50,0.3)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 10, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 800 }}>
+            <div
+              style={{
+                marginTop: 20,
+                padding: 18,
+                background: "var(--navy)",
+                color: "white",
+                borderRadius: 10,
+                border: "1px solid rgba(201,107,50,0.3)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: "var(--gold)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    fontWeight: 800,
+                  }}
+                >
                   Live Website Checkout Display
                 </span>
-                <span style={{ fontSize: 11, color: "#9dafbc", fontWeight: 600 }}>{bankSettings.bankName}</span>
+                <span
+                  style={{ fontSize: 11, color: "#9dafbc", fontWeight: 600 }}
+                >
+                  {bankSettings.bankName}
+                </span>
               </div>
-              <div style={{ fontSize: 24, letterSpacing: 2.5, fontWeight: 700, margin: "6px 0", color: "#ffffff", fontFamily: "monospace" }}>
+              <div
+                style={{
+                  fontSize: 24,
+                  letterSpacing: 2.5,
+                  fontWeight: 700,
+                  margin: "6px 0",
+                  color: "#ffffff",
+                  fontFamily: "monospace",
+                }}
+              >
                 {bankSettings.accountNumber || "— — — — — — — — — —"}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#cbd5e1" }}>
-                <span style={{ fontWeight: 600 }}>{bankSettings.accountName}</span>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  fontSize: 12,
+                  color: "#cbd5e1",
+                }}
+              >
+                <span style={{ fontWeight: 600 }}>
+                  {bankSettings.accountName}
+                </span>
                 <span>{bankSettings.branch}</span>
               </div>
             </div>
           </div>
 
           {/* Section 2: Online Payment Gateway (Paystack) */}
-          <div className="editor-section" style={{ margin: 0, display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div
+            className="editor-section"
+            style={{ margin: 0, display: "flex", flexDirection: "column" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: 16,
+              }}
+            >
               <div>
-                <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>Online Payment Gateway (Paystack)</h3>
-                <small style={{ color: "var(--muted)" }}>Optional automated debit card, bank app, and USSD payments.</small>
+                <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>
+                  Online Payment Gateway (Paystack)
+                </h3>
+                <small style={{ color: "var(--muted)" }}>
+                  Optional automated debit card, bank app, and USSD payments.
+                </small>
               </div>
               <span
                 style={{
@@ -966,7 +1626,9 @@ export function PaymentSettingsView({
                   fontSize: 10,
                   fontWeight: 700,
                   textTransform: "uppercase",
-                  background: isLive ? "rgba(21, 112, 84, 0.15)" : "rgba(201, 107, 50, 0.15)",
+                  background: isLive
+                    ? "rgba(21, 112, 84, 0.15)"
+                    : "rgba(201, 107, 50, 0.15)",
                   color: isLive ? "#157054" : "#c96b32",
                 }}
               >
@@ -974,40 +1636,85 @@ export function PaymentSettingsView({
               </span>
             </div>
 
-            <div className="switch-row" style={{ marginBottom: 16, paddingBottom: 14, borderBottom: "1px solid var(--line)" }}>
+            <div
+              className="switch-row"
+              style={{
+                marginBottom: 16,
+                paddingBottom: 14,
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
               <div>
                 <strong>Enable Paystack Gateway</strong>
-                <span>Allow applicants to pay tuition fees directly via card or bank transfer</span>
+                <span>
+                  Allow applicants to pay tuition fees directly via card or bank
+                  transfer
+                </span>
               </div>
               <label className="switch">
                 <input
                   type="checkbox"
                   checked={bankSettings.enablePaystack !== false}
-                  onChange={(e) => setBankSettings({ ...bankSettings, enablePaystack: e.target.checked })}
+                  onChange={(e) =>
+                    setBankSettings({
+                      ...bankSettings,
+                      enablePaystack: e.target.checked,
+                    })
+                  }
                   aria-label="Enable Paystack"
                 />
                 <i aria-hidden="true" />
               </label>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                flex: 1,
+              }}
+            >
               <Field
                 id="cfg-paystack-pk"
                 label="Paystack Public Key"
                 value={bankSettings.paystackPublicKey || ""}
-                onChange={(v) => setBankSettings({ ...bankSettings, paystackPublicKey: v })}
+                onChange={(v) =>
+                  setBankSettings({ ...bankSettings, paystackPublicKey: v })
+                }
                 placeholder="pk_live_... or pk_test_..."
               />
 
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                  <label htmlFor="cfg-paystack-sk" style={{ fontSize: 11, fontWeight: 700, color: "var(--navy)" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <label
+                    htmlFor="cfg-paystack-sk"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                    }}
+                  >
                     Paystack Secret Key (Used for Bank Account Verification)
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowSecret(!showSecret)}
-                    style={{ border: "none", background: "none", color: "var(--gold)", fontSize: 11, cursor: "pointer", fontWeight: 600 }}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "var(--gold)",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
                   >
                     {showSecret ? "Hide Key" : "Reveal Key"}
                   </button>
@@ -1016,18 +1723,239 @@ export function PaymentSettingsView({
                   id="cfg-paystack-sk"
                   type={showSecret ? "text" : "password"}
                   value={bankSettings.paystackSecretKey || ""}
-                  onChange={(e) => setBankSettings({ ...bankSettings, paystackSecretKey: e.target.value })}
+                  onChange={(e) =>
+                    setBankSettings({
+                      ...bankSettings,
+                      paystackSecretKey: e.target.value,
+                    })
+                  }
                   placeholder="sk_live_... or sk_test_..."
-                  style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
                 />
               </div>
 
-              <div style={{ marginTop: "auto", padding: 12, background: "#f8f9fa", borderRadius: 6, border: "1px solid #e9ecef" }}>
-                <small style={{ display: "block", color: "var(--muted)", fontSize: 11, marginBottom: 4 }}>
+              <div
+                style={{
+                  marginTop: "auto",
+                  padding: 12,
+                  background: "#f8f9fa",
+                  borderRadius: 6,
+                  border: "1px solid #e9ecef",
+                }}
+              >
+                <small
+                  style={{
+                    display: "block",
+                    color: "var(--muted)",
+                    fontSize: 11,
+                    marginBottom: 4,
+                  }}
+                >
                   Webhook Endpoint for Automated Verification:
                 </small>
-                <code style={{ fontSize: 11, wordBreak: "break-all", color: "var(--navy)" }}>
-                  {window.location.origin}{window.location.pathname.startsWith("/Vivadoxa") ? "/Vivadoxa" : ""}/api/payments.php?webhook=paystack
+                <code
+                  style={{
+                    fontSize: 11,
+                    wordBreak: "break-all",
+                    color: "var(--navy)",
+                  }}
+                >
+                  {window.location.origin}
+                  {window.location.pathname.startsWith("/Vivadoxa")
+                    ? "/Vivadoxa"
+                    : ""}
+                  /api/payments.php?webhook=paystack
+                </code>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Diaspora & International Payment Gateway (USD / Dollars) */}
+          <div
+            className="editor-section"
+            style={{ margin: 0, display: "flex", flexDirection: "column" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, paddingBottom: 0, border: "none" }}>
+                  Diaspora &amp; International Students Gateway (USD / $)
+                </h3>
+                <small style={{ color: "var(--muted)" }}>
+                  Automated international debit/credit card checkout via
+                  Flutterwave.
+                </small>
+              </div>
+              <span
+                style={{
+                  padding: "3px 8px",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  background: isFlutterwaveLive
+                    ? "rgba(21, 112, 84, 0.15)"
+                    : "rgba(201, 107, 50, 0.15)",
+                  color: isFlutterwaveLive ? "#157054" : "#c96b32",
+                }}
+              >
+                {isFlutterwaveLive ? "Live Mode" : "Test Mode"}
+              </span>
+            </div>
+
+            <div
+              className="switch-row"
+              style={{
+                marginBottom: 16,
+                paddingBottom: 14,
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <div>
+                <strong>Enable International USD Gateway</strong>
+                <span>
+                  Allow diaspora &amp; online students to pay tuition in US
+                  Dollars ($) via Visa, Mastercard &amp; Amex
+                </span>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={bankSettings.enableFlutterwave !== false}
+                  onChange={(e) =>
+                    setBankSettings({
+                      ...bankSettings,
+                      enableFlutterwave: e.target.checked,
+                    })
+                  }
+                  aria-label="Enable Flutterwave USD Gateway"
+                />
+                <i aria-hidden="true" />
+              </label>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                flex: 1,
+              }}
+            >
+              <Field
+                id="cfg-flutterwave-pk"
+                label="Flutterwave Public Key (API Key)"
+                value={bankSettings.flutterwavePublicKey || ""}
+                onChange={(v) =>
+                  setBankSettings({ ...bankSettings, flutterwavePublicKey: v })
+                }
+                placeholder="FLWPUBK-xxxxxxxxxxxxxxxxxxxxxxxx-X or FLWPUBK_TEST-..."
+              />
+
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <label
+                    htmlFor="cfg-flutterwave-sk"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                    }}
+                  >
+                    Flutterwave Secret Key
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowSecretFlutterwave(!showSecretFlutterwave)
+                    }
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "var(--gold)",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {showSecretFlutterwave ? "Hide Key" : "Reveal Key"}
+                  </button>
+                </div>
+                <input
+                  id="cfg-flutterwave-sk"
+                  type={showSecretFlutterwave ? "text" : "password"}
+                  value={bankSettings.flutterwaveSecretKey || ""}
+                  onChange={(e) =>
+                    setBankSettings({
+                      ...bankSettings,
+                      flutterwaveSecretKey: e.target.value,
+                    })
+                  }
+                  placeholder="FLWSECK-xxxxxxxxxxxxxxxxxxxxxxxx-X or FLWSECK_TEST-..."
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  marginTop: "auto",
+                  padding: 12,
+                  background: "#f8f9fa",
+                  borderRadius: 6,
+                  border: "1px solid #e9ecef",
+                }}
+              >
+                <small
+                  style={{
+                    display: "block",
+                    color: "var(--muted)",
+                    fontSize: 11,
+                    marginBottom: 4,
+                  }}
+                >
+                  Webhook Endpoint for USD Payments:
+                </small>
+                <code
+                  style={{
+                    fontSize: 11,
+                    wordBreak: "break-all",
+                    color: "var(--navy)",
+                  }}
+                >
+                  {window.location.origin}
+                  {window.location.pathname.startsWith("/Vivadoxa")
+                    ? "/Vivadoxa"
+                    : ""}
+                  /api/payments.php?webhook=flutterwave
                 </code>
               </div>
             </div>
@@ -1035,15 +1963,24 @@ export function PaymentSettingsView({
         </div>
 
         {/* Save Bar */}
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14, background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 14,
+            background: "white",
+            padding: 16,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
           {savedNotice && (
             <span style={{ fontSize: 13, color: "#157054", fontWeight: 700 }}>
               ✓ {savedNotice}
             </span>
           )}
-          <Button type="submit">
-            Save Payment &amp; Gateway Settings
-          </Button>
+          <Button type="submit">Save Payment &amp; Gateway Settings</Button>
         </div>
       </form>
     </div>
@@ -1063,13 +2000,17 @@ export function GeneralSettingsView({
   setActionNotice: (msg: string) => void
 }) {
   const [showSmtpPass, setShowSmtpPass] = useState(false)
-  const [smtpActive, setSmtpActive] = useState(Boolean(generalSettings.smtpHost))
+  const [smtpActive, setSmtpActive] = useState(
+    Boolean(generalSettings.smtpHost),
+  )
   const [savedNotice, setSavedNotice] = useState("")
 
   // Test states
   const [testingEmail, setTestingEmail] = useState(false)
   const [testEmailResult, setTestEmailResult] = useState<any | null>(null)
-  const [testEmailRecipient, setTestEmailRecipient] = useState(generalSettings.schoolEmail)
+  const [testEmailRecipient, setTestEmailRecipient] = useState(
+    generalSettings.schoolEmail,
+  )
 
   const [testingWa, setTestingWa] = useState(false)
   const [testWaResult, setTestWaResult] = useState<any | null>(null)
@@ -1095,7 +2036,9 @@ export function GeneralSettingsView({
     try {
       const res = await purgeMockData("PURGE")
       if (res.success) {
-        setPurgeSuccess("Database successfully purged! All mock and test customer records have been wiped clean.")
+        setPurgeSuccess(
+          "Database successfully purged! All mock and test customer records have been wiped clean.",
+        )
         setActionNotice("Database successfully purged of all mock records.")
         setShowPurgeModal(false)
         setPurgeConfirmationInput("")
@@ -1129,7 +2072,9 @@ export function GeneralSettingsView({
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
     saveGeneralSettings(generalSettings)
-    setActionNotice("Academy communications, WhatsApp, and Email notification settings saved.")
+    setActionNotice(
+      "Academy communications, WhatsApp, and Email notification settings saved.",
+    )
     setSavedNotice("Notification preferences saved successfully!")
     setTimeout(() => setSavedNotice(""), 4000)
   }
@@ -1138,7 +2083,10 @@ export function GeneralSettingsView({
     setTestingEmail(true)
     setTestEmailResult(null)
     try {
-      const res = await testEmailNotification(generalSettings, testEmailRecipient)
+      const res = await testEmailNotification(
+        generalSettings,
+        testEmailRecipient,
+      )
       setTestEmailResult(res)
       if (res.success) {
         setActionNotice("Email test executed. See details below.")
@@ -1157,7 +2105,10 @@ export function GeneralSettingsView({
     setTestingWa(true)
     setTestWaResult(null)
     try {
-      const res = await testWhatsAppNotification(generalSettings, generalSettings.schoolWhatsapp)
+      const res = await testWhatsAppNotification(
+        generalSettings,
+        generalSettings.schoolWhatsapp,
+      )
       setTestWaResult(res)
       if (res.success) {
         setActionNotice("WhatsApp notification payload generated.")
@@ -1173,21 +2124,44 @@ export function GeneralSettingsView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Top Banner */}
-      <div className="editor-head standalone" style={{ background: "white", padding: 24, borderRadius: 10, border: "1px solid var(--line)" }}>
+      <div
+        className="editor-head standalone"
+        style={{
+          background: "white",
+          padding: 24,
+          borderRadius: 10,
+          border: "1px solid var(--line)",
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: 20, margin: 0 }}>Communications &amp; Notification Engine</h2>
+          <h2 style={{ fontSize: 20, margin: 0 }}>
+            Communications &amp; Notification Engine
+          </h2>
           <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 13 }}>
-            Configure official school contact directory, and activate instantaneous WhatsApp and Email notifications.
+            Configure official school contact directory, and activate
+            instantaneous WhatsApp and Email notifications.
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <form
+        onSubmit={handleSave}
+        style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      >
         {/* SECTION 1: School Contact Details */}
         <div className="editor-section" style={{ margin: 0 }}>
-          <h3 style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}>Official Academy Contact Directory</h3>
-          <small style={{ color: "var(--muted)", display: "block", marginBottom: 16 }}>
-            Displayed across website footers, consultation popups, and official communication dispatches.
+          <h3 style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}>
+            Official Academy Contact Directory
+          </h3>
+          <small
+            style={{
+              color: "var(--muted)",
+              display: "block",
+              marginBottom: 16,
+            }}
+          >
+            Displayed across website footers, consultation popups, and official
+            communication dispatches.
           </small>
 
           <div className="form-grid">
@@ -1195,20 +2169,26 @@ export function GeneralSettingsView({
               id="cfg-school-phone"
               label="Primary Phone Number"
               value={generalSettings.schoolPhone}
-              onChange={(v) => setGeneralSettings({ ...generalSettings, schoolPhone: v })}
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, schoolPhone: v })
+              }
               required
             />
             <Field
               id="cfg-school-phone2"
               label="Secondary Support Phone"
               value={generalSettings.schoolPhone2}
-              onChange={(v) => setGeneralSettings({ ...generalSettings, schoolPhone2: v })}
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, schoolPhone2: v })
+              }
             />
             <Field
               id="cfg-school-whatsapp"
               label="Official WhatsApp Contact"
               value={generalSettings.schoolWhatsapp}
-              onChange={(v) => setGeneralSettings({ ...generalSettings, schoolWhatsapp: v })}
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, schoolWhatsapp: v })
+              }
               required
             />
             <Field
@@ -1227,32 +2207,76 @@ export function GeneralSettingsView({
             <Field
               id="cfg-school-addr"
               label="Campus &amp; Studio Address"
-              value={generalSettings.schoolAddress || "Kaduna Studio, Kaduna State, Nigeria"}
-              onChange={(v) => setGeneralSettings({ ...generalSettings, schoolAddress: v })}
+              value={
+                generalSettings.schoolAddress ||
+                "Kaduna Studio, Kaduna State, Nigeria"
+              }
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, schoolAddress: v })
+              }
             />
           </div>
         </div>
 
         {/* SECTION 2: PRACTICAL NOTIFICATION PREFERENCES */}
         <div className="editor-section" style={{ margin: 0 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
             <div>
-              <h3 style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}>Instant Alerts &amp; Notifications</h3>
-              <small style={{ color: "var(--muted)" }}>Toggle real-time alerts for staff and automated confirmations for incoming students.</small>
+              <h3
+                style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}
+              >
+                Instant Alerts &amp; Notifications
+              </h3>
+              <small style={{ color: "var(--muted)" }}>
+                Toggle real-time alerts for staff and automated confirmations
+                for incoming students.
+              </small>
             </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {/* WhatsApp Alerts Toggle */}
-            <div className="switch-row" style={{ padding: 14, background: "#fafdfb", borderRadius: 8, border: "1px solid rgba(37, 211, 102, 0.3)" }}>
+            <div
+              className="switch-row"
+              style={{
+                padding: 14,
+                background: "#fafdfb",
+                borderRadius: 8,
+                border: "1px solid rgba(37, 211, 102, 0.3)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#25D366", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "#25D366",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
                   <WhatsAppIcon size={18} fill="white" />
                 </div>
                 <div>
-                  <strong style={{ color: "#075e54", display: "block" }}>WhatsApp Instant Staff Alerts</strong>
+                  <strong style={{ color: "#075e54", display: "block" }}>
+                    WhatsApp Instant Staff Alerts
+                  </strong>
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                    Generate instant WhatsApp notification alerts to <strong>{generalSettings.schoolWhatsapp || "school contact"}</strong> when forms are submitted.
+                    Generate instant WhatsApp notification alerts to{" "}
+                    <strong>
+                      {generalSettings.schoolWhatsapp || "school contact"}
+                    </strong>{" "}
+                    when forms are submitted.
                   </span>
                 </div>
               </div>
@@ -1260,7 +2284,12 @@ export function GeneralSettingsView({
                 <input
                   type="checkbox"
                   checked={generalSettings.whatsappAlerts}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, whatsappAlerts: e.target.checked })}
+                  onChange={(e) =>
+                    setGeneralSettings({
+                      ...generalSettings,
+                      whatsappAlerts: e.target.checked,
+                    })
+                  }
                   aria-label="WhatsApp alerts"
                 />
                 <i aria-hidden="true" />
@@ -1268,15 +2297,40 @@ export function GeneralSettingsView({
             </div>
 
             {/* Email Alerts Toggle */}
-            <div className="switch-row" style={{ padding: 14, background: "#fffdfb", borderRadius: 8, border: "1px solid rgba(201, 107, 50, 0.3)" }}>
+            <div
+              className="switch-row"
+              style={{
+                padding: 14,
+                background: "#fffdfb",
+                borderRadius: 8,
+                border: "1px solid rgba(201, 107, 50, 0.3)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--gold)", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "var(--gold)",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
                   <Icon name="mail" size={16} />
                 </div>
                 <div>
-                  <strong style={{ color: "#a24a18", display: "block" }}>Email Staff Notifications</strong>
+                  <strong style={{ color: "#a24a18", display: "block" }}>
+                    Email Staff Notifications
+                  </strong>
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                    Send notifications to <strong>{generalSettings.schoolEmail || "admissions email"}</strong> upon new applications and enquiries.
+                    Send notifications to{" "}
+                    <strong>
+                      {generalSettings.schoolEmail || "admissions email"}
+                    </strong>{" "}
+                    upon new applications and enquiries.
                   </span>
                 </div>
               </div>
@@ -1284,7 +2338,12 @@ export function GeneralSettingsView({
                 <input
                   type="checkbox"
                   checked={generalSettings.emailAlerts}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, emailAlerts: e.target.checked })}
+                  onChange={(e) =>
+                    setGeneralSettings({
+                      ...generalSettings,
+                      emailAlerts: e.target.checked,
+                    })
+                  }
                   aria-label="Email alerts"
                 />
                 <i aria-hidden="true" />
@@ -1292,15 +2351,37 @@ export function GeneralSettingsView({
             </div>
 
             {/* Student Welcome Email Toggle */}
-            <div className="switch-row" style={{ padding: 14, background: "#f8fafc", borderRadius: 8, border: "1px solid var(--line)" }}>
+            <div
+              className="switch-row"
+              style={{
+                padding: 14,
+                background: "#f8fafc",
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--navy)", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "var(--navy)",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
                   <Icon name="check" size={16} />
                 </div>
                 <div>
-                  <strong style={{ display: "block" }}>Student Application Confirmation</strong>
+                  <strong style={{ display: "block" }}>
+                    Student Application Confirmation
+                  </strong>
                   <span style={{ fontSize: 12, color: "var(--muted)" }}>
-                    Automatically email applicant their official registration reference number upon submission.
+                    Automatically email applicant their official registration
+                    reference number upon submission.
                   </span>
                 </div>
               </div>
@@ -1308,7 +2389,12 @@ export function GeneralSettingsView({
                 <input
                   type="checkbox"
                   checked={generalSettings.studentEmailConfirmation !== false}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, studentEmailConfirmation: e.target.checked })}
+                  onChange={(e) =>
+                    setGeneralSettings({
+                      ...generalSettings,
+                      studentEmailConfirmation: e.target.checked,
+                    })
+                  }
                   aria-label="Student confirmation email"
                 />
                 <i aria-hidden="true" />
@@ -1316,40 +2402,115 @@ export function GeneralSettingsView({
             </div>
 
             {/* Alert Event Types */}
-            <div style={{ marginTop: 8, padding: 14, background: "#faf9f6", borderRadius: 8, border: "1px solid var(--line)" }}>
-              <span style={{ display: "block", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "var(--gold-text)", marginBottom: 10 }}>
+            <div
+              style={{
+                marginTop: 8,
+                padding: 14,
+                background: "#faf9f6",
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <span
+                style={{
+                  display: "block",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  color: "var(--gold-text)",
+                  marginBottom: 10,
+                }}
+              >
                 Active Alert Triggers
               </span>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={generalSettings.alertOnApplication !== false}
-                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnApplication: e.target.checked })}
+                    onChange={(e) =>
+                      setGeneralSettings({
+                        ...generalSettings,
+                        alertOnApplication: e.target.checked,
+                      })
+                    }
                   />
                   <span>New Student Applications</span>
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={generalSettings.alertOnPayment !== false}
-                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnPayment: e.target.checked })}
+                    onChange={(e) =>
+                      setGeneralSettings({
+                        ...generalSettings,
+                        alertOnPayment: e.target.checked,
+                      })
+                    }
                   />
                   <span>Payment Proof Submissions</span>
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={generalSettings.alertOnRepair !== false}
-                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnRepair: e.target.checked })}
+                    onChange={(e) =>
+                      setGeneralSettings({
+                        ...generalSettings,
+                        alertOnRepair: e.target.checked,
+                      })
+                    }
                   />
                   <span>Instrument Repair Bookings</span>
                 </label>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, cursor: "pointer" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={generalSettings.alertOnEnquiry !== false}
-                    onChange={(e) => setGeneralSettings({ ...generalSettings, alertOnEnquiry: e.target.checked })}
+                    onChange={(e) =>
+                      setGeneralSettings({
+                        ...generalSettings,
+                        alertOnEnquiry: e.target.checked,
+                      })
+                    }
                   />
                   <span>General Contact Enquiries</span>
                 </label>
@@ -1367,7 +2528,15 @@ export function GeneralSettingsView({
             marginTop: 18,
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 14,
+              flexWrap: "wrap",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
@@ -1384,12 +2553,30 @@ export function GeneralSettingsView({
                 <Icon name="trash" size={17} />
               </div>
               <div>
-                <h3 style={{ margin: 0, paddingBottom: 0, border: "none", color: "var(--navy)", fontSize: 14, fontWeight: 700 }}>
+                <h3
+                  style={{
+                    margin: 0,
+                    paddingBottom: 0,
+                    border: "none",
+                    color: "var(--navy)",
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
                   Database Hygiene &amp; Test Data Purge
                 </h3>
-                <small style={{ color: "var(--muted)", display: "block", marginTop: 2, fontSize: 12 }}>
-                  Safely wipes all test admissions, mock payments, repairs, contact messages, and schedules from MySQL.
-                  Administrator accounts, academic courses, instructors, and settings are strictly preserved.
+                <small
+                  style={{
+                    color: "var(--muted)",
+                    display: "block",
+                    marginTop: 2,
+                    fontSize: 12,
+                  }}
+                >
+                  Safely wipes all test admissions, mock payments, repairs,
+                  contact messages, and schedules from MySQL. Administrator
+                  accounts, academic courses, instructors, and settings are
+                  strictly preserved.
                 </small>
               </div>
             </div>
@@ -1455,7 +2642,14 @@ export function GeneralSettingsView({
                 border: "1px solid var(--line)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 16,
+                }}
+              >
                 <div
                   style={{
                     width: 40,
@@ -1470,7 +2664,14 @@ export function GeneralSettingsView({
                   <Icon name="trash" size={20} />
                 </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 18, color: "var(--navy)", fontWeight: 700 }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: 18,
+                      color: "var(--navy)",
+                      fontWeight: 700,
+                    }}
+                  >
                     Confirm Database Purge
                   </h3>
                   <small style={{ color: "var(--muted)", fontSize: 12 }}>
@@ -1491,18 +2692,38 @@ export function GeneralSettingsView({
                   marginBottom: 18,
                 }}
               >
-                <div style={{ fontWeight: 700, color: "var(--gold-text)", marginBottom: 4 }}>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: "var(--gold-text)",
+                    marginBottom: 4,
+                  }}
+                >
                   The following MySQL tables will be truncated to 0:
                 </div>
                 <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
-                  <li><code>applications</code> (all test admissions)</li>
-                  <li><code>payments</code> (all mock transaction records)</li>
-                  <li><code>repairs</code> (all test repair workshop requests)</li>
-                  <li><code>enquiries</code> (all contact inquiries)</li>
-                  <li><code>students</code> &amp; <code>schedule_requests</code></li>
+                  <li>
+                    <code>applications</code> (all test admissions)
+                  </li>
+                  <li>
+                    <code>payments</code> (all mock transaction records)
+                  </li>
+                  <li>
+                    <code>repairs</code> (all test repair workshop requests)
+                  </li>
+                  <li>
+                    <code>enquiries</code> (all contact inquiries)
+                  </li>
+                  <li>
+                    <code>students</code> &amp; <code>schedule_requests</code>
+                  </li>
                 </ul>
-                <div style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}>
-                  ✓ <strong>Preserved:</strong> Your admin accounts, passwords, academy course catalog, faculty instructors, and cohorts will remain untouched.
+                <div
+                  style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}
+                >
+                  ✓ <strong>Preserved:</strong> Your admin accounts, passwords,
+                  academy course catalog, faculty instructors, and cohorts will
+                  remain untouched.
                 </div>
               </div>
 
@@ -1522,8 +2743,18 @@ export function GeneralSettingsView({
                 </div>
               )}
 
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6, color: "var(--navy)" }}>
-                To confirm, please type <code style={{ color: "var(--gold-text)" }}>PURGE</code> in uppercase:
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  marginBottom: 6,
+                  color: "var(--navy)",
+                }}
+              >
+                To confirm, please type{" "}
+                <code style={{ color: "var(--gold-text)" }}>PURGE</code> in
+                uppercase:
               </label>
               <input
                 type="text"
@@ -1543,7 +2774,9 @@ export function GeneralSettingsView({
                 }}
               />
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <div
+                style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}
+              >
                 <Button
                   type="button"
                   variant="ghost"
@@ -1555,13 +2788,18 @@ export function GeneralSettingsView({
                 <Button
                   type="button"
                   onClick={handleExecutePurge}
-                  disabled={purging || purgeConfirmationInput.trim().toUpperCase() !== "PURGE"}
+                  disabled={
+                    purging ||
+                    purgeConfirmationInput.trim().toUpperCase() !== "PURGE"
+                  }
                   style={{
                     background: "var(--navy)",
                     color: "white",
                   }}
                 >
-                  {purging ? "Purging Database…" : "Permanently Purge Mock Records"}
+                  {purging
+                    ? "Purging Database…"
+                    : "Permanently Purge Mock Records"}
                 </Button>
               </div>
             </div>
@@ -1569,7 +2807,18 @@ export function GeneralSettingsView({
         )}
 
         {/* Global Save Bar */}
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 14, background: "white", padding: 16, borderRadius: 8, border: "1px solid var(--line)" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 14,
+            background: "white",
+            padding: 16,
+            borderRadius: 8,
+            border: "1px solid var(--line)",
+          }}
+        >
           {savedNotice && (
             <span style={{ fontSize: 13, color: "#157054", fontWeight: 700 }}>
               ✓ {savedNotice}

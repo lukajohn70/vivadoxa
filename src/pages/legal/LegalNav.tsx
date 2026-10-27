@@ -1,9 +1,10 @@
 import React from "react"
 import { Icon } from "@/components/ui"
+import { openCookiePreferences } from "@/lib/cookieConsent"
 import type { Page } from "@/types"
 
 interface LegalNavProps {
-  currentPage: "privacy" | "terms" | "tuition-policy" | "safeguarding"
+  currentPage: "privacy" | "terms" | "tuition-policy" | "safeguarding" | "cookies"
   go: (p: Page | string) => void
   lastUpdated?: string
 }
@@ -22,8 +23,17 @@ const LEGAL_DOCS = [
     path: "/privacy",
     title: "Privacy Policy",
     shortTitle: "Privacy & NDPA",
-    description: "Nigeria Data Protection Act (NDPA 2023) compliance & minor data",
+    description:
+      "Nigeria Data Protection Act (NDPA 2023) compliance & minor data",
     badge: "NDPA 2023",
+  },
+  {
+    id: "cookies" as const,
+    path: "/cookies",
+    title: "Cookie & Tracking Policy",
+    shortTitle: "Cookie Policy",
+    description: "Audit matrix, local storage tokens, ePrivacy & consent",
+    badge: "ePrivacy / NDPA",
   },
   {
     id: "tuition-policy" as const,
@@ -43,7 +53,11 @@ const LEGAL_DOCS = [
   },
 ]
 
-export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: LegalNavProps) {
+export function LegalNav({
+  currentPage,
+  go,
+  lastUpdated = "October 2026",
+}: LegalNavProps) {
   return (
     <div className="legal-header-nav mb-8 border-b border-[var(--line)] pb-6">
       <div className="flex flex-wrap items-center justify-between gap-3.5 mb-5">
@@ -52,7 +66,10 @@ export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: Lega
             Official Regulatory Compliance
           </span>
           <span className="text-xs text-[var(--muted)]">
-            Last Updated: <strong className="text-[var(--ink)] font-semibold">{lastUpdated}</strong>
+            Last Updated:{" "}
+            <strong className="text-[var(--ink)] font-semibold">
+              {lastUpdated}
+            </strong>
           </span>
         </div>
 
@@ -71,6 +88,7 @@ export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: Lega
             <span>Back</span>
           </button>
           <button
+            type="button"
             onClick={() => window.print()}
             className="btn btn-secondary !min-h-[34px] !py-1 !px-3 !text-xs inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
             title="Print or save this document as PDF"
@@ -79,6 +97,16 @@ export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: Lega
             <span>Print / PDF</span>
           </button>
           <button
+            type="button"
+            onClick={openCookiePreferences}
+            className="btn btn-secondary !min-h-[34px] !py-1 !px-3 !text-xs inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial !text-[var(--gold-text)] !border-[var(--gold)]/40 hover:!bg-[var(--gold)]/10"
+            title="Manage cookie & tracking consent"
+          >
+            <Icon name="settings" size={13} />
+            <span>Cookie Settings</span>
+          </button>
+          <button
+            type="button"
             onClick={() => go("contact")}
             className="btn btn-secondary !min-h-[34px] !py-1 !px-3 !text-xs inline-flex items-center justify-center gap-1.5 flex-1 sm:flex-initial"
           >
@@ -89,14 +117,17 @@ export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: Lega
       </div>
 
       {/* Document Switcher Tabs */}
-      <nav aria-label="Legal Documents" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+      <nav
+        aria-label="Legal Documents"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2"
+      >
         {LEGAL_DOCS.map((doc) => {
           const isActive = currentPage === doc.id
           return (
             <button
               key={doc.id}
               onClick={() => go(doc.id)}
-              className={`text-left p-3.5 rounded-xl border transition-all ${
+              className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer ${
                 isActive
                   ? "bg-white border-[var(--gold)] shadow-sm ring-1 ring-[var(--gold)]/20"
                   : "bg-[#fbfaf7] border-[var(--line)] hover:bg-white hover:border-[#cfcac2]"
@@ -113,10 +144,17 @@ export function LegalNav({ currentPage, go, lastUpdated = "October 2026" }: Lega
                   {doc.badge}
                 </span>
                 {isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]" aria-hidden="true" />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]"
+                    aria-hidden="true"
+                  />
                 )}
               </div>
-              <strong className={`block text-xs font-semibold ${isActive ? "text-[var(--ink)]" : "text-[#4b4743]"}`}>
+              <strong
+                className={`block text-xs font-semibold ${
+                  isActive ? "text-[var(--ink)]" : "text-[#4b4743]"
+                }`}
+              >
                 {doc.shortTitle}
               </strong>
               <small className="block text-[11px] text-[var(--muted)] leading-tight mt-0.5 line-clamp-1">

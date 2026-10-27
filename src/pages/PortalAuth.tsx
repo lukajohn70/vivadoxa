@@ -84,14 +84,46 @@ export function PortalAuth({
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#f2f0e9", display: "grid", placeItems: "center", padding: "40px 16px" }}>
-      <div style={{ width: "100%", maxWidth: 460, background: "white", borderRadius: 14, boxShadow: "0 20px 50px rgba(20,15,10,0.08)", border: "1px solid var(--line)", overflow: "hidden" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f2f0e9",
+        display: "grid",
+        placeItems: "center",
+        padding: "40px 16px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 460,
+          background: "white",
+          borderRadius: 14,
+          boxShadow: "0 20px 50px rgba(20,15,10,0.08)",
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+        }}
+      >
         {/* Top Header */}
-        <div style={{ background: "var(--navy)", padding: "28px 24px", textAlign: "center", color: "white" }}>
+        <div
+          style={{
+            background: "var(--navy)",
+            padding: "28px 24px",
+            textAlign: "center",
+            color: "white",
+          }}
+        >
           <div style={{ display: "inline-block", marginBottom: 12 }}>
             <Logo light />
           </div>
-          <h1 style={{ fontSize: 20, margin: "6px 0 2px", fontWeight: 700, letterSpacing: "-0.5px" }}>
+          <h1
+            style={{
+              fontSize: 20,
+              margin: "6px 0 2px",
+              fontWeight: 700,
+              letterSpacing: "-0.5px",
+            }}
+          >
             Student &amp; Client Portal
           </h1>
           <p style={{ margin: 0, fontSize: 12, color: "#9dafbc" }}>
@@ -100,7 +132,13 @@ export function PortalAuth({
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderBottom: "1px solid var(--line)" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            borderBottom: "1px solid var(--line)",
+          }}
+        >
           <button
             type="button"
             onClick={() => setTab("login")}
@@ -126,7 +164,8 @@ export function PortalAuth({
               fontWeight: 700,
               background: tab === "register" ? "white" : "#fcfbf9",
               border: "none",
-              borderBottom: tab === "register" ? "2px solid var(--gold)" : "none",
+              borderBottom:
+                tab === "register" ? "2px solid var(--gold)" : "none",
               color: tab === "register" ? "var(--gold-text)" : "var(--muted)",
               cursor: "pointer",
             }}
@@ -138,9 +177,21 @@ export function PortalAuth({
         {/* Forms */}
         <div style={{ padding: 24 }}>
           {tab === "login" ? (
-            <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleLogin}
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
               {loginError && (
-                <div style={{ padding: "10px 14px", background: "#fee2e2", border: "1px solid #f87171", borderRadius: 6, color: "#991b1b", fontSize: 12 }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fee2e2",
+                    border: "1px solid #f87171",
+                    borderRadius: 6,
+                    color: "#991b1b",
+                    fontSize: 12,
+                  }}
+                >
                   {loginError}
                 </div>
               )}
@@ -168,23 +219,49 @@ export function PortalAuth({
                   <button
                     type="button"
                     onClick={() => {
-                      alert("You can sign in using your Application Reference Number (e.g. VDX-2026-XXXX) as your password, or contact Admissions via WhatsApp.")
+                      alert(
+                        "You can sign in using your Application Reference Number (e.g. VDX-2026-XXXX) as your password, or contact Admissions via WhatsApp.",
+                      )
                     }}
-                    style={{ border: "none", background: "none", color: "var(--muted)", fontSize: 11, cursor: "pointer", textDecoration: "underline" }}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "var(--muted)",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
                   >
                     Forgot password or need reference login?
                   </button>
                 </div>
               </div>
 
-              <Button type="submit" fullWidth disabled={loginLoading} style={{ marginTop: 8 }}>
+              <Button
+                type="submit"
+                fullWidth
+                disabled={loginLoading}
+                style={{ marginTop: 8 }}
+              >
                 {loginLoading ? "Signing In…" : "Sign In to Portal"}
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleRegister}
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
               {regError && (
-                <div style={{ padding: "10px 14px", background: "#fee2e2", border: "1px solid #f87171", borderRadius: 6, color: "#991b1b", fontSize: 12 }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fee2e2",
+                    border: "1px solid #f87171",
+                    borderRadius: 6,
+                    color: "#991b1b",
+                    fontSize: 12,
+                  }}
+                >
                   {regError}
                 </div>
               )}
@@ -218,16 +295,35 @@ export function PortalAuth({
               />
 
               <div>
-                <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    marginBottom: 5,
+                  }}
+                >
                   I Am Joining Vivadoxa As
                 </label>
                 <select
                   value={regRole}
                   onChange={(e) => setRegRole(e.target.value)}
-                  style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "white", fontSize: 13 }}
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 13,
+                  }}
                 >
-                  <option value="student">Music Student / Applicant (Courses &amp; Recitals)</option>
-                  <option value="client">Workshop Client (Instrument Repairs &amp; Maintenance)</option>
+                  <option value="student">
+                    Music Student / Applicant (Courses &amp; Recitals)
+                  </option>
+                  <option value="client">
+                    Workshop Client (Instrument Repairs &amp; Maintenance)
+                  </option>
                   <option value="all">Both Student &amp; Repair Client</option>
                 </select>
               </div>
@@ -242,7 +338,12 @@ export function PortalAuth({
                 required
               />
 
-              <Button type="submit" fullWidth disabled={regLoading} style={{ marginTop: 8 }}>
+              <Button
+                type="submit"
+                fullWidth
+                disabled={regLoading}
+                style={{ marginTop: 8 }}
+              >
                 {regLoading ? "Creating Account…" : "Create Portal Account"}
               </Button>
             </form>
@@ -253,7 +354,14 @@ export function PortalAuth({
             <button
               type="button"
               onClick={() => go("home")}
-              style={{ border: "none", background: "none", color: "var(--gold-text)", fontSize: 12, cursor: "pointer", fontWeight: 600 }}
+              style={{
+                border: "none",
+                background: "none",
+                color: "var(--gold-text)",
+                fontSize: 12,
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
             >
               ← Back to Vivadoxa Website
             </button>

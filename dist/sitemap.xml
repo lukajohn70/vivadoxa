@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <!-- 1. Homepage: Music School, Instrument Repair, Music Studio -->
+  <url>
+    <loc>https://vivadoxa.ng/</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/og-image.jpg</image:loc>
+      <image:title>Vivadoxa Music School, Instrument Repair &amp; Recording Studio in Kaduna</image:title>
+    </image:image>
+  </url>
+
+  <!-- 2. Music School Programs & Courses -->
+  <url>
+    <loc>https://vivadoxa.ng/programs</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/media/programs/piano-syllabus.jpeg</image:loc>
+      <image:title>Music School Programs and Graded Syllabi at Vivadoxa</image:title>
+    </image:image>
+  </url>
+
+  <!-- 3. Instrument Repair Clinic & Workshop -->
+  <url>
+    <loc>https://vivadoxa.ng/repairs</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/media/repairs/repair-saxophone-craftsman.jpeg</image:loc>
+      <image:title>Expert Musical Instrument Repair Clinic in Kaduna</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/media/repairs/repair-keyboard-electronics.jpeg</image:loc>
+      <image:title>Keyboard Synthesizer and Electronics Diagnostic Workshop</image:title>
+    </image:image>
+  </url>
+
+  <!-- 4. Music Studio & Audio Production -->
+  <url>
+    <loc>https://vivadoxa.ng/studio</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/media/studio/multi-instrument-lab.jpeg</image:loc>
+      <image:title>Modern Recording &amp; Rehearsal Music Studio in Kaduna</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://vivadoxa.ng/media/studio/studio-keyboard-lab.jpeg</image:loc>
+      <image:title>Vivadoxa Audio Engineering and Keyboard Lab</image:title>
+    </image:image>
+  </url>
+
+  <!-- 5. About Vivadoxa -->
+  <url>
+    <loc>https://vivadoxa.ng/about</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 6. Study Modes (Onsite, Home, Online) -->
+  <url>
+    <loc>https://vivadoxa.ng/modes</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 7. Performances & Recitals -->
+  <url>
+    <loc>https://vivadoxa.ng/performances</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 8. Student & Client Reviews -->
+  <url>
+    <loc>https://vivadoxa.ng/reviews</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 9. Contact & Studio Location -->
+  <url>
+    <loc>https://vivadoxa.ng/contact</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 10. Online Admissions Application -->
+  <url>
+    <loc>https://vivadoxa.ng/apply</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 11. Policies & Child Safeguarding -->
+  <url>
+    <loc>https://vivadoxa.ng/tuition-policy</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+  <url>
+    <loc>https://vivadoxa.ng/safeguarding</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.60</priority>
+  </url>
+  <url>
+    <loc>https://vivadoxa.ng/privacy</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.50</priority>
+  </url>
+  <url>
+    <loc>https://vivadoxa.ng/terms</loc>
+    <lastmod>2026-10-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.50</priority>
+  </url>
+</urlset>

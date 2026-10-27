@@ -47,10 +47,13 @@ import type { Page } from "@/types"
 
 function extractYouTubeId(urlOrId: string): string {
   const v = urlOrId.trim()
-  if (v.includes("/shorts/")) return v.split("/shorts/")[1].split("?")[0].split("&")[0]
+  if (v.includes("/shorts/"))
+    return v.split("/shorts/")[1].split("?")[0].split("&")[0]
   if (v.includes("v=")) return v.split("v=")[1].split("&")[0]
-  if (v.includes("youtu.be/")) return v.split("youtu.be/")[1].split("?")[0].split("&")[0]
-  if (v.includes("/embed/")) return v.split("/embed/")[1].split("?")[0].split("&")[0]
+  if (v.includes("youtu.be/"))
+    return v.split("youtu.be/")[1].split("?")[0].split("&")[0]
+  if (v.includes("/embed/"))
+    return v.split("/embed/")[1].split("?")[0].split("&")[0]
   return v
 }
 
@@ -235,12 +238,15 @@ export function Admin({ go }: { go: (p: Page) => void }) {
     ],
     [
       "Academics",
-      ["Programs & Courses", "Instructors", "Performances & Recitals", "Students", "Class Schedule"],
+      [
+        "Programs & Courses",
+        "Instructors",
+        "Performances & Recitals",
+        "Students",
+        "Class Schedule",
+      ],
     ],
-    [
-      "System",
-      ["Staff & Roles", "Payment Settings", "General Settings"],
-    ],
+    ["System", ["Staff & Roles", "Payment Settings", "General Settings"]],
   ]
 
   function closeNav(item: string) {
@@ -292,7 +298,11 @@ export function Admin({ go }: { go: (p: Page) => void }) {
                     onClick={() => closeNav(item)}
                     key={item}
                     aria-current={active === item ? "page" : undefined}
-                    style={{ display: "flex", alignItems: "center", width: "100%" }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
                   >
                     <span aria-hidden="true">
                       {String(i + 1).padStart(2, "0")}
@@ -306,7 +316,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
                           borderRadius: 999,
                           fontSize: 10,
                           fontWeight: 700,
-                          background: item === "Payments" || item === "Applications" ? "#dc2626" : "var(--gold)",
+                          background:
+                            item === "Payments" || item === "Applications"
+                              ? "#dc2626"
+                              : "var(--gold)",
                           color: "white",
                           lineHeight: 1.2,
                         }}
@@ -324,7 +337,12 @@ export function Admin({ go }: { go: (p: Page) => void }) {
           <Button
             variant="ghost"
             onClick={logout}
-            style={{ width: "100%", color: "#dc2626", borderColor: "#fecaca", fontWeight: 700 }}
+            style={{
+              width: "100%",
+              color: "#dc2626",
+              borderColor: "#fecaca",
+              fontWeight: 700,
+            }}
           >
             Sign out
           </Button>
@@ -356,7 +374,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
               <p>Vivadoxa Music School Management Portal</p>
             </div>
           </div>
-          <div className="admin-tools" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            className="admin-tools"
+            style={{ display: "flex", alignItems: "center", gap: 12 }}
+          >
             {/* Notification Bell */}
             <div style={{ position: "relative" }}>
               <button
@@ -417,58 +438,218 @@ export function Admin({ go }: { go: (p: Page) => void }) {
                     zIndex: 100,
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--line)", paddingBottom: 8, marginBottom: 8 }}>
-                    <strong style={{ fontSize: 13, color: "var(--navy)" }}>Pending Action Alerts</strong>
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>{totalPending} action item{totalPending === 1 ? "" : "s"}</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      borderBottom: "1px solid var(--line)",
+                      paddingBottom: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <strong style={{ fontSize: 13, color: "var(--navy)" }}>
+                      Pending Action Alerts
+                    </strong>
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                      {totalPending} action item{totalPending === 1 ? "" : "s"}
+                    </span>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                  >
                     <button
                       type="button"
-                      onClick={() => { setActive("Applications"); setShowNotifDropdown(false); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      onClick={() => {
+                        setActive("Applications")
+                        setShowNotifDropdown(false)
+                      }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "#fafafa",
+                        border: "1px solid var(--line)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
                     >
                       <span style={{ fontSize: 12 }}>New Applications</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_applications || 0) > 0 ? "rgba(220,38,38,0.12)" : "#f1f5f9", color: (liveStats?.pending_applications || 0) > 0 ? "#dc2626" : "var(--muted)" }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background:
+                            (liveStats?.pending_applications || 0) > 0
+                              ? "rgba(220,38,38,0.12)"
+                              : "#f1f5f9",
+                          color:
+                            (liveStats?.pending_applications || 0) > 0
+                              ? "#dc2626"
+                              : "var(--muted)",
+                        }}
+                      >
                         {liveStats?.pending_applications || 0} pending
                       </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setActive("Payments"); setShowNotifDropdown(false); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      onClick={() => {
+                        setActive("Payments")
+                        setShowNotifDropdown(false)
+                      }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "#fafafa",
+                        border: "1px solid var(--line)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
                     >
                       <span style={{ fontSize: 12 }}>Payment Proofs</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_payments || 0) > 0 ? "rgba(201,107,50,0.15)" : "#f1f5f9", color: (liveStats?.pending_payments || 0) > 0 ? "var(--gold-text)" : "var(--muted)" }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background:
+                            (liveStats?.pending_payments || 0) > 0
+                              ? "rgba(201,107,50,0.15)"
+                              : "#f1f5f9",
+                          color:
+                            (liveStats?.pending_payments || 0) > 0
+                              ? "var(--gold-text)"
+                              : "var(--muted)",
+                        }}
+                      >
                         {liveStats?.pending_payments || 0} pending
                       </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setActive("Repairs"); setShowNotifDropdown(false); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      onClick={() => {
+                        setActive("Repairs")
+                        setShowNotifDropdown(false)
+                      }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "#fafafa",
+                        border: "1px solid var(--line)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
                     >
                       <span style={{ fontSize: 12 }}>Active Repairs</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.active_repairs || 0) > 0 ? "rgba(37,99,235,0.12)" : "#f1f5f9", color: (liveStats?.active_repairs || 0) > 0 ? "#2563eb" : "var(--muted)" }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background:
+                            (liveStats?.active_repairs || 0) > 0
+                              ? "rgba(37,99,235,0.12)"
+                              : "#f1f5f9",
+                          color:
+                            (liveStats?.active_repairs || 0) > 0
+                              ? "#2563eb"
+                              : "var(--muted)",
+                        }}
+                      >
                         {liveStats?.active_repairs || 0} active
                       </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setActive("Enquiries"); setShowNotifDropdown(false); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      onClick={() => {
+                        setActive("Enquiries")
+                        setShowNotifDropdown(false)
+                      }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "#fafafa",
+                        border: "1px solid var(--line)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
                     >
                       <span style={{ fontSize: 12 }}>Unread Enquiries</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.unread_enquiries || 0) > 0 ? "rgba(16,185,129,0.12)" : "#f1f5f9", color: (liveStats?.unread_enquiries || 0) > 0 ? "#059669" : "var(--muted)" }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background:
+                            (liveStats?.unread_enquiries || 0) > 0
+                              ? "rgba(16,185,129,0.12)"
+                              : "#f1f5f9",
+                          color:
+                            (liveStats?.unread_enquiries || 0) > 0
+                              ? "#059669"
+                              : "var(--muted)",
+                        }}
+                      >
                         {liveStats?.unread_enquiries || 0} unread
                       </span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setActive("Class Schedule"); setShowNotifDropdown(false); }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--line)", cursor: "pointer", textAlign: "left", width: "100%" }}
+                      onClick={() => {
+                        setActive("Class Schedule")
+                        setShowNotifDropdown(false)
+                      }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "#fafafa",
+                        border: "1px solid var(--line)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                      }}
                     >
                       <span style={{ fontSize: 12 }}>Schedule Requests</span>
-                      <span style={{ fontWeight: 700, fontSize: 11, padding: "2px 6px", borderRadius: 4, background: (liveStats?.pending_schedules || 0) > 0 ? "rgba(147,51,234,0.12)" : "#f1f5f9", color: (liveStats?.pending_schedules || 0) > 0 ? "#7c3aed" : "var(--muted)" }}>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 11,
+                          padding: "2px 6px",
+                          borderRadius: 4,
+                          background:
+                            (liveStats?.pending_schedules || 0) > 0
+                              ? "rgba(147,51,234,0.12)"
+                              : "#f1f5f9",
+                          color:
+                            (liveStats?.pending_schedules || 0) > 0
+                              ? "#7c3aed"
+                              : "var(--muted)",
+                        }}
+                      >
                         {liveStats?.pending_schedules || 0} pending
                       </span>
                     </button>
@@ -509,8 +690,19 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
     unread_enquiries?: number
     active_students?: number
     pending_schedules?: number
-    monthly_revenue?: Array<{ month: string; key: string; amount: number; formatted: string }>
-    recent_activity?: Array<{ type: string; title: string; subtitle: string; status: string; created_at: string }>
+    monthly_revenue?: Array<{
+      month: string
+      key: string
+      amount: number
+      formatted: string
+    }>
+    recent_activity?: Array<{
+      type: string
+      title: string
+      subtitle: string
+      status: string
+      created_at: string
+    }>
   } | null>(null)
 
   useEffect(() => {
@@ -533,7 +725,10 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           : "All evaluated"
         : "Loading…",
       tone: liveStats && liveStats.pending_applications > 0 ? "gold" : "muted",
-      badge: liveStats && liveStats.pending_applications > 0 ? `${liveStats.pending_applications} new` : null,
+      badge:
+        liveStats && liveStats.pending_applications > 0
+          ? `${liveStats.pending_applications} new`
+          : null,
       target: "Applications",
       icon: "academic",
     },
@@ -599,7 +794,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
 
   const maxRevenue = Math.max(1, ...monthlyData.map((m) => m.amount || 0))
   const total6Months = monthlyData.reduce((acc, m) => acc + (m.amount || 0), 0)
-  const peakMonth = [...monthlyData].sort((a, b) => (b.amount || 0) - (a.amount || 0))[0]
+  const peakMonth = [...monthlyData].sort(
+    (a, b) => (b.amount || 0) - (a.amount || 0),
+  )[0]
   const avgMonthly = Math.round(total6Months / Math.max(1, monthlyData.length))
 
   return (
@@ -615,7 +812,8 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           </span>
           <h2>Welcome back{session?.name ? `, ${session.name}` : ""}</h2>
           <p>
-            Institutional management: admissions, enrolled students, audited revenues, workshop repairs and schedules.
+            Institutional management: admissions, enrolled students, audited
+            revenues, workshop repairs and schedules.
           </p>
         </div>
         <Button onClick={() => setActive("Applications")}>
@@ -631,7 +829,13 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
             onClick={() => setActive(card.target)}
             title={`View ${card.title}`}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <span>{card.title}</span>
               {card.badge && (
                 <span
@@ -662,7 +866,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
           <div className="panel-title">
             <div>
               <h2>Revenue Overview (Last 6 Months)</h2>
-              <p>Audited inflows aggregated from verified payment transactions</p>
+              <p>
+                Audited inflows aggregated from verified payment transactions
+              </p>
             </div>
             <span
               style={{
@@ -683,7 +889,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
             <div className="bars">
               {monthlyData.map((m) => {
                 const heightPct =
-                  m.amount > 0 ? Math.max(14, Math.round((m.amount / maxRevenue) * 100)) : 4
+                  m.amount > 0
+                    ? Math.max(14, Math.round((m.amount / maxRevenue) * 100))
+                    : 4
                 return (
                   <div
                     key={m.month}
@@ -714,7 +922,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
                         borderRadius: "5px 5px 0 0",
                       }}
                     />
-                    <span style={{ fontWeight: 600, marginTop: 7 }}>{m.month}</span>
+                    <span style={{ fontWeight: 600, marginTop: 7 }}>
+                      {m.month}
+                    </span>
                   </div>
                 )
               })}
@@ -723,7 +933,13 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4.5 pt-4 border-t border-[var(--line)]">
             <div>
-              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  display: "block",
+                }}
+              >
                 6-Month Inflow Total
               </span>
               <strong style={{ fontSize: 16, color: "var(--navy)" }}>
@@ -731,7 +947,13 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               </strong>
             </div>
             <div>
-              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  display: "block",
+                }}
+              >
                 Peak Month
               </span>
               <strong style={{ fontSize: 16, color: "var(--gold-text)" }}>
@@ -741,7 +963,13 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               </strong>
             </div>
             <div>
-              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "var(--muted)",
+                  display: "block",
+                }}
+              >
                 Average Monthly Intake
               </span>
               <strong style={{ fontSize: 16, color: "var(--navy)" }}>
@@ -781,7 +1009,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
             >
               Administrative Quick Hub
             </h3>
-            <p style={{ margin: "2px 0 0", color: "var(--muted)", fontSize: 11 }}>
+            <p
+              style={{ margin: "2px 0 0", color: "var(--muted)", fontSize: 11 }}
+            >
               Direct operational shortcuts with live unread / pending indicators
             </p>
           </div>
@@ -891,7 +1121,13 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
                     marginBottom: 6,
                   }}
                 >
-                  <span style={{ color: "var(--navy)", display: "flex", alignItems: "center" }}>
+                  <span
+                    style={{
+                      color: "var(--navy)",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                     <Icon name={item.icon} size={18} />
                   </span>
                   {item.badge && (
@@ -1005,7 +1241,9 @@ function AdminManager({ title }: { title: string }) {
   const [bankSettings, setBankSettings] = useState(getBankSettings)
   const [generalSettings, setGeneralSettings] = useState(getGeneralSettings)
 
-  const [selectedCohort, setSelectedCohort] = useState("Saturday Cohort A (Morning)")
+  const [selectedCohort, setSelectedCohort] = useState(
+    "Saturday Cohort A (Morning)",
+  )
 
   // Add Course / Instructor / Performance Form State
   const [newCourse, setNewCourse] = useState({
@@ -1039,12 +1277,20 @@ function AdminManager({ title }: { title: string }) {
 
   async function handleBatchDeleteRecitals() {
     if (selectedRecitalIds.length === 0) return
-    if (!confirm(`Are you sure you want to delete ${selectedRecitalIds.length} selected recital video${selectedRecitalIds.length === 1 ? "" : "s"}?`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedRecitalIds.length} selected recital video${
+          selectedRecitalIds.length === 1 ? "" : "s"
+        }?`,
+      )
+    ) {
       return
     }
     const res = await deletePerformancesBatch(selectedRecitalIds)
     if (res && res.success) {
-      setActionNotice(res.message || `${selectedRecitalIds.length} recital videos removed.`)
+      setActionNotice(
+        res.message || `${selectedRecitalIds.length} recital videos removed.`,
+      )
       setSelectedRecitalIds([])
       loadData()
     } else {
@@ -1054,7 +1300,7 @@ function AdminManager({ title }: { title: string }) {
 
   function handleToggleRecital(id: number) {
     setSelectedRecitalIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     )
   }
 
@@ -1068,7 +1314,11 @@ function AdminManager({ title }: { title: string }) {
 
   async function handleToggleInstructor(inst: any) {
     const actionText = inst.is_active === 0 ? "activate" : "deactivate"
-    if (!confirm(`Are you sure you want to ${actionText} the profile for "${inst.name}"? The profile record will be preserved.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to ${actionText} the profile for "${inst.name}"? The profile record will be preserved.`,
+      )
+    ) {
       return
     }
     const res = await toggleInstructorStatus(inst.id)
@@ -1176,7 +1426,9 @@ function AdminManager({ title }: { title: string }) {
       cohort: selectedCohort,
     })
     if (res && res.success) {
-      setActionNotice(`Student enrolled with Student No: ${(res as any).student_no || "Generated"}!`)
+      setActionNotice(
+        `Student enrolled with Student No: ${(res as any).student_no || "Generated"}!`,
+      )
       loadData()
       setSelectedRecord(null)
     }
@@ -1193,13 +1445,21 @@ function AdminManager({ title }: { title: string }) {
     }
   }
 
-  async function handleRepairStatus(code: string, newStatus: string, cost?: number) {
+  async function handleRepairStatus(
+    code: string,
+    newStatus: string,
+    cost?: number,
+  ) {
     const res = await updateRepairStatus(code, newStatus, cost)
     if (res && res.success) {
       setActionNotice(`Repair ${code} updated to ${newStatus}.`)
       loadData()
       if (selectedRecord && selectedRecord.tracking_code === code) {
-        setSelectedRecord({ ...selectedRecord, status: newStatus, ...(cost ? { estimated_cost: cost } : {}) })
+        setSelectedRecord({
+          ...selectedRecord,
+          status: newStatus,
+          ...(cost ? { estimated_cost: cost } : {}),
+        })
       }
     }
   }
@@ -1287,7 +1547,10 @@ function AdminManager({ title }: { title: string }) {
     e.preventDefault()
     if (!newPerformance.title || !newPerformance.youtube_id) return
     const cleanedYid = extractYouTubeId(newPerformance.youtube_id)
-    const res = await savePerformance({ ...newPerformance, youtube_id: cleanedYid })
+    const res = await savePerformance({
+      ...newPerformance,
+      youtube_id: cleanedYid,
+    })
     if (res && res.success) {
       setShowAddModal(false)
       setNewPerformance({
@@ -1310,7 +1573,9 @@ function AdminManager({ title }: { title: string }) {
     if (!selectedRecord) return
     const res = await updateApplication(selectedRecord.application_no, appForm)
     if (res && res.success) {
-      setActionNotice(`Modifications saved for ${selectedRecord.application_no}.`)
+      setActionNotice(
+        `Modifications saved for ${selectedRecord.application_no}.`,
+      )
       setSelectedRecord({ ...selectedRecord, ...appForm })
       setEditingApp(false)
       loadData()
@@ -1342,8 +1607,7 @@ function AdminManager({ title }: { title: string }) {
   const filteredRecords = records.filter((r) => {
     const q = searchTerm.toLowerCase()
     const matchesSearch =
-      !searchTerm ||
-      JSON.stringify(r).toLowerCase().includes(q)
+      !searchTerm || JSON.stringify(r).toLowerCase().includes(q)
     const matchesStatus =
       statusFilter === "all" ||
       r.status === statusFilter ||
@@ -1363,36 +1627,55 @@ function AdminManager({ title }: { title: string }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 20,
+          flexWrap: "wrap",
+          gap: 10,
+        }}
+      >
         <div>
           <h2 style={{ margin: 0, fontSize: 20 }}>{title} Management</h2>
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {title === "Performances & Recitals" && selectedRecitalIds.length > 0 && (
-            <button
-              type="button"
-              onClick={handleBatchDeleteRecitals}
-              style={{
-                padding: "8px 14px",
-                borderRadius: 6,
-                background: "#dc2626",
-                color: "white",
-                border: "none",
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <Icon name="trash" size={14} />
-              Delete Selected ({selectedRecitalIds.length})
-            </button>
-          )}
-          {["Programs & Courses", "Instructors", "Performances & Recitals"].includes(title) && (
+          {title === "Performances & Recitals" &&
+            selectedRecitalIds.length > 0 && (
+              <button
+                type="button"
+                onClick={handleBatchDeleteRecitals}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  background: "#dc2626",
+                  color: "white",
+                  border: "none",
+                  fontWeight: 700,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <Icon name="trash" size={14} />
+                Delete Selected ({selectedRecitalIds.length})
+              </button>
+            )}
+          {[
+            "Programs & Courses",
+            "Instructors",
+            "Performances & Recitals",
+          ].includes(title) && (
             <Button onClick={() => setShowAddModal(true)}>
-              + Add {title === "Instructors" ? "Instructor" : title === "Performances & Recitals" ? "Recital Video" : "Course"}
+              + Add{" "}
+              {title === "Instructors"
+                ? "Instructor"
+                : title === "Performances & Recitals"
+                  ? "Recital Video"
+                  : "Course"}
             </Button>
           )}
         </div>
@@ -1542,7 +1825,10 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col" style={{ width: 40, textAlign: "center" }}>
                       <input
                         type="checkbox"
-                        checked={filteredRecords.length > 0 && selectedRecitalIds.length === filteredRecords.length}
+                        checked={
+                          filteredRecords.length > 0 &&
+                          selectedRecitalIds.length === filteredRecords.length
+                        }
                         onChange={handleToggleAllRecitals}
                         title="Select all recitals"
                         aria-label="Select all recitals"
@@ -1563,7 +1849,9 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col">Program</th>
                     <th scope="col">Assigned Cohort</th>
                     <th scope="col">Status</th>
-                    <th scope="col" style={{ textAlign: "right" }}>Actions</th>
+                    <th scope="col" style={{ textAlign: "right" }}>
+                      Actions
+                    </th>
                   </tr>
                 )}
               </thead>
@@ -1628,10 +1916,7 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            ₦
-                            {Number(
-                              row.tuition_fee || 20000,
-                            ).toLocaleString()}
+                            ₦{Number(row.tuition_fee || 20000).toLocaleString()}
                           </td>
                           <td>
                             <Badge
@@ -1653,7 +1938,10 @@ function AdminManager({ title }: { title: string }) {
                                   className="action-btn accept"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleAppStatus(row.application_no, "approved")
+                                    handleAppStatus(
+                                      row.application_no,
+                                      "approved",
+                                    )
                                   }}
                                   title="Approve candidate"
                                 >
@@ -1665,7 +1953,10 @@ function AdminManager({ title }: { title: string }) {
                                   className="action-btn decline"
                                   onClick={(e) => {
                                     e.stopPropagation()
-                                    handleAppStatus(row.application_no, "rejected")
+                                    handleAppStatus(
+                                      row.application_no,
+                                      "rejected",
+                                    )
                                   }}
                                   title="Reject candidate"
                                 >
@@ -1769,9 +2060,13 @@ function AdminManager({ title }: { title: string }) {
                           </td>
                           <td>
                             <Badge
-                              tone={row.intake_method === "pickup" ? "gold" : "navy"}
+                              tone={
+                                row.intake_method === "pickup" ? "gold" : "navy"
+                              }
                             >
-                              {row.intake_method === "pickup" ? "Pickup" : "Drop-off"}
+                              {row.intake_method === "pickup"
+                                ? "Pickup"
+                                : "Drop-off"}
                             </Badge>
                           </td>
                           <td>
@@ -1899,12 +2194,24 @@ function AdminManager({ title }: { title: string }) {
                       {title === "Instructors" && (
                         <>
                           <td>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                              }}
+                            >
                               {row.image ? (
                                 <img
                                   src={row.image}
                                   alt={row.name}
-                                  style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--line)" }}
+                                  style={{
+                                    width: 34,
+                                    height: 34,
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: "1px solid var(--line)",
+                                  }}
                                 />
                               ) : (
                                 <div
@@ -1949,7 +2256,9 @@ function AdminManager({ title }: { title: string }) {
                           <td>{row.specialization}</td>
                           <td>{row.location}</td>
                           <td>
-                            <Badge tone={row.is_active === 0 ? "gray" : "green"}>
+                            <Badge
+                              tone={row.is_active === 0 ? "gray" : "green"}
+                            >
                               {row.is_active === 0 ? "Inactive" : "Active"}
                             </Badge>
                           </td>
@@ -1985,12 +2294,15 @@ function AdminManager({ title }: { title: string }) {
                                   background: "none",
                                   border: "1px solid var(--line)",
                                   borderRadius: 4,
-                                  color: row.is_active === 0 ? "#166534" : "#dc2626",
+                                  color:
+                                    row.is_active === 0 ? "#166534" : "#dc2626",
                                   cursor: "pointer",
                                   fontWeight: 600,
                                 }}
                               >
-                                {row.is_active === 0 ? "Activate" : "Deactivate"}
+                                {row.is_active === 0
+                                  ? "Activate"
+                                  : "Deactivate"}
                               </button>
                             </div>
                           </td>
@@ -2000,7 +2312,10 @@ function AdminManager({ title }: { title: string }) {
                       {/* Performances row */}
                       {title === "Performances & Recitals" && (
                         <>
-                          <td onClick={(e) => e.stopPropagation()} style={{ width: 40, textAlign: "center" }}>
+                          <td
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ width: 40, textAlign: "center" }}
+                          >
                             <input
                               type="checkbox"
                               checked={selectedRecitalIds.includes(row.id)}
@@ -2043,9 +2358,13 @@ function AdminManager({ title }: { title: string }) {
                               type="button"
                               onClick={async (e) => {
                                 e.stopPropagation()
-                                if (confirm(`Remove performance "${row.title}"?`)) {
+                                if (
+                                  confirm(`Remove performance "${row.title}"?`)
+                                ) {
                                   await deletePerformance(row.id)
-                                  setActionNotice("Performance recital removed.")
+                                  setActionNotice(
+                                    "Performance recital removed.",
+                                  )
                                   loadData()
                                 }
                               }}
@@ -2080,7 +2399,15 @@ function AdminManager({ title }: { title: string }) {
                           <td>{row.program}</td>
                           <td>{row.cohort}</td>
                           <td>
-                            <Badge tone={row.status === "active" ? "green" : row.status === "graduated" ? "gold" : "red"}>
+                            <Badge
+                              tone={
+                                row.status === "active"
+                                  ? "green"
+                                  : row.status === "graduated"
+                                    ? "gold"
+                                    : "red"
+                              }
+                            >
                               {row.status}
                             </Badge>
                           </td>
@@ -2107,15 +2434,31 @@ function AdminManager({ title }: { title: string }) {
           {/* Mobile Card Feed (Responsive, No Horizontal Scrolling) */}
           <div className="block md:hidden" style={{ padding: 12 }}>
             {loading ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 24,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                }}
+              >
                 Loading records…
               </div>
             ) : filteredRecords.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 24,
+                  color: "var(--muted)",
+                  fontSize: 13,
+                }}
+              >
                 No {title.toLowerCase()} found.
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
                 {filteredRecords.map((row) => {
                   const key =
                     row.id ||
@@ -2142,15 +2485,41 @@ function AdminManager({ title }: { title: string }) {
                       {/* Applications Mobile Card */}
                       {title === "Applications" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.application_no}</strong>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                              <strong
+                                style={{ fontSize: 14, color: "var(--navy)" }}
+                              >
+                                {row.application_no}
+                              </strong>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "var(--navy)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 {row.first_name} {row.last_name}
                               </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone={row.status === "approved" ? "green" : row.status === "rejected" ? "red" : "gold"}>
+                              <Badge
+                                tone={
+                                  row.status === "approved"
+                                    ? "green"
+                                    : row.status === "rejected"
+                                      ? "red"
+                                      : "gold"
+                                }
+                              >
                                 {row.status}
                               </Badge>
                             </span>
@@ -2158,27 +2527,59 @@ function AdminManager({ title }: { title: string }) {
                           <div style={{ fontSize: 12, color: "var(--muted)" }}>
                             {row.email} · {row.phone}
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, background: "#fbfaf8", padding: "8px 10px", borderRadius: 6 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              fontSize: 12,
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                            }}
+                          >
                             <div>
-                              <span style={{ color: "var(--muted)" }}>Program: </span>
+                              <span style={{ color: "var(--muted)" }}>
+                                Program:{" "}
+                              </span>
                               <strong>{row.program}</strong>
-                              <div style={{ fontSize: 11, color: "var(--muted)" }}>{row.study_mode} ({row.skill_level})</div>
+                              <div
+                                style={{ fontSize: 11, color: "var(--muted)" }}
+                              >
+                                {row.study_mode} ({row.skill_level})
+                              </div>
                             </div>
                             <div style={{ textAlign: "right" }}>
-                              <span style={{ color: "var(--muted)" }}>Tuition: </span>
-                              <strong style={{ color: "var(--navy)" }}>₦{Number(row.tuition_fee || 20000).toLocaleString()}</strong>
+                              <span style={{ color: "var(--muted)" }}>
+                                Tuition:{" "}
+                              </span>
+                              <strong style={{ color: "var(--navy)" }}>
+                                ₦
+                                {Number(
+                                  row.tuition_fee || 20000,
+                                ).toLocaleString()}
+                              </strong>
                             </div>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             {row.status !== "approved" && (
                               <button
                                 type="button"
                                 className="action-btn accept"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleAppStatus(row.application_no, "approved")
+                                  handleAppStatus(
+                                    row.application_no,
+                                    "approved",
+                                  )
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                }}
                               >
                                 ✓ Approve
                               </button>
@@ -2189,9 +2590,17 @@ function AdminManager({ title }: { title: string }) {
                                 className="action-btn decline"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleAppStatus(row.application_no, "rejected")
+                                  handleAppStatus(
+                                    row.application_no,
+                                    "rejected",
+                                  )
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                }}
                               >
                                 ✕ Reject
                               </button>
@@ -2202,7 +2611,14 @@ function AdminManager({ title }: { title: string }) {
                                 e.stopPropagation()
                                 setSelectedRecord(row)
                               }}
-                              style={{ padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                              style={{
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                border: "1px solid var(--line)",
+                                background: "white",
+                                borderRadius: 6,
+                                fontWeight: 600,
+                              }}
                             >
                               Details
                             </button>
@@ -2213,33 +2629,104 @@ function AdminManager({ title }: { title: string }) {
                       {/* Payments Mobile Card */}
                       {title === "Payments" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{row.reference}</code>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                              <code
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: "var(--navy)",
+                                }}
+                              >
+                                {row.reference}
+                              </code>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "var(--navy)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 {row.payer_name}
                               </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone={row.status === "verified" ? "green" : row.status === "declined" ? "red" : "gold"}>
+                              <Badge
+                                tone={
+                                  row.status === "verified"
+                                    ? "green"
+                                    : row.status === "declined"
+                                      ? "red"
+                                      : "gold"
+                                }
+                              >
                                 {row.status}
                               </Badge>
                             </span>
                           </div>
                           <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                            {row.payer_email} {row.application_no ? `· App: ${row.application_no}` : ""}
+                            {row.payer_email}{" "}
+                            {row.application_no
+                              ? `· App: ${row.application_no}`
+                              : ""}
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, background: "#fbfaf8", padding: "8px 10px", borderRadius: 6 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontSize: 13,
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                            }}
+                          >
                             <div>
-                              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>METHOD</span>
-                              <strong>{row.method}</strong> {row.notes ? <small style={{ color: "var(--muted)" }}> ({row.notes})</small> : null}
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--muted)",
+                                  display: "block",
+                                }}
+                              >
+                                METHOD
+                              </span>
+                              <strong>{row.method}</strong>{" "}
+                              {row.notes ? (
+                                <small style={{ color: "var(--muted)" }}>
+                                  {" "}
+                                  ({row.notes})
+                                </small>
+                              ) : null}
                             </div>
                             <div style={{ textAlign: "right" }}>
-                              <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>AMOUNT</span>
-                              <strong style={{ fontSize: 15, color: "var(--navy)" }}>₦{Number(row.amount).toLocaleString()}</strong>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--muted)",
+                                  display: "block",
+                                }}
+                              >
+                                AMOUNT
+                              </span>
+                              <strong
+                                style={{ fontSize: 15, color: "var(--navy)" }}
+                              >
+                                ₦{Number(row.amount).toLocaleString()}
+                              </strong>
                             </div>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             {row.status !== "verified" && (
                               <button
                                 type="button"
@@ -2248,7 +2735,12 @@ function AdminManager({ title }: { title: string }) {
                                   e.stopPropagation()
                                   handlePaymentVerify(row.reference)
                                 }}
-                                style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                }}
                               >
                                 ✓ Verify Payment
                               </button>
@@ -2259,7 +2751,15 @@ function AdminManager({ title }: { title: string }) {
                                 e.stopPropagation()
                                 setSelectedRecord(row)
                               }}
-                              style={{ flex: 1, padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                border: "1px solid var(--line)",
+                                background: "white",
+                                borderRadius: 6,
+                                fontWeight: 600,
+                              }}
                             >
                               Inspect Details
                             </button>
@@ -2270,15 +2770,44 @@ function AdminManager({ title }: { title: string }) {
                       {/* Repairs Mobile Card */}
                       {(title === "Repairs" || title.includes("Repairs")) && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{row.tracking_code}</code>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                              <code
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: "var(--navy)",
+                                }}
+                              >
+                                {row.tracking_code}
+                              </code>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "var(--navy)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 {row.customer_name}
                               </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone={row.status === "ready" || row.status === "collected" ? "green" : "gold"}>
+                              <Badge
+                                tone={
+                                  row.status === "ready" ||
+                                  row.status === "collected"
+                                    ? "green"
+                                    : "gold"
+                                }
+                              >
                                 {row.status}
                               </Badge>
                             </span>
@@ -2286,13 +2815,40 @@ function AdminManager({ title }: { title: string }) {
                           <div style={{ fontSize: 12, color: "var(--muted)" }}>
                             {row.customer_phone}
                           </div>
-                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
-                            <div style={{ fontWeight: 600, color: "var(--navy)" }}>{row.instrument}</div>
-                            <div style={{ color: "var(--muted)", marginTop: 2 }}>{row.issue}</div>
+                          <div
+                            style={{
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                            }}
+                          >
+                            <div
+                              style={{ fontWeight: 600, color: "var(--navy)" }}
+                            >
+                              {row.instrument}
+                            </div>
+                            <div
+                              style={{ color: "var(--muted)", marginTop: 2 }}
+                            >
+                              {row.issue}
+                            </div>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <Badge tone={row.intake_method === "pickup" ? "gold" : "navy"}>
-                              {row.intake_method === "pickup" ? "Pickup" : "Drop-off"}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Badge
+                              tone={
+                                row.intake_method === "pickup" ? "gold" : "navy"
+                              }
+                            >
+                              {row.intake_method === "pickup"
+                                ? "Pickup"
+                                : "Drop-off"}
                             </Badge>
                             <button
                               type="button"
@@ -2301,7 +2857,11 @@ function AdminManager({ title }: { title: string }) {
                                 e.stopPropagation()
                                 setSelectedRecord(row)
                               }}
-                              style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600 }}
+                              style={{
+                                padding: "6px 14px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
                             >
                               Update Status
                             </button>
@@ -2312,10 +2872,27 @@ function AdminManager({ title }: { title: string }) {
                       {/* Enquiries Mobile Card */}
                       {title === "Enquiries" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
-                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
+                              <strong
+                                style={{ fontSize: 14, color: "var(--navy)" }}
+                              >
+                                {row.name}
+                              </strong>
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: "var(--muted)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 {row.email} · {row.phone}
                               </div>
                             </div>
@@ -2325,11 +2902,30 @@ function AdminManager({ title }: { title: string }) {
                               </Badge>
                             </span>
                           </div>
-                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
-                            <strong style={{ display: "block", color: "var(--navy)", marginBottom: 3 }}>{row.subject}</strong>
-                            <p style={{ margin: 0, color: "var(--muted)" }}>{row.message}</p>
+                          <div
+                            style={{
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                            }}
+                          >
+                            <strong
+                              style={{
+                                display: "block",
+                                color: "var(--navy)",
+                                marginBottom: 3,
+                              }}
+                            >
+                              {row.subject}
+                            </strong>
+                            <p style={{ margin: 0, color: "var(--muted)" }}>
+                              {row.message}
+                            </p>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             <button
                               type="button"
                               className="action-btn"
@@ -2337,7 +2933,12 @@ function AdminManager({ title }: { title: string }) {
                                 e.stopPropagation()
                                 handleEnquiryToggle(row.id, row.is_read)
                               }}
-                              style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 600 }}
+                              style={{
+                                flex: 1,
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
                             >
                               {row.is_read ? "Mark unread" : "Mark read"}
                             </button>
@@ -2347,7 +2948,14 @@ function AdminManager({ title }: { title: string }) {
                                 e.stopPropagation()
                                 setSelectedRecord(row)
                               }}
-                              style={{ padding: "8px 12px", fontSize: 12, border: "1px solid var(--line)", background: "white", borderRadius: 6, fontWeight: 600 }}
+                              style={{
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                border: "1px solid var(--line)",
+                                background: "white",
+                                borderRadius: 6,
+                                fontWeight: 600,
+                              }}
                             >
                               View
                             </button>
@@ -2358,24 +2966,73 @@ function AdminManager({ title }: { title: string }) {
                       {/* Programs Mobile Card */}
                       {title === "Programs & Courses" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
-                              {row.tag && <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: 6 }}>({row.tag})</span>}
-                              <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.category}</div>
+                              <strong
+                                style={{ fontSize: 14, color: "var(--navy)" }}
+                              >
+                                {row.name}
+                              </strong>
+                              {row.tag && (
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    color: "var(--muted)",
+                                    marginLeft: 6,
+                                  }}
+                                >
+                                  ({row.tag})
+                                </span>
+                              )}
+                              <div
+                                style={{
+                                  fontSize: 12,
+                                  color: "var(--muted)",
+                                  marginTop: 2,
+                                }}
+                              >
+                                {row.category}
+                              </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
                               <Badge tone="green">Active</Badge>
                             </span>
                           </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                            }}
+                          >
                             <div>
-                              <div style={{ color: "var(--muted)" }}>{row.duration || "1–12 Months"}</div>
-                              <div style={{ fontSize: 11, color: "var(--muted)" }}>{row.modes || "Studio · Home · Online"}</div>
+                              <div style={{ color: "var(--muted)" }}>
+                                {row.duration || "1–12 Months"}
+                              </div>
+                              <div
+                                style={{ fontSize: 11, color: "var(--muted)" }}
+                              >
+                                {row.modes || "Studio · Home · Online"}
+                              </div>
                             </div>
-                            <strong style={{ color: "var(--navy)" }}>{row.fee}</strong>
+                            <strong style={{ color: "var(--navy)" }}>
+                              {row.fee}
+                            </strong>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             <button
                               type="button"
                               onClick={(e) => {
@@ -2404,13 +3061,33 @@ function AdminManager({ title }: { title: string }) {
                       {/* Instructors Mobile Card */}
                       {title === "Instructors" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 10,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                              }}
+                            >
                               {row.image ? (
                                 <img
                                   src={row.image}
                                   alt={row.name}
-                                  style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "1px solid var(--line)", flexShrink: 0 }}
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: "1px solid var(--line)",
+                                    flexShrink: 0,
+                                  }}
                                 />
                               ) : (
                                 <div
@@ -2431,26 +3108,70 @@ function AdminManager({ title }: { title: string }) {
                                 </div>
                               )}
                               <div>
-                                <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.name}</strong>
+                                <strong
+                                  style={{ fontSize: 14, color: "var(--navy)" }}
+                                >
+                                  {row.name}
+                                </strong>
                                 {row.is_director ? (
-                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
+                                  <span
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      padding: "2px 6px",
+                                      borderRadius: 4,
+                                      background: "#fdf5ec",
+                                      color: "var(--gold-text)",
+                                      border: "1px solid #ebdcd0",
+                                    }}
+                                  >
                                     Director
                                   </span>
                                 ) : null}
-                                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{row.title}</div>
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    color: "var(--muted)",
+                                    marginTop: 2,
+                                  }}
+                                >
+                                  {row.title}
+                                </div>
                               </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone={row.is_active === 0 ? "gray" : "green"}>
+                              <Badge
+                                tone={row.is_active === 0 ? "gray" : "green"}
+                              >
                                 {row.is_active === 0 ? "Inactive" : "Active"}
                               </Badge>
                             </span>
                           </div>
-                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12 }}>
-                            <div><strong style={{ color: "var(--navy)" }}>Specialization:</strong> {row.specialization}</div>
-                            <div style={{ marginTop: 2 }}><strong style={{ color: "var(--navy)" }}>Location:</strong> {row.location}</div>
+                          <div
+                            style={{
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                            }}
+                          >
+                            <div>
+                              <strong style={{ color: "var(--navy)" }}>
+                                Specialization:
+                              </strong>{" "}
+                              {row.specialization}
+                            </div>
+                            <div style={{ marginTop: 2 }}>
+                              <strong style={{ color: "var(--navy)" }}>
+                                Location:
+                              </strong>{" "}
+                              {row.location}
+                            </div>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             <button
                               type="button"
                               onClick={(e) => {
@@ -2484,13 +3205,19 @@ function AdminManager({ title }: { title: string }) {
                                 fontSize: 12,
                                 fontWeight: 600,
                                 background: "none",
-                                border: row.is_active === 0 ? "1px solid #166534" : "1px solid #dc2626",
-                                color: row.is_active === 0 ? "#166534" : "#dc2626",
+                                border:
+                                  row.is_active === 0
+                                    ? "1px solid #166534"
+                                    : "1px solid #dc2626",
+                                color:
+                                  row.is_active === 0 ? "#166534" : "#dc2626",
                                 borderRadius: 6,
                                 cursor: "pointer",
                               }}
                             >
-                              {row.is_active === 0 ? "Activate Profile" : "Deactivate Profile"}
+                              {row.is_active === 0
+                                ? "Activate Profile"
+                                : "Deactivate Profile"}
                             </button>
                           </div>
                         </>
@@ -2499,8 +3226,21 @@ function AdminManager({ title }: { title: string }) {
                       {/* Performances Mobile Card */}
                       {title === "Performances & Recitals" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: 8,
+                              }}
+                            >
                               <input
                                 type="checkbox"
                                 checked={selectedRecitalIds.includes(row.id)}
@@ -2509,31 +3249,77 @@ function AdminManager({ title }: { title: string }) {
                                 aria-label={`Select recital ${row.title}`}
                               />
                               <div>
-                                <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.title}</strong>
+                                <strong
+                                  style={{ fontSize: 14, color: "var(--navy)" }}
+                                >
+                                  {row.title}
+                                </strong>
                                 {row.is_featured ? (
-                                  <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4, background: "#fdf5ec", color: "var(--gold-text)", border: "1px solid #ebdcd0" }}>
+                                  <span
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      padding: "2px 6px",
+                                      borderRadius: 4,
+                                      background: "#fdf5ec",
+                                      color: "var(--gold-text)",
+                                      border: "1px solid #ebdcd0",
+                                    }}
+                                  >
                                     Featured
                                   </span>
                                 ) : null}
-                                <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>Performer: {row.performer}</div>
+                                <div
+                                  style={{
+                                    fontSize: 12,
+                                    color: "var(--muted)",
+                                    marginTop: 2,
+                                  }}
+                                >
+                                  Performer: {row.performer}
+                                </div>
                               </div>
                             </div>
-                            <span style={{ fontSize: 11, color: "var(--muted)", whiteSpace: "nowrap" }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--muted)",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
                               {row.date_label || "Annual Recital"}
                             </span>
                           </div>
-                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between" }}>
-                            <span>{row.program} ({row.category})</span>
+                          <div
+                            style={{
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <span>
+                              {row.program} ({row.category})
+                            </span>
                             <code>{row.youtube_id}</code>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             <button
                               type="button"
                               onClick={async (e) => {
                                 e.stopPropagation()
-                                if (confirm(`Remove performance "${row.title}"?`)) {
+                                if (
+                                  confirm(`Remove performance "${row.title}"?`)
+                                ) {
                                   await deletePerformance(row.id)
-                                  setActionNotice("Performance recital removed.")
+                                  setActionNotice(
+                                    "Performance recital removed.",
+                                  )
                                   loadData()
                                 }
                               }}
@@ -2558,15 +3344,41 @@ function AdminManager({ title }: { title: string }) {
                       {/* Students Mobile Card */}
                       {title === "Students" && (
                         <>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              gap: 8,
+                            }}
+                          >
                             <div>
-                              <strong style={{ fontSize: 14, color: "var(--navy)" }}>{row.student_no}</strong>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--navy)", marginTop: 2 }}>
+                              <strong
+                                style={{ fontSize: 14, color: "var(--navy)" }}
+                              >
+                                {row.student_no}
+                              </strong>
+                              <div
+                                style={{
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  color: "var(--navy)",
+                                  marginTop: 2,
+                                }}
+                              >
                                 {row.full_name}
                               </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
-                              <Badge tone={row.status === "active" ? "green" : row.status === "graduated" ? "gold" : "red"}>
+                              <Badge
+                                tone={
+                                  row.status === "active"
+                                    ? "green"
+                                    : row.status === "graduated"
+                                      ? "gold"
+                                      : "red"
+                                }
+                              >
                                 {row.status}
                               </Badge>
                             </span>
@@ -2574,11 +3386,32 @@ function AdminManager({ title }: { title: string }) {
                           <div style={{ fontSize: 12, color: "var(--muted)" }}>
                             {row.email} · {row.phone}
                           </div>
-                          <div style={{ background: "#fbfaf8", padding: "8px 10px", borderRadius: 6, fontSize: 12, display: "flex", justifyContent: "space-between" }}>
-                            <div><strong style={{ color: "var(--navy)" }}>Program:</strong> {row.program}</div>
-                            <div><strong style={{ color: "var(--navy)" }}>Cohort:</strong> {row.cohort}</div>
+                          <div
+                            style={{
+                              background: "#fbfaf8",
+                              padding: "8px 10px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <div>
+                              <strong style={{ color: "var(--navy)" }}>
+                                Program:
+                              </strong>{" "}
+                              {row.program}
+                            </div>
+                            <div>
+                              <strong style={{ color: "var(--navy)" }}>
+                                Cohort:
+                              </strong>{" "}
+                              {row.cohort}
+                            </div>
                           </div>
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                          <div
+                            style={{ display: "flex", gap: 8, marginTop: 4 }}
+                          >
                             <Button
                               variant="ghost"
                               onClick={(e) => {
@@ -2635,8 +3468,22 @@ function AdminManager({ title }: { title: string }) {
               {/* Application Details */}
               {title === "Applications" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <small style={{ color: "var(--muted)", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <small
+                      style={{
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                        fontWeight: 700,
+                        letterSpacing: "0.05em",
+                      }}
+                    >
                       Candidate Admission Record
                     </small>
                     <button
@@ -2658,53 +3505,146 @@ function AdminManager({ title }: { title: string }) {
                   </div>
 
                   {editingApp ? (
-                    <form onSubmit={handleSaveAppModifications} style={{ background: "#fbfaf8", padding: 16, borderRadius: 8, border: "1px solid var(--line)", marginBottom: 16 }}>
+                    <form
+                      onSubmit={handleSaveAppModifications}
+                      style={{
+                        background: "#fbfaf8",
+                        padding: 16,
+                        borderRadius: 8,
+                        border: "1px solid var(--line)",
+                        marginBottom: 16,
+                      }}
+                    >
                       <div className="form-grid" style={{ marginBottom: 12 }}>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Program / Course
                           </label>
                           <input
                             value={appForm.program}
-                            onChange={(e) => setAppForm({ ...appForm, program: e.target.value })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({
+                                ...appForm,
+                                program: e.target.value,
+                              })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                             required
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Tuition Fee (₦)
                           </label>
                           <input
                             type="number"
                             value={appForm.tuition_fee}
-                            onChange={(e) => setAppForm({ ...appForm, tuition_fee: Number(e.target.value) })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({
+                                ...appForm,
+                                tuition_fee: Number(e.target.value),
+                              })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                             required
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Study Mode
                           </label>
                           <select
                             value={appForm.study_mode}
-                            onChange={(e) => setAppForm({ ...appForm, study_mode: e.target.value })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({
+                                ...appForm,
+                                study_mode: e.target.value,
+                              })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                           >
-                            <option value="Onsite">Onsite (Kaduna Studio)</option>
+                            <option value="Onsite">
+                              Onsite (Kaduna Studio)
+                            </option>
                             <option value="Online">Online Video Lessons</option>
-                            <option value="Home Lessons">Private Home Lessons</option>
+                            <option value="Home Lessons">
+                              Private Home Lessons
+                            </option>
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Skill Level
                           </label>
                           <select
                             value={appForm.skill_level}
-                            onChange={(e) => setAppForm({ ...appForm, skill_level: e.target.value })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({
+                                ...appForm,
+                                skill_level: e.target.value,
+                              })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                           >
                             <option value="Beginner">Beginner</option>
                             <option value="Intermediate">Intermediate</option>
@@ -2712,36 +3652,78 @@ function AdminManager({ title }: { title: string }) {
                           </select>
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Student Phone
                           </label>
                           <input
                             value={appForm.phone}
-                            onChange={(e) => setAppForm({ ...appForm, phone: e.target.value })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({ ...appForm, phone: e.target.value })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                             required
                           />
                         </div>
                         <div>
-                          <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              marginBottom: 5,
+                            }}
+                          >
                             Student Email
                           </label>
                           <input
                             type="email"
                             value={appForm.email}
-                            onChange={(e) => setAppForm({ ...appForm, email: e.target.value })}
-                            style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                            onChange={(e) =>
+                              setAppForm({ ...appForm, email: e.target.value })
+                            }
+                            style={{
+                              width: "100%",
+                              minHeight: 40,
+                              borderRadius: 6,
+                              border: "1px solid #cbd4d9",
+                              padding: "0 10px",
+                              background: "white",
+                              fontSize: 13,
+                            }}
                             required
                           />
                         </div>
                       </div>
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                        <Button variant="ghost" type="button" onClick={() => setEditingApp(false)}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          gap: 10,
+                        }}
+                      >
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          onClick={() => setEditingApp(false)}
+                        >
                           Cancel
                         </Button>
-                        <Button type="submit">
-                          Save Modifications
-                        </Button>
+                        <Button type="submit">Save Modifications</Button>
                       </div>
                     </form>
                   ) : (
@@ -2760,7 +3742,14 @@ function AdminManager({ title }: { title: string }) {
                         <small>Phone Number</small>
                         <strong>{selectedRecord.phone}</strong>
                       </div>
-                      <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, padding: "6px 0 2px" }}>
+                      <div
+                        style={{
+                          gridColumn: "1 / -1",
+                          display: "flex",
+                          gap: 10,
+                          padding: "6px 0 2px",
+                        }}
+                      >
                         <a
                           href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.first_name || "")},%20this%20is%20Vivadoxa%20Music%20Academy%20regarding%20your%20application%20(${selectedRecord.application_no}).`}
                           target="_blank"
@@ -2813,7 +3802,8 @@ function AdminManager({ title }: { title: string }) {
                       <div>
                         <small>Study Mode &amp; Level</small>
                         <strong>
-                          {selectedRecord.study_mode} ({selectedRecord.skill_level})
+                          {selectedRecord.study_mode} (
+                          {selectedRecord.skill_level})
                         </strong>
                       </div>
                       <div>
@@ -2952,7 +3942,14 @@ function AdminManager({ title }: { title: string }) {
                     <small>Bank Narration / Notes</small>
                     <strong>{selectedRecord.notes || "—"}</strong>
                   </div>
-                  <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, paddingTop: 8 }}>
+                  <div
+                    style={{
+                      gridColumn: "1/-1",
+                      display: "flex",
+                      gap: 10,
+                      paddingTop: 8,
+                    }}
+                  >
                     {selectedRecord.payer_phone && (
                       <a
                         href={`https://wa.me/${(selectedRecord.payer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.payer_name || "")},%20this%20is%20Vivadoxa%20Accounts%20regarding%20your%20payment%20(Ref:%20${selectedRecord.reference}).`}
@@ -3019,7 +4016,14 @@ function AdminManager({ title }: { title: string }) {
                       <small>Customer Email</small>
                       <strong>{selectedRecord.customer_email || "—"}</strong>
                     </div>
-                    <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, padding: "4px 0" }}>
+                    <div
+                      style={{
+                        gridColumn: "1/-1",
+                        display: "flex",
+                        gap: 10,
+                        padding: "4px 0",
+                      }}
+                    >
                       <a
                         href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
                         target="_blank"
@@ -3105,13 +4109,23 @@ function AdminManager({ title }: { title: string }) {
                     }}
                   >
                     <div style={{ flex: 1, minWidth: 180 }}>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 4,
+                        }}
+                      >
                         Update Stage:
                       </label>
                       <select
                         defaultValue={selectedRecord.status}
                         onChange={(e) =>
-                          handleRepairStatus(selectedRecord.tracking_code, e.target.value)
+                          handleRepairStatus(
+                            selectedRecord.tracking_code,
+                            e.target.value,
+                          )
                         }
                         style={{
                           width: "100%",
@@ -3123,13 +4137,22 @@ function AdminManager({ title }: { title: string }) {
                         <option value="received">Received</option>
                         <option value="assessing">Assessing</option>
                         <option value="in_progress">In Progress</option>
-                        <option value="ready">Ready for Pickup / Delivery</option>
+                        <option value="ready">
+                          Ready for Pickup / Delivery
+                        </option>
                         <option value="collected">Collected / Delivered</option>
                       </select>
                     </div>
 
                     <div style={{ flex: 1, minWidth: 180 }}>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 4 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 4,
+                        }}
+                      >
                         Set Repair Cost (₦):
                       </label>
                       <input
@@ -3184,7 +4207,12 @@ function AdminManager({ title }: { title: string }) {
                       lineHeight: 1.6,
                     }}
                   >
-                    <small style={{ color: "var(--muted)", textTransform: "uppercase" }}>
+                    <small
+                      style={{
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
                       Message Content:
                     </small>
                     <p style={{ margin: "8px 0 0", color: "#111" }}>
@@ -3200,11 +4228,15 @@ function AdminManager({ title }: { title: string }) {
                   <div className="doc-grid" style={{ margin: "0 0 16px" }}>
                     <div>
                       <small>Student ID Number</small>
-                      <strong style={{ fontSize: 16, color: "var(--navy)" }}>{selectedRecord.student_no}</strong>
+                      <strong style={{ fontSize: 16, color: "var(--navy)" }}>
+                        {selectedRecord.student_no}
+                      </strong>
                     </div>
                     <div>
                       <small>Linked Application</small>
-                      <strong>{selectedRecord.application_no || "Direct Registration"}</strong>
+                      <strong>
+                        {selectedRecord.application_no || "Direct Registration"}
+                      </strong>
                     </div>
                     <div>
                       <small>Student Full Name</small>
@@ -3222,7 +4254,14 @@ function AdminManager({ title }: { title: string }) {
                       <small>Primary Email</small>
                       <strong>{selectedRecord.email || "—"}</strong>
                     </div>
-                    <div style={{ gridColumn: "1/-1", display: "flex", gap: 10, paddingTop: 4 }}>
+                    <div
+                      style={{
+                        gridColumn: "1/-1",
+                        display: "flex",
+                        gap: 10,
+                        paddingTop: 4,
+                      }}
+                    >
                       {selectedRecord.phone && (
                         <a
                           href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.full_name)},%20this%20is%20Vivadoxa%20Academy%20Academic%20Desk.`}
@@ -3270,40 +4309,106 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                   </div>
 
-                  <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16 }}>
-                    <h4 style={{ margin: "0 0 12px", fontSize: 13, textTransform: "uppercase", color: "var(--muted)" }}>
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--line)",
+                      paddingTop: 16,
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 12px",
+                        fontSize: 13,
+                        textTransform: "uppercase",
+                        color: "var(--muted)",
+                      }}
+                    >
                       Academic Cohort &amp; Enrollment Status
                     </h4>
                     <div className="form-grid">
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            marginBottom: 4,
+                          }}
+                        >
                           Assigned Cohort Slot:
                         </label>
                         <select
                           value={studentForm.cohort}
-                          onChange={(e) => setStudentForm({ ...studentForm, cohort: e.target.value })}
-                          style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", background: "white", fontSize: 13 }}
+                          onChange={(e) =>
+                            setStudentForm({
+                              ...studentForm,
+                              cohort: e.target.value,
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            background: "white",
+                            fontSize: 13,
+                          }}
                         >
-                          <option value="Saturday Cohort A">Saturday Cohort A (Morning 9am–12pm)</option>
-                          <option value="Saturday Cohort B">Saturday Cohort B (Afternoon 1pm–4pm)</option>
-                          <option value="Weekday Evenings">Weekday Evenings (Tue &amp; Thu 5pm–7pm)</option>
-                          <option value="Private Home Lessons">Private Home Lessons</option>
-                          <option value="Online Virtual Studio">Online Virtual Studio</option>
+                          <option value="Saturday Cohort A">
+                            Saturday Cohort A (Morning 9am–12pm)
+                          </option>
+                          <option value="Saturday Cohort B">
+                            Saturday Cohort B (Afternoon 1pm–4pm)
+                          </option>
+                          <option value="Weekday Evenings">
+                            Weekday Evenings (Tue &amp; Thu 5pm–7pm)
+                          </option>
+                          <option value="Private Home Lessons">
+                            Private Home Lessons
+                          </option>
+                          <option value="Online Virtual Studio">
+                            Online Virtual Studio
+                          </option>
                         </select>
                       </div>
 
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            marginBottom: 4,
+                          }}
+                        >
                           Enrollment Status:
                         </label>
                         <select
                           value={studentForm.status}
-                          onChange={(e) => setStudentForm({ ...studentForm, status: e.target.value })}
-                          style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--line)", background: "white", fontSize: 13 }}
+                          onChange={(e) =>
+                            setStudentForm({
+                              ...studentForm,
+                              status: e.target.value,
+                            })
+                          }
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            background: "white",
+                            fontSize: 13,
+                          }}
                         >
-                          <option value="active">Active (Currently Enrolled)</option>
-                          <option value="graduated">Graduated (Completed Program)</option>
-                          <option value="suspended">Suspended / On Leave</option>
+                          <option value="active">
+                            Active (Currently Enrolled)
+                          </option>
+                          <option value="graduated">
+                            Graduated (Completed Program)
+                          </option>
+                          <option value="suspended">
+                            Suspended / On Leave
+                          </option>
                         </select>
                       </div>
                     </div>
@@ -3360,7 +4465,10 @@ function AdminManager({ title }: { title: string }) {
                   <Button
                     variant="ghost"
                     onClick={() =>
-                      handleDeleteStudent(selectedRecord.id, selectedRecord.full_name)
+                      handleDeleteStudent(
+                        selectedRecord.id,
+                        selectedRecord.full_name,
+                      )
                     }
                     style={{ color: "#dc2626" }}
                   >
@@ -3377,7 +4485,10 @@ function AdminManager({ title }: { title: string }) {
                   <Button
                     variant="secondary"
                     onClick={() =>
-                      handleEnquiryToggle(selectedRecord.id, selectedRecord.is_read)
+                      handleEnquiryToggle(
+                        selectedRecord.id,
+                        selectedRecord.is_read,
+                      )
                     }
                   >
                     {selectedRecord.is_read ? "Mark as Unread" : "Mark as Read"}
@@ -3471,18 +4582,42 @@ function AdminManager({ title }: { title: string }) {
                   />
                   <div className="form-grid">
                     <div>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 5,
+                        }}
+                      >
                         Category
                       </label>
                       <select
                         value={newCourse.category}
-                        onChange={(e) => setNewCourse({ ...newCourse, category: e.target.value })}
-                        style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd4d9", padding: "0 10px", background: "white", fontSize: 13 }}
+                        onChange={(e) =>
+                          setNewCourse({
+                            ...newCourse,
+                            category: e.target.value,
+                          })
+                        }
+                        style={{
+                          width: "100%",
+                          minHeight: 40,
+                          borderRadius: 6,
+                          border: "1px solid #cbd4d9",
+                          padding: "0 10px",
+                          background: "white",
+                          fontSize: 13,
+                        }}
                       >
                         <option value="Instruments">Instruments</option>
                         <option value="Vocals">Vocals</option>
-                        <option value="Production">Production &amp; Tech</option>
-                        <option value="Theory">Theory &amp; Musicianship</option>
+                        <option value="Production">
+                          Production &amp; Tech
+                        </option>
+                        <option value="Theory">
+                          Theory &amp; Musicianship
+                        </option>
                       </select>
                     </div>
                     <Field
@@ -3502,7 +4637,11 @@ function AdminManager({ title }: { title: string }) {
                   />
                 </div>
                 <div className="modal-foot">
-                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit">Publish to Course Catalog</Button>
@@ -3517,7 +4656,9 @@ function AdminManager({ title }: { title: string }) {
                     id="add-i-name"
                     label="Instructor Full Name"
                     value={newInstructor.name}
-                    onChange={(v) => setNewInstructor({ ...newInstructor, name: v })}
+                    onChange={(v) =>
+                      setNewInstructor({ ...newInstructor, name: v })
+                    }
                     placeholder="e.g. Emmanuel Danjuma"
                     required
                   />
@@ -3526,14 +4667,21 @@ function AdminManager({ title }: { title: string }) {
                       id="add-i-title"
                       label="Title / Position"
                       value={newInstructor.title}
-                      onChange={(v) => setNewInstructor({ ...newInstructor, title: v })}
+                      onChange={(v) =>
+                        setNewInstructor({ ...newInstructor, title: v })
+                      }
                       placeholder="e.g. Senior Piano Faculty"
                     />
                     <Field
                       id="add-i-spec"
                       label="Specialization"
                       value={newInstructor.specialization}
-                      onChange={(v) => setNewInstructor({ ...newInstructor, specialization: v })}
+                      onChange={(v) =>
+                        setNewInstructor({
+                          ...newInstructor,
+                          specialization: v,
+                        })
+                      }
                       placeholder="e.g. Classical & Jazz Piano"
                     />
                   </div>
@@ -3542,15 +4690,36 @@ function AdminManager({ title }: { title: string }) {
                       id="add-i-loc"
                       label="Primary Studio Location"
                       value={newInstructor.location}
-                      onChange={(v) => setNewInstructor({ ...newInstructor, location: v })}
+                      onChange={(v) =>
+                        setNewInstructor({ ...newInstructor, location: v })
+                      }
                       placeholder="Kaduna Studio"
                     />
-                    <div style={{ display: "flex", alignItems: "center", marginTop: 24 }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginTop: 24,
+                      }}
+                    >
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: 13,
+                          cursor: "pointer",
+                        }}
+                      >
                         <input
                           type="checkbox"
                           checked={!!newInstructor.is_director}
-                          onChange={(e) => setNewInstructor({ ...newInstructor, is_director: e.target.checked ? 1 : 0 })}
+                          onChange={(e) =>
+                            setNewInstructor({
+                              ...newInstructor,
+                              is_director: e.target.checked ? 1 : 0,
+                            })
+                          }
                         />
                         Executive / Artistic Director Profile
                       </label>
@@ -3560,19 +4729,27 @@ function AdminManager({ title }: { title: string }) {
                     id="add-i-image"
                     label="Instructor Photo / Avatar URL"
                     value={newInstructor.image || ""}
-                    onChange={(v) => setNewInstructor({ ...newInstructor, image: v })}
+                    onChange={(v) =>
+                      setNewInstructor({ ...newInstructor, image: v })
+                    }
                     placeholder="e.g. /assets/instructors/dan.jpg or https://..."
                   />
                   <Field
                     id="add-i-bio"
                     label="Biography"
                     value={newInstructor.bio}
-                    onChange={(v) => setNewInstructor({ ...newInstructor, bio: v })}
+                    onChange={(v) =>
+                      setNewInstructor({ ...newInstructor, bio: v })
+                    }
                     placeholder="Conservatory background, performance history, awards..."
                   />
                 </div>
                 <div className="modal-foot">
-                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit">Save Instructor Profile</Button>
@@ -3587,7 +4764,9 @@ function AdminManager({ title }: { title: string }) {
                     id="add-pf-title"
                     label="Performance Title"
                     value={newPerformance.title}
-                    onChange={(v) => setNewPerformance({ ...newPerformance, title: v })}
+                    onChange={(v) =>
+                      setNewPerformance({ ...newPerformance, title: v })
+                    }
                     placeholder="e.g. Chopin Nocturne in C Minor"
                     required
                   />
@@ -3596,14 +4775,18 @@ function AdminManager({ title }: { title: string }) {
                       id="add-pf-perf"
                       label="Performer / Student Name"
                       value={newPerformance.performer}
-                      onChange={(v) => setNewPerformance({ ...newPerformance, performer: v })}
+                      onChange={(v) =>
+                        setNewPerformance({ ...newPerformance, performer: v })
+                      }
                       placeholder="e.g. Chinedu Okafor (Grade 3 Piano)"
                     />
                     <Field
                       id="add-pf-prog"
                       label="Associated Course"
                       value={newPerformance.program}
-                      onChange={(v) => setNewPerformance({ ...newPerformance, program: v })}
+                      onChange={(v) =>
+                        setNewPerformance({ ...newPerformance, program: v })
+                      }
                       placeholder="Piano & Keyboard Mastery"
                     />
                   </div>
@@ -3612,7 +4795,9 @@ function AdminManager({ title }: { title: string }) {
                       id="add-pf-yid"
                       label="YouTube URL or Video ID"
                       value={newPerformance.youtube_id}
-                      onChange={(v) => setNewPerformance({ ...newPerformance, youtube_id: v })}
+                      onChange={(v) =>
+                        setNewPerformance({ ...newPerformance, youtube_id: v })
+                      }
                       placeholder="https://youtu.be/... or 11-char ID"
                       required
                     />
@@ -3620,7 +4805,9 @@ function AdminManager({ title }: { title: string }) {
                       id="add-pf-date"
                       label="Recital Date / Term Label"
                       value={newPerformance.date_label}
-                      onChange={(v) => setNewPerformance({ ...newPerformance, date_label: v })}
+                      onChange={(v) =>
+                        setNewPerformance({ ...newPerformance, date_label: v })
+                      }
                       placeholder="Annual Studio Recital 2026"
                     />
                   </div>
@@ -3628,12 +4815,18 @@ function AdminManager({ title }: { title: string }) {
                     id="add-pf-desc"
                     label="Description & Highlights"
                     value={newPerformance.description}
-                    onChange={(v) => setNewPerformance({ ...newPerformance, description: v })}
+                    onChange={(v) =>
+                      setNewPerformance({ ...newPerformance, description: v })
+                    }
                     placeholder="Performance context, milestone celebration..."
                   />
                 </div>
                 <div className="modal-foot">
-                  <Button variant="ghost" type="button" onClick={() => setShowAddModal(false)}>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit">Publish Recital Video</Button>
@@ -3695,7 +4888,9 @@ function AdminManager({ title }: { title: string }) {
                     id="edit-p-cat"
                     label="Category"
                     value={editCourse.category}
-                    onChange={(v) => setEditCourse({ ...editCourse, category: v })}
+                    onChange={(v) =>
+                      setEditCourse({ ...editCourse, category: v })
+                    }
                   />
                   <Field
                     id="edit-p-fee"
@@ -3767,7 +4962,9 @@ function AdminManager({ title }: { title: string }) {
                 if (res && res.success) {
                   setShowEditModal(false)
                   setEditInstructor(null)
-                  setActionNotice(`Instructor "${editInstructor.name}" updated.`)
+                  setActionNotice(
+                    `Instructor "${editInstructor.name}" updated.`,
+                  )
                   loadData()
                 }
               }}
@@ -3777,7 +4974,9 @@ function AdminManager({ title }: { title: string }) {
                   id="edit-i-name"
                   label="Instructor Name"
                   value={editInstructor.name}
-                  onChange={(v) => setEditInstructor({ ...editInstructor, name: v })}
+                  onChange={(v) =>
+                    setEditInstructor({ ...editInstructor, name: v })
+                  }
                   required
                 />
                 <div className="form-grid">
@@ -3785,46 +4984,69 @@ function AdminManager({ title }: { title: string }) {
                     id="edit-i-title"
                     label="Title / Position"
                     value={editInstructor.title}
-                    onChange={(v) => setEditInstructor({ ...editInstructor, title: v })}
+                    onChange={(v) =>
+                      setEditInstructor({ ...editInstructor, title: v })
+                    }
                   />
                   <Field
                     id="edit-i-spec"
                     label="Specialization"
                     value={editInstructor.specialization}
-                    onChange={(v) => setEditInstructor({ ...editInstructor, specialization: v })}
+                    onChange={(v) =>
+                      setEditInstructor({
+                        ...editInstructor,
+                        specialization: v,
+                      })
+                    }
                   />
                 </div>
                 <Field
                   id="edit-i-image"
                   label="Instructor Photo / Avatar URL"
                   value={editInstructor.image || ""}
-                  onChange={(v) => setEditInstructor({ ...editInstructor, image: v })}
+                  onChange={(v) =>
+                    setEditInstructor({ ...editInstructor, image: v })
+                  }
                   placeholder="e.g. /assets/instructors/dan.jpg or https://..."
                 />
                 <Field
                   id="edit-i-bio"
                   label="Biography"
                   value={editInstructor.bio || ""}
-                  onChange={(v) => setEditInstructor({ ...editInstructor, bio: v })}
+                  onChange={(v) =>
+                    setEditInstructor({ ...editInstructor, bio: v })
+                  }
                 />
               </div>
               <div className="modal-foot">
                 <Button
                   variant="ghost"
                   type="button"
-                  style={{ color: editInstructor.is_active === 0 ? "#166534" : "#dc2626" }}
+                  style={{
+                    color:
+                      editInstructor.is_active === 0 ? "#166534" : "#dc2626",
+                  }}
                   onClick={async () => {
-                    const action = editInstructor.is_active === 0 ? "activate" : "deactivate"
-                    if (confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} profile for "${editInstructor.name}"? (Profile will be preserved)`)) {
+                    const action =
+                      editInstructor.is_active === 0 ? "activate" : "deactivate"
+                    if (
+                      confirm(
+                        `${action.charAt(0).toUpperCase() + action.slice(1)} profile for "${editInstructor.name}"? (Profile will be preserved)`,
+                      )
+                    ) {
                       await toggleInstructorStatus(editInstructor.id)
                       setShowEditModal(false)
                       setEditInstructor(null)
-                      setActionNotice(`Instructor profile ${action}d (preserved).`)
+                      setActionNotice(
+                        `Instructor profile ${action}d (preserved).`,
+                      )
                       loadData()
                     }
                   }}
                 >
-                  {editInstructor.is_active === 0 ? "Activate Profile" : "Deactivate Profile"}
+                  {editInstructor.is_active === 0
+                    ? "Activate Profile"
+                    : "Deactivate Profile"}
                 </Button>
                 <Button type="submit">Save Modifications</Button>
               </div>

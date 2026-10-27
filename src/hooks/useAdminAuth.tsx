@@ -30,7 +30,7 @@ function getInitialSession(): AdminSession | null {
   try {
     const raw =
       sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY)
-    return raw ? (JSON.parse(raw) as AdminSession) : null
+    return raw ? JSON.parse(raw) as AdminSession : null
   } catch {
     return null
   }
@@ -87,12 +87,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           setLoginLoading(false)
           return true
         } else {
-          setLoginError(dbResult.error || "Incorrect email or password. Please try again.")
+          setLoginError(
+            dbResult.error || "Incorrect email or password. Please try again.",
+          )
           setLoginLoading(false)
           return false
         }
       } catch (err) {
-        setLoginError("Unable to reach authentication server. Please check your connection.")
+        setLoginError(
+          "Unable to reach authentication server. Please check your connection.",
+        )
         setLoginLoading(false)
         return false
       }

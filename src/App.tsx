@@ -12,8 +12,23 @@ import {
 } from "react-router-dom"
 import { Navbar, Footer } from "@/components/Navigation"
 import { Home } from "@/pages/Home"
-import { About, Programs, Modes, Repairs, Contact, Performances } from "@/pages/StaticPages"
-import { Privacy, Terms, TuitionPolicy, ChildProtection } from "@/pages/legal"
+import {
+  About,
+  Programs,
+  Modes,
+  Repairs,
+  Studio,
+  Contact,
+  Performances,
+} from "@/pages/StaticPages"
+import {
+  Privacy,
+  Terms,
+  TuitionPolicy,
+  ChildProtection,
+  CookiePolicy,
+} from "@/pages/legal"
+import { CookieConsent } from "@/components/CookieConsent"
 import { Apply, Payment, Status } from "@/pages/ApplyFlow"
 import { Admin, AdminLogin } from "@/pages/Admin"
 import { Portal } from "@/pages/Portal"
@@ -81,8 +96,17 @@ function AppShell() {
           <Route path="/programs" element={<Programs go={go} />} />
           <Route path="/modes" element={<Modes go={go} />} />
           <Route path="/repairs" element={<Repairs />} />
+          <Route path="/studio" element={<Studio go={go} />} />
           <Route path="/performances" element={<Performances go={go} />} />
-          <Route path="/reviews" element={<main><ReviewsHub /><Cta go={go} /></main>} />
+          <Route
+            path="/reviews"
+            element={
+              <main>
+                <ReviewsHub />
+                <Cta go={go} />
+              </main>
+            }
+          />
           <Route path="/contact" element={<Contact />} />
           <Route path="/apply" element={<Apply go={go} />} />
           <Route path="/payment" element={<Payment go={go} />} />
@@ -91,15 +115,26 @@ function AppShell() {
           {/* Legal Compliance & Regulatory Pages */}
           <Route path="/privacy" element={<Privacy go={go} />} />
           <Route path="/terms" element={<Terms go={go} />} />
+          <Route path="/cookies" element={<CookiePolicy go={go} />} />
+          <Route
+            path="/cookie-policy"
+            element={<Navigate to="/cookies" replace />}
+          />
           <Route path="/tuition-policy" element={<TuitionPolicy go={go} />} />
           <Route path="/safeguarding" element={<ChildProtection go={go} />} />
-          <Route path="/child-protection" element={<Navigate to="/safeguarding" replace />} />
+          <Route
+            path="/child-protection"
+            element={<Navigate to="/safeguarding" replace />}
+          />
           <Route path="/legal" element={<Navigate to="/terms" replace />} />
 
           {/* Student & Client Portal routes */}
           <Route path="/portal" element={<Portal go={go} />} />
           <Route path="/portal/login" element={<PortalAuth go={go} />} />
-          <Route path="/portal-login" element={<Navigate to="/portal/login" replace />} />
+          <Route
+            path="/portal-login"
+            element={<Navigate to="/portal/login" replace />}
+          />
 
           {/* Admin portal routes */}
           <Route path="/admin/login" element={<AdminLogin go={go} />} />
@@ -140,6 +175,14 @@ function AppShell() {
             <span className="whatsapp-tooltip">Chat with Admissions</span>
           </a>
         </>
+      )}
+
+      {/* Cookie Consent Banner & Preferences Center Modal (All non-admin routes) */}
+      {!location.pathname.startsWith("/admin") && (
+        <CookieConsent
+          onNavigateToPolicy={() => go("cookies")}
+          onNavigateToPrivacy={() => go("privacy")}
+        />
       )}
     </>
   )

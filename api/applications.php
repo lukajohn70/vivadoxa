@@ -97,7 +97,7 @@ if ($method === 'GET') {
         if (!empty($appNo) && is_array($updates)) {
             $fields = [];
             $params = [':no' => $appNo];
-            $allowed = ['program', 'study_mode', 'skill_level', 'status', 'tuition_fee', 'phone', 'email'];
+            $allowed = ['program', 'study_mode', 'skill_level', 'status', 'tuition_fee', 'currency', 'phone', 'email', 'class_type', 'session_time', 'duration', 'marital_status', 'state_of_origin', 'nationality', 'occupation', 'sponsor'];
             foreach ($allowed as $f) {
                 if (isset($updates[$f])) {
                     $fields[] = "`$f` = :$f";
@@ -151,7 +151,21 @@ if ($method === 'GET') {
     $guardianName = !empty($input['guardianName']) ? trim($input['guardianName']) : null;
     $guardianPhone = !empty($input['guardianPhone']) ? trim($input['guardianPhone']) : null;
     $address = !empty($input['address']) ? trim($input['address']) : null;
-    $tuitionFee = (float)($input['amount'] ?? $input['tuition_fee'] ?? 75000.00);
+    $tuitionFee = (float)($input['amount'] ?? $input['tuition_fee'] ?? 55000.00);
+
+    // Official 2026 Application Form docx fields
+    $classType = trim($input['classType'] ?? $input['class_type'] ?? 'Regular classes');
+    $stateOfOrigin = trim($input['stateOfOrigin'] ?? $input['state_of_origin'] ?? $input['state'] ?? '');
+    $maritalStatus = trim($input['maritalStatus'] ?? $input['marital_status'] ?? 'Single');
+    $nationality = trim($input['nationality'] ?? 'Nigerian');
+    $occupation = trim($input['occupation'] ?? '');
+    $sponsor = trim($input['sponsor'] ?? $input['guardianName'] ?? '');
+    $sessionTime = trim($input['sessionTime'] ?? $input['session_time'] ?? $input['schedule'] ?? 'Morning Section (10 AM-1 PM)');
+    $duration = trim($input['duration'] ?? $input['planTier'] ?? '3 Months');
+    $currency = strtoupper(trim($input['currency'] ?? 'NGN'));
+    if ($currency !== 'USD') {
+        $currency = 'NGN';
+    }
 
     if (empty($firstName) || empty($email) || empty($phone)) {
         jsonResponse(['success' => false, 'error' => 'Please provide your name, email, and phone number.'], 400);
@@ -162,8 +176,8 @@ if ($method === 'GET') {
 
     $stmt = $pdo->prepare("
         INSERT INTO `applications`
-        (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `dob`, `gender`, `guardian_name`, `guardian_phone`, `address`, `status`, `tuition_fee`)
-        VALUES (:no, :fn, :ln, :em, :ph, :pr, :sm, :sl, :dob, :gen, :gname, :gph, :addr, 'pending', :fee)
+        (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `dob`, `gender`, `guardian_name`, `guardian_phone`, `address`, `class_type`, `state_of_origin`, `marital_status`, `nationality`, `occupation`, `sponsor`, `session_time`, `duration`, `currency`, `status`, `tuition_fee`)
+        VALUES (:no, :fn, :ln, :em, :ph, :pr, :sm, :sl, :dob, :gen, :gname, :gph, :addr, :ctype, :state, :marital, :nat, :occ, :spon, :stime, :dur, :curr, 'pending', :fee)
     ");
 
     $stmt->execute([
@@ -180,6 +194,15 @@ if ($method === 'GET') {
         ':gname' => $guardianName,
         ':gph' => $guardianPhone,
         ':addr' => $address,
+        ':ctype' => $classType,
+        ':state' => $stateOfOrigin,
+        ':marital' => $maritalStatus,
+        ':nat' => $nationality,
+        ':occ' => $occupation,
+        ':spon' => $sponsor,
+        ':stime' => $sessionTime,
+        ':dur' => $duration,
+        ':curr' => $currency,
         ':fee' => $tuitionFee,
     ]);
 

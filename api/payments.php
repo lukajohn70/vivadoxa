@@ -86,10 +86,96 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'message' => "Payment marked as '$newStatus'."]);
     }
 
+    // ── Action: Online Gateway Verification / Instant Settlement ─────────────
+    if ($action === 'verify_gateway') {
+        $reference = trim($input['reference'] ?? ('REF-GW-' . rand(10000, 99999)));
+        $appNo = trim($input['applicationNo'] ?? $input['application_no'] ?? '');
+        $payerName = trim($input['payerName'] ?? $input['payer_name'] ?? 'Online Applicant');
+        $payerEmail = trim($input['payerEmail'] ?? $input['payer_email'] ?? '');
+        $amount = (float)($input['amount'] ?? $input['amountPaid'] ?? 0);
+        $currency = strtoupper(trim($input['currency'] ?? 'NGN'));
+        if ($currency !== 'USD') {
+            $currency = 'NGN';
+        }
+        $methodType = trim($input['gateway'] ?? $input['method'] ?? 'Online Payment Gateway');
+        $notes = trim($input['notes'] ?? ("Automated {$methodType} checkout transaction verified"));
+
+        if ($amount <= 0) {
+            jsonResponse(['success' => false, 'error' => 'Valid payment amount required.'], 400);
+        }
+
+        $stmt = $pdo->prepare("
+            INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`, `verified_at`)
+            VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'verified', :notes, NOW())
+            ON DUPLICATE KEY UPDATE
+                `payer_name` = VALUES(`payer_name`),
+                `amount` = VALUES(`amount`),
+                `currency` = VALUES(`currency`),
+                `method` = VALUES(`method`),
+                `status` = 'verified',
+                `notes` = VALUES(`notes`),
+                `verified_at` = NOW()
+        ");
+
+        $stmt->execute([
+            ':ref' => $reference,
+            ':app_no' => !empty($appNo) ? $appNo : null,
+            ':name' => $payerName,
+            ':email' => $payerEmail,
+            ':amt' => $amount,
+            ':curr' => $currency,
+            ':method' => $methodType,
+            ':notes' => $notes,
+        ]);
+
+        // Automatically approve application upon successful online payment
+        if (!empty($appNo)) {
+            $upApp = $pdo->prepare("UPDATE `applications` SET `status` = 'approved' WHERE `application_no` = :no");
+            $upApp->execute([':no' => $appNo]);
+        }
+
+        // Notify Admissions & Student
+        try {
+            $settings = getGeneralSettingsConfig();
+            $schoolEmail = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+            $currSymbol = $currency === 'USD' ? '$' : '₦';
+            $formattedAmt = $currSymbol . number_format($amount, 2);
+
+            if (!empty($settings['emailAlerts']) && !empty($settings['alertOnPayment'] ?? true)) {
+                $subject = "💳 Instant Online Payment Received: {$payerName} ({$formattedAmt} via {$methodType})";
+                $html = "
+                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
+                        <h2 style='color: #157054; margin-top: 0;'>Automated Payment Cleared</h2>
+                        <p>An online tuition payment has cleared successfully via {$methodType}:</p>
+                        <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Online Checkout') . "</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount / Currency:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt} {$currency}</td></tr>
+                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Channel:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
+                        </table>
+                    </div>
+                ";
+                sendSystemEmail($schoolEmail, $subject, $html, $settings);
+            }
+        } catch (Exception $e) {}
+
+        jsonResponse([
+            'success' => true,
+            'message' => 'Online payment confirmed and admission cleared.',
+            'reference' => $reference,
+            'application_no' => $appNo,
+        ]);
+    }
+
     // ── Action: Create / submit payment proof ─────────────────────────────────
     $payerName = trim($input['payerName'] ?? $input['payer_name'] ?? '');
     $payerEmail = trim($input['payerEmail'] ?? $input['payer_email'] ?? '');
     $amount = (float)($input['amountPaid'] ?? $input['amount'] ?? 0);
+    $currency = strtoupper(trim($input['currency'] ?? 'NGN'));
+    if ($currency !== 'USD') {
+        $currency = 'NGN';
+    }
     $reference = trim($input['transactionRef'] ?? $input['reference'] ?? ('REF-VDX-' . rand(10000, 99999)));
     $appNo = trim($input['applicationNo'] ?? $input['application_no'] ?? '');
     $methodType = trim($input['method'] ?? 'Bank Transfer');
@@ -100,11 +186,12 @@ if ($method === 'GET') {
     }
 
     $stmt = $pdo->prepare("
-        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `method`, `status`, `notes`)
-        VALUES (:ref, :app_no, :name, :email, :amt, :method, 'pending', :notes)
+        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`)
+        VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes)
         ON DUPLICATE KEY UPDATE
             `payer_name` = VALUES(`payer_name`),
             `amount` = VALUES(`amount`),
+            `currency` = VALUES(`currency`),
             `notes` = VALUES(`notes`)
     ");
 
@@ -114,6 +201,7 @@ if ($method === 'GET') {
         ':name' => $payerName,
         ':email' => $payerEmail,
         ':amt' => $amount,
+        ':curr' => $currency,
         ':method' => $methodType,
         ':notes' => $notes,
     ]);

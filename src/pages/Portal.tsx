@@ -14,6 +14,7 @@ import {
 import {
   AdmissionLetterModal,
   PaymentReceiptModal,
+  ApplicationSlipModal,
 } from "@/components/OfficialDocument"
 import type { Page } from "@/types"
 
@@ -21,9 +22,11 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
   const [user, setUser] = useState<PortalUser | null>(null)
   const [portalData, setPortalData] = useState<PortalData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<"courses" | "payments" | "repairs" | "profile">("courses")
+  const [activeTab, setActiveTab] =
+    useState<"courses" | "payments" | "repairs" | "profile">("courses")
 
   // Modals
+  const [slipData, setSlipData] = useState<any | null>(null)
   const [letterData, setLetterData] = useState<any | null>(null)
   const [receiptData, setReceiptData] = useState<any | null>(null)
 
@@ -42,13 +45,19 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
   // Schedule & Absence modal
   const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [selectedProgramForSchedule, setSelectedProgramForSchedule] = useState<any | null>(null)
-  const [schedType, setSchedType] = useState<"absence_travel" | "one_off_reschedule" | "permanent_change">("absence_travel")
+  const [selectedProgramForSchedule, setSelectedProgramForSchedule] =
+    useState<any | null>(null)
+  const [schedType, setSchedType] =
+    useState<"absence_travel" | "one_off_reschedule" | "permanent_change">(
+      "absence_travel",
+    )
   const [schedAffectedDate, setSchedAffectedDate] = useState("")
   const [schedReturnDate, setSchedReturnDate] = useState("")
   const [schedReason, setSchedReason] = useState("Traveling out of town")
   const [schedMakeup, setSchedMakeup] = useState(true)
-  const [schedPreferredSlot, setSchedPreferredSlot] = useState("Wednesday afternoon (4:00 PM)")
+  const [schedPreferredSlot, setSchedPreferredSlot] = useState(
+    "Wednesday afternoon (4:00 PM)",
+  )
   const [schedNotes, setSchedNotes] = useState("")
   const [schedSubmitting, setSchedSubmitting] = useState(false)
   const [schedSuccessMsg, setSchedSuccessMsg] = useState("")
@@ -111,9 +120,13 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         student_phone: user.phone,
         program: selectedProgramForSchedule.program,
         request_type: schedType,
-        current_schedule: selectedProgramForSchedule.schedule || "Saturday Cohort (10am–12pm)",
+        current_schedule:
+          selectedProgramForSchedule.schedule || "Saturday Cohort (10am–12pm)",
         affected_date: schedAffectedDate || undefined,
-        return_date: schedType === "absence_travel" ? (schedReturnDate || undefined) : undefined,
+        return_date:
+          schedType === "absence_travel"
+            ? schedReturnDate || undefined
+            : undefined,
         reason: schedReason,
         makeup_requested: schedMakeup,
         preferred_makeup_slot: schedMakeup ? schedPreferredSlot : undefined,
@@ -121,7 +134,9 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
       })
 
       if (res.success) {
-        setSchedSuccessMsg("Schedule notice submitted successfully! Admissions & instructors have been notified.")
+        setSchedSuccessMsg(
+          "Schedule notice submitted successfully! Admissions & instructors have been notified.",
+        )
         setTimeout(() => {
           setShowScheduleModal(false)
           setSchedSuccessMsg("")
@@ -165,7 +180,14 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
   if (loading) {
     return (
-      <main style={{ minHeight: "100vh", background: "#f7f5f0", display: "grid", placeItems: "center" }}>
+      <main
+        style={{
+          minHeight: "100vh",
+          background: "#f7f5f0",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
           <Logo />
           <p style={{ marginTop: 16, color: "var(--muted)", fontSize: 14 }}>
@@ -194,7 +216,9 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#f2f0e9", paddingBottom: 60 }}>
+    <main
+      style={{ minHeight: "100vh", background: "#f2f0e9", paddingBottom: 60 }}
+    >
       {/* Top Portal Navigation Bar */}
       <header className="bg-[var(--navy)] text-white px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/10">
         <div className="container flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -244,15 +268,47 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
       <div className="container" style={{ marginTop: 28 }}>
         {/* Toast notice */}
         {actionNotice && (
-          <div style={{ padding: "12px 18px", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 8, color: "#166534", marginBottom: 20, fontSize: 13, fontWeight: 600 }}>
+          <div
+            style={{
+              padding: "12px 18px",
+              background: "#dcfce7",
+              border: "1px solid #86efac",
+              borderRadius: 8,
+              color: "#166534",
+              marginBottom: 20,
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
             ✓ {actionNotice}
           </div>
         )}
 
         {/* Welcome & Overview Banner */}
-        <div style={{ background: "white", borderRadius: 12, padding: "24px 28px", border: "1px solid var(--line)", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+        <div
+          style={{
+            background: "white",
+            borderRadius: 12,
+            padding: "24px 28px",
+            border: "1px solid var(--line)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+            marginBottom: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 20,
+          }}
+        >
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 4,
+              }}
+            >
               <h1 style={{ fontSize: 24, margin: 0, fontWeight: 700 }}>
                 Welcome, {user.full_name.split(" ")[0]}
               </h1>
@@ -274,7 +330,8 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               </span>
             </div>
             <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
-              Here is your centralized academic, tuition, and repair maintenance ledger.
+              Here is your centralized academic, tuition, and repair maintenance
+              ledger.
             </p>
           </div>
 
@@ -290,47 +347,145 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
         {/* Summary Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-          <div style={{ background: "white", borderRadius: 10, padding: 20, border: "1px solid var(--line)" }}>
-            <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              background: "white",
+              borderRadius: 10,
+              padding: 20,
+              border: "1px solid var(--line)",
+            }}
+          >
+            <small
+              style={{
+                color: "var(--muted)",
+                textTransform: "uppercase",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+              }}
+            >
               Active Programs &amp; Applications
             </small>
-            <strong style={{ display: "block", fontSize: 28, color: "var(--navy)", marginTop: 4 }}>
+            <strong
+              style={{
+                display: "block",
+                fontSize: 28,
+                color: "var(--navy)",
+                marginTop: 4,
+              }}
+            >
               {applications.length}
             </strong>
             <span style={{ fontSize: 11, color: "#157054", fontWeight: 600 }}>
-              {students.length > 0 ? `${students.length} Enrolled Student Cohort` : "Applications in Review"}
+              {students.length > 0
+                ? `${students.length} Enrolled Student Cohort`
+                : "Applications in Review"}
             </span>
           </div>
 
-          <div style={{ background: "white", borderRadius: 10, padding: 20, border: "1px solid var(--line)" }}>
-            <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              background: "white",
+              borderRadius: 10,
+              padding: 20,
+              border: "1px solid var(--line)",
+            }}
+          >
+            <small
+              style={{
+                color: "var(--muted)",
+                textTransform: "uppercase",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+              }}
+            >
               Active Instrument Repairs
             </small>
-            <strong style={{ display: "block", fontSize: 28, color: "#1f6ea5", marginTop: 4 }}>
+            <strong
+              style={{
+                display: "block",
+                fontSize: 28,
+                color: "#1f6ea5",
+                marginTop: 4,
+              }}
+            >
               {repairs.length}
             </strong>
             <span style={{ fontSize: 11, color: "var(--muted)" }}>
-              {repairs.filter((r) => r.status === "ready").length} Ready for Collection
+              {repairs.filter((r) => r.status === "ready").length} Ready for
+              Collection
             </span>
           </div>
 
-          <div style={{ background: "white", borderRadius: 10, padding: 20, border: "1px solid var(--line)" }}>
-            <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              background: "white",
+              borderRadius: 10,
+              padding: 20,
+              border: "1px solid var(--line)",
+            }}
+          >
+            <small
+              style={{
+                color: "var(--muted)",
+                textTransform: "uppercase",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+              }}
+            >
               Verified Tuition Paid
             </small>
-            <strong style={{ display: "block", fontSize: 24, color: "#157054", marginTop: 4 }}>
+            <strong
+              style={{
+                display: "block",
+                fontSize: 24,
+                color: "#157054",
+                marginTop: 4,
+              }}
+            >
               {financials.formatted_paid}
             </strong>
             <span style={{ fontSize: 11, color: "var(--muted)" }}>
-              {payments.filter((p) => p.status === "verified").length} Verified Receipts
+              {payments.filter((p) => p.status === "verified").length} Verified
+              Receipts
             </span>
           </div>
 
-          <div style={{ background: financials.balance_due > 0 ? "rgba(201, 107, 50, 0.08)" : "white", borderRadius: 10, padding: 20, border: financials.balance_due > 0 ? "1px solid rgba(201, 107, 50, 0.3)" : "1px solid var(--line)" }}>
-            <small style={{ color: "var(--muted)", textTransform: "uppercase", fontSize: 10, fontWeight: 700, letterSpacing: "0.05em" }}>
+          <div
+            style={{
+              background:
+                financials.balance_due > 0
+                  ? "rgba(201, 107, 50, 0.08)"
+                  : "white",
+              borderRadius: 10,
+              padding: 20,
+              border:
+                financials.balance_due > 0
+                  ? "1px solid rgba(201, 107, 50, 0.3)"
+                  : "1px solid var(--line)",
+            }}
+          >
+            <small
+              style={{
+                color: "var(--muted)",
+                textTransform: "uppercase",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+              }}
+            >
               Tuition Balance Outstanding
             </small>
-            <strong style={{ display: "block", fontSize: 24, color: financials.balance_due > 0 ? "#a24a18" : "#157054", marginTop: 4 }}>
+            <strong
+              style={{
+                display: "block",
+                fontSize: 24,
+                color: financials.balance_due > 0 ? "#a24a18" : "#157054",
+                marginTop: 4,
+              }}
+            >
               {financials.formatted_balance}
             </strong>
             {financials.balance_due > 0 ? (
@@ -352,13 +507,25 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                 Pay Balance Online ↗
               </button>
             ) : (
-              <span style={{ fontSize: 11, color: "#157054", fontWeight: 600 }}>✓ All Invoices Settled</span>
+              <span style={{ fontSize: 11, color: "#157054", fontWeight: 600 }}>
+                ✓ All Invoices Settled
+              </span>
             )}
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="no-scrollbar" style={{ display: "flex", gap: 8, borderBottom: "1px solid var(--line)", marginBottom: 24, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: "flex",
+            gap: 8,
+            borderBottom: "1px solid var(--line)",
+            marginBottom: 24,
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
           <button
             type="button"
             onClick={() => setActiveTab("courses")}
@@ -368,8 +535,12 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               fontWeight: 700,
               background: "none",
               border: "none",
-              borderBottom: activeTab === "courses" ? "3px solid var(--gold)" : "3px solid transparent",
-              color: activeTab === "courses" ? "var(--gold-text)" : "var(--muted)",
+              borderBottom:
+                activeTab === "courses"
+                  ? "3px solid var(--gold)"
+                  : "3px solid transparent",
+              color:
+                activeTab === "courses" ? "var(--gold-text)" : "var(--muted)",
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -386,8 +557,12 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               fontWeight: 700,
               background: "none",
               border: "none",
-              borderBottom: activeTab === "payments" ? "3px solid var(--gold)" : "3px solid transparent",
-              color: activeTab === "payments" ? "var(--gold-text)" : "var(--muted)",
+              borderBottom:
+                activeTab === "payments"
+                  ? "3px solid var(--gold)"
+                  : "3px solid transparent",
+              color:
+                activeTab === "payments" ? "var(--gold-text)" : "var(--muted)",
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -404,8 +579,12 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               fontWeight: 700,
               background: "none",
               border: "none",
-              borderBottom: activeTab === "repairs" ? "3px solid var(--gold)" : "3px solid transparent",
-              color: activeTab === "repairs" ? "var(--gold-text)" : "var(--muted)",
+              borderBottom:
+                activeTab === "repairs"
+                  ? "3px solid var(--gold)"
+                  : "3px solid transparent",
+              color:
+                activeTab === "repairs" ? "var(--gold-text)" : "var(--muted)",
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -422,8 +601,12 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               fontWeight: 700,
               background: "none",
               border: "none",
-              borderBottom: activeTab === "profile" ? "3px solid var(--gold)" : "3px solid transparent",
-              color: activeTab === "profile" ? "var(--gold-text)" : "var(--muted)",
+              borderBottom:
+                activeTab === "profile"
+                  ? "3px solid var(--gold)"
+                  : "3px solid transparent",
+              color:
+                activeTab === "profile" ? "var(--gold-text)" : "var(--muted)",
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
@@ -436,11 +619,28 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         {activeTab === "courses" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {applications.length === 0 ? (
-              <div style={{ background: "white", borderRadius: 10, padding: 40, textAlign: "center", border: "1px solid var(--line)" }}>
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: 10,
+                  padding: 40,
+                  textAlign: "center",
+                  border: "1px solid var(--line)",
+                }}
+              >
                 <Icon name="music" size={36} className="text-amber-600 mb-3" />
                 <h3 style={{ margin: "8px 0" }}>No Academy Applications Yet</h3>
-                <p style={{ color: "var(--muted)", fontSize: 13, maxWidth: 440, margin: "0 auto 18px" }}>
-                  Discover our instrumental and vocal masterclasses. Select a course and submit an application to start your musical journey.
+                <p
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 13,
+                    maxWidth: 440,
+                    margin: "0 auto 18px",
+                  }}
+                >
+                  Discover our instrumental and vocal masterclasses. Select a
+                  course and submit an application to start your musical
+                  journey.
                 </p>
                 <Button onClick={() => go("apply")}>
                   Browse Courses &amp; Apply Now
@@ -450,21 +650,67 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               applications.map((app) => {
                 const isApproved = app.status === "approved"
                 return (
-                  <div key={app.id} style={{ background: "white", borderRadius: 12, padding: 24, border: "1px solid var(--line)", boxShadow: "0 4px 15px rgba(0,0,0,0.02)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid var(--line)" }}>
+                  <div
+                    key={app.id}
+                    style={{
+                      background: "white",
+                      borderRadius: 12,
+                      padding: 24,
+                      border: "1px solid var(--line)",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: 14,
+                        marginBottom: 16,
+                        paddingBottom: 16,
+                        borderBottom: "1px solid var(--line)",
+                      }}
+                    >
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--gold-text)", background: "#fef3c7", padding: "2px 8px", borderRadius: 4 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "var(--gold-text)",
+                              background: "#fef3c7",
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                            }}
+                          >
                             {app.application_no}
                           </span>
-                          <h3 style={{ margin: 0, fontSize: 18 }}>{app.program}</h3>
+                          <h3 style={{ margin: 0, fontSize: 18 }}>
+                            {app.program}
+                          </h3>
                         </div>
                         <small style={{ color: "var(--muted)" }}>
-                          Mode: <strong>{app.study_mode}</strong> ({app.skill_level}) · Submitted on {new Date(app.created_at).toLocaleDateString()}
+                          Mode: <strong>{app.study_mode}</strong> (
+                          {app.skill_level}) · Submitted on{" "}
+                          {new Date(app.created_at).toLocaleDateString()}
                         </small>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
                         <span
                           style={{
                             padding: "4px 12px",
@@ -497,22 +743,60 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-4 text-xs">
                       <div>
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: 11 }}>Tuition Fee Schedule</small>
-                        <strong>₦{Number(app.tuition_fee || 20000).toLocaleString()}</strong>
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          Tuition Fee Schedule
+                        </small>
+                        <strong>
+                          ₦{Number(app.tuition_fee || 20000).toLocaleString()}
+                        </strong>
                       </div>
                       <div>
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: 11 }}>Primary Campus</small>
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          Primary Campus
+                        </small>
                         <strong>Kaduna Studio, Nigeria</strong>
                       </div>
                       <div>
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: 11 }}>Contact On File</small>
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          Contact On File
+                        </small>
                         <span>{app.phone}</span>
                       </div>
                     </div>
 
                     {/* Actions bar */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, borderTop: "1px solid #f1f5f9", flexWrap: "wrap", gap: 10 }}>
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        paddingTop: 14,
+                        borderTop: "1px solid #f1f5f9",
+                        flexWrap: "wrap",
+                        gap: 10,
+                      }}
+                    >
+                      <div
+                        style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
+                      >
                         <button
                           type="button"
                           onClick={() => {
@@ -540,6 +824,27 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           Reschedule / Report Absence
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() => setSlipData(app)}
+                          style={{
+                            padding: "7px 14px",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            background: "transparent",
+                            color: "var(--navy)",
+                            border: "1px solid var(--line)",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <Icon name="copy" size={14} />
+                          Download Application Slip
+                        </button>
+
                         {isApproved && (
                           <button
                             type="button"
@@ -558,7 +863,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                               gap: 6,
                             }}
                           >
-                            <Icon name="sparkles" size={14} />
+                            <Icon name="academic" size={14} />
                             View Official Admission Letter
                           </button>
                         )}
@@ -600,7 +905,8 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                             cursor: "pointer",
                           }}
                         >
-                          Pay Tuition ₦{Number(app.tuition_fee || 20000).toLocaleString()} ↗
+                          Pay Tuition ₦
+                          {Number(app.tuition_fee || 20000).toLocaleString()} ↗
                         </button>
                       )}
                     </div>
@@ -610,61 +916,191 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
             )}
 
             {/* Schedule & Reschedule Requests Audit */}
-            {portalData?.schedule_requests && portalData.schedule_requests.length > 0 && (
-              <div style={{ background: "white", borderRadius: 12, padding: 22, border: "1px solid var(--line)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                  <div>
-                    <h4 style={{ margin: "0 0 2px", fontSize: 15, color: "var(--navy)" }}>Schedule Updates &amp; Makeup Lessons</h4>
-                    <small style={{ color: "var(--muted)" }}>Log of your reported travel notices, lesson absences, and catch-up allocations.</small>
+            {portalData?.schedule_requests &&
+              portalData.schedule_requests.length > 0 && (
+                <div
+                  style={{
+                    background: "white",
+                    borderRadius: 12,
+                    padding: 22,
+                    border: "1px solid var(--line)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 14,
+                    }}
+                  >
+                    <div>
+                      <h4
+                        style={{
+                          margin: "0 0 2px",
+                          fontSize: 15,
+                          color: "var(--navy)",
+                        }}
+                      >
+                        Schedule Updates &amp; Makeup Lessons
+                      </h4>
+                      <small style={{ color: "var(--muted)" }}>
+                        Log of your reported travel notices, lesson absences,
+                        and catch-up allocations.
+                      </small>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
+                    {portalData.schedule_requests.map((req: any) => (
+                      <div
+                        key={req.id}
+                        style={{
+                          padding: 14,
+                          background: "#faf9f6",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          flexWrap: "wrap",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 260 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 700,
+                                padding: "2px 8px",
+                                borderRadius: 4,
+                                background:
+                                  req.request_type === "absence_travel"
+                                    ? "#e0f2fe"
+                                    : "#fef3c7",
+                                color:
+                                  req.request_type === "absence_travel"
+                                    ? "#0369a1"
+                                    : "#92400e",
+                              }}
+                            >
+                              {req.request_type === "absence_travel"
+                                ? "Travel / Absence Notice"
+                                : req.request_type === "one_off_reschedule"
+                                  ? "One-Off Reschedule"
+                                  : "Cohort Transfer"}
+                            </span>
+                            <strong style={{ fontSize: 13 }}>
+                              {req.program}
+                            </strong>
+                          </div>
+                          <p
+                            style={{
+                              margin: "4px 0",
+                              fontSize: 12,
+                              color: "var(--navy)",
+                            }}
+                          >
+                            <strong>Date Affected:</strong>{" "}
+                            {req.affected_date || "Upcoming session"}{" "}
+                            {req.return_date ? `until ${req.return_date}` : ""}{" "}
+                            · <em>Reason: {req.reason}</em>
+                          </p>
+                          {req.status === "approved" &&
+                            req.allocated_makeup_date && (
+                              <div
+                                style={{
+                                  marginTop: 8,
+                                  padding: "8px 12px",
+                                  background: "#dcfce7",
+                                  border: "1px solid #86efac",
+                                  borderRadius: 6,
+                                  fontSize: 12,
+                                  color: "#166534",
+                                }}
+                              >
+                                <strong>✓ Catch-Up Session Allocated:</strong>{" "}
+                                {new Date(
+                                  req.allocated_makeup_date,
+                                ).toLocaleString()}{" "}
+                                ({req.allocated_room || "Studio Room 1"})
+                                {req.staff_notes && (
+                                  <span
+                                    style={{
+                                      display: "block",
+                                      marginTop: 2,
+                                      fontSize: 11,
+                                      color: "#15803d",
+                                    }}
+                                  >
+                                    Instructor Note: {req.staff_notes}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          {req.status === "pending" && (
+                            <small
+                              style={{
+                                color: "var(--muted)",
+                                display: "block",
+                                marginTop: 4,
+                              }}
+                            >
+                              Our admissions desk and instructors have been
+                              alerted. We will confirm your catch-up slot
+                              shortly.
+                            </small>
+                          )}
+                        </div>
+
+                        <div>
+                          <span
+                            style={{
+                              padding: "3px 10px",
+                              borderRadius: 999,
+                              fontSize: 10,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              background:
+                                req.status === "approved"
+                                  ? "#dcfce7"
+                                  : req.status === "declined"
+                                    ? "#fee2e2"
+                                    : "#fef9c3",
+                              color:
+                                req.status === "approved"
+                                  ? "#166534"
+                                  : req.status === "declined"
+                                    ? "#991b1b"
+                                    : "#854d0e",
+                            }}
+                          >
+                            {req.status === "approved"
+                              ? "Approved"
+                              : req.status === "declined"
+                                ? "Declined"
+                                : "Pending Review"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {portalData.schedule_requests.map((req: any) => (
-                    <div key={req.id} style={{ padding: 14, background: "#faf9f6", borderRadius: 8, border: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
-                      <div style={{ flex: 1, minWidth: 260 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: req.request_type === "absence_travel" ? "#e0f2fe" : "#fef3c7", color: req.request_type === "absence_travel" ? "#0369a1" : "#92400e" }}>
-                            {req.request_type === "absence_travel" ? "Travel / Absence Notice" : req.request_type === "one_off_reschedule" ? "One-Off Reschedule" : "Cohort Transfer"}
-                          </span>
-                          <strong style={{ fontSize: 13 }}>{req.program}</strong>
-                        </div>
-                        <p style={{ margin: "4px 0", fontSize: 12, color: "var(--navy)" }}>
-                          <strong>Date Affected:</strong> {req.affected_date || "Upcoming session"} {req.return_date ? `until ${req.return_date}` : ""} · <em>Reason: {req.reason}</em>
-                        </p>
-                        {req.status === "approved" && req.allocated_makeup_date && (
-                          <div style={{ marginTop: 8, padding: "8px 12px", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 6, fontSize: 12, color: "#166534" }}>
-                            <strong>✓ Catch-Up Session Allocated:</strong> {new Date(req.allocated_makeup_date).toLocaleString()} ({req.allocated_room || "Studio Room 1"})
-                            {req.staff_notes && <span style={{ display: "block", marginTop: 2, fontSize: 11, color: "#15803d" }}>Instructor Note: {req.staff_notes}</span>}
-                          </div>
-                        )}
-                        {req.status === "pending" && (
-                          <small style={{ color: "var(--muted)", display: "block", marginTop: 4 }}>
-                            Our admissions desk and instructors have been alerted. We will confirm your catch-up slot shortly.
-                          </small>
-                        )}
-                      </div>
-
-                      <div>
-                        <span
-                          style={{
-                            padding: "3px 10px",
-                            borderRadius: 999,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            background: req.status === "approved" ? "#dcfce7" : req.status === "declined" ? "#fee2e2" : "#fef9c3",
-                            color: req.status === "approved" ? "#166534" : req.status === "declined" ? "#991b1b" : "#854d0e",
-                          }}
-                        >
-                          {req.status === "approved" ? "Approved" : req.status === "declined" ? "Declined" : "Pending Review"}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
           </div>
         )}
 
@@ -672,11 +1108,26 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         {activeTab === "payments" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Top Balance Card */}
-            <div style={{ background: "white", borderRadius: 12, padding: 24, border: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+            <div
+              style={{
+                background: "white",
+                borderRadius: 12,
+                padding: 24,
+                border: "1px solid var(--line)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 20,
+              }}
+            >
               <div>
-                <h3 style={{ margin: "0 0 4px" }}>Tuition &amp; Fees Statement</h3>
+                <h3 style={{ margin: "0 0 4px" }}>
+                  Tuition &amp; Fees Statement
+                </h3>
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
-                  Verified payments are credited directly to your student registration ledger.
+                  Verified payments are credited directly to your student
+                  registration ledger.
                 </p>
               </div>
               <div style={{ display: "flex", gap: 10 }}>
@@ -690,40 +1141,141 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
             </div>
 
             {/* Payments Table */}
-            <div style={{ background: "white", borderRadius: 10, border: "1px solid var(--line)", overflow: "hidden" }}>
+            <div
+              style={{
+                background: "white",
+                borderRadius: 10,
+                border: "1px solid var(--line)",
+                overflow: "hidden",
+              }}
+            >
               <div className="hidden md:block table-wrap">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#fbfaf8", borderBottom: "1px solid var(--line)", textAlign: "left" }}>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Reference</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Course / Ref</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Amount</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Method</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Status</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>Date</th>
-                      <th style={{ padding: "12px 18px", fontSize: 11, color: "var(--muted)", textTransform: "uppercase", textAlign: "right" }}>Receipt</th>
+                    <tr
+                      style={{
+                        background: "#fbfaf8",
+                        borderBottom: "1px solid var(--line)",
+                        textAlign: "left",
+                      }}
+                    >
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Reference
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Course / Ref
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Amount
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Method
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Status
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Date
+                      </th>
+                      <th
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textTransform: "uppercase",
+                          textAlign: "right",
+                        }}
+                      >
+                        Receipt
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {payments.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ padding: 40, textAlign: "center", color: "var(--muted)" }}>
+                        <td
+                          colSpan={7}
+                          style={{
+                            padding: 40,
+                            textAlign: "center",
+                            color: "var(--muted)",
+                          }}
+                        >
                           No payment transactions recorded yet.
                         </td>
                       </tr>
                     ) : (
                       payments.map((pay) => (
-                        <tr key={pay.id} style={{ borderBottom: "1px solid var(--line)", fontSize: 13 }}>
+                        <tr
+                          key={pay.id}
+                          style={{
+                            borderBottom: "1px solid var(--line)",
+                            fontSize: 13,
+                          }}
+                        >
                           <td style={{ padding: "14px 18px" }}>
                             <code>{pay.reference}</code>
                           </td>
                           <td style={{ padding: "14px 18px" }}>
                             {pay.application_no || "Tuition Registration"}
                           </td>
-                          <td style={{ padding: "14px 18px", fontWeight: 700, color: "var(--navy)" }}>
+                          <td
+                            style={{
+                              padding: "14px 18px",
+                              fontWeight: 700,
+                              color: "var(--navy)",
+                            }}
+                          >
                             ₦{Number(pay.amount).toLocaleString()}
                           </td>
-                          <td style={{ padding: "14px 18px", color: "var(--muted)" }}>
+                          <td
+                            style={{
+                              padding: "14px 18px",
+                              color: "var(--muted)",
+                            }}
+                          >
                             {pay.method}
                           </td>
                           <td style={{ padding: "14px 18px" }}>
@@ -755,10 +1307,18 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                                   : "Pending Verification"}
                             </span>
                           </td>
-                          <td style={{ padding: "14px 18px", color: "var(--muted)", fontSize: 12 }}>
+                          <td
+                            style={{
+                              padding: "14px 18px",
+                              color: "var(--muted)",
+                              fontSize: 12,
+                            }}
+                          >
                             {new Date(pay.created_at).toLocaleDateString()}
                           </td>
-                          <td style={{ padding: "14px 18px", textAlign: "right" }}>
+                          <td
+                            style={{ padding: "14px 18px", textAlign: "right" }}
+                          >
                             <button
                               type="button"
                               onClick={() => setReceiptData(pay)}
@@ -785,11 +1345,24 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               {/* Mobile Stacked Card View */}
               <div className="block md:hidden" style={{ padding: 12 }}>
                 {payments.length === 0 ? (
-                  <div style={{ padding: 24, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                  <div
+                    style={{
+                      padding: 24,
+                      textAlign: "center",
+                      color: "var(--muted)",
+                      fontSize: 13,
+                    }}
+                  >
                     No payment transactions recorded yet.
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10,
+                    }}
+                  >
                     {payments.map((pay) => (
                       <div
                         key={pay.id}
@@ -803,10 +1376,33 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           gap: 8,
                         }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 8,
+                          }}
+                        >
                           <div>
-                            <code style={{ fontSize: 13, fontWeight: 700, color: "var(--navy)" }}>{pay.reference}</code>
-                            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{pay.application_no || "Tuition Registration"}</div>
+                            <code
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: "var(--navy)",
+                              }}
+                            >
+                              {pay.reference}
+                            </code>
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "var(--muted)",
+                                marginTop: 2,
+                              }}
+                            >
+                              {pay.application_no || "Tuition Registration"}
+                            </div>
                           </div>
                           <span
                             style={{
@@ -838,19 +1434,61 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           </span>
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "white", padding: "8px 10px", borderRadius: 6, border: "1px solid #ede8de" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            background: "white",
+                            padding: "8px 10px",
+                            borderRadius: 6,
+                            border: "1px solid #ede8de",
+                          }}
+                        >
                           <div>
-                            <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>METHOD</span>
-                            <strong style={{ fontSize: 12 }}>{pay.method}</strong>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--muted)",
+                                display: "block",
+                              }}
+                            >
+                              METHOD
+                            </span>
+                            <strong style={{ fontSize: 12 }}>
+                              {pay.method}
+                            </strong>
                           </div>
                           <div style={{ textAlign: "right" }}>
-                            <span style={{ fontSize: 11, color: "var(--muted)", display: "block" }}>AMOUNT</span>
-                            <strong style={{ fontSize: 14, color: "var(--navy)" }}>₦{Number(pay.amount).toLocaleString()}</strong>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--muted)",
+                                display: "block",
+                              }}
+                            >
+                              AMOUNT
+                            </span>
+                            <strong
+                              style={{ fontSize: 14, color: "var(--navy)" }}
+                            >
+                              ₦{Number(pay.amount).toLocaleString()}
+                            </strong>
                           </div>
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--line)", paddingTop: 8 }}>
-                          <span style={{ fontSize: 11, color: "var(--muted)" }}>{new Date(pay.created_at).toLocaleDateString()}</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            borderTop: "1px solid var(--line)",
+                            paddingTop: 8,
+                          }}
+                        >
+                          <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                            {new Date(pay.created_at).toLocaleDateString()}
+                          </span>
                           <button
                             type="button"
                             onClick={() => setReceiptData(pay)}
@@ -881,11 +1519,30 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         {activeTab === "repairs" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {repairs.length === 0 ? (
-              <div style={{ background: "white", borderRadius: 10, padding: 40, textAlign: "center", border: "1px solid var(--line)" }}>
+              <div
+                style={{
+                  background: "white",
+                  borderRadius: 10,
+                  padding: 40,
+                  textAlign: "center",
+                  border: "1px solid var(--line)",
+                }}
+              >
                 <Icon name="tool" size={36} className="text-amber-600 mb-3" />
-                <h3 style={{ margin: "8px 0" }}>No Active Instrument Repairs</h3>
-                <p style={{ color: "var(--muted)", fontSize: 13, maxWidth: 440, margin: "0 auto 18px" }}>
-                  Does your guitar, violin, keyboard, or woodwind instrument need restringing, setup, or electronic repair? Submit an intake ticket to our Kaduna workshop.
+                <h3 style={{ margin: "8px 0" }}>
+                  No Active Instrument Repairs
+                </h3>
+                <p
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 13,
+                    maxWidth: 440,
+                    margin: "0 auto 18px",
+                  }}
+                >
+                  Does your guitar, violin, keyboard, or woodwind instrument
+                  need restringing, setup, or electronic repair? Submit an
+                  intake ticket to our Kaduna workshop.
                 </p>
                 <Button onClick={() => go("repairs")}>
                   Book Instrument Service
@@ -893,21 +1550,70 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               </div>
             ) : (
               repairs.map((rep) => {
-                const stages = ["received", "assessing", "in_progress", "ready", "collected"]
+                const stages = [
+                  "received",
+                  "assessing",
+                  "in_progress",
+                  "ready",
+                  "collected",
+                ]
                 const currentIdx = stages.indexOf(rep.status)
 
                 return (
-                  <div key={rep.id} style={{ background: "white", borderRadius: 12, padding: 24, border: "1px solid var(--line)", boxShadow: "0 4px 15px rgba(0,0,0,0.02)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+                  <div
+                    key={rep.id}
+                    style={{
+                      background: "white",
+                      borderRadius: 12,
+                      padding: 24,
+                      border: "1px solid var(--line)",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                        gap: 12,
+                        marginBottom: 16,
+                      }}
+                    >
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: "#1f6ea5", background: "#e0f2fe", padding: "2px 8px", borderRadius: 4 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "#1f6ea5",
+                              background: "#e0f2fe",
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                            }}
+                          >
                             {rep.tracking_code}
                           </span>
-                          <h3 style={{ margin: 0, fontSize: 18 }}>{rep.instrument}</h3>
+                          <h3 style={{ margin: 0, fontSize: 18 }}>
+                            {rep.instrument}
+                          </h3>
                         </div>
                         <small style={{ color: "var(--muted)" }}>
-                          Intake: <strong>{rep.intake_method === "pickup" ? "Logistics Courier Pickup" : "Studio Drop-off"}</strong> · Intake logged {new Date(rep.created_at).toLocaleDateString()}
+                          Intake:{" "}
+                          <strong>
+                            {rep.intake_method === "pickup"
+                              ? "Logistics Courier Pickup"
+                              : "Studio Drop-off"}
+                          </strong>{" "}
+                          · Intake logged{" "}
+                          {new Date(rep.created_at).toLocaleDateString()}
                         </small>
                       </div>
 
@@ -919,8 +1625,10 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                             fontSize: 11,
                             fontWeight: 700,
                             textTransform: "uppercase",
-                            background: rep.status === "ready" ? "#dcfce7" : "#e0f2fe",
-                            color: rep.status === "ready" ? "#166534" : "#0369a1",
+                            background:
+                              rep.status === "ready" ? "#dcfce7" : "#e0f2fe",
+                            color:
+                              rep.status === "ready" ? "#166534" : "#0369a1",
                           }}
                         >
                           Stage: {rep.status.replace("_", " ")}
@@ -929,21 +1637,54 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                     </div>
 
                     {/* Progress Bar Steps */}
-                    <div style={{ margin: "20px 0", padding: "16px", background: "#faf9f6", borderRadius: 8, border: "1px solid var(--line)" }}>
-                      <small style={{ display: "block", fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
+                    <div
+                      style={{
+                        margin: "20px 0",
+                        padding: "16px",
+                        background: "#faf9f6",
+                        borderRadius: 8,
+                        border: "1px solid var(--line)",
+                      }}
+                    >
+                      <small
+                        style={{
+                          display: "block",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          color: "var(--muted)",
+                          marginBottom: 10,
+                        }}
+                      >
                         Luthier Workshop Diagnostic Pipeline
                       </small>
-                      <div style={{ display: "flex", justifyContent: "space-between", position: "relative" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          position: "relative",
+                        }}
+                      >
                         {[
                           { key: "received", label: "1. Intake Received" },
                           { key: "assessing", label: "2. Fault Diagnostic" },
-                          { key: "in_progress", label: "3. Service In Progress" },
+                          {
+                            key: "in_progress",
+                            label: "3. Service In Progress",
+                          },
                           { key: "ready", label: "4. Ready for Collection" },
                         ].map((stage, idx) => {
                           const isDone = currentIdx >= idx
                           const isCurrent = currentIdx === idx
                           return (
-                            <div key={stage.key} style={{ textAlign: "center", flex: 1, position: "relative" }}>
+                            <div
+                              key={stage.key}
+                              style={{
+                                textAlign: "center",
+                                flex: 1,
+                                position: "relative",
+                              }}
+                            >
                               <div
                                 style={{
                                   width: 26,
@@ -960,7 +1701,13 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                               >
                                 {isDone ? "✓" : idx + 1}
                               </div>
-                              <span style={{ fontSize: 11, fontWeight: isCurrent ? 700 : 500, color: isCurrent ? "#157054" : "var(--muted)" }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: isCurrent ? 700 : 500,
+                                  color: isCurrent ? "#157054" : "var(--muted)",
+                                }}
+                              >
                                 {stage.label}
                               </span>
                             </div>
@@ -971,13 +1718,33 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4 text-xs">
                       <div>
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: 11 }}>Reported Issue</small>
-                        <p style={{ margin: "2px 0 0", color: "var(--navy)" }}>{rep.issue}</p>
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          Reported Issue
+                        </small>
+                        <p style={{ margin: "2px 0 0", color: "var(--navy)" }}>
+                          {rep.issue}
+                        </p>
                       </div>
                       <div>
-                        <small style={{ display: "block", color: "var(--muted)", fontSize: 11 }}>Diagnostic Cost Estimate</small>
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                          }}
+                        >
+                          Diagnostic Cost Estimate
+                        </small>
                         <strong style={{ fontSize: 16, color: "var(--navy)" }}>
-                          {rep.estimated_cost ? `₦${Number(rep.estimated_cost).toLocaleString()}` : "Awaiting Luthier Assessment"}
+                          {rep.estimated_cost
+                            ? `₦${Number(rep.estimated_cost).toLocaleString()}`
+                            : "Awaiting Luthier Assessment"}
                         </strong>
                       </div>
                     </div>
@@ -986,18 +1753,42 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                     {rep.status === "assessing" && rep.estimated_cost && (
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#fef3c7] border border-[#fde68a] rounded-lg mb-3.5">
                         <div>
-                          <strong style={{ color: "#92400e", fontSize: 13 }}>Diagnostic Quote Ready for Approval:</strong>
-                          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#78350f" }}>
-                            Estimated cost is ₦{Number(rep.estimated_cost).toLocaleString()}. Approve to authorize workshop repairs.
+                          <strong style={{ color: "#92400e", fontSize: 13 }}>
+                            Diagnostic Quote Ready for Approval:
+                          </strong>
+                          <p
+                            style={{
+                              margin: "2px 0 0",
+                              fontSize: 12,
+                              color: "#78350f",
+                            }}
+                          >
+                            Estimated cost is ₦
+                            {Number(rep.estimated_cost).toLocaleString()}.
+                            Approve to authorize workshop repairs.
                           </p>
                         </div>
-                        <Button variant="primary" onClick={() => handleApproveRepair(rep.tracking_code)} className="w-full sm:w-auto shrink-0">
+                        <Button
+                          variant="primary"
+                          onClick={() => handleApproveRepair(rep.tracking_code)}
+                          className="w-full sm:w-auto shrink-0"
+                        >
                           Approve Quote &amp; Start Repair
                         </Button>
                       </div>
                     )}
 
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 10,
+                        paddingTop: 12,
+                        borderTop: "1px solid #f1f5f9",
+                      }}
+                    >
                       <a
                         href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Workshop,%20I%20am%20inquiring%20about%20my%20repair%20ticket%20(${rep.tracking_code})%20for%20my%20${encodeURIComponent(rep.instrument)}.`}
                         target="_blank"
@@ -1033,15 +1824,44 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
         {/* TAB 4: PROFILE & SETTINGS */}
         {activeTab === "profile" && (
-          <div style={{ background: "white", borderRadius: 12, padding: 28, border: "1px solid var(--line)", maxWidth: 640 }}>
-            <h3 style={{ margin: "0 0 4px" }}>Profile &amp; Emergency Contacts</h3>
-            <p style={{ margin: "0 0 20px", color: "var(--muted)", fontSize: 13 }}>
-              Keep your contact details updated to ensure notifications and admission letters reach you promptly.
+          <div
+            style={{
+              background: "white",
+              borderRadius: 12,
+              padding: 28,
+              border: "1px solid var(--line)",
+              maxWidth: 640,
+            }}
+          >
+            <h3 style={{ margin: "0 0 4px" }}>
+              Profile &amp; Emergency Contacts
+            </h3>
+            <p
+              style={{
+                margin: "0 0 20px",
+                color: "var(--muted)",
+                fontSize: 13,
+              }}
+            >
+              Keep your contact details updated to ensure notifications and
+              admission letters reach you promptly.
             </p>
 
-            <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <form
+              onSubmit={handleSaveProfile}
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
               {profileNotice && (
-                <div style={{ padding: "10px 14px", background: "#dcfce7", border: "1px solid #86efac", borderRadius: 6, color: "#166534", fontSize: 12 }}>
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#dcfce7",
+                    border: "1px solid #86efac",
+                    borderRadius: 6,
+                    color: "#166534",
+                    fontSize: 12,
+                  }}
+                >
                   ✓ {profileNotice}
                 </div>
               )}
@@ -1056,13 +1876,29 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
               <div className="form-grid">
                 <div>
-                  <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      marginBottom: 5,
+                    }}
+                  >
                     Email Address (Immutable)
                   </label>
                   <input
                     value={user.email}
                     disabled
-                    style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid var(--line)", padding: "0 10px", background: "#f8f9fa", fontSize: 13, color: "var(--muted)" }}
+                    style={{
+                      width: "100%",
+                      minHeight: 40,
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      padding: "0 10px",
+                      background: "#f8f9fa",
+                      fontSize: 13,
+                      color: "var(--muted)",
+                    }}
                   />
                 </div>
                 <Field
@@ -1082,7 +1918,10 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                 placeholder="Street address and landmark"
               />
 
-              <div className="form-grid" style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+              <div
+                className="form-grid"
+                style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}
+              >
                 <Field
                   id="prof-guardian"
                   label="Emergency Contact / Guardian Name"
@@ -1097,7 +1936,9 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                 />
               </div>
 
-              <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+              <div
+                style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}
+              >
                 <Field
                   id="prof-pass"
                   label="Update Password (leave blank to keep unchanged)"
@@ -1108,7 +1949,13 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 10 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: 10,
+                }}
+              >
                 <Button type="submit" disabled={profileSaving}>
                   {profileSaving ? "Saving Changes…" : "Update Profile"}
                 </Button>
@@ -1117,6 +1964,27 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
           </div>
         )}
       </div>
+
+      {/* Official Application Slip Modal */}
+      {slipData && (
+        <ApplicationSlipModal
+          data={{
+            first_name: slipData.first_name,
+            last_name: slipData.last_name,
+            application_no: slipData.application_no,
+            program: slipData.program,
+            study_mode: slipData.study_mode,
+            skill_level: slipData.skill_level,
+            tuition_fee: slipData.tuition_fee,
+            created_at: slipData.created_at,
+            email: slipData.email,
+            phone: slipData.phone,
+            address: slipData.address,
+            status: slipData.status,
+          }}
+          onClose={() => setSlipData(null)}
+        />
+      )}
 
       {/* Official Admission Letter Modal */}
       {letterData && (
@@ -1167,10 +2035,19 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
           <div className="modal-card" style={{ maxWidth: 580 }}>
             <div className="modal-head">
               <div>
-                <h3 id="schedule-modal-title" style={{ margin: 0, fontSize: 17 }}>
+                <h3
+                  id="schedule-modal-title"
+                  style={{ margin: 0, fontSize: 17 }}
+                >
                   Report Absence or Request Reschedule
                 </h3>
-                <small style={{ color: "var(--muted)", display: "block", marginTop: 2 }}>
+                <small
+                  style={{
+                    color: "var(--muted)",
+                    display: "block",
+                    marginTop: 2,
+                  }}
+                >
                   {selectedProgramForSchedule.program} · {user?.full_name}
                 </small>
               </div>
@@ -1183,7 +2060,16 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
               </button>
             </div>
 
-            <form onSubmit={handleSendScheduleRequest} className="modal-body" style={{ padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+            <form
+              onSubmit={handleSendScheduleRequest}
+              className="modal-body"
+              style={{
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               {schedSuccessMsg ? (
                 <div
                   style={{
@@ -1212,12 +2098,24 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                       lineHeight: 1.5,
                     }}
                   >
-                    <strong>24-Hour Studio Notice Policy:</strong> Vivadoxa music instruction is 1-on-1 and relies on scheduled studio rooms and instructors. Submitting notice at least 24 hours in advance preserves your lesson credit and guarantees priority catch-up slot allocation.
+                    <strong>24-Hour Studio Notice Policy:</strong> Vivadoxa
+                    music instruction is 1-on-1 and relies on scheduled studio
+                    rooms and instructors. Submitting notice at least 24 hours
+                    in advance preserves your lesson credit and guarantees
+                    priority catch-up slot allocation.
                   </div>
 
                   {/* Type Selector */}
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 6 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--navy)",
+                        marginBottom: 6,
+                      }}
+                    >
                       What would you like to report?
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -1227,14 +2125,30 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                         style={{
                           padding: "10px 12px",
                           borderRadius: 8,
-                          border: schedType === "absence_travel" ? "2px solid var(--navy)" : "1px solid var(--line)",
-                          background: schedType === "absence_travel" ? "rgba(10, 25, 47, 0.05)" : "white",
+                          border:
+                            schedType === "absence_travel"
+                              ? "2px solid var(--navy)"
+                              : "1px solid var(--line)",
+                          background:
+                            schedType === "absence_travel"
+                              ? "rgba(10, 25, 47, 0.05)"
+                              : "white",
                           textAlign: "left",
                           cursor: "pointer",
                         }}
                       >
-                        <strong style={{ display: "block", fontSize: 13, color: "var(--navy)" }}>Travel / Away</strong>
-                        <small style={{ color: "var(--muted)", fontSize: 11 }}>Out of town or taking leave</small>
+                        <strong
+                          style={{
+                            display: "block",
+                            fontSize: 13,
+                            color: "var(--navy)",
+                          }}
+                        >
+                          Travel / Away
+                        </strong>
+                        <small style={{ color: "var(--muted)", fontSize: 11 }}>
+                          Out of town or taking leave
+                        </small>
                       </button>
 
                       <button
@@ -1243,14 +2157,30 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                         style={{
                           padding: "10px 12px",
                           borderRadius: 8,
-                          border: schedType === "one_off_reschedule" ? "2px solid var(--navy)" : "1px solid var(--line)",
-                          background: schedType === "one_off_reschedule" ? "rgba(10, 25, 47, 0.05)" : "white",
+                          border:
+                            schedType === "one_off_reschedule"
+                              ? "2px solid var(--navy)"
+                              : "1px solid var(--line)",
+                          background:
+                            schedType === "one_off_reschedule"
+                              ? "rgba(10, 25, 47, 0.05)"
+                              : "white",
                           textAlign: "left",
                           cursor: "pointer",
                         }}
                       >
-                        <strong style={{ display: "block", fontSize: 13, color: "var(--navy)" }}>One-Off Reschedule</strong>
-                        <small style={{ color: "var(--muted)", fontSize: 11 }}>Move single lesson date</small>
+                        <strong
+                          style={{
+                            display: "block",
+                            fontSize: 13,
+                            color: "var(--navy)",
+                          }}
+                        >
+                          One-Off Reschedule
+                        </strong>
+                        <small style={{ color: "var(--muted)", fontSize: 11 }}>
+                          Move single lesson date
+                        </small>
                       </button>
 
                       <button
@@ -1259,23 +2189,55 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                         style={{
                           padding: "10px 12px",
                           borderRadius: 8,
-                          border: schedType === "permanent_change" ? "2px solid var(--navy)" : "1px solid var(--line)",
-                          background: schedType === "permanent_change" ? "rgba(10, 25, 47, 0.05)" : "white",
+                          border:
+                            schedType === "permanent_change"
+                              ? "2px solid var(--navy)"
+                              : "1px solid var(--line)",
+                          background:
+                            schedType === "permanent_change"
+                              ? "rgba(10, 25, 47, 0.05)"
+                              : "white",
                           textAlign: "left",
                           cursor: "pointer",
                         }}
                       >
-                        <strong style={{ display: "block", fontSize: 13, color: "var(--navy)" }}>Cohort Change</strong>
-                        <small style={{ color: "var(--muted)", fontSize: 11 }}>Switch recurring weekly slot</small>
+                        <strong
+                          style={{
+                            display: "block",
+                            fontSize: 13,
+                            color: "var(--navy)",
+                          }}
+                        >
+                          Cohort Change
+                        </strong>
+                        <small style={{ color: "var(--muted)", fontSize: 11 }}>
+                          Switch recurring weekly slot
+                        </small>
                       </button>
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className={schedType === "absence_travel" ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : "grid grid-cols-1 gap-3"}>
+                  <div
+                    className={
+                      schedType === "absence_travel"
+                        ? "grid grid-cols-1 sm:grid-cols-2 gap-3"
+                        : "grid grid-cols-1 gap-3"
+                    }
+                  >
                     <div>
-                      <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
-                        {schedType === "absence_travel" ? "Departure / Start Date *" : "Date You Cannot Attend *"}
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {schedType === "absence_travel"
+                          ? "Departure / Start Date *"
+                          : "Date You Cannot Attend *"}
                       </label>
                       <input
                         type="date"
@@ -1294,7 +2256,15 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                     {schedType === "absence_travel" && (
                       <div>
-                        <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: "var(--navy)",
+                            marginBottom: 4,
+                          }}
+                        >
                           Expected Return Date
                         </label>
                         <input
@@ -1315,7 +2285,15 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                   {/* Reason */}
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--navy)",
+                        marginBottom: 4,
+                      }}
+                    >
                       Primary Reason
                     </label>
                     <select
@@ -1330,19 +2308,48 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                         background: "white",
                       }}
                     >
-                      <option value="Traveling out of town">Traveling out of town (Kaduna / Interstate / Abroad)</option>
-                      <option value="School / University Examinations">School or University Examinations</option>
-                      <option value="Work / Official Business Conflict">Work or Official Business Conflict</option>
-                      <option value="Health / Medical Appointment">Health / Medical Appointment</option>
-                      <option value="Family Commitment / Event">Family Commitment or Event</option>
-                      <option value="Transport or Logistics Delay">Transport or Logistics Delay</option>
+                      <option value="Traveling out of town">
+                        Traveling out of town (Kaduna / Interstate / Abroad)
+                      </option>
+                      <option value="School / University Examinations">
+                        School or University Examinations
+                      </option>
+                      <option value="Work / Official Business Conflict">
+                        Work or Official Business Conflict
+                      </option>
+                      <option value="Health / Medical Appointment">
+                        Health / Medical Appointment
+                      </option>
+                      <option value="Family Commitment / Event">
+                        Family Commitment or Event
+                      </option>
+                      <option value="Transport or Logistics Delay">
+                        Transport or Logistics Delay
+                      </option>
                       <option value="Other">Other Personal Circumstance</option>
                     </select>
                   </div>
 
                   {/* Makeup Session Option */}
-                  <div style={{ padding: "12px 14px", background: "#f8fafc", borderRadius: 8, border: "1px solid var(--line)" }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontWeight: 700, fontSize: 13, color: "var(--navy)" }}>
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      background: "#f8fafc",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                    }}
+                  >
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: "var(--navy)",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={schedMakeup}
@@ -1354,12 +2361,23 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                     {schedMakeup && (
                       <div style={{ marginTop: 10 }}>
-                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", marginBottom: 4 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "var(--muted)",
+                            textTransform: "uppercase",
+                            marginBottom: 4,
+                          }}
+                        >
                           Preferred Catch-Up Day &amp; Time
                         </label>
                         <select
                           value={schedPreferredSlot}
-                          onChange={(e) => setSchedPreferredSlot(e.target.value)}
+                          onChange={(e) =>
+                            setSchedPreferredSlot(e.target.value)
+                          }
                           style={{
                             width: "100%",
                             padding: "8px 12px",
@@ -1369,12 +2387,24 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                             background: "white",
                           }}
                         >
-                          <option value="Wednesday afternoon (4:00 PM)">Wednesday afternoon (4:00 PM – 5:30 PM)</option>
-                          <option value="Thursday evening (5:30 PM)">Thursday evening (5:30 PM – 7:00 PM)</option>
-                          <option value="Friday afternoon (3:30 PM)">Friday afternoon (3:30 PM – 5:00 PM)</option>
-                          <option value="Next Saturday morning (9:00 AM)">Next Saturday morning (9:00 AM – 10:30 AM)</option>
-                          <option value="Next Saturday afternoon (2:00 PM)">Next Saturday afternoon (2:00 PM – 3:30 PM)</option>
-                          <option value="Flexible (Coordinate with Instructor)">Flexible — whatever slot the instructor has free</option>
+                          <option value="Wednesday afternoon (4:00 PM)">
+                            Wednesday afternoon (4:00 PM – 5:30 PM)
+                          </option>
+                          <option value="Thursday evening (5:30 PM)">
+                            Thursday evening (5:30 PM – 7:00 PM)
+                          </option>
+                          <option value="Friday afternoon (3:30 PM)">
+                            Friday afternoon (3:30 PM – 5:00 PM)
+                          </option>
+                          <option value="Next Saturday morning (9:00 AM)">
+                            Next Saturday morning (9:00 AM – 10:30 AM)
+                          </option>
+                          <option value="Next Saturday afternoon (2:00 PM)">
+                            Next Saturday afternoon (2:00 PM – 3:30 PM)
+                          </option>
+                          <option value="Flexible (Coordinate with Instructor)">
+                            Flexible — whatever slot the instructor has free
+                          </option>
                         </select>
                       </div>
                     )}
@@ -1382,7 +2412,15 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
 
                   {/* Additional notes */}
                   <div>
-                    <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--navy)", marginBottom: 4 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--navy)",
+                        marginBottom: 4,
+                      }}
+                    >
                       Additional Notes for Instructor / Studio Desk
                     </label>
                     <textarea
@@ -1414,7 +2452,9 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                       disabled={schedSubmitting}
                       className="btn btn-primary w-full sm:w-auto"
                     >
-                      {schedSubmitting ? "Submitting Notice…" : "Submit Notice & Alert Studio Desk"}
+                      {schedSubmitting
+                        ? "Submitting Notice…"
+                        : "Submit Notice & Alert Studio Desk"}
                     </button>
                   </div>
                 </>

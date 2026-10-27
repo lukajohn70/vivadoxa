@@ -1,14 +1,32 @@
 import { useState, useEffect } from "react"
-import { Badge, Button, Icon, PageHero, SectionHead, Cta, WhatsAppIcon } from "@/components/ui"
-import { performances as staticPerformances, type PerformanceItem } from "@/lib/data"
+import {
+  Badge,
+  Button,
+  Icon,
+  PageHero,
+  SectionHead,
+  Cta,
+  WhatsAppIcon,
+} from "@/components/ui"
+import { SEO } from "@/components/SEO"
+import {
+  performances as staticPerformances,
+  type PerformanceItem,
+} from "@/lib/data"
 import { fetchAcademics } from "@/lib/api"
 import { WHATSAPP_URL, YOUTUBE_URL } from "@/lib/utils"
 import type { Page } from "@/types"
 
-const CATEGORIES = ["All", "Concert", "Recital", "Student Band", "Shorts"] as const
+const CATEGORIES = [
+  "All",
+  "Concert",
+  "Recital",
+  "Student Band",
+  "Shorts",
+] as const
 
 export function Performances({ go }: { go: (p: Page) => void }) {
-  const [filter, setFilter] = useState<(typeof CATEGORIES)[number]>("All")
+  const [filter, setFilter] = useState<typeof CATEGORIES[number]>("All")
   const [items, setItems] = useState<PerformanceItem[]>(staticPerformances)
   const [showAll, setShowAll] = useState(false)
   const INITIAL_LIMIT = 6
@@ -30,32 +48,42 @@ export function Performances({ go }: { go: (p: Page) => void }) {
               date: p.date_label,
               description: p.description,
               isShort: Boolean(p.is_short ?? p.isShort),
-            }))
+            })),
           )
         }
       })
       .catch(() => {})
   }, [])
 
-  const handleFilterChange = (cat: (typeof CATEGORIES)[number]) => {
+  const handleFilterChange = (cat: typeof CATEGORIES[number]) => {
     setFilter(cat)
     setShowAll(false)
   }
 
-  const featured = items.find((p) => p.youtubeId === "-IcdMT9uCLU") || items[0] || staticPerformances[0]
+  const featured =
+    items.find((p) => p.youtubeId === "-IcdMT9uCLU") ||
+    items[0] ||
+    staticPerformances[0]
 
-  const filtered = filter === "All"
-    ? items.filter((p) => p.youtubeId !== featured?.youtubeId)
-    : filter === "Shorts"
-      ? items.filter((p) => p.isShort)
-      : items.filter((p) => p.category === filter)
+  const filtered =
+    filter === "All"
+      ? items.filter((p) => p.youtubeId !== featured?.youtubeId)
+      : filter === "Shorts"
+        ? items.filter((p) => p.isShort)
+        : items.filter((p) => p.category === filter)
 
-  const visibleItems = (filter === "All" && !showAll)
-    ? filtered.slice(0, INITIAL_LIMIT)
-    : filtered
+  const visibleItems =
+    filter === "All" && !showAll ? filtered.slice(0, INITIAL_LIMIT) : filtered
 
   return (
     <main>
+      <SEO
+        title="Student Recitals & Live Concert Performances | Vivadoxa Music School"
+        description="Watch inspiring live performances, student ensemble concerts, piano recitals, and saxophone showcases recorded at Vivadoxa Music School in Kaduna."
+        keywords="student recitals kaduna, live music concert, saxophone performance, piano recital, student musicians nigeria"
+        canonicalUrl="/performances"
+      />
+
       <PageHero
         eyebrow="Student Showcase & Recitals"
         title="Music that comes alive on stage."
@@ -64,7 +92,10 @@ export function Performances({ go }: { go: (p: Page) => void }) {
 
       {/* Featured Video Spotlight */}
       {featured && (
-        <section className="section" style={{ background: "white", borderBottom: "1px solid var(--line)" }}>
+        <section
+          className="section"
+          style={{ background: "white", borderBottom: "1px solid var(--line)" }}
+        >
           <div className="container">
             <SectionHead
               eyebrow="Featured Performance"
@@ -72,22 +103,61 @@ export function Performances({ go }: { go: (p: Page) => void }) {
               body="Every 12 weeks, Vivadoxa candidates take the stage to share what they've learned with family, friends, and the community."
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-10 items-center mt-6 p-6 sm:p-9 rounded-2xl border" style={{ background: "var(--cream)", borderColor: "var(--line)" }}>
-              <div style={{ borderRadius: 10, overflow: "hidden", background: featured.isShort ? "#080c14" : "#000", aspectRatio: featured.isShort ? undefined : "16/9", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", padding: featured.isShort ? 24 : 0 }}>
+            <div
+              className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-10 items-center mt-6 p-6 sm:p-9 rounded-2xl border"
+              style={{ background: "var(--cream)", borderColor: "var(--line)" }}
+            >
+              <div
+                style={{
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  background: featured.isShort ? "#080c14" : "#000",
+                  aspectRatio: featured.isShort ? undefined : "16/9",
+                  border: "1px solid var(--line)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: featured.isShort ? 24 : 0,
+                }}
+              >
                 {featured.videoUrl ? (
                   <video
                     src={featured.videoUrl}
                     poster={featured.thumbnail}
                     controls
                     playsInline
-                    style={{ width: "100%", height: "100%", objectFit: "contain", background: "#000" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      background: "#000",
+                    }}
                   />
                 ) : featured.isShort ? (
-                  <div style={{ width: "100%", maxWidth: 260, aspectRatio: "9/16", borderRadius: 14, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.12)", position: "relative", background: "#000" }}>
+                  <div
+                    style={{
+                      width: "100%",
+                      maxWidth: 260,
+                      aspectRatio: "9/16",
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      position: "relative",
+                      background: "#000",
+                    }}
+                  >
                     <iframe
                       src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
                       title={featured.title}
-                      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: 0 }}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "100%",
+                        border: 0,
+                      }}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
@@ -105,14 +175,43 @@ export function Performances({ go }: { go: (p: Page) => void }) {
 
               <div>
                 <Badge tone="gold">{featured.category}</Badge>
-                <h2 style={{ fontSize: 28, margin: "14px 0 6px", color: "var(--navy)" }}>{featured.title}</h2>
-                <p style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700, margin: "0 0 14px" }}>
+                <h2
+                  style={{
+                    fontSize: 28,
+                    margin: "14px 0 6px",
+                    color: "var(--navy)",
+                  }}
+                >
+                  {featured.title}
+                </h2>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--gold)",
+                    fontWeight: 700,
+                    margin: "0 0 14px",
+                  }}
+                >
                   {featured.performer} • {featured.date}
                 </p>
-                <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+                <p
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    marginBottom: 24,
+                  }}
+                >
                   {featured.description}
                 </p>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                  }}
+                >
                   <Button onClick={() => go("apply")}>
                     Enroll for {featured.program} <Icon name="arrow" />
                   </Button>
@@ -121,7 +220,11 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-secondary inline-flex items-center gap-2"
-                    style={{ borderColor: "rgba(37,211,102,0.4)", color: "#128C7E", background: "#f0fdf4" }}
+                    style={{
+                      borderColor: "rgba(37,211,102,0.4)",
+                      color: "#128C7E",
+                      background: "#f0fdf4",
+                    }}
                   >
                     <WhatsAppIcon size={18} /> Chat with Us
                   </a>
@@ -135,8 +238,21 @@ export function Performances({ go }: { go: (p: Page) => void }) {
       {/* Video Gallery */}
       <section className="section" style={{ background: "var(--cream)" }}>
         <div className="container">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-            <div className="tabs" role="tablist" aria-label="Performance filters" style={{ margin: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 16,
+            }}
+          >
+            <div
+              className="tabs"
+              role="tablist"
+              aria-label="Performance filters"
+              style={{ margin: 0 }}
+            >
               {CATEGORIES.map((c) => (
                 <button
                   key={c}
@@ -155,7 +271,11 @@ export function Performances({ go }: { go: (p: Page) => void }) {
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary inline-flex items-center gap-2 text-xs py-2 px-3.5"
-              style={{ borderColor: "rgba(255,0,0,0.3)", color: "#cc0000", background: "#ffffff" }}
+              style={{
+                borderColor: "rgba(255,0,0,0.3)",
+                color: "#cc0000",
+                background: "#ffffff",
+              }}
             >
               <Icon name="youtube" size={16} /> Subscribe on YouTube @vivadoxa
             </a>
@@ -237,20 +357,40 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                           border: "1px solid rgba(255,255,255,0.25)",
                         }}
                       >
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }} />
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "#ef4444",
+                          }}
+                        />
                         Short
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ aspectRatio: "16/9", background: "#000", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div
+                    style={{
+                      aspectRatio: "16/9",
+                      background: "#000",
+                      borderBottom: "1px solid var(--line)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
                     {item.videoUrl ? (
                       <video
                         src={item.videoUrl}
                         poster={item.thumbnail}
                         controls
                         playsInline
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
                       />
                     ) : (
                       <iframe
@@ -264,28 +404,94 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                   </div>
                 )}
 
-                <div style={{ padding: 24, display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    padding: 24,
+                    display: "flex",
+                    flexDirection: "column",
+                    flex: 1,
+                    justifyContent: "space-between",
+                  }}
+                >
                   <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
                       <Badge tone="gold">{item.category}</Badge>
-                      <span style={{ fontSize: 11, color: "var(--muted)", fontFamily: "monospace" }}>{item.duration}</span>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {item.duration}
+                      </span>
                     </div>
-                    <h3 style={{ fontSize: 20, margin: "6px 0 4px", color: "var(--navy)" }}>
+                    <h3
+                      style={{
+                        fontSize: 20,
+                        margin: "6px 0 4px",
+                        color: "var(--navy)",
+                      }}
+                    >
                       {item.title}
                     </h3>
-                    <p style={{ fontSize: 12, color: "var(--gold)", fontWeight: 700, margin: "0 0 10px" }}>
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "var(--gold)",
+                        fontWeight: 700,
+                        margin: "0 0 10px",
+                      }}
+                    >
                       {item.performer} • {item.program}
                     </p>
-                    <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.5, margin: 0 }}>
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: "var(--muted)",
+                        lineHeight: 1.5,
+                        margin: 0,
+                      }}
+                    >
                       {item.description}
                     </p>
                   </div>
 
-                  <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>{item.date}</span>
+                  <div
+                    style={{
+                      marginTop: 20,
+                      paddingTop: 16,
+                      borderTop: "1px solid var(--line)",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                      {item.date}
+                    </span>
                     <button
                       onClick={() => go("apply")}
-                      style={{ border: 0, background: "none", color: "var(--gold)", fontWeight: 700, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}
+                      style={{
+                        border: 0,
+                        background: "none",
+                        color: "var(--gold)",
+                        fontWeight: 700,
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
                     >
                       Join Course <Icon name="arrow" size={12} />
                     </button>
@@ -313,9 +519,14 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                 }}
               >
                 {showAll ? (
-                  <>Show fewer recitals <Icon name="arrowUp" size={13} /></>
+                  <>
+                    Show fewer recitals <Icon name="arrowUp" size={13} />
+                  </>
                 ) : (
-                  <>Show all recitals (+{filtered.length - INITIAL_LIMIT} more) <Icon name="arrowDown" size={13} /></>
+                  <>
+                    Show all recitals (+{filtered.length - INITIAL_LIMIT} more){" "}
+                    <Icon name="arrowDown" size={13} />
+                  </>
                 )}
               </button>
             </div>
@@ -324,7 +535,10 @@ export function Performances({ go }: { go: (p: Page) => void }) {
       </section>
 
       {/* Recital Philosophy */}
-      <section className="section" style={{ background: "white", borderTop: "1px solid var(--line)" }}>
+      <section
+        className="section"
+        style={{ background: "white", borderTop: "1px solid var(--line)" }}
+      >
         <div className="container">
           <SectionHead
             center
@@ -333,33 +547,141 @@ export function Performances({ go }: { go: (p: Page) => void }) {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div style={{ padding: 28, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--navy)", color: "white", display: "grid", placeItems: "center", fontWeight: 700, marginBottom: 16 }}>
+            <div
+              style={{
+                padding: 28,
+                borderRadius: "var(--radius)",
+                background: "var(--cream)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "var(--navy)",
+                  color: "white",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  marginBottom: 16,
+                }}
+              >
                 01
               </div>
-              <h3 style={{ fontSize: 18, color: "var(--navy)", margin: "0 0 8px" }}>Termly Live Recitals</h3>
-              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-                Stage experience is built into every curriculum. Overcoming performance anxiety transforms practice room drills into authentic stage confidence.
+              <h3
+                style={{
+                  fontSize: 18,
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Termly Live Recitals
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                Stage experience is built into every curriculum. Overcoming
+                performance anxiety transforms practice room drills into
+                authentic stage confidence.
               </p>
             </div>
 
-            <div style={{ padding: 28, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--navy)", color: "white", display: "grid", placeItems: "center", fontWeight: 700, marginBottom: 16 }}>
+            <div
+              style={{
+                padding: 28,
+                borderRadius: "var(--radius)",
+                background: "var(--cream)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "var(--navy)",
+                  color: "white",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  marginBottom: 16,
+                }}
+              >
                 02
               </div>
-              <h3 style={{ fontSize: 18, color: "var(--navy)", margin: "0 0 8px" }}>Ensemble Coordination</h3>
-              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-                Students don&apos;t learn in isolation. We bring keyboardists, violinists, vocalists, and drummers together for collaborative live bands.
+              <h3
+                style={{
+                  fontSize: 18,
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Ensemble Coordination
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                Students don&apos;t learn in isolation. We bring keyboardists,
+                violinists, vocalists, and drummers together for collaborative
+                live bands.
               </p>
             </div>
 
-            <div style={{ padding: 28, borderRadius: "var(--radius)", background: "var(--cream)", border: "1px solid var(--line)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--navy)", color: "white", display: "grid", placeItems: "center", fontWeight: 700, marginBottom: 16 }}>
+            <div
+              style={{
+                padding: 28,
+                borderRadius: "var(--radius)",
+                background: "var(--cream)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "var(--navy)",
+                  color: "white",
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  marginBottom: 16,
+                }}
+              >
                 03
               </div>
-              <h3 style={{ fontSize: 18, color: "var(--navy)", margin: "0 0 8px" }}>Archived Video Portfolios</h3>
-              <p style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6, margin: 0 }}>
-                High-definition audio and video recordings of student performances are captured and provided to students and parents as lasting portfolios.
+              <h3
+                style={{
+                  fontSize: 18,
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Archived Video Portfolios
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                High-definition audio and video recordings of student
+                performances are captured and provided to students and parents
+                as lasting portfolios.
               </p>
             </div>
           </div>
@@ -367,7 +689,10 @@ export function Performances({ go }: { go: (p: Page) => void }) {
       </section>
 
       {/* Authentic Recital & Stage Photo Gallery */}
-      <section className="section" style={{ background: "white", borderTop: "1px solid var(--line)" }}>
+      <section
+        className="section"
+        style={{ background: "white", borderTop: "1px solid var(--line)" }}
+      >
         <div className="container">
           <SectionHead
             center
@@ -440,23 +765,58 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                   transition: "transform 0.2s, box-shadow 0.2s",
                 }}
               >
-                <div style={{ height: 220, overflow: "hidden", background: "#111" }}>
+                <div
+                  style={{
+                    height: 220,
+                    overflow: "hidden",
+                    background: "#111",
+                  }}
+                >
                   <img
                     src={photo.src}
                     alt={photo.title}
                     loading="lazy"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 </div>
-                <div style={{ padding: "16px 18px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    padding: "16px 18px",
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <div>
-                    <span className="badge badge-gold" style={{ fontSize: 10, padding: "2px 8px" }}>
+                    <span
+                      className="badge badge-gold"
+                      style={{ fontSize: 10, padding: "2px 8px" }}
+                    >
                       {photo.tag}
                     </span>
-                    <h4 style={{ margin: "8px 0 4px", fontSize: 16, color: "var(--navy)", fontFamily: "'DM Serif Display', serif" }}>
+                    <h4
+                      style={{
+                        margin: "8px 0 4px",
+                        fontSize: 16,
+                        color: "var(--navy)",
+                        fontFamily: "'DM Serif Display', serif",
+                      }}
+                    >
                       {photo.title}
                     </h4>
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 12,
+                        color: "var(--muted)",
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {photo.desc}
                     </p>
                   </div>
@@ -468,8 +828,14 @@ export function Performances({ go }: { go: (p: Page) => void }) {
       </section>
 
       {/* Book Ensemble / Soloist Section */}
-      <section className="section" style={{ background: "var(--navy)", color: "white" }}>
-        <div className="container" style={{ textAlign: "center", maxWidth: 760 }}>
+      <section
+        className="section"
+        style={{ background: "var(--navy)", color: "white" }}
+      >
+        <div
+          className="container"
+          style={{ textAlign: "center", maxWidth: 760 }}
+        >
           <span className="eyebrow" style={{ color: "var(--gold2)" }}>
             Live Performance Bookings
           </span>
@@ -483,20 +849,47 @@ export function Performances({ go }: { go: (p: Page) => void }) {
           >
             Book a Vivadoxa Student Ensemble or Soloist for Your Event
           </h2>
-          <p style={{ fontSize: 14, color: "#c1ccd5", lineHeight: 1.7, marginBottom: 32 }}>
-            Looking for refined string quartets, gospel jazz keyboardists, or youth choral ensembles for your wedding, church convention, or corporate dinner in Kaduna or Abuja? Connect with our event coordinator directly.
+          <p
+            style={{
+              fontSize: 14,
+              color: "#c1ccd5",
+              lineHeight: 1.7,
+              marginBottom: 32,
+            }}
+          >
+            Looking for refined string quartets, gospel jazz keyboardists, or
+            youth choral ensembles for your wedding, church convention, or
+            corporate dinner in Kaduna or Abuja? Connect with our event
+            coordinator directly.
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 14,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
             <a
               href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20book%20a%20musician%20or%20student%20ensemble%20for%20an%20event.`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary inline-flex items-center gap-2"
-              style={{ background: "#25D366", borderColor: "#25D366", color: "#0a192f", fontWeight: 700, padding: "12px 24px" }}
+              style={{
+                background: "#25D366",
+                borderColor: "#25D366",
+                color: "#0a192f",
+                fontWeight: 700,
+                padding: "12px 24px",
+              }}
             >
               <WhatsAppIcon size={20} /> Book Musicians on WhatsApp
             </a>
-            <Button variant="secondary" onClick={() => go("contact")} style={{ borderColor: "rgba(255,255,255,0.3)", color: "white" }}>
+            <Button
+              variant="secondary"
+              onClick={() => go("contact")}
+              style={{ borderColor: "rgba(255,255,255,0.3)", color: "white" }}
+            >
               Send Event Brief
             </Button>
           </div>
@@ -509,4 +902,3 @@ export function Performances({ go }: { go: (p: Page) => void }) {
 }
 
 export default Performances
-

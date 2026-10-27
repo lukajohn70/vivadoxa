@@ -33,14 +33,20 @@ $defaultGeneral = [
 ];
 
 $defaultBank = [
-    'bankName' => 'Access Bank',
-    'accountNumber' => '1906950275',
-    'accountName' => 'Fredrerick Chysantus',
-    'branch' => 'Angwan Sunday, Kaduna',
-    'paystackPublicKey' => 'pk_live_vivadoxa_school_portal',
-    'paystackSecretKey' => '••••••••••••••••••••••••',
+    'bankName' => 'Guaranty Trust Bank (GTBank)',
+    'accountNumber' => '0236649229',
+    'accountName' => 'Frederick Chrysantius',
+    'branch' => 'Kaduna Main Branch',
+    // Nigerian Payments (Naira / NGN)
+    'paystackPublicKey' => '',
+    'paystackSecretKey' => '',
     'enablePaystack' => true,
+    // Diaspora / International Payments (USD / Dollars)
+    'flutterwavePublicKey' => '',
+    'flutterwaveSecretKey' => '',
+    'enableFlutterwave' => true,
     'currency' => 'NGN',
+    'usdRate' => 1500,
     'defaultTuitionFee' => 20000,
 ];
 
@@ -139,8 +145,8 @@ if ($method === 'GET') {
         ]);
     } elseif ($action === 'verify_bank_account') {
         $accNo = preg_replace('/\D/', '', trim($input['account_number'] ?? ''));
-        $bankCode = trim($input['bank_code'] ?? '044'); // default Access Bank
-        $bankName = trim($input['bank_name'] ?? 'Access Bank');
+        $bankCode = trim($input['bank_code'] ?? '058'); // default GTBank
+        $bankName = trim($input['bank_name'] ?? 'Guaranty Trust Bank (GTBank)');
 
         if (strlen($accNo) !== 10) {
             jsonResponse([

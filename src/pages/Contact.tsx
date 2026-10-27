@@ -15,6 +15,7 @@ import {
   YouTubeIcon,
   InstagramIcon,
 } from "@/components/ui"
+import { SEO } from "@/components/SEO"
 import {
   isValidEmail,
   WHATSAPP_URL,
@@ -50,17 +51,28 @@ const emptyContact: ContactForm = {
 }
 
 const QUICK_QUESTIONS = [
-  { label: "Tuition Fees & Term Dates", text: "Hello Vivadoxa, I would like to know the current tuition fees and upcoming term dates." },
-  { label: "Kids Weekend Program", text: "Hello Vivadoxa, I want to inquire about the kids music program (ages 4-12)." },
-  { label: "Instrument Repair & Tuning", text: "Hello Vivadoxa, I need to bring my instrument in for repair and inspection." },
-  { label: "Private Home Coaching", text: "Hello Vivadoxa, I would like to inquire about private home music lessons in Kaduna." },
+  {
+    label: "Tuition Fees & Term Dates",
+    text: "Hello Vivadoxa, I would like to know the current tuition fees and upcoming term dates.",
+  },
+  {
+    label: "Kids Weekend Program",
+    text: "Hello Vivadoxa, I want to inquire about the kids music program (ages 4-12).",
+  },
+  {
+    label: "Instrument Repair & Tuning",
+    text: "Hello Vivadoxa, I need to bring my instrument in for repair and inspection.",
+  },
+  {
+    label: "Private Home Coaching",
+    text: "Hello Vivadoxa, I would like to inquire about private home music lessons in Kaduna.",
+  },
 ]
 
 export function Contact() {
   const [form, setForm] = useState<ContactForm>(emptyContact)
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof ContactForm, string>>
-  >({})
+  const [errors, setErrors] =
+    useState<Partial<Record<keyof ContactForm, string>>>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState("")
   const [sent, setSent] = useState(false)
@@ -75,8 +87,7 @@ export function Contact() {
     const e: typeof errors = {}
     if (!form.fullName.trim()) e.fullName = "Full name is required."
     if (!form.email.trim()) e.email = "Email is required."
-    else if (!isValidEmail(form.email))
-      e.email = "Enter a valid email address."
+    else if (!isValidEmail(form.email)) e.email = "Enter a valid email address."
     if (!form.subject) e.subject = "Please select a subject."
     if (!form.message.trim()) e.message = "Message cannot be empty."
     setErrors(e)
@@ -107,9 +118,7 @@ export function Contact() {
         )
       }
     } catch {
-      setServerError(
-        "Network connection error. Please verify your connection.",
-      )
+      setServerError("Network connection error. Please verify your connection.")
     } finally {
       setSubmitting(false)
     }
@@ -117,6 +126,13 @@ export function Contact() {
 
   return (
     <main>
+      <SEO
+        title="Contact Vivadoxa — Music School, Instrument Repair & Recording Studio | Kaduna"
+        description="Get in touch with Vivadoxa Music School, Instrument Repair Clinic & Recording Studio in Kaduna. Inquire about classes, diagnostic drop-offs, and rehearsal bookings."
+        keywords="contact music school kaduna, instrument repair kaduna phone, recording studio kaduna address, vivadoxa phone number"
+        canonicalUrl="/contact"
+      />
+
       <PageHero
         eyebrow="Admissions & Studio Desk"
         title="Let's talk about your music."
@@ -129,33 +145,61 @@ export function Contact() {
               eyebrow="Direct Channels"
               title="We'd love to hear from you"
             />
-            
+
             {/* Instant WhatsApp Priority Card */}
             <div
               style={{
-                background: "linear-gradient(135deg, rgba(37,211,102,0.12) 0%, rgba(18,140,126,0.06) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(37,211,102,0.12) 0%, rgba(18,140,126,0.06) 100%)",
                 border: "1.5px solid rgba(37,211,102,0.4)",
                 borderRadius: "var(--radius)",
                 padding: "20px 22px",
                 marginBottom: 24,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <WhatsAppIcon size={28} />
                   <div>
-                    <strong style={{ fontSize: 16, color: "var(--navy)", display: "block" }}>
+                    <strong
+                      style={{
+                        fontSize: 16,
+                        color: "var(--navy)",
+                        display: "block",
+                      }}
+                    >
                       Official WhatsApp Admissions
                     </strong>
-                    <span style={{ fontSize: 11, color: "#128C7E", fontWeight: 700 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "#128C7E",
+                        fontWeight: 700,
+                      }}
+                    >
                       ● Online · Fast reply under 15 mins
                     </span>
                   </div>
                 </div>
               </div>
 
-              <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 14px", lineHeight: 1.5 }}>
-                Tap a pre-filled prompt below to start an instant WhatsApp conversation with our Kaduna admissions coordinator:
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--muted)",
+                  margin: "0 0 14px",
+                  lineHeight: 1.5,
+                }}
+              >
+                Tap a pre-filled prompt below to start an instant WhatsApp
+                conversation with our Kaduna admissions coordinator:
               </p>
 
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -208,7 +252,11 @@ export function Contact() {
                 <WhatsAppIcon size={18} className="text-[#25D366] mt-1" />
                 <p>
                   <strong>WhatsApp desk</strong>
-                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {SCHOOL_WHATSAPP} (Instant Chat)
                   </a>
                 </p>
@@ -233,7 +281,14 @@ export function Contact() {
                 padding: "20px 22px",
               }}
             >
-              <strong style={{ fontSize: 13, color: "var(--navy)", display: "block", marginBottom: 10 }}>
+              <strong
+                style={{
+                  fontSize: 13,
+                  color: "var(--navy)",
+                  display: "block",
+                  marginBottom: 10,
+                }}
+              >
                 Connect on Official Channels
               </strong>
               <div className="flex flex-wrap gap-2 mb-4">
@@ -244,7 +299,10 @@ export function Contact() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors inline-flex items-center gap-2 group"
                   title="TikTok: @vivadoxa"
                 >
-                  <TikTokIcon size={14} className="group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <TikTokIcon
+                    size={14}
+                    className="group-hover:scale-110 transition-transform flex-shrink-0"
+                  />
                   <span>@vivadoxa</span>
                 </a>
                 <a
@@ -254,7 +312,10 @@ export function Contact() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors inline-flex items-center gap-2 group"
                   title="Facebook: @vivadoxa music"
                 >
-                  <FacebookIcon size={14} className="text-[#1877F2] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <FacebookIcon
+                    size={14}
+                    className="text-[#1877F2] group-hover:scale-110 transition-transform flex-shrink-0"
+                  />
                   <span>@vivadoxa music</span>
                 </a>
                 <a
@@ -264,7 +325,10 @@ export function Contact() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 transition-colors inline-flex items-center gap-2 group"
                   title="YouTube: Vivadoxa Music"
                 >
-                  <YouTubeIcon size={14} className="text-[#FF0000] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <YouTubeIcon
+                    size={14}
+                    className="text-[#FF0000] group-hover:scale-110 transition-transform flex-shrink-0"
+                  />
                   <span>Vivadoxa Music</span>
                 </a>
                 <a
@@ -274,7 +338,10 @@ export function Contact() {
                   className="px-3 py-1.5 rounded-full text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 transition-colors inline-flex items-center gap-2 group"
                   title="Instagram: @vivadoxa music"
                 >
-                  <InstagramIcon size={14} className="text-[#E4405F] group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <InstagramIcon
+                    size={14}
+                    className="text-[#E4405F] group-hover:scale-110 transition-transform flex-shrink-0"
+                  />
                   <span>@vivadoxa music</span>
                 </a>
               </div>
@@ -300,16 +367,26 @@ export function Contact() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <GoogleIcon size={24} />
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ color: "#FBBC05", fontSize: 13 }}>★ ★ ★ ★ ★</span>
-                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>4.9 on Google</strong>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    >
+                      <span style={{ color: "#FBBC05", fontSize: 13 }}>
+                        ★ ★ ★ ★ ★
+                      </span>
+                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>
+                        4.9 on Google
+                      </strong>
                     </div>
                     <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                      130+ verified reviews from students &amp; parents in Kaduna
+                      130+ verified reviews from students &amp; parents in
+                      Kaduna
                     </span>
                   </div>
                 </div>
-                <span style={{ fontSize: 11, color: "#1a73e8", fontWeight: 700 }} className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                <span
+                  style={{ fontSize: 11, color: "#1a73e8", fontWeight: 700 }}
+                  className="group-hover:translate-x-1 transition-transform flex items-center gap-1"
+                >
                   Read Reviews <Icon name="external" size={11} />
                 </span>
               </a>
@@ -343,7 +420,9 @@ export function Contact() {
                 }}
               >
                 <div>
-                  <strong style={{ fontSize: 13, display: "block", color: "white" }}>
+                  <strong
+                    style={{ fontSize: 13, display: "block", color: "white" }}
+                  >
                     Vivadoxa Music School
                   </strong>
                   <span style={{ fontSize: 11, color: "var(--gold2)" }}>
@@ -447,6 +526,27 @@ export function Contact() {
                     {serverError}
                   </div>
                 )}
+
+                <p className="text-[11px] text-[var(--muted)] leading-relaxed mt-4 mb-3">
+                  By submitting this form, you confirm that you have read and
+                  agree to our{" "}
+                  <a
+                    href="/privacy"
+                    className="underline text-[var(--gold)] font-medium hover:text-[var(--gold2)]"
+                  >
+                    Privacy Policy
+                  </a>{" "}
+                  and{" "}
+                  <a
+                    href="/cookies"
+                    className="underline text-[var(--gold)] font-medium hover:text-[var(--gold2)]"
+                  >
+                    Cookie Policy
+                  </a>
+                  . Your information is processed securely under the Nigeria
+                  Data Protection Act (NDPA 2023) and is never shared with
+                  third-party advertisers.
+                </p>
 
                 <Button type="submit" disabled={submitting}>
                   {submitting ? (

@@ -1,0 +1,32 @@
+# Vivadoxa Music School, Instrument Repair Clinic & Recording Studio
+# Official Robots.txt for Search Engine Optimization
+
+User-agent: *
+Allow: /
+Allow: /programs
+Allow: /repairs
+Allow: /studio
+Allow: /about
+Allow: /modes
+Allow: /performances
+Allow: /reviews
+Allow: /contact
+Allow: /apply
+Allow: /terms
+Allow: /privacy
+Allow: /tuition-policy
+Allow: /safeguarding
+
+# Disallow private administrative & student portals
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin-login
+Disallow: /portal
+Disallow: /portal/
+Disallow: /portal-login
+Disallow: /api/admin/
+Disallow: /api/config.php
+Disallow: /api/db.php
+
+# Sitemap location
+Sitemap: https://vivadoxa.ng/sitemap.xml

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import {
   Logo,
   Button,
@@ -8,7 +8,7 @@ import {
   SelectField,
   WhatsAppIcon,
 } from "@/components/ui"
-import { programs } from "@/lib/data"
+import { SEO } from "@/components/SEO"
 import {
   isValidEmail,
   SCHOOL_PHONE,
@@ -17,378 +17,483 @@ import {
   SCHOOL_EMAIL,
   WHATSAPP_URL,
 } from "@/lib/utils"
-import { submitApplication, checkUserSession, fetchAcademics } from "@/lib/api"
+import { submitApplication } from "@/lib/api"
 import type { ApplicationData, Page } from "@/types"
 
-// ── Multi-step stepper UI ────────────────────────────────────────────────────
-function Stepper({ step }: { step: number }) {
-  const steps = ["Personal", "Guardian", "Program", "Review"]
-  return (
-    <nav className="stepper" aria-label="Application steps">
-      {steps.map((x, i) => (
-        <div
-          key={x}
-          className={i + 1 <= step ? "done" : ""}
-          aria-current={i + 1 === step ? "step" : undefined}
-        >
-          <span aria-hidden="true">
-            {i + 1 < step ? <Icon name="check" size={14} /> : i + 1}
-          </span>
-          <small>{x}</small>
-        </div>
-      ))}
-    </nav>
-  )
-}
-
-function FormStep({
-  title,
-  intro,
-  children,
-}: {
-  title: string
-  intro: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="form-step">
-      <span className="eyebrow">Step details</span>
-      <h2>{title}</h2>
-      <p>{intro}</p>
-      {children}
-    </div>
-  )
-}
-
-function ReviewRow({
-  title,
-  value,
-  onEdit,
-}: {
-  title: string
-  value: string
-  onEdit: () => void
-}) {
-  return (
-    <div className="review-row">
-      <span>{title}</span>
-      <strong>{value}</strong>
-      <button type="button" onClick={onEdit} aria-label={`Edit ${title}`}>
-        Edit
-      </button>
-    </div>
-  )
-}
-
-export const OFFICIAL_APPLY_DISCIPLINES = [
-  // Instruments (13 official disciplines)
-  { name: "Piano & Keyboard Mastery", category: "Instruments" },
-  { name: "Acoustic Guitar Foundations", category: "Instruments" },
-  { name: "Lead & Electric Guitar", category: "Instruments" },
-  { name: "Bass Guitar Groove & Harmony", category: "Instruments" },
-  { name: "Violin & Classical Strings", category: "Instruments" },
-  { name: "Saxophone (Alto & Tenor)", category: "Instruments" },
-  { name: "Trumpet & Brass Fundamentals", category: "Instruments" },
-  { name: "Euphonium & Low Brass", category: "Instruments" },
-  { name: "Clarinet & Woodwinds", category: "Instruments" },
-  { name: "Concert Flute", category: "Instruments" },
-  { name: "Contemporary Drum Kit", category: "Instruments" },
-  { name: "Talking Drums (Traditional Percussion)", category: "Instruments" },
-  // Vocals
-  { name: "Voice Training & Vocal Stagecraft", category: "Vocals" },
-  // Composition
-  { name: "Sight Reading & Music Theory", category: "Composition" },
-  // Production
-  { name: "Music Production & Audio Engineering", category: "Music Production" },
+// ── 17 Available Instruments & Disciplines from Official Roster ───────────────
+export const OFFICIAL_AVAILABLE_INSTRUMENTS = [
+  { name: "Alto saxophone", family: "Woodwinds & Brass" },
+  { name: "Soprano saxophone", family: "Woodwinds & Brass" },
+  { name: "Euphonium", family: "Woodwinds & Brass" },
+  { name: "Trumpet", family: "Woodwinds & Brass" },
+  { name: "Clarinet", family: "Woodwinds & Brass" },
+  { name: "Flute", family: "Woodwinds & Brass" },
+  { name: "Piano/keyboard", family: "Keyboards" },
+  { name: "Intermediate Piano", family: "Keyboards" },
+  { name: "Bass guitar", family: "Strings & Frets" },
+  { name: "Lead guitar", family: "Strings & Frets" },
+  { name: "Acoustic guitar", family: "Strings & Frets" },
+  { name: "Talking drums", family: "Percussion" },
+  { name: "Set drum", family: "Percussion" },
+  { name: "Voice training", family: "Vocals" },
+  { name: "Studio engineering", family: "Music Production" },
+  { name: "Sound engineering", family: "Music Production" },
+  { name: "Violin", family: "Strings" },
+  { name: "Ukulele", family: "Strings & Frets" },
+  { name: "Others Specify", family: "Custom" },
 ]
 
-export const ENROLLMENT_DURATION_PLANS = [
+export const NIGERIAN_STATES = [
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "FCT - Abuja",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+  "Non-Nigerian / International",
+]
+
+export const NATIONALITIES = [
+  "Nigerian",
+  "Ghanaian",
+  "Cameroonian",
+  "Kenyan",
+  "South African",
+  "British",
+  "American",
+  "Canadian",
+  "Australian",
+  "Irish",
+  "German",
+  "French",
+  "Italian",
+  "Spanish",
+  "Dutch",
+  "Indian",
+  "Chinese",
+  "Other African",
+  "Other International",
+]
+
+// ── Official Section D Duration Tracks & Fixed Tuition Policy ─────────────────
+// Note: For international students and Nigerian students, price is fixed for ANY instrument chosen.
+export const OFFICIAL_DURATION_PLANS = [
   {
     id: "1-month",
-    name: "1 Month Intensive Foundation",
+    name: "1 Month Intro Program",
     duration: "1 Month",
-    fee: 20000,
-    feeLabel: "₦20,000",
-    badge: "Foundation",
-    inclusions: "4 weekly intensive sessions, foundational technique & practice sheet",
+    feeNGN: 20000,
+    feeNGNLabel: "₦20,000",
+    feeUSD: 25,
+    feeUSDLabel: "$25",
+    desc: "4 weekly intensive sessions covering foundational technique, posture & drills.",
   },
   {
     id: "3-months",
     name: "3 Months Certificate Program",
     duration: "3 Months",
-    fee: 55000,
-    feeLabel: "₦55,000",
-    badge: "Most Popular",
-    inclusions: "Full Vivadoxa study kit, textbooks, recital preparation & Certificate",
+    feeNGN: 55000,
+    feeNGNLabel: "₦55,000",
+    feeUSD: 70,
+    feeUSDLabel: "$70",
+    desc: "Foundational mastery, sight reading, recital preparation & Vivadoxa Certificate.",
   },
   {
     id: "6-months",
-    name: "6 Months Diploma Program",
+    name: "6 Months Program",
     duration: "6 Months",
-    fee: 95000,
-    feeLabel: "₦95,000",
-    badge: "Professional Track",
-    inclusions: "Complete textbooks, Vivadoxa Academy T-Shirt, ensemble concerts & Diploma",
+    feeNGN: 100000,
+    feeNGNLabel: "₦100,000",
+    feeUSD: 125,
+    feeUSDLabel: "$125",
+    desc: "Intermediate musicianship, advanced scales, ensemble coaching & Certificate.",
   },
   {
     id: "1-year",
-    name: "1 Year Advance Diploma",
-    duration: "12 Months (1 Year)",
-    fee: 185000,
-    feeLabel: "₦185,000",
-    badge: "Mastery Level",
-    inclusions: "Flagship conservatory training, live studio recording & Advance Diploma",
+    name: "12 Months (1 Year) Program",
+    duration: "1 Year",
+    feeNGN: 195000,
+    feeNGNLabel: "₦195,000",
+    feeUSD: 240,
+    feeUSDLabel: "$240",
+    desc: "Conservatory mastery, live studio tracking, solo recital & Advanced Certificate.",
+  },
+  {
+    id: "2-years",
+    name: "2 Years Diploma Program",
+    duration: "2 Years",
+    feeNGN: 500000,
+    feeNGNLabel: "₦500,000",
+    feeUSD: 600,
+    feeUSDLabel: "$600",
+    desc: "Full conservatory curriculum, professional tracking, solo recital & Diploma.",
   },
   {
     id: "home-lessons",
-    name: "Private Home Lessons (Monthly)",
+    name: "Special: Private Classes (Monthly)",
     duration: "Monthly",
-    fee: 50000,
-    feeLabel: "₦50,000 / month",
-    badge: "1-on-1 at Residence",
-    inclusions: "Instructor visits your home in Kaduna for personalized 1-on-1 coaching",
+    feeNGN: 70000,
+    feeNGNLabel: "₦70,000 / month",
+    feeUSD: 90,
+    feeUSDLabel: "$90 / month",
+    desc: "1-on-1 personalized private coaching at your residence or private online session.",
   },
 ]
 
-const defaultData = (): ApplicationData => ({
+const defaultFormData = (): ApplicationData => ({
   fullName: "",
+  firstName: "",
+  surname: "",
   dateOfBirth: "",
-  gender: "Female",
+  gender: "",
   phone: "",
   email: "",
-  state: "Kaduna",
+  state: "",
   address: "",
+  stateOfOrigin: "",
+  maritalStatus: "",
+  nationality: "",
+  occupation: "",
+  sponsor: "",
   guardianName: "",
   relationship: "",
-  guardianPhone: "",
-  guardianEmail: "",
-  category: "Instruments",
-  program: "Piano & Keyboard Mastery",
-  planTier: "1-month",
-  level: "Beginner",
-  schedule: "Weekday evenings",
-  studyMode: "Onsite",
+  classType: "",
+  category: "",
+  program: "",
+  planTier: "",
+  duration: "",
+  sessionTime: "",
+  level: "",
+  schedule: "",
+  studyMode: "",
+  currency: "NGN",
   referenceNo: "",
-  amount: 20000,
+  amount: 0,
+  passportPhoto: "",
+  signature: "",
 })
 
 export function Apply({ go }: { go: (p: Page | string) => void }) {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const stepParam = parseInt(searchParams.get("step") || "1", 10)
-  const initialStep = stepParam >= 1 && stepParam <= 4 ? stepParam : 1
-  const [step, setStep] = useState(initialStep)
-  const [data, setData] = useState<ApplicationData>(defaultData)
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof ApplicationData, string>>
-  >({})
+  const [data, setData] = useState<ApplicationData>(defaultFormData)
+  const [customInstrument, setCustomInstrument] = useState("")
+  const [selectedDays, setSelectedDays] =
+    useState<"weekdays" | "weekends" | "">("")
+  const [selectedTimeSlot, setSelectedTimeSlot] =
+    useState<"Morning Section (10 AM - 1 PM)" | "Afternoon Section (1 PM - 4 PM)" | "Evening Section (4 PM - 7 PM)" | "">(
+      "",
+    )
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [termsError, setTermsError] = useState("")
   const [accountPassword, setAccountPassword] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
-  const [autofilled, setAutofilled] = useState(false)
-  const formRef = useRef<HTMLDivElement>(null)
 
-  // Autofill authenticated user details if logged in
-  useEffect(() => {
-    checkUserSession()
-      .then((user) => {
-        if (user) {
-          setData((prev) => ({
-            ...prev,
-            fullName: prev.fullName || user.full_name || "",
-            email: prev.email || user.email || "",
-            phone: prev.phone || user.phone || "",
-            address: prev.address || user.address || "",
-            guardianName: prev.guardianName || user.guardian_name || "",
-            guardianPhone: prev.guardianPhone || user.guardian_phone || "",
-          }))
-          setAutofilled(true)
-        }
-      })
-      .catch(() => {})
-
-    // Sync live disciplines from database
-    fetchAcademics("programs")
-      .then((progs) => {
-        if (Array.isArray(progs) && progs.length > 0) {
-          setDisciplines((prev) => {
-            const map = new Map<string, any>()
-            prev.forEach((d) => map.set(d.name.toLowerCase(), d))
-            progs.forEach((p: any) => {
-              const key = p.name.toLowerCase()
-              map.set(key, {
-                id: p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-                name: p.name,
-                category: p.category || "Instruments",
-                instruments: p.name,
-              })
-            })
-            return Array.from(map.values())
-          })
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const [disciplines, setDisciplines] = useState(OFFICIAL_APPLY_DISCIPLINES)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const formTopRef = useRef<HTMLDivElement>(null)
 
   function set<K extends keyof ApplicationData>(k: K, v: ApplicationData[K]) {
     setData((d) => ({ ...d, [k]: v }))
-    setErrors((e) => ({ ...e, [k]: undefined }))
+    setErrors((e) => {
+      const next = { ...e }
+      delete next[(k as string)]
+      return next
+    })
     setSubmitError("")
   }
 
-  function handleCategoryChange(cat: string) {
-    set("category", cat)
-    const matchingProgs = disciplines.filter((p) => p.category === cat)
-    if (matchingProgs.length > 0) {
-      set("program", matchingProgs[0].name)
+  function handleNameChange(type: "first" | "surname", val: string) {
+    if (type === "first") {
+      const full = `${val} ${data.surname || ""}`.trim()
+      setData((d) => ({ ...d, firstName: val, fullName: full }))
+      setErrors((e) => {
+        const next = { ...e }
+        delete next.firstName
+        delete next.fullName
+        return next
+      })
+    } else {
+      const full = `${data.firstName || ""} ${val}`.trim()
+      setData((d) => ({ ...d, surname: val, fullName: full }))
+      setErrors((e) => {
+        const next = { ...e }
+        delete next.surname
+        delete next.fullName
+        return next
+      })
     }
   }
 
-  function handlePlanChange(planId: string) {
-    const plan = ENROLLMENT_DURATION_PLANS.find((p) => p.id === planId)
+  function handleNationalityChange(newNat: string) {
+    set("nationality", newNat)
+    set("stateOfOrigin", "")
+    if (newNat !== "Nigerian" && data.studyMode === "Online") {
+      handleCurrencyToggle("USD")
+    }
+  }
+
+  function handlePassportUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Passport photograph must be under 5MB.")
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const url = event.target?.result as string
+        set("passportPhoto", url)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  function handleCurrencyToggle(curr: "NGN" | "USD") {
+    set("currency", curr)
+    const plan = OFFICIAL_DURATION_PLANS.find((p) => p.id === data.planTier)
+    if (plan) {
+      set("amount", curr === "USD" ? plan.feeUSD : plan.feeNGN)
+    }
+  }
+
+  function handlePlanSelect(planId: string) {
+    const plan = OFFICIAL_DURATION_PLANS.find((p) => p.id === planId)
     if (plan) {
       set("planTier", planId)
+      set("duration", plan.duration)
+      const isUSD = data.currency === "USD"
       if (planId === "home-lessons") {
-        set("studyMode", "Home Lessons")
-        set("amount", 50000)
+        if (data.studyMode !== "Online") {
+          set("studyMode", "Home Lessons")
+        }
+        set("classType", "Private classes")
+        set("amount", isUSD ? 90 : 70000)
       } else {
         if (data.studyMode === "Home Lessons") {
           set("studyMode", "Onsite")
+          set("classType", "Regular classes")
         }
-        set("amount", plan.fee)
+        set("amount", isUSD ? plan.feeUSD : plan.feeNGN)
       }
     }
   }
 
-  function handleStudyModeChange(mode: "Onsite" | "Online" | "Home Lessons") {
-    set("studyMode", mode)
-    if (mode === "Home Lessons") {
-      set("planTier", "home-lessons")
-      set("amount", 50000)
-    } else {
-      if (data.planTier === "home-lessons") {
-        set("planTier", "1-month")
-        set("amount", 20000)
-      } else {
-        const plan = ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)
-        set("amount", plan ? plan.fee : 20000)
-      }
-    }
+  function handleScheduleUpdate(
+    days: "weekdays" | "weekends" | "",
+    slot: "Morning Section (10 AM - 1 PM)" | "Afternoon Section (1 PM - 4 PM)" | "Evening Section (4 PM - 7 PM)" | "",
+  ) {
+    setSelectedDays(days)
+    setSelectedTimeSlot(slot)
+    const daysLabel =
+      days === "weekdays"
+        ? "Weekdays (3 days per week)"
+        : days === "weekends"
+          ? "Weekends (Friday & Saturday)"
+          : ""
+    const combined =
+      daysLabel && slot ? `${daysLabel} — ${slot}` : daysLabel || slot || ""
+    set("schedule", combined)
+    if (slot) set("sessionTime", slot)
   }
 
-  function validateStep(): boolean {
-    const e: typeof errors = {}
+  function validateAll(): boolean {
+    const e: Record<string, string> = {}
+    if (!data.firstName?.trim()) e.firstName = "First name is required."
+    if (!data.surname?.trim()) e.surname = "Surname is required."
+    if (!data.dateOfBirth) e.dateOfBirth = "Date of birth (DOB) is required."
+    if (!data.gender) e.gender = "Please select candidate gender."
+    if (!data.phone?.trim()) e.phone = "Candidate phone number is required."
+    if (!data.email?.trim()) e.email = "Candidate email address is required."
+    else if (!isValidEmail(data.email))
+      e.email = "Valid email address is required."
+    if (!data.address?.trim()) e.address = "Residential address is required."
 
-    if (step === 1) {
-      if (!data.fullName.trim()) e.fullName = "Full name is required."
-      if (!data.dateOfBirth) e.dateOfBirth = "Date of birth is required."
-      if (!data.gender) e.gender = "Please select a gender."
-      if (!data.phone.trim()) e.phone = "Phone number is required."
-      if (!data.email.trim()) e.email = "Email is required."
-      else if (!isValidEmail(data.email))
-        e.email = "Enter a valid email address."
-      if (!data.state) e.state = "Please select your state."
-      if (!data.address.trim()) e.address = "Home address is required."
+    if (!data.nationality) {
+      e.nationality = "Please select nationality."
     }
 
-    if (step === 2) {
-      if (data.guardianEmail && !isValidEmail(data.guardianEmail)) {
-        e.guardianEmail = "Enter a valid guardian email address."
-      }
+    if (data.nationality === "Nigerian" && !data.stateOfOrigin?.trim()) {
+      e.stateOfOrigin = "Please select your Nigerian State of Origin."
     }
 
-    if (step === 3) {
-      if (!data.category) e.category = "Please select a category."
-      if (!data.program) e.program = "Please select a program."
-      if (!data.level) e.level = "Please select your level."
-      if (!data.schedule) e.schedule = "Please select a preferred schedule."
+    if (!data.program)
+      e.program = "Please select your musical discipline / interest."
+    if (data.program === "Others Specify" && !customInstrument.trim()) {
+      e.customInstrument = "Please specify your instrument or course."
+    }
+
+    if (!data.planTier) {
+      e.planTier = "Please select a study duration program."
+    }
+
+    if (!data.signature?.trim()) {
+      e.signature = "Please sign by typing your full legal name."
+    }
+
+    if (!termsAccepted) {
+      setTermsError(
+        "You must affirm the candidate declaration before submitting.",
+      )
+      return false
     }
 
     setErrors(e)
     return Object.keys(e).length === 0
   }
 
-  function next() {
-    if (!validateStep()) {
-      formRef.current?.scrollIntoView({ behavior: "smooth" })
-      return
-    }
-    setStep((s) => s + 1)
-    formRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  function prev() {
-    setStep((s) => s - 1)
-    formRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  async function handleSubmit() {
-    if (!termsAccepted) {
-      setTermsError("You must agree to the terms before proceeding.")
-      return
-    }
-    setTermsError("")
-    setSubmitting(true)
+  async function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault()
     setSubmitError("")
+    setTermsError("")
+
+    if (!validateAll()) {
+      formTopRef.current?.scrollIntoView({ behavior: "smooth" })
+      return
+    }
+
+    setSubmitting(true)
+    const effectiveProgram =
+      data.program === "Others Specify" && customInstrument.trim()
+        ? customInstrument.trim()
+        : data.program
 
     try {
       const res = await submitApplication({
         fullName: data.fullName,
+        first_name: data.firstName || data.fullName.split(" ")[0] || "",
+        last_name:
+          data.surname || data.fullName.split(" ").slice(1).join(" ") || "",
         dateOfBirth: data.dateOfBirth,
         gender: data.gender,
         phone: data.phone,
         email: data.email,
         address: `${data.address}, ${data.state}`,
-        guardianName: data.guardianName,
+        guardianName: data.guardianName || data.sponsor,
         guardianPhone: data.guardianPhone,
-        program: data.program,
+        program: effectiveProgram,
         studyMode: data.studyMode,
         level: data.level,
         amount: data.amount,
         password: accountPassword.trim() || undefined,
+        // Standardized official application form docx fields
+        classType: data.classType || "Regular classes",
+        stateOfOrigin:
+          data.stateOfOrigin?.trim() ||
+          (data.nationality === "Nigerian" ? "Kaduna" : "International"),
+        maritalStatus: data.maritalStatus || "Single",
+        nationality: data.nationality || "Nigerian",
+        occupation: data.occupation || "Student",
+        sponsor: data.sponsor || data.guardianName || "Self-Sponsored",
+        sessionTime: data.sessionTime || "Morning Section (10 AM - 1 PM)",
+        duration: data.duration || "3 Months",
+        planTier: data.planTier,
+        currency: data.currency || "NGN",
       })
 
       if (res && res.success && res.application_no) {
-        // Save current application context for seamless payment processing
+        // Cache application context for payment checkout & document download
         sessionStorage.setItem("vdx_current_ref", res.application_no)
         sessionStorage.setItem("vdx_current_amount", String(data.amount))
+        sessionStorage.setItem("vdx_current_currency", data.currency || "NGN")
+        sessionStorage.setItem("vdx_current_study_mode", data.studyMode)
         sessionStorage.setItem("vdx_current_name", data.fullName)
         sessionStorage.setItem("vdx_current_email", data.email)
-        sessionStorage.setItem("vdx_current_program", data.program)
+        sessionStorage.setItem("vdx_current_phone", data.phone || "")
+        sessionStorage.setItem("vdx_current_program", effectiveProgram)
+        sessionStorage.setItem("vdx_current_schedule", data.schedule || "")
+        sessionStorage.setItem("vdx_current_plan", data.planTier || "")
+        sessionStorage.setItem("vdx_current_address", data.address || "")
+        if (data.passportPhoto) {
+          sessionStorage.setItem("vdx_current_passport", data.passportPhoto)
+        }
+        sessionStorage.setItem(
+          "vdx_current_signature",
+          data.signature || data.fullName,
+        )
 
-        navigate(`/payment?ref=${res.application_no}&amount=${data.amount}`)
+        navigate(
+          `/payment?ref=${res.application_no}&amount=${data.amount}&currency=${data.currency || "NGN"}&mode=${data.studyMode}`,
+        )
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
         setSubmitError(
-          res.error || "Failed to submit application. Please try again.",
+          res.error ||
+            "Failed to submit official application. Please check your details and try again.",
         )
       }
     } catch {
-      setSubmitError(
-        "Network connection error. Please verify your connection.",
-      )
+      setSubmitError("Network connection error. Please verify your connection.")
     } finally {
       setSubmitting(false)
     }
   }
 
+  const currentDateFormatted = new Date().toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })
+
+  const isUSD = data.currency === "USD"
+
   return (
-    <main className="application">
-      <div className="container">
-        <div className="application-head">
+    <main
+      className="application"
+      style={{ background: "#f1ede6", minHeight: "100vh", paddingBottom: 60 }}
+    >
+      <SEO
+        title="Official Admission Application Form"
+        description="Official student admission application form for Vivadoxa Music School Kaduna. Standardized conservatory matriculation for instrumental and vocal studies."
+      />
+
+      <div className="container" ref={formTopRef}>
+        {/* Navigation Head */}
+        <div
+          className="application-head"
+          style={{ borderBottom: "1px solid #d9d4cc", height: 70 }}
+        >
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => {
                 if (window.history.length > 1) navigate(-1)
-                else go("programs")
+                else go("home")
               }}
               className="btn btn-secondary !min-h-[36px] !py-1 !px-3 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              title="Return to previous page"
+              title="Return"
               aria-label="Go back to previous page"
             >
               <Icon name="arrow" size={13} className="rotate-180" />
@@ -402,583 +507,1506 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
               <Logo />
             </button>
           </div>
-          <span className="text-xs text-[var(--muted)] hidden sm:inline">Official Admissions Portal</span>
+          <span className="text-xs text-[var(--navy)] font-mono font-bold hidden sm:inline">
+            RC 3184525 · Official Conservatory Matriculation
+          </span>
         </div>
 
-        <div className="apply-layout">
-          <aside>
-            <span>Admissions {new Date().getFullYear()}</span>
-            <h1>Begin your musical journey.</h1>
-            <p>
-              Complete your application in a few simple steps to secure your
-              audition and class placement.
+        <div
+          style={{ maxWidth: 880, margin: "0 auto", padding: "24px 0 60px" }}
+        >
+          {/* Header Introduction */}
+          <div className="mb-6 text-center">
+            <span
+              style={{
+                color: "var(--gold-text)",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                fontSize: 11,
+                fontWeight: 700,
+              }}
+            >
+              Academic Admissions · Vivadoxa Conservatory
+            </span>
+            <h1
+              style={{
+                fontFamily: "'DM Serif Display', Georgia, serif",
+                fontSize: "clamp(28px, 4vw, 36px)",
+                margin: "8px 0 6px",
+                color: "var(--navy)",
+              }}
+            >
+              Application for Admission
+            </h1>
+            <p
+              style={{
+                color: "var(--muted)",
+                fontSize: 13.5,
+                maxWidth: 580,
+                margin: "0 auto",
+                lineHeight: 1.6,
+              }}
+            >
+              Please complete candidate particulars below. Once submitted, your
+              registration reference will be generated for tuition confirmation.
             </p>
-            <div className="support">
-              <strong className="block text-white font-semibold text-sm mb-3">Admissions Desk</strong>
-              <div className="flex flex-col gap-2.5 text-xs text-[#9dacb8]">
-                <a href={`tel:${SCHOOL_PHONE}`} className="inline-flex items-center gap-2 hover:text-white transition-colors">
-                  <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE}</span>
-                </a>
-                <a href={`tel:${SCHOOL_PHONE_2}`} className="inline-flex items-center gap-2 hover:text-white transition-colors">
-                  <Icon name="phone" size={13} className="text-slate-400" /> <span>{SCHOOL_PHONE_2}</span>
-                </a>
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 hover:text-white transition-colors">
-                  <WhatsAppIcon size={14} className="text-emerald-400 shrink-0" /> <span>{SCHOOL_WHATSAPP} (WhatsApp)</span>
-                </a>
-                <a href={`mailto:${SCHOOL_EMAIL}`} className="inline-flex items-center gap-2 hover:text-white transition-colors break-all">
-                  <Icon name="mail" size={13} className="text-slate-400" /> <span>{SCHOOL_EMAIL}</span>
-                </a>
-              </div>
-            </div>
-          </aside>
+          </div>
 
-          <section
+          {/* Centered Official Application Form */}
+          <form
+            onSubmit={handleFormSubmit}
+            noValidate
             className="apply-card"
-            ref={formRef as React.RefObject<HTMLElement>}
+            style={{
+              background: "#ffffff",
+              borderRadius: 14,
+              boxShadow: "0 10px 40px rgba(14, 13, 12, 0.06)",
+              border: "1px solid var(--line-strong)",
+              padding: "36px 42px",
+            }}
           >
-            <Stepper step={step} />
-
-            {/* Step 1 — Personal */}
-            {step === 1 && (
-              <FormStep
-                title="Personal details"
-                intro="Let's start with some basic information about you."
+            {/* ══════════════════════════════════════════════════════════════════
+                FORM HEADER: CLASS CATEGORIES + PASSPORT PHOTO (Matching docx)
+                ══════════════════════════════════════════════════════════════════ */}
+            <div
+              style={{
+                borderBottom: "2px solid var(--navy)",
+                paddingBottom: 20,
+                marginBottom: 24,
+              }}
+            >
+              {/* Top Row: Class Category Checkboxes + Date + Passport Photo Box */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                  gap: 20,
+                }}
               >
-                {autofilled && (
-                  <div
+                {/* Left: School Title & Category Checkboxes */}
+                <div style={{ flex: "1 1 340px" }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                        color: "var(--navy)",
+                        background: "#e2e8f0",
+                        padding: "2px 6px",
+                        borderRadius: 3,
+                      }}
+                    >
+                      RC 3184525
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Official Conservatory Registration
+                    </span>
+                  </div>
+
+                  <h1
                     style={{
-                      marginBottom: 16,
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      background: "rgba(21, 112, 84, 0.08)",
-                      border: "1px solid rgba(21, 112, 84, 0.25)",
-                      color: "#157054",
-                      fontSize: 12,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
+                      fontFamily: "serif",
+                      fontSize: 26,
+                      color: "var(--navy)",
+                      margin: "4px 0 2px",
+                      letterSpacing: "0.5px",
                     }}
                   >
-                    <Icon name="check" size={14} />
-                    <span>Prefilled with your authenticated Vivadoxa account details.</span>
-                  </div>
-                )}
-                <div className="form-grid">
-                  <Field
-                    id="ap-name"
-                    label="Full name"
-                    placeholder="As shown on your ID"
-                    value={data.fullName}
-                    onChange={(v) => set("fullName", v)}
-                    required
-                    error={errors.fullName}
-                  />
-                  <Field
-                    id="ap-dob"
-                    label="Date of birth"
-                    type="date"
-                    value={data.dateOfBirth}
-                    onChange={(v) => set("dateOfBirth", v)}
-                    required
-                    error={errors.dateOfBirth}
-                  />
-                  <SelectField
-                    id="ap-gender"
-                    label="Gender"
-                    value={data.gender}
-                    onChange={(v) => set("gender", v)}
-                    required
+                    VIVADOXA MUSIC SCHOOL
+                  </h1>
+                  <h2
+                    style={{
+                      fontFamily: "serif",
+                      fontSize: 18,
+                      color: "var(--gold)",
+                      margin: "0 0 14px",
+                      textTransform: "uppercase",
+                      letterSpacing: "1.2px",
+                    }}
                   >
-                    <option value="Female">Female</option>
-                    <option value="Male">Male</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                  </SelectField>
-                  <Field
-                    id="ap-phone"
-                    label="Phone number"
-                    placeholder="+234"
-                    type="tel"
-                    value={data.phone}
-                    onChange={(v) => set("phone", v)}
-                    required
-                    error={errors.phone}
-                  />
-                  <Field
-                    id="ap-email"
-                    label="Email address"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={data.email}
-                    onChange={(v) => set("email", v)}
-                    required
-                    error={errors.email}
-                  />
-                  <SelectField
-                    id="ap-state"
-                    label="State"
-                    value={data.state}
-                    onChange={(v) => set("state", v)}
-                    required
-                  >
-                    <option value="Kaduna">Kaduna</option>
-                    <option value="Kano">Kano</option>
-                    <option value="Abuja FCT">Abuja FCT</option>
-                    <option value="Lagos">Lagos</option>
-                    <option value="Other">Other</option>
-                  </SelectField>
-                  <label className="field full" htmlFor="ap-address">
-                    <span>
-                      Home address{" "}
-                      <span className="required-star" aria-hidden="true">
-                        {" "}
-                        *
-                      </span>
-                    </span>
-                    <input
-                      id="ap-address"
-                      placeholder="Street, area, and city"
-                      value={data.address}
-                      onChange={(e) => set("address", e.target.value)}
-                      required
-                      aria-invalid={!!errors.address}
-                    />
-                    {errors.address && (
-                      <span className="field-hint error" role="alert">
-                        {errors.address}
-                      </span>
-                    )}
-                  </label>
-                </div>
-              </FormStep>
-            )}
+                    APPLICATION FORM
+                  </h2>
 
-            {/* Step 2 — Guardian */}
-            {step === 2 && (
-              <FormStep
-                title="Guardian details"
-                intro="Required for applicants under the age of 18. Skip if you are an adult applicant."
-              >
-                <div className="form-grid">
-                  <Field
-                    id="ap-gname"
-                    label="Guardian name"
-                    placeholder="Full name of parent or guardian"
-                    value={data.guardianName}
-                    onChange={(v) => set("guardianName", v)}
-                  />
-                  <Field
-                    id="ap-rel"
-                    label="Relationship"
-                    placeholder="e.g. Mother, Father, Sponsor"
-                    value={data.relationship}
-                    onChange={(v) => set("relationship", v)}
-                  />
-                  <Field
-                    id="ap-gphone"
-                    label="Guardian phone"
-                    placeholder="+234"
-                    type="tel"
-                    value={data.guardianPhone}
-                    onChange={(v) => set("guardianPhone", v)}
-                  />
-                  <Field
-                    id="ap-gemail"
-                    label="Guardian email"
-                    type="email"
-                    placeholder="guardian@example.com"
-                    value={data.guardianEmail}
-                    onChange={(v) => set("guardianEmail", v)}
-                    error={errors.guardianEmail}
-                  />
-                </div>
-              </FormStep>
-            )}
-
-            {/* Step 3 — Program */}
-            {step === 3 && (
-              <FormStep
-                title="Choose your program"
-                intro="Tell us what instrument and study mode you would like to pursue."
-              >
-                <div className="form-grid">
-                  <SelectField
-                    id="ap-cat"
-                    label="Category"
-                    value={data.category}
-                    onChange={handleCategoryChange}
-                    required
+                  {/* Class Category Checkboxes from docx */}
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: 10,
+                      padding: "12px 16px",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    }}
                   >
-                    <option value="Instruments">Musical Instruments (13 Official Disciplines)</option>
-                    <option value="Vocals">Voice Training & Vocal Stagecraft</option>
-                    <option value="Composition">Sight Reading & Music Theory</option>
-                    <option value="Music Production">Music Production & Audio Engineering</option>
-                  </SelectField>
-                  <SelectField
-                    id="ap-prog"
-                    label="Program / Instrument"
-                    value={data.program}
-                    onChange={(v) => set("program", v)}
-                    required
-                  >
-                    {disciplines
-                      .filter((p) => p.category === data.category)
-                      .map((p) => (
-                        <option key={p.name} value={p.name}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </SelectField>
-                  <SelectField
-                    id="ap-level"
-                    label="Current level"
-                    value={data.level}
-                    onChange={(v) => set("level", v)}
-                    required
-                  >
-                    <option value="Beginner">Beginner (No prior experience)</option>
-                    <option value="Intermediate">Intermediate (Basic chords / scales)</option>
-                    <option value="Advanced">Advanced (Performance & repertoire)</option>
-                  </SelectField>
-                  <SelectField
-                    id="ap-sched"
-                    label="Preferred schedule"
-                    value={data.schedule}
-                    onChange={(v) => set("schedule", v)}
-                    required
-                  >
-                    <option value="Weekday evenings">Weekday evenings</option>
-                    <option value="Saturday mornings">Saturday mornings</option>
-                    <option value="Saturday afternoons">
-                      Saturday afternoons
-                    </option>
-                    <option value="Flexible (discuss with instructor)">
-                      Flexible (discuss with instructor)
-                    </option>
-                  </SelectField>
-
-                  {/* Enrollment Duration Plan Selection */}
-                  <div className="full">
-                    <span className="field-label">
-                      Enrollment Duration & Program Track{" "}
-                      <span className="required-star" aria-hidden="true">
-                        *
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 800,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.8px",
+                          color: "var(--navy)",
+                        }}
+                      >
+                        Class Category Checkboxes:
                       </span>
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-2">
-                      {ENROLLMENT_DURATION_PLANS.map((plan) => {
-                        const isSelected = data.planTier === plan.id;
-                        const isHomeLessons = plan.id === "home-lessons";
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          color: "#334155",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Date:{" "}
+                        <strong style={{ color: "var(--navy)" }}>
+                          {currentDateFormatted}
+                        </strong>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      {([
+                        "Regular classes",
+                        "Private classes",
+                        "Group classes",
+                        "Scholarship",
+                      ] as const).map((cat) => {
+                        const checked = data.classType === cat
                         return (
                           <button
-                            key={plan.id}
+                            key={cat}
                             type="button"
-                            onClick={() => handlePlanChange(plan.id)}
-                            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                              isHomeLessons ? "sm:col-span-2" : "sm:col-span-1"
-                            } ${
-                              isSelected
-                                ? "border-[var(--gold)] bg-[var(--gold)]/10 ring-2 ring-[var(--gold)]/30"
-                                : "border-[var(--border,#e5e7eb)] bg-[var(--card,#ffffff)] hover:border-[var(--gold)]/50"
+                            onClick={() => {
+                              set("classType", cat)
+                              if (cat === "Private classes") {
+                                set("studyMode", "Home Lessons")
+                                set("planTier", "home-lessons")
+                                set("duration", "Monthly")
+                                set("amount", isUSD ? 90 : 70000)
+                              } else if (data.studyMode === "Home Lessons") {
+                                set("studyMode", "Onsite")
+                                if (data.planTier === "home-lessons") {
+                                  set("planTier", "")
+                                  set("duration", "")
+                                  set("amount", 0)
+                                }
+                              }
+                            }}
+                            className={`px-3 py-2.5 rounded-lg border text-left cursor-pointer transition-all flex items-center gap-2.5 ${
+                              checked
+                                ? "border-[var(--navy)] bg-black/5 text-[var(--navy)] ring-2 ring-black/10 shadow-xs"
+                                : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50 shadow-xs"
                             }`}
                           >
-                            {isHomeLessons ? (
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                    <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gold)]/20 text-[var(--gold2)] border border-[var(--gold)]/30">
-                                      {plan.badge}
-                                    </span>
-                                    <span className="font-bold text-sm text-[var(--navy,#0f2438)]">
-                                      {plan.name}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-[var(--muted,#64748b)] leading-relaxed">
-                                    {plan.inclusions}
-                                  </p>
-                                </div>
-                                <div className="flex items-center justify-between sm:justify-end gap-3.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-[var(--border,#e5e7eb)]/60 sm:pl-3.5">
-                                  <div className="text-left sm:text-right">
-                                    <span className="block text-[11px] text-[var(--muted,#64748b)] font-medium">
-                                      {plan.duration}
-                                    </span>
-                                    <strong className="text-sm font-bold text-[var(--gold)]">
-                                      {plan.feeLabel}
-                                    </strong>
-                                  </div>
-                                  <span
-                                    className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                                      isSelected
-                                        ? "border-[var(--gold)] bg-[var(--gold)] text-white shadow-xs"
-                                        : "border-zinc-300 bg-white"
-                                    }`}
-                                  >
-                                    {isSelected && (
-                                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                    )}
-                                  </span>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="w-full">
-                                  <div className="flex items-center justify-between gap-2 mb-2">
-                                    {plan.badge ? (
-                                      <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--gold)]/20 text-[var(--gold2)] border border-[var(--gold)]/30">
-                                        {plan.badge}
-                                      </span>
-                                    ) : (
-                                      <span />
-                                    )}
-                                    <span
-                                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                                        isSelected
-                                          ? "border-[var(--gold)] bg-[var(--gold)] text-white shadow-xs"
-                                          : "border-zinc-300 bg-white"
-                                      }`}
-                                    >
-                                      {isSelected && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                                      )}
-                                    </span>
-                                  </div>
-                                  <h4 className="font-bold text-sm text-[var(--navy,#0f2438)] leading-snug mb-1">
-                                    {plan.name}
-                                  </h4>
-                                  <p className="text-xs text-[var(--muted,#64748b)] leading-relaxed mb-3">
-                                    {plan.inclusions}
-                                  </p>
-                                </div>
-                                <div className="w-full pt-2 border-t border-[var(--border,#e5e7eb)]/60 flex items-center justify-between mt-auto">
-                                  <span className="text-xs text-[var(--muted,#64748b)] font-medium">
-                                    {plan.duration}
-                                  </span>
-                                  <strong className="text-sm font-bold text-[var(--gold)]">
-                                    {plan.feeLabel}
-                                  </strong>
-                                </div>
-                              </>
-                            )}
+                            <span
+                              style={{
+                                width: 17,
+                                height: 17,
+                                minWidth: 17,
+                                borderRadius: 4,
+                                border: checked
+                                  ? "2px solid var(--navy)"
+                                  : "2px solid #475569",
+                                background: checked ? "var(--navy)" : "#ffffff",
+                                color: "#ffffff",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 10.5,
+                                fontWeight: 900,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {checked ? "✓" : ""}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: checked ? 700 : 600,
+                                color: checked ? "var(--navy)" : "#141312",
+                                lineHeight: 1.25,
+                              }}
+                            >
+                              {cat}
+                            </span>
                           </button>
-                        );
+                        )
                       })}
                     </div>
                   </div>
-
-                  <div className="full">
-                    <span className="field-label">
-                      Study mode{" "}
-                      <span className="required-star" aria-hidden="true">
-                        *
-                      </span>
-                    </span>
-                    <div
-                      className="radio-cards"
-                      role="radiogroup"
-                      aria-label="Study mode"
-                    >
-                      {(["Onsite", "Online", "Home Lessons"] as const).map(
-                        (x) => (
-                          <label key={x}>
-                            <input
-                              type="radio"
-                              name="mode"
-                              value={x}
-                              checked={data.studyMode === x}
-                              onChange={() => handleStudyModeChange(x)}
-                            />
-                            <span>
-                              <strong>{x}</strong>
-                              <small>
-                                {x === "Onsite"
-                                  ? "At Vivadoxa Kaduna Studio"
-                                  : x === "Online"
-                                    ? "Live Interactive Video Coaching"
-                                    : "Instructor visits your residence (₦50,000/mo)"}
-                              </small>
-                            </span>
-                          </label>
-                        ),
-                      )}
-                    </div>
-                  </div>
                 </div>
-              </FormStep>
-            )}
 
-            {/* Step 4 — Review */}
-            {step === 4 && (
-              <FormStep
-                title="Review & confirm"
-                intro="Verify your admission details before submitting."
-              >
-                <div className="review">
-                  <ReviewRow
-                    title="Applicant"
-                    value={`${data.fullName} · ${data.email}`}
-                    onEdit={() => setStep(1)}
-                  />
-                  <ReviewRow
-                    title="Phone"
-                    value={data.phone}
-                    onEdit={() => setStep(1)}
-                  />
-                  <ReviewRow
-                    title="Program"
-                    value={`${data.program} · ${data.level}`}
-                    onEdit={() => setStep(3)}
-                  />
-                  <ReviewRow
-                    title="Study mode"
-                    value={`${data.studyMode} · ${data.schedule}`}
-                    onEdit={() => setStep(3)}
-                  />
-                  <ReviewRow
-                    title="Plan & Duration"
-                    value={ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)?.name || "1 Month Intensive Foundation"}
-                    onEdit={() => setStep(3)}
-                  />
-                  {data.guardianName && (
-                    <ReviewRow
-                      title="Guardian"
-                      value={`${data.guardianName} · ${data.guardianPhone}`}
-                      onEdit={() => setStep(2)}
-                    />
-                  )}
-                  <div className="total">
-                    <div>
-                      <span>{ENROLLMENT_DURATION_PLANS.find((p) => p.id === data.planTier)?.name || "Program Tuition"}</span>
-                      <small className="block text-xs text-[var(--muted)] font-normal mt-0.5">
-                        Uniform tuition policy across all 13 official instruments and vocal disciplines
-                      </small>
-                    </div>
-                    <strong>₦{data.amount.toLocaleString("en-NG")}</strong>
-                  </div>
-                  <div style={{ margin: "20px 0 16px", padding: 16, background: "#faf9f6", borderRadius: 8, border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <Icon name="lock" size={15} className="text-amber-800" />
-                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>Student Portal Account (Optional)</strong>
-                    </div>
-                    <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--muted)", lineHeight: 1.4 }}>
-                      Create a password to access your Student Portal anytime to track your admission review, download official admission letters, and view payment receipts.
-                    </p>
-                    <input
-                      type="password"
-                      placeholder="Choose a password (leave blank for automatic credentials)"
-                      value={accountPassword}
-                      onChange={(e) => setAccountPassword(e.target.value)}
-                      style={{ width: "100%", minHeight: 40, borderRadius: 6, border: "1px solid #cbd5e1", padding: "0 12px", background: "white", fontSize: 13 }}
-                    />
-                  </div>
-
-                  <label className="terms">
-                    <input
-                      type="checkbox"
-                      checked={termsAccepted}
-                      onChange={(e) => {
-                        setTermsAccepted(e.target.checked)
-                        if (e.target.checked) setTermsError("")
-                      }}
-                      aria-invalid={!!termsError}
-                    />
-                    <span>
-                      I agree to the Vivadoxa Music School{" "}
-                      <a
-                        href="/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Terms of Service
-                      </a>
-                      ,{" "}
-                      <a
-                        href="/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Privacy Policy
-                      </a>
-                      ,{" "}
-                      <a
-                        href="/tuition-policy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Tuition &amp; Refund Policy
-                      </a>
-                      , and{" "}
-                      <a
-                        href="/safeguarding"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-semibold text-[var(--gold)] hover:text-[var(--gold2)]"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Child Safeguarding Guidelines
-                      </a>
-                      .
-                    </span>
-                  </label>
-                  {termsError && (
-                    <p className="field-hint error" role="alert">
-                      {termsError}
-                    </p>
-                  )}
-                  {submitError && (
-                    <div
-                      className="login-error"
-                      role="alert"
-                      style={{ marginTop: 16 }}
-                    >
-                      <Icon name="warning" size={16} />
-                      {submitError}
-                    </div>
-                  )}
-                </div>
-              </FormStep>
-            )}
-
-            <div className="apply-actions">
-              {step > 1 ? (
-                <Button variant="ghost" onClick={prev} disabled={submitting}>
-                  Back
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => {
-                    if (window.history.length > 1) navigate(-1)
-                    else go("programs")
+                {/* Right: Passport Photo Box from docx */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    flexShrink: 0,
                   }}
-                  disabled={submitting}
                 >
-                  ← Back to Programs
-                </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/jpeg,image/png"
+                    onChange={handlePassportUpload}
+                    style={{ display: "none" }}
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      width: 104,
+                      height: 126,
+                      borderRadius: 4,
+                      border: "1.5px dashed var(--gold, #c96b32)",
+                      background: data.passportPhoto ? "#000000" : "#faf9f6",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      overflow: "hidden",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    }}
+                    title="Click to affix / upload passport photograph"
+                  >
+                    {data.passportPhoto ? (
+                      <img
+                        src={data.passportPhoto}
+                        alt="Student Passport"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: "center", padding: 6 }}>
+                        <span style={{ fontSize: 18 }}>📷</span>
+                        <strong
+                          style={{
+                            display: "block",
+                            fontSize: 10,
+                            letterSpacing: "1px",
+                            textTransform: "uppercase",
+                            color: "var(--navy)",
+                            marginTop: 3,
+                          }}
+                        >
+                          Passport
+                        </strong>
+                        <span
+                          style={{
+                            fontSize: 8.5,
+                            color: "var(--muted)",
+                            lineHeight: 1.1,
+                          }}
+                        >
+                          Affix Recent Photograph
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "var(--gold)",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      marginTop: 6,
+                    }}
+                  >
+                    {data.passportPhoto
+                      ? "Change Passport"
+                      : "+ Affix Passport"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                SECTION A (Personal Data) - Directly from docx
+                ══════════════════════════════════════════════════════════════════ */}
+            <div style={{ marginBottom: 32 }}>
+              <div
+                style={{
+                  background: "var(--navy)",
+                  color: "white",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  SECTION A (Personal Data)
+                </strong>
+                <span style={{ fontSize: 11, color: "#cbd5e1" }}>
+                  Date: {currentDateFormatted}
+                </span>
+              </div>
+
+              <div className="form-grid">
+                {/* NAME: First name and Surname */}
+                <Field
+                  id="ap-fn"
+                  label="First Name *"
+                  placeholder="e.g. Samuel"
+                  value={data.firstName || ""}
+                  onChange={(v) => handleNameChange("first", v)}
+                  required
+                  error={errors.firstName}
+                />
+                <Field
+                  id="ap-sn"
+                  label="Surname *"
+                  placeholder="e.g. Danjuma"
+                  value={data.surname || ""}
+                  onChange={(v) => handleNameChange("surname", v)}
+                  required
+                  error={errors.surname}
+                />
+
+                {/* DOB & Nationality (Nationality comes BEFORE State of Origin) */}
+                <Field
+                  id="ap-dob"
+                  label="DOB (Date of Birth) *"
+                  type="date"
+                  value={data.dateOfBirth}
+                  onChange={(v) => set("dateOfBirth", v)}
+                  required
+                  error={errors.dateOfBirth}
+                />
+                <SelectField
+                  id="ap-nat"
+                  label="Nationality *"
+                  placeholder="Select nationality (e.g. Nigerian, Ghanaian, British)"
+                  value={data.nationality}
+                  onChange={handleNationalityChange}
+                  required
+                  error={errors.nationality}
+                >
+                  {NATIONALITIES.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </SelectField>
+
+                {/* State of Origin: Dynamic based on Nationality */}
+                {data.nationality === "Nigerian" ? (
+                  <SelectField
+                    id="ap-state-origin"
+                    label="State of Origin (Nigeria) *"
+                    placeholder="Select Nigerian state of origin (e.g. Kaduna, Lagos)"
+                    value={data.stateOfOrigin}
+                    onChange={(v) => set("stateOfOrigin", v)}
+                    required
+                    error={errors.stateOfOrigin}
+                  >
+                    {NIGERIAN_STATES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </SelectField>
+                ) : data.nationality ? (
+                  <Field
+                    id="ap-state-origin"
+                    label="State / Province / Region of Origin"
+                    placeholder="e.g. Greater London, California, Ontario, Greater Accra"
+                    value={data.stateOfOrigin || ""}
+                    onChange={(v) => set("stateOfOrigin", v)}
+                    error={errors.stateOfOrigin}
+                  />
+                ) : (
+                  <SelectField
+                    id="ap-state-origin"
+                    label="State of Origin *"
+                    placeholder="Select state of origin (e.g. Kaduna, Lagos, FCT)"
+                    value={data.stateOfOrigin}
+                    onChange={(v) => set("stateOfOrigin", v)}
+                    required
+                    error={errors.stateOfOrigin}
+                  >
+                    {NIGERIAN_STATES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
+
+                {/* Marital Status */}
+                <SelectField
+                  id="ap-marital"
+                  label="Marital Status"
+                  placeholder="Select marital status (e.g. Single, Married)"
+                  value={data.maritalStatus}
+                  onChange={(v) => set("maritalStatus", v)}
+                >
+                  <option value="Single">Single</option>
+                  <option value="Married">Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
+                </SelectField>
+
+                {/* Gender & Occupation */}
+                <SelectField
+                  id="ap-gender"
+                  label="Gender *"
+                  placeholder="Select gender (Female / Male)"
+                  value={data.gender}
+                  onChange={(v) => set("gender", v)}
+                  required
+                  error={errors.gender}
+                >
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                </SelectField>
+                <Field
+                  id="ap-occ"
+                  label="Occupation"
+                  placeholder="e.g. Student, Civil Servant, Professional, Music Director"
+                  value={data.occupation || ""}
+                  onChange={(v) => set("occupation", v)}
+                />
+
+                {/* Residential Address */}
+                <label className="field full" htmlFor="ap-address">
+                  <span>
+                    Residential Address{" "}
+                    <span className="required-star" aria-hidden="true">
+                      *
+                    </span>
+                  </span>
+                  <input
+                    id="ap-address"
+                    placeholder="e.g. 14 Constitution Road, Kaduna"
+                    value={data.address}
+                    onChange={(e) => set("address", e.target.value)}
+                    required
+                    aria-invalid={!!errors.address}
+                  />
+                  {errors.address && (
+                    <span className="field-hint error" role="alert">
+                      {errors.address}
+                    </span>
+                  )}
+                </label>
+
+                {/* Sponsor & Phone Number */}
+                <Field
+                  id="ap-sponsor"
+                  label="Sponsor"
+                  placeholder="e.g. Self-Sponsored or Mr. & Mrs. Danjuma"
+                  value={data.sponsor || data.guardianName || ""}
+                  onChange={(v) => {
+                    set("sponsor", v)
+                    set("guardianName", v)
+                  }}
+                />
+                <Field
+                  id="ap-sphone"
+                  label="Sponsor Phone Number"
+                  placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
+                  type="tel"
+                  value={data.guardianPhone}
+                  onChange={(v) => set("guardianPhone", v)}
+                />
+
+                {/* Candidate Contacts */}
+                <Field
+                  id="ap-phone"
+                  label="Candidate Phone Number *"
+                  placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
+                  type="tel"
+                  value={data.phone}
+                  onChange={(v) => set("phone", v)}
+                  required
+                  error={errors.phone}
+                />
+                <Field
+                  id="ap-email"
+                  label="Candidate Email Address *"
+                  type="email"
+                  placeholder="e.g. candidate@example.com"
+                  value={data.email}
+                  onChange={(v) => set("email", v)}
+                  required
+                  error={errors.email}
+                />
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                SECTION B (Interest) - 100% Correlation with Roster & docx
+                ══════════════════════════════════════════════════════════════════ */}
+            <div style={{ marginBottom: 32 }}>
+              <div
+                style={{
+                  background: "var(--navy)",
+                  color: "white",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  SECTION B (Interest)
+                </strong>
+                <span style={{ fontSize: 11, color: "var(--gold)" }}>
+                  Available Instruments &amp; Disciplines
+                </span>
+              </div>
+
+              <p
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--muted)",
+                  margin: "0 0 12px",
+                }}
+              >
+                Select your primary instrument or vocal discipline from the
+                official school roster.
+              </p>
+
+              {/* Exact 17 Available Instruments + Intermediate Piano + Others Specify Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+                {OFFICIAL_AVAILABLE_INSTRUMENTS.map((item) => {
+                  const isSelected = data.program === item.name
+                  return (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => {
+                        set("program", item.name)
+                        set("category", item.family)
+                      }}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                        isSelected
+                          ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 shadow-xs"
+                          : "border-slate-300 bg-white hover:border-slate-400 shadow-xs"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 4,
+                            border: isSelected
+                              ? "2px solid var(--navy)"
+                              : "2px solid #475569",
+                            background: isSelected ? "var(--navy)" : "white",
+                            color: "white",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {isSelected ? "✓" : ""}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            fontWeight: isSelected ? 700 : 600,
+                            color: isSelected ? "var(--navy)" : "#0f172a",
+                            lineHeight: 1.25,
+                          }}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 9,
+                          textTransform: "uppercase",
+                          color: isSelected ? "var(--gold)" : "var(--muted)",
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.family.split(" ")[0]}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Others Specify Input Field */}
+              {data.program === "Others Specify" && (
+                <div style={{ marginBottom: 14 }}>
+                  <Field
+                    id="ap-custom-specify"
+                    label="Others Specify (Type your instrument or course)"
+                    placeholder="e.g. Cello, Harp, Oboe, Accordion"
+                    value={customInstrument}
+                    onChange={(v) => setCustomInstrument(v)}
+                    required
+                    error={errors.customInstrument}
+                  />
+                </div>
               )}
+
+              {/* Proficiency Level */}
+              <div className="form-grid">
+                <SelectField
+                  id="ap-level"
+                  label="Candidate Proficiency Level"
+                  placeholder="Select proficiency level (Beginner / Intermediate / Advanced)"
+                  value={data.level}
+                  onChange={(v) => set("level", v)}
+                  required
+                  error={errors.level}
+                >
+                  <option value="Beginner">
+                    Beginner (No prior musical experience)
+                  </option>
+                  <option value="Intermediate">
+                    Intermediate (Basic chords, scales, reading)
+                  </option>
+                  <option value="Advanced">
+                    Advanced (Concert repertoire &amp; theory)
+                  </option>
+                </SelectField>
+              </div>
+
+              {errors.program && (
+                <div
+                  className="login-error"
+                  role="alert"
+                  style={{ marginTop: 12 }}
+                >
+                  <Icon name="warning" size={14} />
+                  {errors.program}
+                </div>
+              )}
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                SECTION C (Time) - Directly from docx with Weekday/Weekend Rules
+                ══════════════════════════════════════════════════════════════════ */}
+            <div style={{ marginBottom: 32 }}>
+              <div
+                style={{
+                  background: "var(--navy)",
+                  color: "white",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  SECTION C (Time)
+                </strong>
+                <span style={{ fontSize: 11, color: "var(--gold)" }}>
+                  Sessions &amp; Cohort Days
+                </span>
+              </div>
+
+              {/* Section Time Checkboxes from docx */}
+              <div style={{ marginBottom: 16 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    color: "var(--navy)",
+                    display: "block",
+                    marginBottom: 8,
+                  }}
+                >
+                  Session Time Slots (From Official Form):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {([
+                    "Morning Section (10 AM - 1 PM)",
+                    "Afternoon Section (1 PM - 4 PM)",
+                    "Evening Section (4 PM - 7 PM)",
+                  ] as const).map((slot) => {
+                    const isSelected = selectedTimeSlot === slot
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => handleScheduleUpdate(selectedDays, slot)}
+                        className={`p-3 rounded-lg border text-left cursor-pointer transition-all flex items-center gap-2.5 ${
+                          isSelected
+                            ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 shadow-xs"
+                            : "border-slate-300 bg-white hover:border-slate-400 shadow-xs"
+                        }`}
+                      >
+                        <span
+                          style={{
+                            width: 16,
+                            height: 16,
+                            borderRadius: 4,
+                            border: isSelected
+                              ? "2px solid var(--navy)"
+                              : "2px solid #475569",
+                            background: isSelected ? "var(--navy)" : "white",
+                            color: "white",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 10,
+                            fontWeight: 900,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {isSelected ? "✓" : ""}
+                        </span>
+                        <div>
+                          <strong
+                            style={{
+                              display: "block",
+                              fontSize: 13,
+                              color: isSelected ? "var(--navy)" : "#0f172a",
+                            }}
+                          >
+                            {slot.split(" (")[0]}
+                          </strong>
+                          <small
+                            style={{
+                              color: "#475569",
+                              fontSize: 11.5,
+                              fontWeight: 500,
+                            }}
+                          >
+                            {slot.split(" (")[1]?.replace(")", "")}
+                          </small>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Cohort Days: Weekdays (3 days/wk) vs Weekends (Friday & Saturday) */}
+              <div style={{ marginBottom: 16 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    color: "var(--navy)",
+                    display: "block",
+                    marginBottom: 8,
+                  }}
+                >
+                  Cohort Days Schedule:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleScheduleUpdate("weekdays", selectedTimeSlot)
+                    }
+                    className={`p-3 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between ${
+                      selectedDays === "weekdays"
+                        ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 font-bold text-[var(--navy)] shadow-xs"
+                        : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 shadow-xs"
+                    }`}
+                  >
+                    <div>
+                      <strong
+                        style={{
+                          fontSize: 13,
+                          color:
+                            selectedDays === "weekdays"
+                              ? "var(--navy)"
+                              : "#0f172a",
+                        }}
+                      >
+                        📅 Weekdays Schedule
+                      </strong>
+                      <span className="block text-xs text-slate-600 font-medium mt-0.5">
+                        Strictly 3 days per week (Intensive practicals)
+                      </span>
+                    </div>
+                    <span className="badge badge-gold" style={{ fontSize: 10 }}>
+                      3 days / wk
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleScheduleUpdate("weekends", selectedTimeSlot)
+                    }
+                    className={`p-3 rounded-lg border text-left cursor-pointer transition-all flex items-center justify-between ${
+                      selectedDays === "weekends"
+                        ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 font-bold text-[var(--navy)] shadow-xs"
+                        : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 shadow-xs"
+                    }`}
+                  >
+                    <div>
+                      <strong
+                        style={{
+                          fontSize: 13,
+                          color:
+                            selectedDays === "weekends"
+                              ? "var(--navy)"
+                              : "#0f172a",
+                        }}
+                      >
+                        ⭐ Weekends Schedule
+                      </strong>
+                      <span className="block text-xs text-slate-600 font-medium mt-0.5">
+                        Strictly Friday &amp; Saturday masterclasses
+                      </span>
+                    </div>
+                    <span className="badge badge-gold" style={{ fontSize: 10 }}>
+                      Fri &amp; Sat
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Study Mode: Onsite vs Online vs Home Lessons */}
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                    color: "var(--navy)",
+                    display: "block",
+                    marginBottom: 8,
+                  }}
+                >
+                  Study Mode:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {(["Onsite", "Online", "Home Lessons"] as const).map((m) => {
+                    const isSelected = data.studyMode === m
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          set("studyMode", m)
+                          if (m === "Home Lessons") {
+                            set("planTier", "home-lessons")
+                            set("duration", "Monthly")
+                            set("classType", "Private classes")
+                            set("amount", isUSD ? 90 : 70000)
+                          } else if (data.planTier === "home-lessons") {
+                            set("planTier", "")
+                            set("duration", "")
+                            set("amount", 0)
+                          }
+                        }}
+                        className={`p-3 rounded-lg border text-left cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 font-bold text-[var(--navy)] shadow-xs"
+                            : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 shadow-xs"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <strong
+                            style={{
+                              fontSize: 13,
+                              color: isSelected ? "var(--navy)" : "#0f172a",
+                            }}
+                          >
+                            {m}
+                          </strong>
+                          <span
+                            style={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: "50%",
+                              border: isSelected
+                                ? "2px solid var(--navy)"
+                                : "2px solid #475569",
+                              background: isSelected ? "var(--navy)" : "white",
+                              color: "white",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 10,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {isSelected ? "✓" : ""}
+                          </span>
+                        </div>
+                        <small className="block text-xs text-slate-600 font-medium">
+                          {m === "Onsite"
+                            ? "Vivadoxa Studio Kaduna"
+                            : m === "Online"
+                              ? "Live interactive video"
+                              : "1-on-1 at your residence"}
+                        </small>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Online Student Billing Currency (Nigerian Students in ₦ vs Diaspora in $) */}
+              {data.studyMode === "Online" && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: "14px 16px",
+                    background: "rgba(201,107,50,0.08)",
+                    border: "1px solid var(--gold)",
+                    borderRadius: 8,
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <strong style={{ fontSize: 12, color: "var(--navy)" }}>
+                      Online Student Tuition Currency:
+                    </strong>
+                    <span className="badge badge-gold" style={{ fontSize: 10 }}>
+                      {isUSD ? "Diaspora ($ USD)" : "Nigerian Resident (₦ NGN)"}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleCurrencyToggle("NGN")}
+                      className={`p-2.5 rounded border text-left cursor-pointer transition-all ${
+                        !isUSD
+                          ? "border-[var(--gold)] bg-white ring-2 ring-[var(--gold)]/30 font-bold text-[var(--navy)]"
+                          : "border-slate-200 bg-white/60 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>🇳🇬 Nigerian Student (Naira ₦)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCurrencyToggle("USD")}
+                      className={`p-2.5 rounded border text-left cursor-pointer transition-all ${
+                        isUSD
+                          ? "border-[var(--gold)] bg-white ring-2 ring-[var(--gold)]/30 font-bold text-[var(--navy)]"
+                          : "border-slate-200 bg-white/60 text-slate-600 hover:border-slate-300"
+                      }`}
+                    >
+                      <span>🌍 Diaspora / International Student (USD $)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                SECTION D (Duration) - Directly from docx with Fixed Price Policy
+                ══════════════════════════════════════════════════════════════════ */}
+            <div style={{ marginBottom: 32 }}>
+              <div
+                style={{
+                  background: "var(--navy)",
+                  color: "white",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  SECTION D (Duration)
+                </strong>
+                <span style={{ fontSize: 11, color: "var(--gold)" }}>
+                  Fixed Tuition for Any Instrument Chosen
+                </span>
+              </div>
+
+              {/* Notice that Price is Fixed for Any Instrument Chosen */}
+              <div
+                style={{
+                  background: "#faf9f6",
+                  border: "1.5px solid var(--line)",
+                  borderRadius: 8,
+                  padding: "12px 16px",
+                  marginBottom: 16,
+                  fontSize: 12,
+                  color: "var(--navy)",
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ fontSize: 14 }}>📌</span>
+                  <strong
+                    style={{
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      fontSize: 11,
+                    }}
+                  >
+                    Uniform Fixed Tuition Guarantee:
+                  </strong>
+                </div>
+                <p style={{ margin: 0, color: "#334155", lineHeight: 1.45 }}>
+                  <strong>
+                    For international students and Nigerian students, the price
+                    is fixed for any instrument chosen.
+                  </strong>{" "}
+                  Whether you study Piano/keyboard, Saxophone, Violin, Voice
+                  training, Studio engineering, or Talking drums, the tuition
+                  rate below is fixed.
+                </p>
+              </div>
+
+              {errors.planTier && (
+                <div
+                  className="login-error"
+                  role="alert"
+                  style={{ marginBottom: 12 }}
+                >
+                  <Icon name="warning" size={14} />
+                  {errors.planTier}
+                </div>
+              )}
+
+              {/* Duration Options from docx */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                {OFFICIAL_DURATION_PLANS.map((plan) => {
+                  const isSelected = data.planTier === plan.id
+                  const isSpecial =
+                    plan.id === "2-years" || plan.id === "home-lessons"
+                  return (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      onClick={() => handlePlanSelect(plan.id)}
+                      className={`p-3.5 rounded-lg border text-left cursor-pointer transition-all flex flex-col justify-between ${
+                        isSpecial ? "sm:col-span-1" : "sm:col-span-1"
+                      } ${
+                        isSelected
+                          ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 shadow-xs"
+                          : "border-slate-300 bg-white hover:border-slate-400 shadow-xs"
+                      }`}
+                    >
+                      <div className="w-full">
+                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                          <strong
+                            style={{
+                              fontSize: 13.5,
+                              color: isSelected ? "var(--navy)" : "#0f172a",
+                            }}
+                          >
+                            {plan.name}
+                          </strong>
+                          <span
+                            style={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: 4,
+                              border: isSelected
+                                ? "2px solid var(--navy)"
+                                : "2px solid #475569",
+                              background: isSelected ? "var(--navy)" : "white",
+                              color: "white",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 10,
+                              fontWeight: 900,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {isSelected ? "✓" : ""}
+                          </span>
+                        </div>
+                        <p
+                          style={{
+                            margin: "0 0 8px",
+                            fontSize: 11.5,
+                            color: "#475569",
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          {plan.desc}
+                        </p>
+                      </div>
+                      <div className="w-full pt-2 border-t border-slate-200 flex items-center justify-between mt-auto">
+                        <span
+                          style={{
+                            fontSize: 11.5,
+                            color: "#334155",
+                            fontWeight: 700,
+                          }}
+                        >
+                          {plan.duration}
+                        </span>
+                        <strong style={{ fontSize: 14, color: "var(--gold)" }}>
+                          {isUSD ? plan.feeUSDLabel : plan.feeNGNLabel}
+                        </strong>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Total Fee Callout */}
+              <div
+                style={{
+                  background: "linear-gradient(135deg, #0b0b0b, #24201d)",
+                  borderRadius: 8,
+                  padding: "16px 20px",
+                  color: "white",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <span
+                    style={{
+                      color: "var(--gold)",
+                      fontSize: 10,
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Tuition Assessment (Fixed for Any Instrument)
+                  </span>
+                  <div style={{ fontSize: 12, color: "#cbd5e1", marginTop: 2 }}>
+                    {data.program ? data.program : "Choose instrument"} ·{" "}
+                    {data.duration ? data.duration : "Choose duration"}
+                    {data.studyMode ? ` (${data.studyMode})` : ""}
+                  </div>
+                </div>
+                <strong
+                  style={{
+                    fontSize: data.amount > 0 ? 24 : 15,
+                    fontFamily: data.amount > 0 ? "serif" : "sans-serif",
+                    color: data.amount > 0 ? "white" : "#cbd5e1",
+                    fontWeight: data.amount > 0 ? 700 : 500,
+                  }}
+                >
+                  {data.amount > 0 ? (
+                    <>
+                      {isUSD ? "$" : "₦"}
+                      {data.amount.toLocaleString(isUSD ? "en-US" : "en-NG")}
+                    </>
+                  ) : (
+                    "Select a plan above"
+                  )}
+                </strong>
+              </div>
+            </div>
+
+            {/* ══════════════════════════════════════════════════════════════════
+                DECLARATION - Exact Wording from docx
+                ══════════════════════════════════════════════════════════════════ */}
+            <div style={{ marginBottom: 28 }}>
+              <div
+                style={{
+                  background: "var(--navy)",
+                  color: "white",
+                  padding: "8px 14px",
+                  borderRadius: 6,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: 12,
+                    letterSpacing: "1.2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  DECLARATION
+                </strong>
+                <span style={{ fontSize: 11, color: "var(--gold)" }}>
+                  Official Candidate Affirmation
+                </span>
+              </div>
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1.5px solid var(--navy)",
+                  borderRadius: 8,
+                  padding: "16px 20px",
+                }}
+              >
+                {/* Exact Text from vivadoxa APPLICATION FORM.docx */}
+                <blockquote
+                  style={{
+                    margin: "0 0 16px",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    color: "#1e293b",
+                    fontStyle: "italic",
+                  }}
+                >
+                  &ldquo;I{" "}
+                  <strong>
+                    {data.fullName ||
+                      `${data.firstName || ""} ${data.surname || ""}`.trim() ||
+                      "the Applicant"}
+                  </strong>{" "}
+                  declare that to the best of my Knowledge the above information
+                  is accurate and I also promise to abide by the rules governing
+                  the school and promise to be of my best behavior.&rdquo;
+                </blockquote>
+
+                {/* Candidate Signature Line */}
+                <div
+                  style={{
+                    borderTop: "1px dashed var(--line)",
+                    paddingTop: 14,
+                  }}
+                >
+                  <label
+                    htmlFor="ap-signature"
+                    style={{
+                      display: "block",
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Signature (Type Full Legal Name as Official Signature) *
+                  </label>
+                  <input
+                    id="ap-signature"
+                    type="text"
+                    placeholder="e.g. Samuel Danjuma (Type full legal name)"
+                    value={data.signature || ""}
+                    onChange={(e) => set("signature", e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: 42,
+                      borderRadius: 6,
+                      border: "1px solid var(--line, #cbd5e1)",
+                      padding: "0 12px",
+                      fontSize: 16,
+                      fontFamily: "serif",
+                      fontStyle: "italic",
+                      background: "white",
+                    }}
+                    required
+                  />
+                  {errors.signature && (
+                    <span
+                      className="field-hint error"
+                      role="alert"
+                      style={{ marginTop: 4, display: "block" }}
+                    >
+                      {errors.signature}
+                    </span>
+                  )}
+                  {data.signature && (
+                    <div
+                      style={{ marginTop: 6, fontSize: 12, color: "#157054" }}
+                    >
+                      Signed by:{" "}
+                      <span
+                        style={{
+                          fontFamily: "serif",
+                          fontStyle: "italic",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {data.signature}
+                      </span>{" "}
+                      on {currentDateFormatted}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Optional Portal Password */}
+              <div
+                style={{
+                  marginTop: 16,
+                  padding: "14px 16px",
+                  background: "#faf9f6",
+                  border: "1px solid #e2ded8",
+                  borderRadius: 6,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon name="lock" size={13} className="text-amber-800" />
+                  <strong style={{ fontSize: 12, color: "var(--navy)" }}>
+                    Student Portal Access (Optional)
+                  </strong>
+                </div>
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: 11.5,
+                    color: "var(--muted)",
+                  }}
+                >
+                  Create an optional password to view term lesson notes and
+                  track practice assignments.
+                </p>
+                <input
+                  type="password"
+                  placeholder="Create portal password (optional, min 6 characters)"
+                  value={accountPassword}
+                  onChange={(e) => setAccountPassword(e.target.value)}
+                  style={{
+                    width: "100%",
+                    minHeight: 36,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    fontSize: 13,
+                    background: "white",
+                  }}
+                />
+              </div>
+
+              {/* Terms Checkbox */}
+              <label className="terms" style={{ marginTop: 16 }}>
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => {
+                    setTermsAccepted(e.target.checked)
+                    setTermsError("")
+                  }}
+                  required
+                />
+                <span style={{ fontSize: 12 }}>
+                  I confirm that all particulars supplied above are true and
+                  complete, and I agree to abide by the Vivadoxa Music School
+                  admission and code of conduct regulations.
+                </span>
+              </label>
+
+              {termsError && (
+                <div
+                  className="login-error"
+                  role="alert"
+                  style={{ marginTop: 10 }}
+                >
+                  <Icon name="warning" size={14} />
+                  {termsError}
+                </div>
+              )}
+
+              {submitError && (
+                <div
+                  className="login-error"
+                  role="alert"
+                  style={{ marginTop: 10 }}
+                >
+                  <Icon name="warning" size={14} />
+                  {submitError}
+                </div>
+              )}
+            </div>
+
+            {/* Submission Button */}
+            <div style={{ borderTop: "2px solid var(--navy)", paddingTop: 20 }}>
               <Button
-                onClick={step < 4 ? next : handleSubmit}
+                type="submit"
                 disabled={submitting}
+                style={{
+                  width: "100%",
+                  minHeight: 50,
+                  fontSize: 15,
+                  fontWeight: 700,
+                  background: "var(--navy)",
+                  color: "white",
+                  justifyContent: "center",
+                  letterSpacing: "0.5px",
+                }}
               >
                 {submitting ? (
-                  "Submitting to admissions…"
-                ) : step === 4 ? (
-                  <>
-                    Submit & proceed to payment <Icon name="arrow" />
-                  </>
+                  "Submitting Official Admission Form…"
                 ) : (
                   <>
-                    Save & continue <Icon name="arrow" />
+                    SUBMIT OFFICIAL APPLICATION &amp; PROCEED TO TUITION
+                    {data.amount > 0 ? (
+                      <>
+                        {" "}
+                        ({isUSD ? "$" : "₦"}
+                        {data.amount.toLocaleString(isUSD ? "en-US" : "en-NG")})
+                      </>
+                    ) : null}{" "}
+                    <Icon name="arrow" />
                   </>
                 )}
               </Button>
             </div>
-          </section>
+          </form>
+
+          {/* Discrete Admissions Desk Assistance */}
+          <div className="mt-8 pt-5 border-t border-[var(--line)] flex flex-wrap items-center justify-between gap-4 text-xs text-[var(--muted)]">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+              <span>
+                Admissions Desk: {SCHOOL_PHONE} · {SCHOOL_PHONE_2}
+              </span>
+            </div>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-semibold text-[var(--navy)] hover:text-[var(--gold-text)] transition-colors"
+            >
+              <WhatsAppIcon size={14} className="text-emerald-600" />
+              <span>Need help? Chat with Admissions on WhatsApp</span>
+            </a>
+          </div>
         </div>
       </div>
     </main>
