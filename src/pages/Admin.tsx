@@ -1536,6 +1536,7 @@ function AdminManager({ title }: { title: string }) {
         specialization: "",
         location: "Kaduna Studio",
         bio: "",
+        image: "",
         is_director: 0,
       })
       setActionNotice("Instructor profile saved.")
@@ -2257,7 +2258,7 @@ function AdminManager({ title }: { title: string }) {
                           <td>{row.location}</td>
                           <td>
                             <Badge
-                              tone={row.is_active === 0 ? "gray" : "green"}
+                              tone={row.is_active === 0 ? "navy" : "green"}
                             >
                               {row.is_active === 0 ? "Inactive" : "Active"}
                             </Badge>
@@ -3142,7 +3143,7 @@ function AdminManager({ title }: { title: string }) {
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
                               <Badge
-                                tone={row.is_active === 0 ? "gray" : "green"}
+                                tone={row.is_active === 0 ? "navy" : "green"}
                               >
                                 {row.is_active === 0 ? "Inactive" : "Active"}
                               </Badge>

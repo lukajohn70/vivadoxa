@@ -715,10 +715,10 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
                     color: "var(--navy, #0b0b0b)",
                   }}
                 >
-                  Tomi Adeyemi, M.Mus.
+                  Frederick Chrysantius
                 </strong>
                 <div style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}>
-                  Director of Academic Admissions
+                  Founder &amp; Artistic Director
                 </div>
                 <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
                   Vivadoxa Music School Conservatory
@@ -2263,10 +2263,28 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
             }}
           >
             <div style={{ flex: 1, minWidth: 150 }}>
-              <RegistrarSignature
-                name="B. S. Danladi"
-                title="Admissions & Registrar"
-              />
+              <SignatureRegistrar color="var(--navy, #0b0b0b)" />
+              <div
+                style={{
+                  borderTop: "1.5px solid #64748b",
+                  width: 175,
+                  paddingTop: 4,
+                  marginTop: 2,
+                }}
+              >
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: 10.5,
+                    color: "var(--navy, #0b0b0b)",
+                  }}
+                >
+                  B. S. Danladi
+                </strong>
+                <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
+                  Admissions &amp; Registrar
+                </div>
+              </div>
             </div>
             <div
               style={{

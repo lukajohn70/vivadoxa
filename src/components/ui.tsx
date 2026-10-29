@@ -462,6 +462,73 @@ export function Logo({ light = false }: { light?: boolean }) {
   )
 }
 
+// ── VivadoxaSquircle — compact V-mark icon for avatars, PWA icons, badges ────
+// size: px dimension (renders as a square). Matches brand palette exactly.
+export function VivadoxaSquircle({
+  size = 48,
+  className = "",
+}: {
+  size?: number
+  className?: string
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      width={size}
+      height={size}
+      className={`shrink-0 ${className}`}
+      aria-label="Vivadoxa Music"
+      role="img"
+    >
+      {/* Squircle background */}
+      <rect width="506" height="506" x="3" y="3" rx="112" fill="#0b0b0b" />
+      <rect
+        width="506"
+        height="506"
+        x="3"
+        y="3"
+        rx="112"
+        fill="none"
+        stroke="#c96b32"
+        strokeWidth="6"
+        strokeOpacity="0.5"
+      />
+      {/* Left leg of V */}
+      <polygon points="78,118 168,118 256,348 204,348" fill="#c96b32" />
+      {/* Right leg of V */}
+      <polygon points="344,118 434,118 308,348 256,348" fill="#c96b32" />
+      {/* Record/disc highlight clipped to the left V leg */}
+      <clipPath id="vmark-clip">
+        <polygon points="78,118 168,118 256,348 204,348" />
+      </clipPath>
+      <g clipPath="url(#vmark-clip)">
+        <circle
+          cx="195"
+          cy="152"
+          r="52"
+          fill="none"
+          stroke="#e8e4df"
+          strokeWidth="10"
+          opacity="0.28"
+        />
+        <circle
+          cx="195"
+          cy="152"
+          r="30"
+          fill="none"
+          stroke="#e8e4df"
+          strokeWidth="7"
+          opacity="0.18"
+        />
+        <circle cx="195" cy="152" r="10" fill="#e8e4df" opacity="0.35" />
+        {/* Play arrow */}
+        <polygon points="190,145 205,152 190,159" fill="#c96b32" opacity="0.9" />
+      </g>
+    </svg>
+  )
+}
+
 // ── Button ────────────────────────────────────────────────────────────────────
 export function Button({
   children,

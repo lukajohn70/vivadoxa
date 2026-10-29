@@ -187,6 +187,8 @@ const defaultFormData = (): ApplicationData => ({
   occupation: "",
   sponsor: "",
   guardianName: "",
+  guardianPhone: "",
+  guardianEmail: "",
   relationship: "",
   classType: "",
   category: "",
@@ -196,7 +198,7 @@ const defaultFormData = (): ApplicationData => ({
   sessionTime: "",
   level: "",
   schedule: "",
-  studyMode: "",
+  studyMode: "Onsite",
   currency: "NGN",
   referenceNo: "",
   amount: 0,
@@ -349,14 +351,16 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
       e.stateOfOrigin = "Please select your Nigerian State of Origin."
     }
 
-    if (!data.program)
-      e.program = "Please select your musical discipline / interest."
+    if (!data.program) {
+      e.program =
+        "Please select your primary instrument or discipline (Section B)."
+    }
     if (data.program === "Others Specify" && !customInstrument.trim()) {
       e.customInstrument = "Please specify your instrument or course."
     }
 
     if (!data.planTier) {
-      e.planTier = "Please select a study duration program."
+      e.planTier = "Please select a study duration program (Section D)."
     }
 
     if (!data.signature?.trim()) {
@@ -365,13 +369,12 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
 
     if (!termsAccepted) {
       setTermsError(
-        "You must affirm the candidate declaration before submitting.",
+        "You must affirm the candidate declaration checkbox before submitting.",
       )
-      return false
     }
 
     setErrors(e)
-    return Object.keys(e).length === 0
+    return Object.keys(e).length === 0 && termsAccepted
   }
 
   async function handleFormSubmit(e: React.FormEvent) {
@@ -380,33 +383,58 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
     setTermsError("")
 
     if (!validateAll()) {
-      formTopRef.current?.scrollIntoView({ behavior: "smooth" })
+      setTimeout(() => {
+        const firstErr = document.querySelector(
+          ".field-error input, .field-error select, .field-error textarea, .field-hint.error, .login-error",
+        )
+        if (firstErr) {
+          firstErr.scrollIntoView({ behavior: "smooth", block: "center" })
+          if (firstErr instanceof HTMLElement) firstErr.focus()
+        } else {
+          formTopRef.current?.scrollIntoView({ behavior: "smooth" })
+        }
+      }, 50)
       return
     }
 
     setSubmitting(true)
+
+    const effectiveFirstName =
+      data.firstName?.trim() || data.fullName.split(" ")[0] || "Candidate"
+    const effectiveSurname =
+      data.surname?.trim() ||
+      data.fullName.split(" ").slice(1).join(" ") ||
+      "Student"
+    const effectiveFullName =
+      data.fullName?.trim() ||
+      `${effectiveFirstName} ${effectiveSurname}`.trim()
     const effectiveProgram =
       data.program === "Others Specify" && customInstrument.trim()
         ? customInstrument.trim()
-        : data.program
+        : data.program || "Piano/keyboard"
+    const effectivePlan = data.planTier || "3-months"
+    const effectiveDuration = data.duration || "3 Months"
+    const effectiveAmount = data.amount > 0 ? data.amount : 55000
+    const effectiveAddress = data.state
+      ? `${data.address}, ${data.state}`
+      : data.address || "Kaduna"
 
     try {
       const res = await submitApplication({
-        fullName: data.fullName,
-        first_name: data.firstName || data.fullName.split(" ")[0] || "",
-        last_name:
-          data.surname || data.fullName.split(" ").slice(1).join(" ") || "",
+        fullName: effectiveFullName,
+        first_name: effectiveFirstName,
+        last_name: effectiveSurname,
         dateOfBirth: data.dateOfBirth,
-        gender: data.gender,
+        gender: data.gender || "Female",
         phone: data.phone,
         email: data.email,
-        address: `${data.address}, ${data.state}`,
-        guardianName: data.guardianName || data.sponsor,
-        guardianPhone: data.guardianPhone,
+        address: effectiveAddress,
+        guardianName: data.guardianName || data.sponsor || "Self-Sponsored",
+        guardianPhone: data.guardianPhone || data.phone,
         program: effectiveProgram,
-        studyMode: data.studyMode,
-        level: data.level,
-        amount: data.amount,
+        studyMode: data.studyMode || "Onsite",
+        level: data.level || "Beginner",
+        amount: effectiveAmount,
         password: accountPassword.trim() || undefined,
         // Standardized official application form docx fields
         classType: data.classType || "Regular classes",
@@ -418,39 +446,42 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
         occupation: data.occupation || "Student",
         sponsor: data.sponsor || data.guardianName || "Self-Sponsored",
         sessionTime: data.sessionTime || "Morning Section (10 AM - 1 PM)",
-        duration: data.duration || "3 Months",
-        planTier: data.planTier,
+        duration: effectiveDuration,
+        planTier: effectivePlan,
         currency: data.currency || "NGN",
       })
 
       if (res && res.success && res.application_no) {
         // Cache application context for payment checkout & document download
         sessionStorage.setItem("vdx_current_ref", res.application_no)
-        sessionStorage.setItem("vdx_current_amount", String(data.amount))
+        sessionStorage.setItem("vdx_current_amount", String(effectiveAmount))
         sessionStorage.setItem("vdx_current_currency", data.currency || "NGN")
-        sessionStorage.setItem("vdx_current_study_mode", data.studyMode)
-        sessionStorage.setItem("vdx_current_name", data.fullName)
+        sessionStorage.setItem(
+          "vdx_current_study_mode",
+          data.studyMode || "Onsite",
+        )
+        sessionStorage.setItem("vdx_current_name", effectiveFullName)
         sessionStorage.setItem("vdx_current_email", data.email)
         sessionStorage.setItem("vdx_current_phone", data.phone || "")
         sessionStorage.setItem("vdx_current_program", effectiveProgram)
         sessionStorage.setItem("vdx_current_schedule", data.schedule || "")
-        sessionStorage.setItem("vdx_current_plan", data.planTier || "")
-        sessionStorage.setItem("vdx_current_address", data.address || "")
+        sessionStorage.setItem("vdx_current_plan", effectivePlan)
+        sessionStorage.setItem("vdx_current_address", effectiveAddress)
         if (data.passportPhoto) {
           sessionStorage.setItem("vdx_current_passport", data.passportPhoto)
         }
         sessionStorage.setItem(
           "vdx_current_signature",
-          data.signature || data.fullName,
+          data.signature || effectiveFullName,
         )
 
         navigate(
-          `/payment?ref=${res.application_no}&amount=${data.amount}&currency=${data.currency || "NGN"}&mode=${data.studyMode}`,
+          `/payment?ref=${res.application_no}&amount=${effectiveAmount}&currency=${data.currency || "NGN"}&mode=${data.studyMode || "Onsite"}`,
         )
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
         setSubmitError(
-          res.error ||
+          res?.error ||
             "Failed to submit official application. Please check your details and try again.",
         )
       }
@@ -1931,14 +1962,42 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 </span>
               </label>
 
+              {/* Prominent list of missing fields so user immediately sees what is required */}
+              {Object.keys(errors).length > 0 && (
+                <div
+                  className="login-error"
+                  role="alert"
+                  style={{ marginTop: 12, marginBottom: 12, textAlign: "left" }}
+                >
+                  <Icon name="warning" size={16} className="shrink-0 mt-0.5" />
+                  <div>
+                    <strong style={{ display: "block", marginBottom: 4 }}>
+                      Please complete the following required fields to proceed:
+                    </strong>
+                    <ul
+                      style={{
+                        margin: 0,
+                        paddingLeft: 18,
+                        fontSize: 12,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {Object.values(errors).map((err, i) => (
+                        <li key={i}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {termsError && (
                 <div
                   className="login-error"
                   role="alert"
-                  style={{ marginTop: 10 }}
+                  style={{ marginTop: 10, textAlign: "left" }}
                 >
-                  <Icon name="warning" size={14} />
-                  {termsError}
+                  <Icon name="warning" size={14} className="shrink-0 mt-0.5" />
+                  <span>{termsError}</span>
                 </div>
               )}
 
@@ -1946,10 +2005,10 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 <div
                   className="login-error"
                   role="alert"
-                  style={{ marginTop: 10 }}
+                  style={{ marginTop: 10, textAlign: "left" }}
                 >
-                  <Icon name="warning" size={14} />
-                  {submitError}
+                  <Icon name="warning" size={14} className="shrink-0 mt-0.5" />
+                  <span>{submitError}</span>
                 </div>
               )}
             </div>

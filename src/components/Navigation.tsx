@@ -125,7 +125,6 @@ export function Navbar({ page, go }: NavbarProps) {
             setOpen(false)
             setProgramsOpen(false)
             setServicesOpen(false)
-            setPortalOpen(false)
           }}
           aria-label="Vivadoxa Music School Home"
         >
