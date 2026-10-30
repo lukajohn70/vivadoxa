@@ -16,6 +16,7 @@ import {
   PaymentReceiptModal,
   ApplicationSlipModal,
 } from "@/components/OfficialDocument"
+import { ServiceQuickNav } from "@/components/ServiceQuickNav"
 import type { Page } from "@/types"
 
 export function Portal({ go }: { go: (p: Page | string) => void }) {
@@ -265,7 +266,10 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         </div>
       </header>
 
-      <div className="container" style={{ marginTop: 28 }}>
+      <div className="container" style={{ marginTop: 24 }}>
+        {/* Core Services & Rentals Quick Tap Strip */}
+        <ServiceQuickNav go={go} variant="dashboard" className="mb-5" />
+
         {/* Toast notice */}
         {actionNotice && (
           <div

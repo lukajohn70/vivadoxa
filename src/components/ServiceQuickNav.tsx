@@ -11,6 +11,7 @@ export interface ServiceQuickNavItem {
   color: string
   bgColor: string
   badge?: string
+  isComingSoon?: boolean
 }
 
 export const CORE_SERVICES: ServiceQuickNavItem[] = [
@@ -52,7 +53,8 @@ export const CORE_SERVICES: ServiceQuickNavItem[] = [
     iconName: "repeat",
     color: "#059669",
     bgColor: "rgba(5, 150, 105, 0.12)",
-    badge: "From ₦8,000/mo",
+    badge: "Coming Soon",
+    isComingSoon: true,
   },
   {
     id: "store",
@@ -62,7 +64,8 @@ export const CORE_SERVICES: ServiceQuickNavItem[] = [
     iconName: "store",
     color: "#7C3AED",
     bgColor: "rgba(124, 58, 237, 0.12)",
-    badge: "Vetted Gear",
+    badge: "Coming Soon",
+    isComingSoon: true,
   },
 ]
 
@@ -134,7 +137,11 @@ export function ServiceQuickNav({
                       {item.name}
                     </strong>
                     {item.badge && (
-                      <span className="service-quicknav-badge">
+                      <span
+                        className={`service-quicknav-badge ${
+                          item.isComingSoon ? "is-coming-soon" : ""
+                        }`}
+                      >
                         {item.badge}
                       </span>
                     )}

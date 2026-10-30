@@ -12,6 +12,7 @@ import { HomeReviewsSpotlight } from "@/components/HomeReviewsSpotlight"
 import { StatCounters } from "@/components/StatCounters"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { SEO } from "@/components/SEO"
+import { ServiceQuickNav } from "@/components/ServiceQuickNav"
 import {
   heroImg,
   studioImg,
@@ -356,6 +357,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* ── 1B. Core Services & Rentals Quick 1-Tap Navigation Bar ─────────── */}
+      <ServiceQuickNav go={go} activePage="home" variant="homepage" />
 
       {/* ── 2. Prestigious Institutional Milestone Counters ───────────────── */}
       <StatCounters />
@@ -1128,7 +1132,136 @@ export function Home({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
 
-      {/* ── 12. Omnichannel Admissions Contact Hub (Parara Model) ─────────── */}
+      {/* ── 11B. Instrument Rentals & Music Store Dual Showcase ───────────── */}
+      <section
+        className="section overflow-hidden"
+        style={{
+          background: "#FAF8F5",
+          borderTop: "1px solid var(--line)",
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
+        <div className="container">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <ScrollReveal direction="left">
+              <div>
+                <span className="eyebrow">Gear Hire &amp; Instrument Atelier</span>
+                <h2
+                  style={{
+                    fontSize: "clamp(28px, 3.8vw, 42px)",
+                    margin: "8px 0 0",
+                    color: "var(--navy)",
+                  }}
+                >
+                  Instrument Rentals &amp; Gear Store
+                </h2>
+                <p
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 15,
+                    margin: "8px 0 0",
+                    maxWidth: 600,
+                  }}
+                >
+                  Take an instrument home for private practice, rent event sound gear, or purchase
+                  vetted instruments with precision clinic setup. Both features launching soon.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal direction="right" delay={100}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+                Under Preparation — Launching Soon
+              </div>
+            </ScrollReveal>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Card 1: Rentals */}
+            <ScrollReveal direction="left">
+              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group relative">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-[2px] rounded-2xl">
+                  <div className="text-center px-6">
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                      <Icon name="repeat" size={26} />
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[11px] font-bold mb-3">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                      Launching Soon
+                    </div>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Instrument &amp; Sound Rentals</h3>
+                    <p className="text-xs text-[var(--muted)] mb-4 max-w-xs mx-auto">
+                      Practice instruments for students and sound equipment for events in Kaduna.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => go("rentals")}
+                      className="btn btn-primary !py-2 !px-5 !text-xs mx-auto"
+                    >
+                      View Details <Icon name="arrow" size={13} />
+                    </button>
+                  </div>
+                </div>
+                {/* Background card (blurred behind overlay) */}
+                <div className="h-56 relative overflow-hidden bg-slate-900">
+                  <img
+                    src="/media/programs/violin-solo-rainbow.jpeg"
+                    alt="Vivadoxa student instrument rentals"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6 flex-1">
+                  <p className="text-xs text-[var(--muted)]">Student rentals &amp; event sound gear</p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Card 2: Store */}
+            <ScrollReveal direction="right" delay={120}>
+              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group relative">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-[2px] rounded-2xl">
+                  <div className="text-center px-6">
+                    <div className="w-14 h-14 rounded-2xl bg-violet-50 border border-violet-200 text-violet-600 flex items-center justify-center mx-auto mb-3">
+                      <Icon name="store" size={26} />
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[11px] font-bold mb-3">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                      Launching Soon
+                    </div>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Vivadoxa Music Store</h3>
+                    <p className="text-xs text-[var(--muted)] mb-4 max-w-xs mx-auto">
+                      Musical instruments, replacement strings, reeds &amp; accessories in Kaduna.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => go("store")}
+                      className="btn btn-primary !py-2 !px-5 !text-xs mx-auto"
+                    >
+                      View Details <Icon name="arrow" size={13} />
+                    </button>
+                  </div>
+                </div>
+                {/* Background card (blurred behind overlay) */}
+                <div className="h-56 relative overflow-hidden bg-slate-900">
+                  <img
+                    src="/media/programs/guitar-acoustic-recital.jpeg"
+                    alt="Vivadoxa music instrument store Kaduna"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6 flex-1">
+                  <p className="text-xs text-[var(--muted)]">Pre-Tested &amp; Clinic Setup Guaranteed</p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
       <section
         className="section overflow-hidden"
         style={{ background: "white" }}

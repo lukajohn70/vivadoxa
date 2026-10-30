@@ -205,6 +205,9 @@ const EVENT_RENTALS: EventRentalItem[] = [
 ]
 
 export function Rentals({ go }: { go: (p: Page) => void }) {
+  // Set to true when ready to launch the full self-service rental catalog
+  const SHOW_ACTIVE_CATALOG = false
+
   const [activeTab, setActiveTab] = useState<"students" | "events" | "terms">("students")
   const [selectedGear, setSelectedGear] = useState<string>("")
   const [formName, setFormName] = useState("")
@@ -241,6 +244,124 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     )}`
 
     window.open(`https://wa.me/2348038890786?text=${msg}`, "_blank")
+  }
+
+  // When active catalog is hidden, render in-place Coming Soon view
+  if (!SHOW_ACTIVE_CATALOG) {
+    return (
+      <main>
+        <SEO
+          title="Instrument & Sound Rentals (Coming Soon) | Vivadoxa"
+          description="Affordable student instrument rentals and event sound gear in Kaduna — launching soon at Vivadoxa Music School."
+          keywords="instrument rentals kaduna, rent violin kaduna, rent keyboard kaduna, vivadoxa rentals coming soon"
+          canonicalUrl="/rentals"
+        />
+
+        <PageHero
+          badge="Feature Launching Soon"
+          title="Instrument & Sound Rentals"
+          lead="We are finalizing our student practice rental fleet (violins, keyboards, guitars, saxophones from ₦8,000/mo) and event PA sound gear in Kaduna. Official self-service online reservation will be available shortly."
+          actions={
+            <>
+              <a
+                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                  "Hello Vivadoxa, I would like to inquire about early instrument rental availability.",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
+                <WhatsAppIcon size={18} />
+                <span>Chat with Concierge for Early Access</span>
+              </a>
+              <Button variant="secondary" onClick={() => go("programs")}>
+                Explore Academy Programs <Icon name="arrow" />
+              </Button>
+            </>
+          }
+        />
+
+        {/* In-place Coming Soon Feature Highlights */}
+        <section className="section bg-[#FAF8F5]">
+          <div className="container max-w-4xl">
+            <div className="text-center mb-10">
+              <span className="eyebrow">Service in Preparation</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
+                Instrument &amp; Equipment Rentals
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-2 max-w-xl mx-auto">
+                We are setting up rental options to support students and performers in Kaduna. Full details and terms will be published upon launch.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                  <Icon name="music" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Student Practice Instruments</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Practice instruments for students enrolled in our academy programs.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                  <Icon name="star" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Event Sound &amp; Gear</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Sound equipment and backline options for recitals, rehearsals, and church events.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                  <Icon name="wrench" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Clinic Inspection</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  All rental gear checked and serviced by our in-house instrument repair clinic.
+                </p>
+              </div>
+            </div>
+
+            {/* Advance Notice / Early Inquiry Banner */}
+            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[var(--line)] shadow-sm text-center">
+              <span className="inline-block text-[10px] uppercase font-extrabold tracking-widest text-[var(--gold)] mb-1">
+                Advance Notice
+              </span>
+              <h3 className="text-lg sm:text-xl font-bold font-serif text-[var(--navy)] mb-2">
+                Need an instrument or sound gear before official rollout?
+              </h3>
+              <p className="text-xs sm:text-sm text-[var(--muted)] max-w-lg mx-auto mb-6">
+                Our admissions desk can accommodate advance rental arrangements for current and prospective Vivadoxa students on a case-by-case basis.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                    "Hello Vivadoxa, I would like to inquire about advance instrument rentals.",
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary !py-2.5 !px-5 !text-xs flex items-center gap-2"
+                >
+                  <WhatsAppIcon size={16} />
+                  <span>Contact Admissions on WhatsApp</span>
+                </a>
+                <a
+                  href={`tel:${SCHOOL_PHONE}`}
+                  className="btn btn-secondary !py-2.5 !px-5 !text-xs flex items-center gap-2"
+                >
+                  <Icon name="phone" size={14} />
+                  <span>Call: {SCHOOL_PHONE}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -587,7 +708,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                       : "border-[var(--line)] bg-white text-[var(--muted)]"
                   }`}
                 >
-                  🏢 Studio Pickup (Kaduna)
+                  Studio Pickup (Kaduna)
                 </button>
                 <button
                   type="button"
@@ -598,7 +719,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                       : "border-[var(--line)] bg-white text-[var(--muted)]"
                   }`}
                 >
-                  🚚 Doorstep Courier Delivery
+                  Doorstep Courier Delivery
                 </button>
               </div>
             </div>

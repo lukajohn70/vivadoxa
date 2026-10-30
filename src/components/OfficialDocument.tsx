@@ -282,11 +282,14 @@ export function printDocumentElement(elementId: string) {
     const iframe = document.createElement("iframe")
     iframe.id = "vdx-print-frame"
     iframe.style.position = "fixed"
-    iframe.style.right = "0"
-    iframe.style.bottom = "0"
-    iframe.style.width = "0"
-    iframe.style.height = "0"
-    iframe.style.border = "0"
+    iframe.style.top = "0"
+    iframe.style.left = "0"
+    iframe.style.width = "210mm"
+    iframe.style.height = "297mm"
+    iframe.style.border = "none"
+    iframe.style.zIndex = "-9999"
+    iframe.style.opacity = "0.01"
+    iframe.style.pointerEvents = "none"
     iframe.setAttribute("aria-hidden", "true")
     document.body.appendChild(iframe)
 
@@ -314,8 +317,14 @@ export function printDocumentElement(elementId: string) {
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   ${headNodes}
   <style>
-    @page { size: auto; margin: 10mm 12mm; }
-    body {
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm 8mm 10mm;
+    }
+    * {
+      box-sizing: border-box !important;
+    }
+    html, body {
       background: #ffffff !important;
       color: #1a1918 !important;
       margin: 0 !important;
@@ -328,17 +337,19 @@ export function printDocumentElement(elementId: string) {
     .doc-sheet {
       box-shadow: none !important;
       border: none !important;
+      border-radius: 0 !important;
       margin: 0 auto !important;
       width: 100% !important;
-      max-width: 820px !important;
+      max-width: 190mm !important;
       padding: 0 !important;
       position: relative !important;
       overflow: visible !important;
+      box-sizing: border-box !important;
     }
   </style>
 </head>
 <body>
-  <div style="padding: 10px 15px;">
+  <div style="margin: 0 auto; width: 100%; max-width: 190mm;">
     ${target.outerHTML}
   </div>
 </body>
@@ -382,7 +393,7 @@ export function downloadDocumentHtml(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} | Vivadoxa Music School</title>
+  <title>${title} · Vivadoxa Music School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -400,25 +411,38 @@ export function downloadDocumentHtml(
       --line: #e6e4dc;
       --cream: #faf9f5;
     }
-    @page { size: auto; margin: 10mm 12mm; }
-    body {
+    * {
+      box-sizing: border-box !important;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm 8mm 10mm;
+    }
+    html, body {
       background: #f4f2eb;
       color: #1a1918;
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
-      padding: 30px 15px;
+      padding: 0;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
+    .screen-wrapper {
+      padding: 24px 16px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     .download-action-bar {
-      max-width: 820px;
-      margin: 0 auto 20px;
+      width: 100%;
+      max-width: 190mm;
+      margin-bottom: 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #0b1a29;
       color: white;
-      padding: 12px 20px;
+      padding: 12px 18px;
       border-radius: 8px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
@@ -436,42 +460,68 @@ export function downloadDocumentHtml(
       gap: 6px;
     }
     .download-action-bar button:hover { background: #b35a24; }
+    
+    .sheet-wrapper {
+      width: 100%;
+      max-width: 190mm;
+      margin: 0 auto;
+    }
     .doc-sheet {
       background: #ffffff !important;
       width: 100% !important;
-      max-width: 820px !important;
+      max-width: 190mm !important;
       margin: 0 auto !important;
       border: 1px solid #d4cebe !important;
-      border-radius: 8px !important;
-      padding: 36px 42px !important;
+      border-radius: 6px !important;
+      padding: 24px 28px !important;
       box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
       position: relative !important;
       overflow: visible !important;
+      box-sizing: border-box !important;
     }
+    
     @media print {
-      body {
+      html, body {
         background: #ffffff !important;
+        margin: 0 !important;
         padding: 0 !important;
       }
-      .no-print, .download-action-bar { display: none !important; }
+      .screen-wrapper {
+        padding: 0 !important;
+        display: block !important;
+      }
+      .no-print, .download-action-bar {
+        display: none !important;
+      }
+      .sheet-wrapper {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+      }
       .doc-sheet {
         border: none !important;
+        border-radius: 0 !important;
         box-shadow: none !important;
+        margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
+        max-width: 190mm !important;
       }
     }
   </style>
 </head>
 <body>
-  <div class="download-action-bar no-print">
-    <div>
-      <strong style="display:block;font-size:14px;">${title}</strong>
-      <span style="font-size:12px;opacity:0.8;">Vivadoxa Music School Official Credential</span>
+  <div class="screen-wrapper">
+    <div class="download-action-bar no-print">
+      <div>
+        <strong style="display:block;font-size:14px;">${title}</strong>
+        <span style="font-size:12px;opacity:0.8;">Vivadoxa Music School · Standard A4 Document</span>
+      </div>
+      <button onclick="window.print()">Print / Save as PDF</button>
     </div>
-    <button onclick="window.print()">Print / Save as PDF</button>
-  </div>
-  <div style="max-width: 820px; margin: 0 auto;">
-    ${target.outerHTML}
+    <div class="sheet-wrapper">
+      ${target.outerHTML}
+    </div>
   </div>
 </body>
 </html>`

@@ -18,6 +18,7 @@ import {
   WHATSAPP_URL,
 } from "@/lib/utils"
 import { submitApplication } from "@/lib/api"
+import { ApplicationSlipModal } from "@/components/OfficialDocument"
 import type { ApplicationData, Page } from "@/types"
 
 // ── 17 Available Instruments & Disciplines from Official Roster ───────────────
@@ -222,6 +223,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
   const [termsError, setTermsError] = useState("")
   const [accountPassword, setAccountPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [showSlipModal, setShowSlipModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
@@ -582,6 +584,16 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
               Please complete candidate particulars below. Once submitted, your
               registration reference will be generated for tuition confirmation.
             </p>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowSlipModal(true)}
+                className="btn btn-secondary !min-h-[38px] !py-1.5 !px-4 !text-xs inline-flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                <Icon name="copy" size={14} /> Preview &amp; Print Official Form (PDF)
+              </button>
+            </div>
           </div>
 
           {/* Centered Official Application Form */}
@@ -824,7 +836,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       />
                     ) : (
                       <div style={{ textAlign: "center", padding: 6 }}>
-                        <span style={{ fontSize: 18 }}>📷</span>
+                        <Icon name="upload" size={18} className="mx-auto text-slate-400 mb-1" />
                         <strong
                           style={{
                             display: "block",
@@ -904,7 +916,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 {/* NAME: First name and Surname */}
                 <Field
                   id="ap-fn"
-                  label="First Name *"
+                  label="First Name"
                   placeholder="e.g. Samuel"
                   value={data.firstName || ""}
                   onChange={(v) => handleNameChange("first", v)}
@@ -913,7 +925,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 />
                 <Field
                   id="ap-sn"
-                  label="Surname *"
+                  label="Surname"
                   placeholder="e.g. Danjuma"
                   value={data.surname || ""}
                   onChange={(v) => handleNameChange("surname", v)}
@@ -924,7 +936,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 {/* DOB & Nationality (Nationality comes BEFORE State of Origin) */}
                 <Field
                   id="ap-dob"
-                  label="DOB (Date of Birth) *"
+                  label="DOB (Date of Birth)"
                   type="date"
                   value={data.dateOfBirth}
                   onChange={(v) => set("dateOfBirth", v)}
@@ -933,7 +945,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 />
                 <SelectField
                   id="ap-nat"
-                  label="Nationality *"
+                  label="Nationality"
                   placeholder="Select nationality (e.g. Nigerian, Ghanaian, British)"
                   value={data.nationality}
                   onChange={handleNationalityChange}
@@ -951,7 +963,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 {data.nationality === "Nigerian" ? (
                   <SelectField
                     id="ap-state-origin"
-                    label="State of Origin (Nigeria) *"
+                    label="State of Origin (Nigeria)"
                     placeholder="Select Nigerian state of origin (e.g. Kaduna, Lagos)"
                     value={data.stateOfOrigin}
                     onChange={(v) => set("stateOfOrigin", v)}
@@ -976,7 +988,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 ) : (
                   <SelectField
                     id="ap-state-origin"
-                    label="State of Origin *"
+                    label="State of Origin"
                     placeholder="Select state of origin (e.g. Kaduna, Lagos, FCT)"
                     value={data.stateOfOrigin}
                     onChange={(v) => set("stateOfOrigin", v)}
@@ -1008,7 +1020,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 {/* Gender & Occupation */}
                 <SelectField
                   id="ap-gender"
-                  label="Gender *"
+                  label="Gender"
                   placeholder="Select gender (Female / Male)"
                   value={data.gender}
                   onChange={(v) => set("gender", v)}
@@ -1072,7 +1084,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 {/* Candidate Contacts */}
                 <Field
                   id="ap-phone"
-                  label="Candidate Phone Number *"
+                  label="Candidate Phone Number"
                   placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
                   type="tel"
                   value={data.phone}
@@ -1082,7 +1094,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 />
                 <Field
                   id="ap-email"
-                  label="Candidate Email Address *"
+                  label="Candidate Email Address"
                   type="email"
                   placeholder="e.g. candidate@example.com"
                   value={data.email}
@@ -1396,7 +1408,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                               : "#0f172a",
                         }}
                       >
-                        📅 Weekdays Schedule
+                        Weekdays Schedule
                       </strong>
                       <span className="block text-xs text-slate-600 font-medium mt-0.5">
                         Strictly 3 days per week (Intensive practicals)
@@ -1428,7 +1440,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                               : "#0f172a",
                         }}
                       >
-                        ⭐ Weekends Schedule
+                        Weekends Schedule
                       </strong>
                       <span className="block text-xs text-slate-600 font-medium mt-0.5">
                         Strictly Friday &amp; Saturday masterclasses
@@ -1553,7 +1565,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                           : "border-slate-200 bg-white/60 text-slate-600 hover:border-slate-300"
                       }`}
                     >
-                      <span>🇳🇬 Nigerian Student (Naira ₦)</span>
+                      <span>Nigerian Student (Naira ₦)</span>
                     </button>
                     <button
                       type="button"
@@ -1564,7 +1576,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                           : "border-slate-200 bg-white/60 text-slate-600 hover:border-slate-300"
                       }`}
                     >
-                      <span>🌍 Diaspora / International Student (USD $)</span>
+                      <span>Diaspora / International Student (USD $)</span>
                     </button>
                   </div>
                 </div>
@@ -1614,7 +1626,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 }}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span style={{ fontSize: 14 }}>📌</span>
+                  <Icon name="pin" size={13} className="text-[var(--gold)] shrink-0" />
                   <strong
                     style={{
                       textTransform: "uppercase",
@@ -2047,36 +2059,53 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
 
             {/* Submission Button */}
             <div style={{ borderTop: "2px solid var(--navy)", paddingTop: 20 }}>
-              <Button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  width: "100%",
-                  minHeight: 50,
-                  fontSize: 15,
-                  fontWeight: 700,
-                  background: "var(--navy)",
-                  color: "white",
-                  justifyContent: "center",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                {submitting ? (
-                  "Submitting Official Admission Form…"
-                ) : (
-                  <>
-                    SUBMIT OFFICIAL APPLICATION &amp; PROCEED TO TUITION
-                    {data.amount > 0 ? (
-                      <>
-                        {" "}
-                        ({isUSD ? "$" : "₦"}
-                        {data.amount.toLocaleString(isUSD ? "en-US" : "en-NG")})
-                      </>
-                    ) : null}{" "}
-                    <Icon name="arrow" />
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowSlipModal(true)}
+                  style={{
+                    minHeight: 50,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    borderColor: "var(--navy)",
+                    color: "var(--navy)",
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  <Icon name="copy" size={15} /> Preview &amp; Print Form (PDF)
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    flex: 1,
+                    minHeight: 50,
+                    fontSize: 15,
+                    fontWeight: 700,
+                    background: "var(--navy)",
+                    color: "white",
+                    justifyContent: "center",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {submitting ? (
+                    "Submitting Official Admission Form…"
+                  ) : (
+                    <>
+                      SUBMIT OFFICIAL APPLICATION &amp; PROCEED TO TUITION
+                      {data.amount > 0 ? (
+                        <>
+                          {" "}
+                          ({isUSD ? "$" : "₦"}
+                          {data.amount.toLocaleString(isUSD ? "en-US" : "en-NG")})
+                        </>
+                      ) : null}{" "}
+                      <Icon name="arrow" />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
 
@@ -2100,6 +2129,30 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
           </div>
         </div>
       </div>
+
+      {/* Official Standardized Application Form Modal Preview & Download */}
+      {showSlipModal && (
+        <ApplicationSlipModal
+          data={{
+            ...data,
+            first_name: data.firstName,
+            last_name: data.surname,
+            fullName:
+              `${data.firstName || ""} ${data.surname || ""}`.trim() ||
+              "Prospective Student",
+            residentialAddress: data.address,
+            guardianName: data.guardianName || data.sponsor,
+            guardianPhone: data.guardianPhone || data.phone,
+            passport_photo: data.passportPhoto,
+            passportPhoto: data.passportPhoto,
+            application_no:
+              sessionStorage.getItem("vdx_current_ref") ||
+              `VDX-${new Date().getFullYear()}-0101`,
+            created_at: new Date().toISOString(),
+          }}
+          onClose={() => setShowSlipModal(false)}
+        />
+      )}
     </main>
   )
 }

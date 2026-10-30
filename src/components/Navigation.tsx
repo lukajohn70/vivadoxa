@@ -98,7 +98,7 @@ export function Navbar({ page, go }: NavbarProps) {
     }
   }
 
-  const isServicesActive = page === "repairs" || page === "performances"
+  const isServicesActive = page === "repairs"
   const isProgramsActive = page === "programs" || page === "modes"
   const isPortalActive = page === "portal" || page === "status"
 
@@ -350,18 +350,20 @@ export function Navbar({ page, go }: NavbarProps) {
               <div
                 className={`nav-dropdown-panel ${
                   servicesOpen
-                    ? "open opacity-100 visible translate-y-0 max-h-[500px]"
+                    ? "open opacity-100 visible translate-y-0 max-h-[620px]"
                     : "opacity-0 invisible -translate-y-2 pointer-events-none md:pointer-events-none max-h-0 md:max-h-none overflow-hidden md:overflow-visible"
                 }`}
+                style={{ width: "340px" }}
               >
                 <div className="dropdown-section">
                   <span className="dropdown-heading">
-                    Workshop &amp; Stagecraft
+                    Core Pillars &amp; Services
                   </span>
 
+                  {/* 1. Academy */}
                   <button
                     onClick={() => {
-                      go("repairs")
+                      go("programs")
                       setServicesOpen(false)
                       setOpen(false)
                     }}
@@ -374,19 +376,20 @@ export function Navbar({ page, go }: NavbarProps) {
                         color: "var(--gold)",
                       }}
                     >
-                      <Icon name="wrench" size={16} />
+                      <Icon name="academic" size={16} />
                     </div>
                     <div>
-                      <strong>Instrument Repair Clinic</strong>
+                      <strong>Academy &amp; Tuition</strong>
                       <small>
-                        Diagnostics, precision overhaul &amp; courier pickup
+                        17 Disciplines, ABRSM &amp; MUSON prep, fee schedule
                       </small>
                     </div>
                   </button>
 
+                  {/* 2. Studio */}
                   <button
                     onClick={() => {
-                      go("performances")
+                      go("studio")
                       setServicesOpen(false)
                       setOpen(false)
                     }}
@@ -395,16 +398,42 @@ export function Navbar({ page, go }: NavbarProps) {
                     <div
                       className="dropdown-icon-box"
                       style={{
-                        background: "rgba(30,58,95,0.08)",
-                        color: "var(--navy)",
+                        background: "rgba(37,99,235,0.12)",
+                        color: "#2563EB",
                       }}
                     >
-                      <Icon name="star" size={16} />
+                      <Icon name="mic" size={16} />
                     </div>
                     <div>
-                      <strong>Recitals &amp; Performances</strong>
+                      <strong>Recording &amp; Rehearsal Studio</strong>
                       <small>
-                        Live student concerts, ensembles &amp; stagecraft
+                        Treated vocal booths, mixing, mastering &amp; band room
+                      </small>
+                    </div>
+                  </button>
+
+                  {/* 3. Repairs & Service */}
+                  <button
+                    onClick={() => {
+                      go("repairs")
+                      setServicesOpen(false)
+                      setOpen(false)
+                    }}
+                    className="dropdown-item"
+                  >
+                    <div
+                      className="dropdown-icon-box"
+                      style={{
+                        background: "rgba(217,119,6,0.12)",
+                        color: "#D97706",
+                      }}
+                    >
+                      <Icon name="wrench" size={16} />
+                    </div>
+                    <div>
+                      <strong>Repairs &amp; Service Clinic</strong>
+                      <small>
+                        Diagnostics, precision overhaul &amp; courier pickup
                       </small>
                     </div>
                   </button>
@@ -412,7 +441,41 @@ export function Navbar({ page, go }: NavbarProps) {
               </div>
             </div>
 
-            {/* 4. About Vivadoxa */}
+            {/* 4. Rentals (Individual Navbar Item) */}
+            <button
+              className={`inline-flex items-center gap-1.5 ${
+                page === "rentals" ? "active" : ""
+              }`}
+              onClick={() => {
+                go("rentals")
+                setOpen(false)
+              }}
+              aria-current={page === "rentals" ? "page" : undefined}
+            >
+              <span>Rentals</span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                Soon
+              </span>
+            </button>
+
+            {/* 5. Store (Individual Navbar Item) */}
+            <button
+              className={`inline-flex items-center gap-1.5 ${
+                page === "store" ? "active" : ""
+              }`}
+              onClick={() => {
+                go("store")
+                setOpen(false)
+              }}
+              aria-current={page === "store" ? "page" : undefined}
+            >
+              <span>Store</span>
+              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                Soon
+              </span>
+            </button>
+
+            {/* 6. About Vivadoxa */}
             <button
               className={page === "about" ? "active" : ""}
               onClick={() => {
@@ -424,7 +487,7 @@ export function Navbar({ page, go }: NavbarProps) {
               About
             </button>
 
-            {/* 5. Contact & Location */}
+            {/* 7. Contact & Location */}
             <button
               className={page === "contact" ? "active" : ""}
               onClick={() => {
@@ -436,7 +499,7 @@ export function Navbar({ page, go }: NavbarProps) {
               Contact
             </button>
 
-            {/* 6. Student & Client Portal */}
+            {/* 8. Student & Client Portal */}
             <button
               className={isPortalActive ? "active" : ""}
               onClick={() => {
@@ -510,11 +573,13 @@ export function Footer({ go }: { go: (p: Page) => void }) {
           <div className="flex flex-col gap-2 w-full">
             {([
               ["About Vivadoxa", "about"],
-              ["Programs & Tuition", "programs"],
-              ["Instrument Repairs", "repairs"],
-              ["Music Studio & Recording", "studio"],
+              ["Academy Programs & Fees", "programs"],
+              ["Recording & Rehearsal Studio", "studio"],
+              ["Instrument Repairs & Clinic", "repairs"],
+              ["Instrument & Sound Rentals", "rentals"],
+              ["Music Store & Supplies", "store"],
               ["Student Recitals", "performances"],
-              ["Study Modes", "modes"],
+              ["Study Modes & Home Lessons", "modes"],
             ] as [string, Page][]).map(([x, p]) => (
               <button
                 key={x}

@@ -1435,7 +1435,7 @@ export function PaymentSettingsView({
                       gap: 4,
                     }}
                   >
-                    {verifying ? "Authenticating…" : "🔍 Authenticate Account"}
+                    {verifying ? "Authenticating…" : "Authenticate Account"}
                   </button>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -1515,7 +1515,7 @@ export function PaymentSettingsView({
 
               <Field
                 id="cfg-account-name"
-                label="Official Account Name *"
+                label="Official Account Name"
                 value={bankSettings.accountName}
                 onChange={(v) =>
                   setBankSettings({ ...bankSettings, accountName: v })

@@ -956,8 +956,11 @@ footer a:hover{color:white}
 
 @media print {
   @page {
-    margin: 10mm 12mm;
-    size: auto;
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+  * {
+    box-sizing: border-box !important;
   }
   html, body {
     background: #ffffff !important;
@@ -993,8 +996,8 @@ footer a:hover{color:white}
   }
   .modal-overlay > div {
     width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
+    max-width: 190mm !important;
+    margin: 0 auto !important;
     padding: 0 !important;
   }
   .doc-sheet {
@@ -1002,23 +1005,33 @@ footer a:hover{color:white}
     left: auto !important;
     top: auto !important;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 190mm !important;
     margin: 0 auto !important;
-    padding: 8mm 10mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
     background: #ffffff !important;
     color: #1a1918 !important;
-    page-break-inside: auto;
+    box-sizing: border-box !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  /* Ensure 1-page official credentials never spill to page 2 */
+  #admission-letter-doc,
+  #payment-receipt-doc {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  /* Multi-page form styling */
+  #application-slip-doc {
+    page-break-inside: auto;
   }
   .modal-head, .modal-foot {
     display: none !important;
   }
   .doc-watermark {
-    opacity: 0.06 !important;
+    opacity: 0.05 !important;
   }
 }
 
@@ -1317,4 +1330,160 @@ footer a:hover{color:white}
     transform: none !important;
     transition: none !important;
   }
+}
+
+/* ── Service Quick Navigation Bar & Tap Strip ───────────────────────────── */
+.service-quicknav-container {
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+.service-quicknav-home {
+  padding: 16px 0;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 8px 24px -10px rgba(30, 58, 95, 0.06);
+}
+
+.service-quicknav-dashboard {
+  padding: 12px 0 20px 0;
+  background: transparent;
+}
+
+.service-quicknav-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.service-quicknav-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.service-quicknav-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 107, 50, 0.4);
+  box-shadow: 0 10px 24px -6px rgba(30, 58, 95, 0.08);
+  background: #FAF8F5;
+}
+
+.service-quicknav-card.is-active {
+  border-color: var(--gold);
+  background: #FAF7F2;
+  box-shadow: 0 0 0 1.5px var(--gold);
+}
+
+.service-quicknav-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.service-quicknav-card:hover .service-quicknav-icon {
+  transform: scale(1.08);
+}
+
+.service-quicknav-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-quicknav-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.service-quicknav-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.service-quicknav-badge {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: rgba(201, 107, 50, 0.1);
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.service-quicknav-badge.is-coming-soon {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.service-quicknav-arrow {
+  font-size: 13px;
+  color: var(--gold);
+  opacity: 0.4;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  font-weight: bold;
+}
+
+.service-quicknav-card:hover .service-quicknav-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+@media (max-width: 1100px) {
+  .service-quicknav-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .service-quicknav-grid {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    gap: 10px;
+  }
+  .service-quicknav-grid::-webkit-scrollbar {
+    display: none;
+  }
+  .service-quicknav-card {
+    min-width: 220px;
+    flex: 0 0 auto;
+  }
+}
+
+
+/* ── Coming Soon Modal animation ─────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.18s ease both;
 }

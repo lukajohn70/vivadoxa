@@ -20,6 +20,8 @@ import {
   Studio,
   Contact,
   Performances,
+  Rentals,
+  Store,
 } from "@/pages/StaticPages"
 import {
   Privacy,
@@ -97,6 +99,8 @@ function AppShell() {
           <Route path="/modes" element={<Modes go={go} />} />
           <Route path="/repairs" element={<Repairs />} />
           <Route path="/studio" element={<Studio go={go} />} />
+          <Route path="/rentals" element={<Rentals go={go} />} />
+          <Route path="/store" element={<Store go={go} />} />
           <Route path="/performances" element={<Performances go={go} />} />
           <Route
             path="/reviews"

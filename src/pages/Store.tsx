@@ -177,6 +177,9 @@ const PRODUCTS: ProductItem[] = [
 ]
 
 export function Store({ go }: { go: (p: Page) => void }) {
+  // Set to true when ready to launch the full active store & order catalog
+  const SHOW_ACTIVE_STORE = false
+
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -207,6 +210,124 @@ export function Store({ go }: { go: (p: Page) => void }) {
       item.category,
     )}%0A%0APlease confirm availability and payment/pickup details.`
     window.open(`https://wa.me/2348038890786?text=${msg}`, "_blank")
+  }
+
+  // When active store is hidden, render in-place Coming Soon view
+  if (!SHOW_ACTIVE_STORE) {
+    return (
+      <main>
+        <SEO
+          title="Vivadoxa Music Store (Coming Soon) | Kaduna"
+          description="Vetted musical instruments, Vandoren reeds, strings, and accessories with master clinic setup — launching soon in Kaduna."
+          keywords="musical instrument store kaduna, buy violin kaduna, vivadoxa music store coming soon"
+          canonicalUrl="/store"
+        />
+
+        <PageHero
+          badge="Feature Launching Soon"
+          title="Vivadoxa Music Store &amp; Gear Shop"
+          lead="Our verified musical instrument and accessory atelier is preparing for launch in Kaduna. Every instrument will feature pre-delivery setup, intonation, and a 6-month clinic warranty."
+          actions={
+            <>
+              <a
+                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                  "Hello Vivadoxa Store, I am inquiring about purchasing musical instruments or accessories.",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
+                <WhatsAppIcon size={18} />
+                <span>Chat with Gear Concierge</span>
+              </a>
+              <Button variant="secondary" onClick={() => go("repairs")}>
+                Explore Repair Clinic <Icon name="arrow" />
+              </Button>
+            </>
+          }
+        />
+
+        {/* In-place Coming Soon Highlights */}
+        <section className="section bg-[#FAF8F5]">
+          <div className="container max-w-4xl">
+            <div className="text-center mb-10">
+              <span className="eyebrow">Service in Preparation</span>
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
+                Vivadoxa Music Store
+              </h2>
+              <p className="text-xs sm:text-sm text-[var(--muted)] mt-2 max-w-xl mx-auto">
+                We are curating musical instruments, replacement strings, and essential accessories for musicians in Kaduna.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-4">
+                  <Icon name="music" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Musical Instruments</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Guitars, keyboards, violins, and wind instruments suitable for beginners and advancing students.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                  <Icon name="tag" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Strings &amp; Accessories</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Replacement strings, instrument reeds, cables, tuners, and care supplies.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                  <Icon name="wrench" size={22} />
+                </div>
+                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Clinic Inspection</h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  Instruments checked and calibrated by our in-house technicians before handover.
+                </p>
+              </div>
+            </div>
+
+            {/* Advance Stock Inquiry Banner */}
+            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[var(--line)] shadow-sm text-center">
+              <span className="inline-block text-[10px] uppercase font-extrabold tracking-widest text-[var(--gold)] mb-1">
+                Advance Stock Inquiries
+              </span>
+              <h3 className="text-lg sm:text-xl font-bold font-serif text-[var(--navy)] mb-2">
+                Need strings, reeds, or an instrument today?
+              </h3>
+              <p className="text-xs sm:text-sm text-[var(--muted)] max-w-lg mx-auto mb-6">
+                We have select maintenance accessories, reeds, and instruments currently available in-studio at Angwan Sunday, Kaduna.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                    "Hello Vivadoxa, I am inquiring about available instruments, strings, or reeds in stock.",
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary !py-2.5 !px-5 !text-xs flex items-center gap-2"
+                >
+                  <WhatsAppIcon size={16} />
+                  <span>Ask Concierge on WhatsApp</span>
+                </a>
+                <a
+                  href={`tel:${SCHOOL_PHONE}`}
+                  className="btn btn-secondary !py-2.5 !px-5 !text-xs flex items-center gap-2"
+                >
+                  <Icon name="phone" size={14} />
+                  <span>Call Desk: {SCHOOL_PHONE}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   return (

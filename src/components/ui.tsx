@@ -649,7 +649,7 @@ export const Field = ({
 }) => (
   <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
-      {label}
+      {label.replace(/\s*\*+$/, "")}
       {required && (
         <span className="required-star" aria-hidden="true">
           {" "}
@@ -697,7 +697,7 @@ export const Textarea = ({
 }) => (
   <label className={`field full${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
-      {label}
+      {label.replace(/\s*\*+$/, "")}
       {required && (
         <span className="required-star" aria-hidden="true">
           {" "}
@@ -743,7 +743,7 @@ export const SelectField = ({
 }) => (
   <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
-      {label}
+      {label.replace(/\s*\*+$/, "")}
       {required && (
         <span className="required-star" aria-hidden="true">
           {" "}
