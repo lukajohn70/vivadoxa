@@ -453,9 +453,6 @@ export function Navbar({ page, go }: NavbarProps) {
               aria-current={page === "rentals" ? "page" : undefined}
             >
               <span>Rentals</span>
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                Soon
-              </span>
             </button>
 
             {/* 5. Store (Individual Navbar Item) */}
@@ -470,9 +467,6 @@ export function Navbar({ page, go }: NavbarProps) {
               aria-current={page === "store" ? "page" : undefined}
             >
               <span>Store</span>
-              <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
-                Soon
-              </span>
             </button>
 
             {/* 6. About Vivadoxa */}

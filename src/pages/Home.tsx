@@ -1160,15 +1160,15 @@ export function Home({ go }: { go: (p: Page) => void }) {
                   }}
                 >
                   Take an instrument home for private practice, rent event sound gear, or purchase
-                  vetted instruments with precision clinic setup. Both features launching soon.
+                  vetted instruments with precision clinic setup. Showcase open — contact admin to order.
                 </p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal direction="right" delay={100}>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
-                Under Preparation — Launching Soon
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                Showcase Open · Inquire with Admin
               </div>
             </ScrollReveal>
           </div>
@@ -1176,82 +1176,94 @@ export function Home({ go }: { go: (p: Page) => void }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Card 1: Rentals */}
             <ScrollReveal direction="left">
-              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group relative">
-                {/* Coming Soon Overlay */}
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-[2px] rounded-2xl">
-                  <div className="text-center px-6">
-                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto mb-3">
-                      <Icon name="repeat" size={26} />
-                    </div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[11px] font-bold mb-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                      Launching Soon
-                    </div>
-                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Instrument &amp; Sound Rentals</h3>
-                    <p className="text-xs text-[var(--muted)] mb-4 max-w-xs mx-auto">
-                      Practice instruments for students and sound equipment for events in Kaduna.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => go("rentals")}
-                      className="btn btn-primary !py-2 !px-5 !text-xs mx-auto"
-                    >
-                      View Details <Icon name="arrow" size={13} />
-                    </button>
-                  </div>
-                </div>
-                {/* Background card (blurred behind overlay) */}
+              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group">
                 <div className="h-56 relative overflow-hidden bg-slate-900">
                   <img
                     src="/media/programs/violin-solo-rainbow.jpeg"
                     alt="Vivadoxa student instrument rentals"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs">
+                    Rental Showcase
+                  </span>
                 </div>
-                <div className="p-6 flex-1">
-                  <p className="text-xs text-[var(--muted)]">Student rentals &amp; event sound gear</p>
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Instrument &amp; Sound Rentals</h3>
+                    <p className="text-xs text-[var(--muted)] mb-4">
+                      Practice instruments for student scholars and high-fidelity sound gear for church services and events in Kaduna.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-slate-600 mb-6">
+                      <li className="flex items-center gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span>100% technician vetted &amp; action adjusted</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span>Refundable caution deposit (terms &amp; condition check apply)</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-emerald-600 font-bold">✓</span>
+                        <span>Studio pickup in Angwan Sunday or Kaduna delivery</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => go("rentals")}
+                    className="btn btn-primary !py-2.5 !px-5 !text-xs w-full justify-center"
+                  >
+                    <span>Browse Rental Showcase</span> <Icon name="arrow" size={13} />
+                  </button>
                 </div>
               </div>
             </ScrollReveal>
 
             {/* Card 2: Store */}
             <ScrollReveal direction="right" delay={120}>
-              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group relative">
-                {/* Coming Soon Overlay */}
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-[2px] rounded-2xl">
-                  <div className="text-center px-6">
-                    <div className="w-14 h-14 rounded-2xl bg-violet-50 border border-violet-200 text-violet-600 flex items-center justify-center mx-auto mb-3">
-                      <Icon name="store" size={26} />
-                    </div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-800 text-[11px] font-bold mb-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                      Launching Soon
-                    </div>
-                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Vivadoxa Music Store</h3>
-                    <p className="text-xs text-[var(--muted)] mb-4 max-w-xs mx-auto">
-                      Musical instruments, replacement strings, reeds &amp; accessories in Kaduna.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => go("store")}
-                      className="btn btn-primary !py-2 !px-5 !text-xs mx-auto"
-                    >
-                      View Details <Icon name="arrow" size={13} />
-                    </button>
-                  </div>
-                </div>
-                {/* Background card (blurred behind overlay) */}
+              <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group">
                 <div className="h-56 relative overflow-hidden bg-slate-900">
                   <img
                     src="/media/programs/guitar-acoustic-recital.jpeg"
                     alt="Vivadoxa music instrument store Kaduna"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs">
+                    Product Showcase
+                  </span>
                 </div>
-                <div className="p-6 flex-1">
-                  <p className="text-xs text-[var(--muted)]">Pre-Tested &amp; Clinic Setup Guaranteed</p>
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Vivadoxa Music Store</h3>
+                    <p className="text-xs text-[var(--muted)] mb-4">
+                      Verified guitars, keyboards, violins, saxophones, Vandoren reeds, and D&apos;Addario strings in Kaduna.
+                    </p>
+                    <ul className="space-y-1.5 text-xs text-slate-600 mb-6">
+                      <li className="flex items-center gap-2">
+                        <span className="text-[var(--gold)] font-bold">✓</span>
+                        <span>Pre-delivery intonation &amp; clinic setup guarantee</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-[var(--gold)] font-bold">✓</span>
+                        <span>6-Month clinic warranty on all instruments</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-[var(--gold)] font-bold">✓</span>
+                        <span>Contact admin directly to order via WhatsApp, form or email</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => go("store")}
+                    className="btn btn-primary !py-2.5 !px-5 !text-xs w-full justify-center"
+                  >
+                    <span>Browse Product Showcase</span> <Icon name="arrow" size={13} />
+                  </button>
                 </div>
               </div>
             </ScrollReveal>

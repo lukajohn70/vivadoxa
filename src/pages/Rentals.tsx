@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Badge,
   Button,
@@ -29,36 +29,28 @@ import {
   bassGuitarImg,
   studioImg,
 } from "@/lib/data"
+import { fetchCatalogRentals } from "@/lib/api"
 import type { Page } from "@/types"
 
-interface StudentRentalItem {
+export interface RentalItem {
   id: string
   name: string
-  category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass"
-  monthlyRate: string
+  category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass" | "PA & Sound" | "Backline" | "Microphones"
+  type: "student" | "event"
   image: string
-  deposit: string
-  inclusions: string[]
-  recommendedFor: string
+  inclusions?: string[]
+  features?: string[]
+  recommendedFor?: string
+  idealFor?: string
+  inStock?: boolean
 }
 
-interface EventRentalItem {
-  id: string
-  name: string
-  category: "PA & Sound" | "Backline" | "Keys" | "Microphones"
-  dailyRate: string
-  image: string
-  features: string[]
-  idealFor: string
-}
-
-const STUDENT_RENTALS: StudentRentalItem[] = [
+const DEFAULT_RENTALS: RentalItem[] = [
   {
     id: "violin",
     name: "Student Conservatory Violin Outfit (1/2, 3/4, 4/4)",
     category: "Strings",
-    monthlyRate: "₦8,000",
-    deposit: "₦15,000 (Refundable)",
+    type: "student",
     image: violinImg,
     recommendedFor: "Beginner & Intermediate strings scholars",
     inclusions: [
@@ -72,8 +64,7 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
     id: "keyboard",
     name: "61-Key Touch-Sensitive Student Keyboard",
     category: "Keys",
-    monthlyRate: "₦12,000",
-    deposit: "₦25,000 (Refundable)",
+    type: "student",
     image: pianoImg,
     recommendedFor: "Piano syllabus practice, ear training & theory",
     inclusions: [
@@ -87,8 +78,7 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
     id: "acoustic-guitar",
     name: "Classical Nylon & Folk Acoustic Guitar",
     category: "Guitars",
-    monthlyRate: "₦8,000",
-    deposit: "₦15,000 (Refundable)",
+    type: "student",
     image: guitarAcousticImg,
     recommendedFor: "Fingerpicking, classical posture & pop chords",
     inclusions: [
@@ -102,8 +92,7 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
     id: "alto-sax",
     name: "Eb Alto Saxophone (Lacquered Brass)",
     category: "Woodwinds",
-    monthlyRate: "₦18,000",
-    deposit: "₦35,000 (Refundable)",
+    type: "student",
     image: saxophoneImg,
     recommendedFor: "Wind players, band members & soloists",
     inclusions: [
@@ -117,8 +106,7 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
     id: "flute",
     name: "C Concert Concert Flute (Silver Plated)",
     category: "Woodwinds",
-    monthlyRate: "₦10,000",
-    deposit: "₦20,000 (Refundable)",
+    type: "student",
     image: fluteImg,
     recommendedFor: "Classical repertoire, breath control & orchestra",
     inclusions: [
@@ -132,8 +120,7 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
     id: "trumpet",
     name: "Bb Standard Student Trumpet",
     category: "Brass",
-    monthlyRate: "₦12,000",
-    deposit: "₦25,000 (Refundable)",
+    type: "student",
     image: trumpetImg,
     recommendedFor: "Brass fundamentals, embouchure & ensemble playing",
     inclusions: [
@@ -143,14 +130,11 @@ const STUDENT_RENTALS: StudentRentalItem[] = [
       "Slide tuning grease and maintenance guide",
     ],
   },
-]
-
-const EVENT_RENTALS: EventRentalItem[] = [
   {
     id: "pa-system",
     name: "Active Concert PA System (2x Tops + Subwoofer)",
     category: "PA & Sound",
-    dailyRate: "₦45,000",
+    type: "event",
     image: studioImg,
     idealFor: "Church crusades, live outdoor concerts, wedding banquets",
     features: [
@@ -164,7 +148,7 @@ const EVENT_RENTALS: EventRentalItem[] = [
     id: "drum-kit",
     name: "5-Piece Stage Drum Kit & Heavy Hardware Pack",
     category: "Backline",
-    dailyRate: "₦30,000",
+    type: "event",
     image: drumsImg,
     idealFor: "Concerts, youth rallies, music video shoots & recitals",
     features: [
@@ -178,7 +162,7 @@ const EVENT_RENTALS: EventRentalItem[] = [
     id: "bass-amp",
     name: "300W Bass Combo & Stage Guitar Amplifier Rig",
     category: "Backline",
-    dailyRate: "₦20,000",
+    type: "event",
     image: bassGuitarImg,
     idealFor: "Ensemble rehearsals, church guest bands & stage live backline",
     features: [
@@ -192,7 +176,7 @@ const EVENT_RENTALS: EventRentalItem[] = [
     id: "stage-piano",
     name: "88-Key Weighted Action Stage Piano & Synthesizer",
     category: "Keys",
-    dailyRate: "₦35,000",
+    type: "event",
     image: pianoImg,
     idealFor: "Classical recitals, worship conferences & corporate galas",
     features: [
@@ -205,11 +189,17 @@ const EVENT_RENTALS: EventRentalItem[] = [
 ]
 
 export function Rentals({ go }: { go: (p: Page) => void }) {
-  // Set to true when ready to launch the full self-service rental catalog
-  const SHOW_ACTIVE_CATALOG = false
-
+  const [rentals, setRentals] = useState<RentalItem[]>(DEFAULT_RENTALS)
   const [activeTab, setActiveTab] = useState<"students" | "events" | "terms">("students")
+
+  // Multi-Item Selection State
+  const [selectedRentals, setSelectedRentals] = useState<RentalItem[]>([])
+  const [showMultiDrawer, setShowMultiDrawer] = useState(false)
+
+  // Single Item Inquiry Target
   const [selectedGear, setSelectedGear] = useState<string>("")
+
+  // Form Fields
   const [formName, setFormName] = useState("")
   const [formPhone, setFormPhone] = useState("")
   const [formEmail, setFormEmail] = useState("")
@@ -219,6 +209,38 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
   const [formNotes, setFormNotes] = useState("")
   const [submitted, setSubmitted] = useState(false)
 
+  // Dynamic fetch from database / backend
+  useEffect(() => {
+    fetchCatalogRentals().then((data) => {
+      if (data && Array.isArray(data) && data.length > 0) {
+        setRentals(data as RentalItem[])
+      }
+    })
+  }, [])
+
+  const studentItems = rentals.filter((r) => r.type === "student" || (!r.type && r.category !== "PA & Sound" && r.category !== "Backline"))
+  const eventItems = rentals.filter((r) => r.type === "event" || r.category === "PA & Sound" || r.category === "Backline")
+
+  // Multi-selection helpers
+  const isSelected = (id: string) => selectedRentals.some((item) => item.id === id)
+
+  const toggleSelectRental = (item: RentalItem) => {
+    if (isSelected(item.id)) {
+      setSelectedRentals(selectedRentals.filter((i) => i.id !== item.id))
+    } else {
+      setSelectedRentals([...selectedRentals, item])
+    }
+  }
+
+  const removeSelectedRental = (id: string) => {
+    setSelectedRentals(selectedRentals.filter((i) => i.id !== id))
+  }
+
+  const clearRentalsSelection = () => {
+    setSelectedRentals([])
+    setShowMultiDrawer(false)
+  }
+
   const handleInquiry = (gearName: string) => {
     setSelectedGear(gearName)
     const el = document.getElementById("rental-inquiry-form")
@@ -227,163 +249,94 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     }
   }
 
+  const directWhatsAppInquiry = (gearName: string) => {
+    const msg = `Hello Vivadoxa Admin, I would like to inquire about renting:%0A%0A• Item: ${encodeURIComponent(
+      gearName,
+    )}%0A%0APlease let me know current availability, rental terms, caution deposit requirements, and pickup/delivery options.`
+    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+  }
+
+  // Wire MULTIPLE rental items to Admin via WhatsApp
+  const wireMultipleRentalsToWhatsApp = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (selectedRentals.length === 0) return
+
+    const itemsList = selectedRentals
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})`)
+      .join("%0A")
+
+    const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
+
+    const msg = `Hello Vivadoxa Admin, I would like to reserve the following ${selectedRentals.length} rental items:%0A%0A${itemsList}%0A%0A• Duration: ${encodeURIComponent(
+      formDuration,
+    )}%0A• Customer: ${encodeURIComponent(formName || "Customer")}%0A• WhatsApp/Phone: ${encodeURIComponent(
+      formPhone || "Not provided",
+    )}%0A• Email: ${encodeURIComponent(formEmail || "Not provided")}%0A• Intake: ${encodeURIComponent(
+      intakeText,
+    )}%0A• Notes: ${encodeURIComponent(
+      formNotes || "Please provide rental quote, caution deposit details, and pickup/delivery terms.",
+    )}`
+
+    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+  }
+
+  // Wire MULTIPLE rental items to Admin via Email
+  const wireMultipleRentalsToEmail = () => {
+    if (selectedRentals.length === 0) return
+
+    const itemsList = selectedRentals
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})`)
+      .join("\n")
+
+    const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
+
+    const body = `Hello Vivadoxa Administration,\n\nI would like to inquire about reserving the following ${selectedRentals.length} items from your rental fleet:\n\n${itemsList}\n\nRental Details:\n• Duration: ${formDuration}\n• Customer Name: ${formName || "Customer"}\n• Phone: ${formPhone || "Not provided"}\n• Intake Method: ${intakeText}\n• Notes: ${formNotes || "None"}\n\nPlease let me know the rental quote, caution deposit requirements, and handover schedule.\n\nThank you!`
+
+    window.location.href = `mailto:${SCHOOL_EMAIL}?subject=${encodeURIComponent(
+      `Rental Fleet Inquiry (${selectedRentals.length} Items)`,
+    )}&body=${encodeURIComponent(body)}`
+  }
+
+  // Single form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
 
     const gearText = selectedGear || "Musical Instrument / Equipment Rental"
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress}`
-    const msg = `Hello Vivadoxa, I would like to reserve a rental:%0A%0A• Item: ${encodeURIComponent(
+    const msg = `Hello Vivadoxa Admin, I would like to reserve a rental:%0A%0A• Item: ${encodeURIComponent(
       gearText,
     )}%0A• Duration: ${encodeURIComponent(formDuration)}%0A• Name: ${encodeURIComponent(
       formName,
     )}%0A• Phone: ${encodeURIComponent(formPhone)}%0A• Email: ${encodeURIComponent(
-      formEmail,
+      formEmail || "Not provided",
     )}%0A• Intake: ${encodeURIComponent(intakeText)}%0A• Notes: ${encodeURIComponent(
       formNotes || "None",
-    )}`
+    )}%0A%0APlease provide rental rates, caution deposit details, and pickup/delivery arrangement.`
 
-    window.open(`https://wa.me/2348038890786?text=${msg}`, "_blank")
-  }
-
-  // When active catalog is hidden, render in-place Coming Soon view
-  if (!SHOW_ACTIVE_CATALOG) {
-    return (
-      <main>
-        <SEO
-          title="Instrument & Sound Rentals (Coming Soon) | Vivadoxa"
-          description="Affordable student instrument rentals and event sound gear in Kaduna — launching soon at Vivadoxa Music School."
-          keywords="instrument rentals kaduna, rent violin kaduna, rent keyboard kaduna, vivadoxa rentals coming soon"
-          canonicalUrl="/rentals"
-        />
-
-        <PageHero
-          badge="Feature Launching Soon"
-          title="Instrument & Sound Rentals"
-          lead="We are finalizing our student practice rental fleet (violins, keyboards, guitars, saxophones from ₦8,000/mo) and event PA sound gear in Kaduna. Official self-service online reservation will be available shortly."
-          actions={
-            <>
-              <a
-                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
-                  "Hello Vivadoxa, I would like to inquire about early instrument rental availability.",
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-              >
-                <WhatsAppIcon size={18} />
-                <span>Chat with Concierge for Early Access</span>
-              </a>
-              <Button variant="secondary" onClick={() => go("programs")}>
-                Explore Academy Programs <Icon name="arrow" />
-              </Button>
-            </>
-          }
-        />
-
-        {/* In-place Coming Soon Feature Highlights */}
-        <section className="section bg-[#FAF8F5]">
-          <div className="container max-w-4xl">
-            <div className="text-center mb-10">
-              <span className="eyebrow">Service in Preparation</span>
-              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
-                Instrument &amp; Equipment Rentals
-              </h2>
-              <p className="text-xs sm:text-sm text-[var(--muted)] mt-2 max-w-xl mx-auto">
-                We are setting up rental options to support students and performers in Kaduna. Full details and terms will be published upon launch.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-                  <Icon name="music" size={22} />
-                </div>
-                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Student Practice Instruments</h3>
-                <p className="text-xs text-[var(--muted)] leading-relaxed">
-                  Practice instruments for students enrolled in our academy programs.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                  <Icon name="star" size={22} />
-                </div>
-                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Event Sound &amp; Gear</h3>
-                <p className="text-xs text-[var(--muted)] leading-relaxed">
-                  Sound equipment and backline options for recitals, rehearsals, and church events.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 border border-[var(--line)] shadow-xs">
-                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
-                  <Icon name="wrench" size={22} />
-                </div>
-                <h3 className="font-bold text-base text-[var(--navy)] mb-1">Clinic Inspection</h3>
-                <p className="text-xs text-[var(--muted)] leading-relaxed">
-                  All rental gear checked and serviced by our in-house instrument repair clinic.
-                </p>
-              </div>
-            </div>
-
-            {/* Advance Notice / Early Inquiry Banner */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[var(--line)] shadow-sm text-center">
-              <span className="inline-block text-[10px] uppercase font-extrabold tracking-widest text-[var(--gold)] mb-1">
-                Advance Notice
-              </span>
-              <h3 className="text-lg sm:text-xl font-bold font-serif text-[var(--navy)] mb-2">
-                Need an instrument or sound gear before official rollout?
-              </h3>
-              <p className="text-xs sm:text-sm text-[var(--muted)] max-w-lg mx-auto mb-6">
-                Our admissions desk can accommodate advance rental arrangements for current and prospective Vivadoxa students on a case-by-case basis.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <a
-                  href={`${WHATSAPP_URL}?text=${encodeURIComponent(
-                    "Hello Vivadoxa, I would like to inquire about advance instrument rentals.",
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary !py-2.5 !px-5 !text-xs flex items-center gap-2"
-                >
-                  <WhatsAppIcon size={16} />
-                  <span>Contact Admissions on WhatsApp</span>
-                </a>
-                <a
-                  href={`tel:${SCHOOL_PHONE}`}
-                  className="btn btn-secondary !py-2.5 !px-5 !text-xs flex items-center gap-2"
-                >
-                  <Icon name="phone" size={14} />
-                  <span>Call: {SCHOOL_PHONE}</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-    )
+    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
   }
 
   return (
-    <main>
+    <main className="pb-24">
       <SEO
         title="Musical Instrument & Sound Equipment Rentals in Kaduna | Vivadoxa"
-        description="Affordable instrument rentals for music students and high-fidelity backline/PA gear for events in Kaduna. Rent violins, keyboards, saxophones, guitars, and stage gear with full maintenance included."
-        keywords="instrument rentals kaduna, rent violin kaduna, rent keyboard kaduna, rent saxophone kaduna, sound system rental kaduna, drum kit rental kaduna, vivadoxa rentals, musical equipment hire"
+        description="Showcase of student practice instruments and professional concert sound equipment for rent in Kaduna. Rent violins, keyboards, saxophones, guitars, and stage backline with maintenance included. Contact admin to rent."
+        keywords="instrument rentals kaduna, rent violin kaduna, rent keyboard kaduna, rent saxophone kaduna, sound system rental kaduna, drum kit rental kaduna, vivadoxa rentals"
         canonicalUrl="/rentals"
       />
 
       <PageHero
-        badge="Instrument & Gear Hire Atelier"
+        badge="Instrument &amp; Gear Hire Atelier"
         title="Practice today. Perform tomorrow."
-        lead="Quality, vetted musical instruments for students to practice at home without an immediate large purchase, plus professional stage backline and PA audio systems for concerts, churches, and events in Kaduna."
+        lead="Quality, vetted musical instruments for students to practice at home without an immediate large purchase, plus professional stage backline and PA audio systems for concerts, churches, and events in Kaduna. Select one or multiple items to wire your reservation to administration."
         actions={
           <>
             <Button onClick={() => handleInquiry("General Rental Inquiry")}>
-              Reserve Rental Now <Icon name="arrow" />
+              Reserve Rental via Form <Icon name="arrow" />
             </Button>
             <a
-              href={WHATSAPP_URL}
+              href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admin%2C%20I%20would%20like%20to%20inquire%20about%20instrument%20and%20sound%20equipment%20rentals."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-concierge"
@@ -395,7 +348,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         }
       />
 
-      {/* ── Value Pillars Strip ────────────────────────────────────────── */}
+      {/* ── Value Pillars Strip (NO 100% refund promise) ─────────────── */}
       <section className="bg-white border-b border-[var(--line)] py-8">
         <div className="container grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
@@ -404,14 +357,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
             <small className="text-[11px] text-[var(--muted)]">Intonated &amp; setup by our clinic</small>
           </div>
           <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--navy)] block">From ₦8k</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Monthly Student Rates</strong>
-            <small className="text-[11px] text-[var(--muted)]">Accessible entry for every learner</small>
+            <span className="text-2xl font-black text-[var(--navy)] block">Flexible</span>
+            <strong className="text-xs text-[var(--navy)] block mt-1">Student Practice Terms</strong>
+            <small className="text-[11px] text-[var(--muted)]">Monthly &amp; term practice access</small>
           </div>
           <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--gold)] block">Refundable</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Security Deposit</strong>
-            <small className="text-[11px] text-[var(--muted)]">Returned immediately upon return</small>
+            <span className="text-2xl font-black text-[var(--gold)] block">Security</span>
+            <strong className="text-xs text-[var(--navy)] block mt-1">Caution Deposit</strong>
+            <small className="text-[11px] text-[var(--muted)]">Subject to return condition check</small>
           </div>
           <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
             <span className="text-2xl font-black text-[var(--navy)] block">Kaduna</span>
@@ -426,10 +379,13 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
             <div>
-              <span className="eyebrow">Rental Catalog</span>
+              <span className="eyebrow">Rental Showcase</span>
               <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
-                Choose your rental plan
+                Choose your rental gear
               </h2>
+              <p className="text-xs text-[var(--muted)] mt-1">
+                Select single or multiple items with &ldquo;Select&rdquo;, then wire your reservation list to Admin.
+              </p>
             </div>
 
             <div className="inline-flex p-1.5 rounded-xl bg-white border border-[var(--line)] shadow-xs">
@@ -442,7 +398,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                     : "text-[var(--muted)] hover:text-[var(--navy)]"
                 }`}
               >
-                Student Home Take-Out
+                Student Home Practice ({studentItems.length})
               </button>
               <button
                 type="button"
@@ -453,7 +409,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                     : "text-[var(--muted)] hover:text-[var(--navy)]"
                 }`}
               >
-                Stage, PA &amp; Event Backline
+                Stage, PA &amp; Event Backline ({eventItems.length})
               </button>
               <button
                 type="button"
@@ -472,130 +428,204 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
           {/* Tab 1: Student Rentals */}
           {activeTab === "students" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {STUDENT_RENTALS.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col group"
-                >
-                  <div className="h-48 relative overflow-hidden bg-slate-900">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs">
-                      {item.category}
-                    </span>
-                    <span className="absolute bottom-3 right-3 bg-[var(--gold)] text-white font-extrabold text-sm px-3 py-1 rounded-md shadow-sm">
-                      {item.monthlyRate} <span className="text-[10px] font-normal">/ mo</span>
-                    </span>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
-                    <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor}</p>
-
-                    <div className="mb-4 pt-3 border-t border-[var(--line)]">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] block mb-1.5">
-                        Inclusions &amp; Setup:
-                      </span>
-                      <ul className="space-y-1 text-xs text-slate-600">
-                        {item.inclusions.map((inc, i) => (
-                          <li key={i} className="flex items-start gap-1.5">
-                            <span className="text-[var(--gold)] font-bold">✓</span>
-                            <span>{inc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-3">
-                      <div>
-                        <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
-                          Security Deposit
-                        </small>
-                        <strong className="text-xs text-[var(--navy)]">{item.deposit}</strong>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleInquiry(item.name)}
-                        className="btn btn-primary !py-2 !px-3.5 !text-xs"
+              {studentItems.map((item) => {
+                const selected = isSelected(item.id)
+                return (
+                  <div
+                    key={item.id}
+                    className={`bg-white rounded-2xl border transition-all flex flex-col group relative ${
+                      selected
+                        ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
+                        : "border-[var(--line)] shadow-xs hover:shadow-md"
+                    }`}
+                  >
+                    {/* Multi-Select Checkbox overlay */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectRental(item)}
+                      className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
+                        selected
+                          ? "bg-[var(--gold)] text-white"
+                          : "bg-white/95 text-[var(--navy)] hover:bg-white"
+                      }`}
+                      title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                    >
+                      <span
+                        className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                          selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
+                        }`}
                       >
-                        Rent Now
-                      </button>
+                        {selected ? "✓" : ""}
+                      </span>
+                      <span>{selected ? "Selected" : "Select"}</span>
+                    </button>
+
+                    <div className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs">
+                        {item.category}
+                      </span>
+                      <span className="absolute bottom-3 left-3 bg-white/95 text-[var(--navy)] font-bold text-xs px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Student Practice Fleet
+                      </span>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
+                      <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor}</p>
+
+                      <div className="mb-4 pt-3 border-t border-[var(--line)]">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] block mb-1.5">
+                          Inclusions &amp; Setup:
+                        </span>
+                        <ul className="space-y-1 text-xs text-slate-600">
+                          {(item.inclusions || []).map((inc, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <span className="text-[var(--gold)] font-bold">✓</span>
+                              <span>{inc}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                        <div>
+                          <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
+                            Caution Deposit
+                          </small>
+                          <strong className="text-xs text-slate-700 font-semibold">Terms on Inspection</strong>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => directWhatsAppInquiry(item.name)}
+                            className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
+                            title="Inquire on WhatsApp"
+                          >
+                            <WhatsAppIcon size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInquiry(item.name)}
+                            className="btn btn-primary !py-2 !px-3.5 !text-xs cursor-pointer"
+                          >
+                            Reserve Item
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
           {/* Tab 2: Stage & Event Backline */}
           {activeTab === "events" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {EVENT_RENTALS.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row group"
-                >
-                  <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden" />
-                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md">
-                      {item.category}
-                    </span>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h3 className="font-bold text-base text-[var(--navy)]">{item.name}</h3>
-                        <span className="text-sm font-bold text-[var(--gold)] whitespace-nowrap">
-                          {item.dailyRate} <small className="text-[10px] font-normal">/ day</small>
-                        </span>
-                      </div>
-                      <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor}</p>
-
-                      <ul className="space-y-1 text-xs text-slate-600 mb-4">
-                        {item.features.map((f, i) => (
-                          <li key={i} className="flex items-start gap-1.5">
-                            <span className="text-[var(--gold)] font-bold">✓</span>
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between gap-3">
-                      <span className="text-[11px] text-[var(--muted)]">Sound engineer available</span>
-                      <button
-                        type="button"
-                        onClick={() => handleInquiry(item.name)}
-                        className="btn btn-primary !py-2 !px-4 !text-xs"
+              {eventItems.map((item) => {
+                const selected = isSelected(item.id)
+                return (
+                  <div
+                    key={item.id}
+                    className={`bg-white rounded-2xl border transition-all flex flex-col sm:flex-row group relative ${
+                      selected
+                        ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
+                        : "border-[var(--line)] shadow-xs hover:shadow-md"
+                    }`}
+                  >
+                    {/* Multi-Select Checkbox overlay */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectRental(item)}
+                      className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
+                        selected
+                          ? "bg-[var(--gold)] text-white"
+                          : "bg-white/95 text-[var(--navy)] hover:bg-white"
+                      }`}
+                      title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                    >
+                      <span
+                        className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                          selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
+                        }`}
                       >
-                        Book Event Gear
-                      </button>
+                        {selected ? "✓" : ""}
+                      </span>
+                      <span>{selected ? "Selected" : "Select"}</span>
+                    </button>
+
+                    <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden" />
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md">
+                        {item.category}
+                      </span>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1 pr-20">
+                          <h3 className="font-bold text-base text-[var(--navy)]">{item.name}</h3>
+                        </div>
+                        <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor || item.recommendedFor}</p>
+
+                        <ul className="space-y-1 text-xs text-slate-600 mb-4">
+                          {(item.features || item.inclusions || []).map((f, i) => (
+                            <li key={i} className="flex items-start gap-1.5">
+                              <span className="text-[var(--gold)] font-bold">✓</span>
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-[var(--muted)]">Sound engineer available</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => directWhatsAppInquiry(item.name)}
+                            className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
+                            title="Inquire on WhatsApp"
+                          >
+                            <WhatsAppIcon size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInquiry(item.name)}
+                            className="btn btn-primary !py-2 !px-4 !text-xs cursor-pointer"
+                          >
+                            Book Event Gear
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
-          {/* Tab 3: Terms & FAQ */}
+          {/* Tab 3: Terms & FAQ (NO 100% refund promise) */}
           {activeTab === "terms" && (
             <div className="bg-white rounded-2xl border border-[var(--line)] p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
               <div>
                 <h3 className="font-bold text-lg text-[var(--navy)] mb-2">1. How Rental Security Deposits Work</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Every instrument rental requires a refundable deposit paid prior to dispatch. When you return the
-                  instrument undamaged at the conclusion of your rental term, your full deposit is instantly credited
-                  back to your designated bank account or cash voucher.
+                  Every instrument rental requires a refundable caution deposit paid prior to dispatch. When you return the
+                  instrument at the conclusion of your rental term, our instrument clinic inspects its condition.
+                  The security deposit is refunded subject to return condition verification, less any applicable repair or
+                  overdue fees.
                 </p>
               </div>
 
@@ -630,7 +660,243 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
 
-      {/* ── Interactive Rental Booking Form ────────────────────────────── */}
+      {/* ── STICKY MULTI-ITEM RENTAL BAR (Floating Bottom) ───────────── */}
+      {selectedRentals.length > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-amber-500/30 animate-in slide-in-from-bottom">
+          <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-[var(--gold)] text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                {selectedRentals.length}
+              </span>
+              <div>
+                <strong className="text-xs sm:text-sm font-bold block text-white">
+                  {selectedRentals.length} {selectedRentals.length === 1 ? "Rental Item" : "Rental Items"} Selected
+                </strong>
+                <span className="text-[11px] text-slate-300 line-clamp-1">
+                  {selectedRentals.map((i) => i.name).join(" · ")}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={clearRentalsSelection}
+                className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                Clear
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowMultiDrawer(true)}
+                className="btn btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+              >
+                <WhatsAppIcon size={14} />
+                <span>Review &amp; Wire to Admin ({selectedRentals.length})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MULTI-ITEM RENTAL RESERVATION MODAL ───────────────────────── */}
+      {showMultiDrawer && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-[var(--line)] relative max-h-[92vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setShowMultiDrawer(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-[var(--navy)] p-1.5 rounded-lg hover:bg-slate-100"
+              aria-label="Close"
+            >
+              <Icon name="close" size={18} />
+            </button>
+
+            <div className="mb-4">
+              <span className="eyebrow block mb-1">Multi-Item Reservation</span>
+              <h3 className="font-bold text-base sm:text-xl text-[var(--navy)]">
+                Wire {selectedRentals.length} Selected Rentals to Admin
+              </h3>
+              <p className="text-xs text-[var(--muted)] mt-1">
+                Admin will verify availability for your dates, calculate security deposits, and arrange studio pickup or delivery in Kaduna.
+              </p>
+            </div>
+
+            {/* List of Selected Rentals */}
+            <div className="space-y-2 mb-5 max-h-52 overflow-y-auto pr-1">
+              {selectedRentals.map((item, idx) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)] text-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
+                      {idx + 1}
+                    </span>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-10 h-10 rounded-lg object-cover bg-slate-900 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <h5 className="font-bold text-slate-800 truncate">{item.name}</h5>
+                      <span className="text-[10px] text-[var(--muted)]">
+                        {item.category} · {item.type === "event" ? "Event Backline" : "Student Practice"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => removeSelectedRental(item.id)}
+                    className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 cursor-pointer shrink-0"
+                    title="Remove item"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Wire to Admin Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+              <button
+                type="button"
+                onClick={wireMultipleRentalsToWhatsApp}
+                className="btn btn-primary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
+              >
+                <WhatsAppIcon size={16} />
+                <span>WhatsApp List</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={wireMultipleRentalsToEmail}
+                className="btn btn-secondary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
+              >
+                <Icon name="mail" size={14} />
+                <span>Email List</span>
+              </button>
+
+              <a
+                href={`tel:${SCHOOL_PHONE}`}
+                className="btn btn-secondary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full text-center"
+              >
+                <Icon name="phone" size={14} />
+                <span>Call Admin</span>
+              </a>
+            </div>
+
+            {/* Reservation Form */}
+            <div className="bg-[#FAF8F5] p-4 sm:p-5 rounded-xl border border-[var(--line)]">
+              <h4 className="text-xs font-bold text-[var(--navy)] mb-2 flex items-center gap-1.5">
+                <Icon name="pen" size={12} className="text-[var(--gold)]" />
+                <span>Reservation Details:</span>
+              </h4>
+
+              <form onSubmit={wireMultipleRentalsToWhatsApp} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field
+                    label="Your Full Name"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="e.g. Samuel Danladi"
+                    required
+                  />
+                  <Field
+                    label="WhatsApp / Phone Number"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    placeholder="0803 889 0786"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field
+                    label="Email Address (Optional)"
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <SelectField
+                    label="Desired Rental Duration"
+                    value={formDuration}
+                    onChange={(e) => setFormDuration(e.target.value)}
+                    options={[
+                      { value: "1 Month", label: "1 Month (Student Practice)" },
+                      { value: "3 Months", label: "3 Months (Academic Term)" },
+                      { value: "6 Months", label: "6 Months (Semester)" },
+                      { value: "12 Months", label: "12 Months (Full Year)" },
+                      { value: "1 Day", label: "1 Day (Event / Concert)" },
+                      { value: "Weekend (2-3 Days)", label: "Weekend Event (2-3 Days)" },
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[var(--navy)] mb-1">Intake Method</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormIntake("pickup")}
+                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                        formIntake === "pickup"
+                          ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
+                          : "border-[var(--line)] bg-white text-[var(--muted)]"
+                      }`}
+                    >
+                      Studio Pickup (Angwan Sunday)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormIntake("delivery")}
+                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                        formIntake === "delivery"
+                          ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
+                          : "border-[var(--line)] bg-white text-[var(--muted)]"
+                      }`}
+                    >
+                      Kaduna Delivery
+                    </button>
+                  </div>
+                </div>
+
+                {formIntake === "delivery" && (
+                  <Field
+                    label="Delivery Address & Landmark (Kaduna)"
+                    value={formAddress}
+                    onChange={(e) => setFormAddress(e.target.value)}
+                    placeholder="e.g. Barnawa Complex, near Market, Kaduna"
+                    required
+                  />
+                )}
+
+                <Textarea
+                  label="Notes / Instrument Specifications"
+                  value={formNotes}
+                  onChange={(e) => setFormNotes(e.target.value)}
+                  placeholder="Specify size requirements (e.g. 1/2 vs 4/4 violin), sound engineer request, or dates."
+                  rows={2}
+                />
+
+                <Button type="submit" className="w-full justify-center !py-2.5 !text-xs">
+                  <WhatsAppIcon size={15} />
+                  <span>Reserve All {selectedRentals.length} Items via WhatsApp</span>
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Interactive Rental Booking Form (Single / General) ────────── */}
       <section className="section bg-white border-t border-[var(--line)]" id="rental-inquiry-form">
         <div className="container max-w-2xl">
           <div className="text-center mb-8">
@@ -679,7 +945,6 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 value={formEmail}
                 onChange={(e) => setFormEmail(e.target.value)}
                 placeholder="you@example.com"
-                required
               />
               <SelectField
                 label="Desired Rental Duration"
@@ -747,9 +1012,29 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               <span>Submit Rental Request on WhatsApp</span>
             </Button>
 
-            <div className="flex items-center justify-center gap-2 text-[11px] text-[var(--muted)] pt-2">
+            <div className="flex items-center justify-center gap-2 text-[11px] text-[var(--muted)] pt-1">
               <Icon name="shield" size={13} className="text-emerald-600" />
-              <span>Free calibration · 100% Refundable deposit guarantee</span>
+              <span>Free calibration · Security caution deposit subject to condition check</span>
+            </div>
+
+            {/* Alternative Contact Links */}
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-4 border-t border-[var(--line)] text-xs text-[var(--muted)]">
+              <span className="font-semibold text-[var(--navy)]">Prefer another channel?</span>
+              <a
+                href={`mailto:${SCHOOL_EMAIL}?subject=Rental%20Inquiry%20from%20Website`}
+                className="inline-flex items-center gap-1 text-[var(--navy)] hover:text-[var(--gold)] font-medium"
+              >
+                <Icon name="mail" size={13} />
+                <span>{SCHOOL_EMAIL}</span>
+              </a>
+              <span className="text-slate-300">•</span>
+              <a
+                href={`tel:${SCHOOL_PHONE}`}
+                className="inline-flex items-center gap-1 text-[var(--navy)] hover:text-[var(--gold)] font-medium"
+              >
+                <Icon name="phone" size={13} />
+                <span>Call {SCHOOL_PHONE}</span>
+              </a>
             </div>
           </form>
         </div>

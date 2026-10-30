@@ -96,6 +96,7 @@ function AppShell() {
           <Route path="/" element={<Home go={go} />} />
           <Route path="/about" element={<About go={go} />} />
           <Route path="/programs" element={<Programs go={go} />} />
+          <Route path="/academy" element={<Programs go={go} />} />
           <Route path="/modes" element={<Modes go={go} />} />
           <Route path="/repairs" element={<Repairs />} />
           <Route path="/studio" element={<Studio go={go} />} />

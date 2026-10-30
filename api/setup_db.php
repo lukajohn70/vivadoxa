@@ -124,6 +124,31 @@ try {
         $pdo->exec("ALTER TABLE `repairs` ADD COLUMN `pickup_address` TEXT NULL");
     } catch (Exception $e) {}
 
+    // Extended columns matching official Vivadoxa Instrument Repair Request form
+    $repairCols = [
+        "equipment_type VARCHAR(100) NULL",
+        "brand_model VARCHAR(191) NULL",
+        "serial_number VARCHAR(100) NULL",
+        "accessories VARCHAR(255) NULL",
+        "equipment_age VARCHAR(100) NULL",
+        "problem_started VARCHAR(100) NULL",
+        "previously_repaired VARCHAR(20) NULL",
+        "visible_damage VARCHAR(20) NULL",
+        "service_requested TEXT NULL",
+        "preferred_contact VARCHAR(50) NULL",
+        "best_time VARCHAR(50) NULL",
+        "collection_arrangement VARCHAR(100) NULL",
+        "customer_signature VARCHAR(191) NULL",
+        "additional_notes TEXT NULL",
+        "form_data LONGTEXT NULL"
+    ];
+    foreach ($repairCols as $cDef) {
+        $colName = explode(' ', $cDef)[0];
+        try {
+            $pdo->exec("ALTER TABLE `repairs` ADD COLUMN $cDef");
+        } catch (Exception $e) {}
+    }
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `enquiries` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,

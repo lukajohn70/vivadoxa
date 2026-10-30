@@ -198,82 +198,336 @@ export function Studio({ go }: { go: (p: Page) => void }) {
       />
 
       <PageHero
-        eyebrow="State-of-the-Art Music Studio"
-        title="Where sound meets perfection."
-        body="Kaduna's premier music recording and rehearsal studio. Built for musicians, choirs, producers, and students who demand acoustic clarity, pristine tracking, and professional audio engineering."
+        eyebrow="Vivadoxa Studio"
+        title="Your Sound Deserves to Be Heard."
+        body="Welcome to Vivadoxa Studio, a creative environment where musical ideas become recorded productions. From your first single to a complete album, we help artists, vocalists, instrumentalists, churches, and creative teams bring their projects to life. Our goal is to help you capture your sound, communicate your message, and present your music with professionalism."
         image={studioEngineeringImg}
+        actions={
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                "Hello Vivadoxa Studio, I would like to book a studio recording or production session.",
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+            >
+              <WhatsAppIcon size={16} /> Book a Studio Session
+            </a>
+            <button
+              type="button"
+              onClick={() => go("contact")}
+              className="btn btn-secondary cursor-pointer"
+            >
+              Discuss Your Project &rarr;
+            </button>
+            <a
+              href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                "Hello Vivadoxa Studio, I would like to request a quote for my recording/audio project.",
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary inline-flex items-center gap-1.5"
+            >
+              <Icon name="tag" size={14} /> Request a Quote
+            </a>
+          </div>
+        }
       />
 
-      {/* ── Studio Capabilities & Services ─────────────────────────────────── */}
-      <section className="section" style={{ background: "white" }}>
+      {/* ── Our Recording and Production Services ─────────────────────────── */}
+      <section className="section bg-white">
         <div className="container">
-          <SectionHead
-            eyebrow="Studio Services"
-            title="Complete Acoustic & Audio Production Solutions"
-            body="From tracking your first vocal demo to rehearsing a full concert set, our facility provides the exact environment, instruments, and equipment required to produce world-class music."
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-            {STUDIO_SERVICES.map((srv) => (
-              <article
-                key={srv.id}
-                className="rounded-2xl border border-[var(--line)] bg-[#faf8f5] overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-shadow"
-              >
-                <div className="h-60 sm:h-72 w-full overflow-hidden relative bg-[#0a192f]">
-                  <img
-                    src={srv.image}
-                    alt={`${srv.title} at Vivadoxa Music Studio Kaduna`}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                    loading="lazy"
-                  />
-                  <span className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur text-[var(--gold2)] text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-md border border-[var(--gold)]/30">
-                    {srv.badge}
-                  </span>
-                </div>
-                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-serif text-[var(--navy)] mb-3">
-                      {srv.title}
-                    </h3>
-                    <p className="text-sm text-[var(--muted)] leading-relaxed mb-5">
-                      {srv.desc}
-                    </p>
-                    <ul className="space-y-2.5 mb-6">
-                      {srv.features.map((feat, i) => (
-                        <li
-                          key={i}
-                          className="text-xs text-slate-700 flex items-start gap-2.5 leading-snug"
-                        >
-                          <span className="text-[var(--gold)] font-bold text-sm shrink-0">
-                            ✓
-                          </span>
-                          <span>{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between">
-                    <a
-                      href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20inquire%20about%20booking%20the%20${encodeURIComponent(srv.title)}.`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider"
-                    >
-                      <WhatsAppIcon size={16} />
-                      <span>Book Session</span>
-                    </a>
-                    <button
-                      onClick={() => go("contact")}
-                      className="text-xs font-semibold text-[var(--navy)] hover:text-[var(--gold)] transition-colors"
-                    >
-                      Studio Tour &rarr;
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+            <span className="eyebrow">Recording &amp; Production</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
+              Our Recording &amp; <em>Production Services</em>
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--muted)] max-w-2xl mx-auto leading-relaxed">
+              Professional audio solutions tailored for solo artists, vocalists, church worship ministries, live bands, and commercial creators.
+            </p>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+            {/* Service 1: Music Recording */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  01
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Music Recording
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Recording services for solo artists, vocalists, instrumentalists, bands, and music groups in an acoustically treated environment.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Solo instrumental tracking (sax, violin, piano, guitar)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Ensemble multi-tracking with clean preamp separation</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Pristine acoustics free of ambient bleed</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20book%20a%20Music%20Recording%20session.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Book Music Recording &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 2: Vocal Recording */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  02
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Vocal Recording
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  A dedicated recording environment for lead vocals, backing vocals, harmonies, and expressive vocal performances.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Isolated vocal booth with high-grade pop filtration</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Warm large-diaphragm condenser studio microphones</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Real-time latency-free monitor mix for singers</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20book%20a%20Vocal%20Recording%20session.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Book Vocal Booth &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 3: Music Production */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  03
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Music Production
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Creative support for developing musical ideas into complete productions, subject to the selected production package.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Beat programming, melodic orchestration &amp; harmonic structuring</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Arrangement guidance for singles, EPs, and albums</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Multi-genre support: Gospel, Afrobeats, Classical, Jazz &amp; RnB</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20discuss%20a%20Music%20Production%20package.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Discuss Production &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 4: Mixing and Mastering */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  04
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Mixing and Mastering
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Audio processing to improve balance, clarity, consistency, and readiness for the intended listening platform.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Stem balancing, surgical EQ &amp; multi-band compression</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Reverb spatial imaging &amp; analog saturation</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Industry standard loudness compliance (-14 LUFS for streaming)</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20need%20Mixing%20and%20Mastering%20for%20my%20tracks.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Send Stems for Mixing &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 5: Gospel and Worship Music */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  05
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Gospel and Worship Music
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Recording and production support for gospel artists, church choirs, worship teams, and inspirational music projects.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Choir multi-mic tracking &amp; vocal section blending</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Worship team rhythm sections &amp; live ministry capturing</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Atmospheric, spiritually uplifting acoustic production</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20record%20a%20Gospel/Worship%20project.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Record Worship Project &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 6: Live Sessions and Band Recording */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
+                  06
+                </div>
+                <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                  Live Sessions &amp; Band Recording
+                </h3>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Recording options for musicians and groups seeking to capture performances with an authentic musical feel.
+                </p>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Full live tracking room with backline drum kit &amp; amps</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Multi-angle 4K video recording synchronization</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                    <span>Direct recording of authentic live chemistry &amp; dynamics</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 mt-5 border-t border-[var(--line)]">
+                <a
+                  href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20want%20to%20book%20a%20Live%20Band%20Recording%20session.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[var(--gold-text)] hover:underline inline-flex items-center gap-1.5"
+                >
+                  <WhatsAppIcon size={14} /> Book Band Session &rarr;
+                </a>
+              </div>
+            </div>
+
+            {/* Service 7: Jingles and Audio Projects */}
+            <div className="p-6 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all md:col-span-2 lg:col-span-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="max-w-2xl">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-3">
+                    07
+                  </div>
+                  <h3 className="text-xl font-serif text-[var(--navy)] mb-2 font-bold">
+                    Jingles and Audio Projects
+                  </h3>
+                  <p className="text-xs text-[var(--muted)] leading-relaxed mb-0">
+                    Recording and production support for selected advertising, promotional, brand sonic identities, podcast production, and other customized commercial audio projects.
+                  </p>
+                </div>
+                <div className="shrink-0">
+                  <a
+                    href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20have%20a%20commercial%20jingle%20or%20audio%20project%20to%20discuss.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary !text-xs inline-flex items-center gap-1.5"
+                  >
+                    <WhatsAppIcon size={14} /> Discuss Audio Project
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Our Studio Philosophy ─────────────────────────────────────────── */}
+      <section className="section bg-[#FAF8F5] border-t border-b border-[var(--line)]">
+        <div className="container max-w-4xl text-center">
+          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
+            <span className="eyebrow">Our Guiding Principle</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
+              Our Studio <em>Philosophy</em>
+            </h2>
+          </div>
+          <p className="text-xl sm:text-3xl font-serif text-[var(--gold-text)] italic mb-6">
+            &ldquo;Every artist has a sound worth developing.&rdquo;
+          </p>
+          <p className="text-sm sm:text-base text-[var(--muted)] max-w-2xl mx-auto leading-relaxed m-0">
+            We work to understand your vision, respect your creative direction, and help you achieve the best possible results within your project&apos;s requirements.
+          </p>
         </div>
       </section>
 
@@ -286,11 +540,15 @@ export function Studio({ go }: { go: (p: Page) => void }) {
         }}
       >
         <div className="container">
-          <SectionHead
-            eyebrow="Rates & Packages"
-            title="Transparent Studio Booking Rates"
-            body="Flexible studio time packages for solo artists, ensembles, and music producers. All sessions include studio access and in-house technical support."
-          />
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+            <span className="eyebrow">Rates &amp; Packages</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
+              Transparent Studio <em>Booking Rates</em>
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--muted)] max-w-2xl mx-auto leading-relaxed">
+              Flexible studio time packages for solo artists, ensembles, and music producers. All sessions include studio access and in-house technical support.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
             {STUDIO_RATES.map((tier) => (
@@ -447,6 +705,55 @@ export function Studio({ go }: { go: (p: Page) => void }) {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Ready to Record? Call to Action ──────────────────────────────── */}
+      <section className="section bg-white border-t border-[var(--line)]">
+        <div className="container max-w-4xl text-center">
+          <div className="p-8 sm:p-12 rounded-3xl bg-[#FAF8F5] border border-[var(--gold)]/30 shadow-xs">
+            <span className="eyebrow block mb-2">Let&apos;s Create Together</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mb-4">
+              Ready to <em>Record?</em>
+            </h2>
+            <p className="text-sm sm:text-base text-[var(--muted)] max-w-xl mx-auto leading-relaxed mb-8">
+              Whether you are preparing a single, an album, a worship project, or a musical collaboration, we invite you to discuss your project with us.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+              <a
+                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                  "Hello Vivadoxa Studio, I would like to book a recording session.",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary !py-3 !px-6 text-sm font-bold inline-flex items-center gap-2"
+              >
+                <WhatsAppIcon size={18} /> Book a Studio Session
+              </a>
+              <button
+                type="button"
+                onClick={() => go("contact")}
+                className="btn btn-secondary !py-3 !px-6 text-sm font-bold cursor-pointer"
+              >
+                Discuss Your Project
+              </button>
+              <a
+                href={`${WHATSAPP_URL}?text=${encodeURIComponent(
+                  "Hello Vivadoxa Studio, I would like to request an official quote for my recording/production project.",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary !py-3 !px-6 text-sm font-bold inline-flex items-center gap-1.5"
+              >
+                <Icon name="tag" size={15} /> Request a Quote
+              </a>
+            </div>
+
+            <p className="text-xs uppercase font-extrabold tracking-widest text-[var(--gold)] m-0">
+              Your vision. Your sound. Professionally brought to life.
+            </p>
           </div>
         </div>
       </section>

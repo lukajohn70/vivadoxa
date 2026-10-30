@@ -40,6 +40,7 @@ import {
   PaymentSettingsView,
   GeneralSettingsView,
 } from "@/components/AdminSystemViews"
+import { ShopAndRentalsView } from "@/components/AdminCatalogView"
 import { ClassScheduleManagerView } from "@/components/AdminScheduleViews"
 import {
   AdmissionLetterModal,
@@ -236,7 +237,14 @@ export function Admin({ go }: { go: (p: Page) => void }) {
   const navGroups: [string, string[]][] = [
     [
       "Operations",
-      ["Dashboard", "Applications", "Payments", "Repairs", "Enquiries"],
+      [
+        "Dashboard",
+        "Applications",
+        "Payments",
+        "Repairs",
+        "Shop & Rentals",
+        "Enquiries",
+      ],
     ],
     [
       "Academics",
@@ -1738,7 +1746,9 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {title === "Staff & Roles" ? (
+      {title === "Shop & Rentals" ? (
+        <ShopAndRentalsView setActionNotice={setActionNotice} />
+      ) : title === "Staff & Roles" ? (
         <StaffAndRolesView setActionNotice={setActionNotice} />
       ) : title === "Payment Settings" ? (
         <PaymentSettingsView

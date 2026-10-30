@@ -2281,3 +2281,137 @@ export async function purgeMockData(
     return { success: false, error: err.message || "Failed to purge database." }
   }
 }
+
+// ── Catalog & Inventory Showcase API ───────────────────────────────────────────
+export async function fetchCatalogStore(): Promise<any[]> {
+  try {
+    const res = await fetch(`${getApiUrl("catalog.php")}?type=store`, {
+      credentials: "include",
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success && Array.isArray(data.products)) {
+      return data.products
+    }
+  } catch (err) {
+    console.warn("fetchCatalogStore network fallback:", err)
+  }
+  return []
+}
+
+export async function saveStoreProduct(
+  item: Record<string, any>,
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save_store_item", item }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save product." }
+  }
+}
+
+export async function deleteStoreProduct(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete_store_item", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete product." }
+  }
+}
+
+export async function toggleStoreStock(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_store_stock", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to toggle stock status." }
+  }
+}
+
+export async function fetchCatalogRentals(): Promise<any[]> {
+  try {
+    const res = await fetch(`${getApiUrl("catalog.php")}?type=rentals`, {
+      credentials: "include",
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success && Array.isArray(data.rentals)) {
+      return data.rentals
+    }
+  } catch (err) {
+    console.warn("fetchCatalogRentals network fallback:", err)
+  }
+  return []
+}
+
+export async function saveRentalGear(
+  item: Record<string, any>,
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save_rental_item", item }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save rental item." }
+  }
+}
+
+export async function deleteRentalGear(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete_rental_item", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete rental gear." }
+  }
+}
+
+export async function toggleRentalStock(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_rental_stock", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to toggle rental availability." }
+  }
+}
+
+export async function resetCatalogDefaults(): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "reset_catalog" }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to reset catalog." }
+  }
+}
+
