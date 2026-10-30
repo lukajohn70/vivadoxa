@@ -619,19 +619,6 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
               >
                 <Icon name="check" size={14} /> Payment Receipt (PDF)
               </Button>
-
-              <Button
-                variant="primary"
-                onClick={() => setShowLetter(true)}
-                style={{
-                  justifyContent: "center",
-                  fontSize: 12.5,
-                  minHeight: 44,
-                  fontWeight: 700,
-                }}
-              >
-                <Icon name="copy" size={14} /> Admission Letter (PDF)
-              </Button>
             </div>
             <p
               style={{
@@ -641,8 +628,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 textAlign: "center",
               }}
             >
-              Click any document above to view, print, or download as an
-              official conservatory PDF certificate.
+              Your official admission letter will be issued separately once the admissions office verifies your payment.
             </p>
           </div>
 

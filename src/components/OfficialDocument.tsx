@@ -302,7 +302,14 @@ export function printDocumentElement(elementId: string) {
     const headNodes = Array.from(
       document.querySelectorAll('link[rel="stylesheet"], style'),
     )
-      .map((node) => node.outerHTML)
+      .map((node) => {
+        if (node.tagName === "LINK") {
+          // Use the browser-resolved absolute href so the blob window can fetch it
+          const href = (node as HTMLLinkElement).href
+          return `<link rel="stylesheet" href="${href}">`
+        }
+        return node.outerHTML
+      })
       .join("\n")
 
     frameDoc.open()
@@ -380,7 +387,13 @@ export function downloadDocumentHtml(
   const headNodes = Array.from(
     document.querySelectorAll('link[rel="stylesheet"], style'),
   )
-    .map((node) => node.outerHTML)
+    .map((node) => {
+      if (node.tagName === "LINK") {
+        const href = (node as HTMLLinkElement).href
+        return `<link rel="stylesheet" href="${href}">`
+      }
+      return node.outerHTML
+    })
     .join("\n")
 
   const cleanFilename = (filename || "Vivadoxa-Official-Document").replace(

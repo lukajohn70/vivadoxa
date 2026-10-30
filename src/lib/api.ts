@@ -864,6 +864,53 @@ export async function deleteApplication(
   }
 }
 
+// ── Admission Letter Release ──────────────────────────────────────────────────
+export async function releaseAdmissionLetter(
+  application_no: string,
+): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("applications.php")
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "release_letter", application_no }),
+    })
+    const result = await res.json().catch(() => null)
+    if (res.ok && result?.success) return result
+    if (result?.error) return { success: false, error: result.error }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to connect to database server.",
+    }
+  }
+  return { success: false, error: "Failed to release admission letter." }
+}
+
+export async function revokeAdmissionLetter(
+  application_no: string,
+): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("applications.php")
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "revoke_letter", application_no }),
+    })
+    const result = await res.json().catch(() => null)
+    if (res.ok && result?.success) return result
+    if (result?.error) return { success: false, error: result.error }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to connect to database server.",
+    }
+  }
+  return { success: false, error: "Failed to revoke admission letter." }
+}
+
 // ── Payments ──────────────────────────────────────────────────────────────────
 export async function fetchPayments(): Promise<any[]> {
   try {

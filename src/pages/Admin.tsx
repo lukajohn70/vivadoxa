@@ -32,6 +32,8 @@ import {
   getGeneralSettings,
   saveGeneralSettings,
   fetchRemoteSettings,
+  releaseAdmissionLetter,
+  revokeAdmissionLetter,
 } from "@/lib/api"
 import {
   StaffAndRolesView,
@@ -1416,6 +1418,30 @@ function AdminManager({ title }: { title: string }) {
     }
   }
 
+  async function handleReleaseLetter(appNo: string) {
+    const res = await releaseAdmissionLetter(appNo)
+    if (res && res.success) {
+      setActionNotice(`Admission letter released for ${appNo}.`)
+      loadData()
+      if (selectedRecord && selectedRecord.application_no === appNo) {
+        setSelectedRecord({ ...selectedRecord, letter_released: 1 })
+      }
+    } else {
+      setActionNotice(`Failed to release letter: ${res?.error || "Unknown error"}`)
+    }
+  }
+
+  async function handleRevokeLetter(appNo: string) {
+    const res = await revokeAdmissionLetter(appNo)
+    if (res && res.success) {
+      setActionNotice(`Admission letter access revoked for ${appNo}.`)
+      loadData()
+      if (selectedRecord && selectedRecord.application_no === appNo) {
+        setSelectedRecord({ ...selectedRecord, letter_released: 0 })
+      }
+    }
+  }
+
   async function handleEnroll(app: any) {
     const res = await enrollStudent({
       application_no: app.application_no,
@@ -1962,6 +1988,23 @@ function AdminManager({ title }: { title: string }) {
                                   title="Reject candidate"
                                 >
                                   ✕
+                                </button>
+                              )}
+                              {row.status === "approved" && (
+                                <button
+                                  className={`action-btn ${row.letter_released ? "decline" : "accept"}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (row.letter_released) {
+                                      handleRevokeLetter(row.application_no)
+                                    } else {
+                                      handleReleaseLetter(row.application_no)
+                                    }
+                                  }}
+                                  title={row.letter_released ? "Revoke letter" : "Release admission letter"}
+                                  style={{ fontSize: 10, padding: "3px 6px" }}
+                                >
+                                  {row.letter_released ? "Revoke" : "Letter"}
                                 </button>
                               )}
                             </div>
@@ -2604,6 +2647,33 @@ function AdminManager({ title }: { title: string }) {
                                 }}
                               >
                                 ✕ Reject
+                              </button>
+                            )}
+                            {row.status === "approved" && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  if (row.letter_released) {
+                                    handleRevokeLetter(row.application_no)
+                                  } else {
+                                    handleReleaseLetter(row.application_no)
+                                  }
+                                }}
+                                style={{
+                                  flex: 1,
+                                  padding: "8px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  background: row.letter_released ? "#fef3c7" : "#0b1a29",
+                                  color: row.letter_released ? "#92400e" : "white",
+                                  border: row.letter_released ? "1px solid #fcd34d" : "none",
+                                  borderRadius: 6,
+                                  cursor: "pointer",
+                                }}
+                                title={row.letter_released ? "Revoke letter access" : "Release admission letter to student"}
+                              >
+                                {row.letter_released ? "Revoke Letter" : "Release Letter"}
                               </button>
                             )}
                             <button
@@ -3907,6 +3977,60 @@ function AdminManager({ title }: { title: string }) {
                       </Button>
                     </div>
                   </div>
+
+                  {/* Admission Letter Release */}
+                  {selectedRecord.status === "approved" && (
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--line)",
+                        paddingTop: 16,
+                        marginTop: 16,
+                      }}
+                    >
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Admission Letter Access
+                      </label>
+                      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
+                        {selectedRecord.letter_released
+                          ? "Letter is currently visible to the student. Revoke to hide it again."
+                          : "Letter is not yet released. The student cannot view it until you release it below."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedRecord.letter_released) {
+                            handleRevokeLetter(selectedRecord.application_no)
+                          } else {
+                            handleReleaseLetter(selectedRecord.application_no)
+                          }
+                        }}
+                        style={{
+                          padding: "9px 18px",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          background: selectedRecord.letter_released ? "#fef3c7" : "#0b1a29",
+                          color: selectedRecord.letter_released ? "#92400e" : "white",
+                          border: selectedRecord.letter_released ? "1px solid #fcd34d" : "none",
+                          borderRadius: 6,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        {selectedRecord.letter_released
+                          ? "Revoke Admission Letter"
+                          : "Release Admission Letter to Student"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -118,6 +118,28 @@ if ($method === 'GET') {
         jsonResponse(['success' => false, 'error' => 'Application reference and valid fields required.'], 400);
     }
 
+    // ── Action: Release admission letter (Admin) ──────────────────────────────
+    if ($action === 'release_letter') {
+        $appNo = trim($input['application_no'] ?? '');
+        if (empty($appNo)) {
+            jsonResponse(['success' => false, 'error' => 'Application reference required.'], 400);
+        }
+        $stmt = $pdo->prepare("UPDATE `applications` SET `letter_released` = 1, `updated_at` = NOW() WHERE `application_no` = :no");
+        $stmt->execute([':no' => $appNo]);
+        jsonResponse(['success' => true, 'message' => 'Admission letter released for ' . $appNo]);
+    }
+
+    // ── Action: Revoke admission letter (Admin) ───────────────────────────────
+    if ($action === 'revoke_letter') {
+        $appNo = trim($input['application_no'] ?? '');
+        if (empty($appNo)) {
+            jsonResponse(['success' => false, 'error' => 'Application reference required.'], 400);
+        }
+        $stmt = $pdo->prepare("UPDATE `applications` SET `letter_released` = 0, `updated_at` = NOW() WHERE `application_no` = :no");
+        $stmt->execute([':no' => $appNo]);
+        jsonResponse(['success' => true, 'message' => 'Admission letter access revoked for ' . $appNo]);
+    }
+
     // ── Action: Delete application (Admin) ────────────────────────────────────
     if ($action === 'delete') {
         $appNo = trim($input['application_no'] ?? '');

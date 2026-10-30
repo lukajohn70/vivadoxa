@@ -12,7 +12,6 @@ import { HomeReviewsSpotlight } from "@/components/HomeReviewsSpotlight"
 import { StatCounters } from "@/components/StatCounters"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { SEO } from "@/components/SEO"
-import { ServiceQuickNav } from "@/components/ServiceQuickNav"
 import {
   heroImg,
   studioImg,
@@ -357,9 +356,6 @@ export function Home({ go }: { go: (p: Page) => void }) {
           </ScrollReveal>
         </div>
       </section>
-
-      {/* ── 1B. Core Services & Rentals Quick 1-Tap Navigation Bar ─────────── */}
-      <ServiceQuickNav go={go} activePage="home" variant="homepage" />
 
       {/* ── 2. Prestigious Institutional Milestone Counters ───────────────── */}
       <StatCounters />

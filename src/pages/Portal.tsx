@@ -16,7 +16,6 @@ import {
   PaymentReceiptModal,
   ApplicationSlipModal,
 } from "@/components/OfficialDocument"
-import { ServiceQuickNav } from "@/components/ServiceQuickNav"
 import type { Page } from "@/types"
 
 export function Portal({ go }: { go: (p: Page | string) => void }) {
@@ -267,9 +266,6 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
       </header>
 
       <div className="container" style={{ marginTop: 24 }}>
-        {/* Core Services & Rentals Quick Tap Strip */}
-        <ServiceQuickNav go={go} variant="dashboard" className="mb-5" />
-
         {/* Toast notice */}
         {actionNotice && (
           <div
@@ -653,6 +649,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
             ) : (
               applications.map((app) => {
                 const isApproved = app.status === "approved"
+                const isLetterReleased = isApproved && app.letter_released == 1
                 return (
                   <div
                     key={app.id}
@@ -849,7 +846,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           Download Application Slip
                         </button>
 
-                        {isApproved && (
+                        {isLetterReleased ? (
                           <button
                             type="button"
                             onClick={() => setLetterData(app)}
@@ -870,7 +867,25 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                             <Icon name="academic" size={14} />
                             View Official Admission Letter
                           </button>
-                        )}
+                        ) : isApproved ? (
+                          <span
+                            style={{
+                              padding: "7px 14px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "var(--muted)",
+                              border: "1px solid var(--line)",
+                              borderRadius: 6,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              background: "#fafaf8",
+                            }}
+                          >
+                            <Icon name="copy" size={14} />
+                            Admission letter pending release
+                          </span>
+                        ) : null}
                         <a
                           href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admissions,%20I%20am%20following%20up%20on%20my%20application%20(${app.application_no})%20for%20${encodeURIComponent(app.program)}.`}
                           target="_blank"

@@ -78,6 +78,10 @@ try {
         $pdo->exec("ALTER TABLE `applications` ADD COLUMN `passport_photo` LONGTEXT NULL");
     } catch (Exception $e) {}
 
+    try {
+        $pdo->exec("ALTER TABLE `applications` ADD COLUMN `letter_released` TINYINT(1) NOT NULL DEFAULT 0");
+    } catch (Exception $e) {}
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `payments` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
