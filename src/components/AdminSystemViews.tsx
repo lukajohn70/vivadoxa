@@ -1522,27 +1522,18 @@ export function PaymentSettingsView({
                 }
                 required
               />
-
-              <Field
-                id="cfg-bank-branch"
-                label="Branch / Location"
-                value={bankSettings.branch}
-                onChange={(v) =>
-                  setBankSettings({ ...bankSettings, branch: v })
-                }
-                required
-              />
             </div>
 
             {/* Student Preview Card */}
             <div
               style={{
                 marginTop: 20,
-                padding: 18,
+                padding: 20,
                 background: "var(--navy)",
                 color: "white",
-                borderRadius: 10,
-                border: "1px solid rgba(201,107,50,0.3)",
+                borderRadius: 12,
+                border: "1px solid rgba(201,107,50,0.35)",
+                boxShadow: "0 6px 20px rgba(11,26,44,0.18)",
               }}
             >
               <div
@@ -1550,7 +1541,9 @@ export function PaymentSettingsView({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: 8,
+                  flexWrap: "wrap",
+                  gap: 8,
+                  marginBottom: 10,
                 }}
               >
                 <span
@@ -1565,35 +1558,40 @@ export function PaymentSettingsView({
                   Live Website Checkout Display
                 </span>
                 <span
-                  style={{ fontSize: 11, color: "#9dafbc", fontWeight: 600 }}
+                  style={{
+                    fontSize: 13,
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    background: "rgba(255,255,255,0.15)",
+                    padding: "4px 12px",
+                    borderRadius: 6,
+                    letterSpacing: "0.2px",
+                  }}
                 >
-                  {bankSettings.bankName}
+                  {bankSettings.bankName || "Guaranty Trust Bank (GTBank)"}
                 </span>
               </div>
               <div
                 style={{
-                  fontSize: 24,
-                  letterSpacing: 2.5,
-                  fontWeight: 700,
-                  margin: "6px 0",
+                  fontSize: 26,
+                  letterSpacing: 3,
+                  fontWeight: 800,
+                  margin: "8px 0 6px",
                   color: "#ffffff",
                   fontFamily: "monospace",
                 }}
               >
-                {bankSettings.accountNumber || "— — — — — — — — — —"}
+                {bankSettings.accountNumber || "0236649229"}
               </div>
               <div
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 12,
-                  color: "#cbd5e1",
+                  fontSize: 13,
+                  color: "#e2e8f0",
+                  fontWeight: 600,
+                  letterSpacing: "0.3px",
                 }}
               >
-                <span style={{ fontWeight: 600 }}>
-                  {bankSettings.accountName}
-                </span>
-                <span>{bankSettings.branch}</span>
+                {bankSettings.accountName || "Fredrerick Chysantus"}
               </div>
             </div>
           </div>
@@ -1654,7 +1652,7 @@ export function PaymentSettingsView({
               <label className="switch">
                 <input
                   type="checkbox"
-                  checked={bankSettings.enablePaystack !== false}
+                  checked={Boolean(bankSettings.enablePaystack)}
                   onChange={(e) =>
                     setBankSettings({
                       ...bankSettings,
@@ -1835,7 +1833,7 @@ export function PaymentSettingsView({
               <label className="switch">
                 <input
                   type="checkbox"
-                  checked={bankSettings.enableFlutterwave !== false}
+                  checked={Boolean(bankSettings.enableFlutterwave)}
                   onChange={(e) =>
                     setBankSettings({
                       ...bankSettings,

@@ -127,13 +127,13 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     bankName: BANK_NAME,
     accountNumber: BANK_ACCOUNT_NO,
     accountName: BANK_ACCOUNT_NAME,
-    branch: "Kaduna Branch",
+    branch: "",
     paystackPublicKey: "",
     paystackSecretKey: "",
-    enablePaystack: true,
+    enablePaystack: false,
     flutterwavePublicKey: "",
     flutterwaveSecretKey: "",
-    enableFlutterwave: true,
+    enableFlutterwave: false,
   })
 
   useEffect(() => {
@@ -144,11 +144,11 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         bankName: cached.bankName || BANK_NAME,
         accountNumber: cached.accountNumber || BANK_ACCOUNT_NO,
         accountName: cached.accountName || BANK_ACCOUNT_NAME,
-        branch: cached.branch || "Kaduna Branch",
+        branch: "",
         paystackPublicKey: cached.paystackPublicKey || "",
         flutterwavePublicKey: cached.flutterwavePublicKey || "",
-        enablePaystack: cached.enablePaystack !== false,
-        enableFlutterwave: cached.enableFlutterwave !== false,
+        enablePaystack: Boolean(cached.enablePaystack && cached.paystackPublicKey?.trim()),
+        enableFlutterwave: Boolean(cached.enableFlutterwave && cached.flutterwavePublicKey?.trim()),
       }))
     }
     fetchSettings()
@@ -159,11 +159,11 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
             bankName: res.payment.bankName || BANK_NAME,
             accountNumber: res.payment.accountNumber || BANK_ACCOUNT_NO,
             accountName: res.payment.accountName || BANK_ACCOUNT_NAME,
-            branch: res.payment.branch || "Kaduna Branch",
+            branch: "",
             paystackPublicKey: res.payment.paystackPublicKey || "",
             flutterwavePublicKey: res.payment.flutterwavePublicKey || "",
-            enablePaystack: res.payment.enablePaystack !== false,
-            enableFlutterwave: res.payment.enableFlutterwave !== false,
+            enablePaystack: Boolean(res.payment.enablePaystack && res.payment.paystackPublicKey?.trim()),
+            enableFlutterwave: Boolean(res.payment.enableFlutterwave && res.payment.flutterwavePublicKey?.trim()),
           }))
         }
       })
@@ -183,7 +183,8 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     const e: typeof errors = {}
     if (!proof.payerName.trim()) e.payerName = "Payer name is required."
     if (!proof.paymentDate) e.paymentDate = "Payment date is required."
-    if (!proof.amountPaid.trim() || Number(proof.amountPaid) <= 0)
+    const cleanAmt = Number(String(proof.amountPaid).replace(/[^0-9.]/g, ""))
+    if (!proof.amountPaid.trim() || isNaN(cleanAmt) || cleanAmt <= 0)
       e.amountPaid = "Valid amount is required."
     if (!proof.transactionRef.trim())
       e.transactionRef = "Bank transaction reference/narration is required."
@@ -199,13 +200,16 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     setSubmitError("")
 
     try {
+      const cleanAmt =
+        Number(String(proof.amountPaid).replace(/[^0-9.]/g, "")) ||
+        defaultAmount
       const res = await submitPaymentProof({
         applicationNo: appRef,
-        payerName: proof.payerName,
-        payerEmail: proof.payerEmail || studentEmail,
-        amountPaid: Number(proof.amountPaid),
+        payerName: proof.payerName.trim(),
+        payerEmail: (proof.payerEmail || studentEmail || "").trim(),
+        amountPaid: cleanAmt,
         currency,
-        transactionRef: proof.transactionRef,
+        transactionRef: proof.transactionRef.trim(),
         paymentDate: proof.paymentDate,
         method: isUSD ? "International Wire / Transfer" : "Bank Transfer",
       })
@@ -331,11 +335,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         )
       }
     } else {
-      // Admin keys not yet configured - simulate test checkout
-      handleGatewaySuccess({
-        reference: `PSK-SIM-${Date.now()}`,
-        gateway: "Paystack (Sandbox / Test Checkout)",
-      })
+      setGatewayError(
+        "Paystack gateway is currently offline. Please use the Official Bank Transfer method below.",
+      )
     }
   }
 
@@ -380,11 +382,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         )
       }
     } else {
-      // Admin keys not yet configured - simulate test checkout
-      handleGatewaySuccess({
-        reference: `FLW-USD-SIM-${Date.now()}`,
-        gateway: "Flutterwave USD (Sandbox / Test Checkout)",
-      })
+      setGatewayError(
+        "International USD gateway is currently offline. Please use the Official Bank Transfer method below.",
+      )
     }
   }
 
@@ -437,6 +437,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
 
   const hasPaystackKeys = Boolean(bankInfo.paystackPublicKey?.trim())
   const hasFlutterwaveKeys = Boolean(bankInfo.flutterwavePublicKey?.trim())
+  const isPaystackActive = Boolean(bankInfo.enablePaystack && hasPaystackKeys)
+  const isFlutterwaveActive = Boolean(isUSD && bankInfo.enableFlutterwave && hasFlutterwaveKeys)
+  const isOnlineAvailable = isUSD ? isFlutterwaveActive : isPaystackActive
 
   if (sent) {
     return (
@@ -729,52 +732,54 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 : "Transfer tuition into the Vivadoxa school account below or complete your checkout instantly online for automated ledger clearance."}
             </p>
 
-            {/* Method tabs */}
-            <div
-              className="payment-tabs"
-              role="tablist"
-              aria-label="Payment method"
-            >
-              <button
-                role="tab"
-                aria-selected={method === "online"}
-                className={method === "online" ? "active" : ""}
-                onClick={() => setMethod("online")}
+            {/* Method tabs - only shown if online gateway is configured & enabled by admin */}
+            {isOnlineAvailable && (
+              <div
+                className="payment-tabs"
+                role="tablist"
+                aria-label="Payment method"
               >
-                <i aria-hidden="true" />
-                <div>
-                  <strong>
-                    {isUSD
-                      ? "International Card (USD / $)"
-                      : "Online Card / USSD (Paystack)"}
-                  </strong>
-                  <small>
-                    {isUSD
-                      ? "Visa, Mastercard, Amex, Apple Pay"
-                      : "Instant automated clearance"}
-                  </small>
-                </div>
-                <Badge tone="green">{isUSD ? "USD ($)" : "Automated"}</Badge>
-              </button>
+                <button
+                  role="tab"
+                  aria-selected={method === "online"}
+                  className={method === "online" ? "active" : ""}
+                  onClick={() => setMethod("online")}
+                >
+                  <i aria-hidden="true" />
+                  <div>
+                    <strong>
+                      {isUSD
+                        ? "International Card (USD / $)"
+                        : "Online Card / USSD (Paystack)"}
+                    </strong>
+                    <small>
+                      {isUSD
+                        ? "Visa, Mastercard, Amex, Apple Pay"
+                        : "Instant automated clearance"}
+                    </small>
+                  </div>
+                  <Badge tone="green">{isUSD ? "USD ($)" : "Automated"}</Badge>
+                </button>
 
-              <button
-                role="tab"
-                aria-selected={method === "bank"}
-                className={method === "bank" ? "active" : ""}
-                onClick={() => setMethod("bank")}
-              >
-                <i aria-hidden="true" />
-                <div>
-                  <strong>Official Bank Transfer</strong>
-                  <small>Direct ledger confirmation</small>
-                </div>
-                <Badge tone={isUSD ? "gold" : "green"}>
-                  {isUSD ? "Naira Account" : "Available"}
-                </Badge>
-              </button>
-            </div>
+                <button
+                  role="tab"
+                  aria-selected={method === "bank"}
+                  className={method === "bank" ? "active" : ""}
+                  onClick={() => setMethod("bank")}
+                >
+                  <i aria-hidden="true" />
+                  <div>
+                    <strong>Official Bank Transfer</strong>
+                    <small>Direct ledger confirmation</small>
+                  </div>
+                  <Badge tone={isUSD ? "gold" : "green"}>
+                    {isUSD ? "Naira Account" : "Available"}
+                  </Badge>
+                </button>
+              </div>
+            )}
 
-            {method === "online" ? (
+            {isOnlineAvailable && method === "online" ? (
               /* Online Gateway View */
               <div
                 className="bank-card"
@@ -889,62 +894,6 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                   </strong>
                 </div>
 
-                {/* Gateway Status / API Keys Info */}
-                {isUSD
-                  ? !hasFlutterwaveKeys && (
-                      <div
-                        style={{
-                          background: "#fffbeb",
-                          border: "1px solid #fef3c7",
-                          borderRadius: 8,
-                          padding: "14px 18px",
-                          marginBottom: 20,
-                          fontSize: 12.5,
-                          lineHeight: 1.55,
-                          color: "#92400e",
-                        }}
-                      >
-                        <div className="flex items-center gap-1.5 font-bold mb-1">
-                          <Icon name="warning" size={14} />
-                          <span>Online USD Payment Gateway Wired</span>
-                        </div>
-                        <p style={{ margin: 0 }}>
-                          The international USD card payment gateway is fully
-                          integrated. When the conservatory administration
-                          enters their Flutterwave API keys in the Admin
-                          Settings panel, live transactions will process
-                          automatically. You can test the automated clearance
-                          flow below.
-                        </p>
-                      </div>
-                    )
-                  : !hasPaystackKeys && (
-                      <div
-                        style={{
-                          background: "#fffbeb",
-                          border: "1px solid #fef3c7",
-                          borderRadius: 8,
-                          padding: "14px 18px",
-                          marginBottom: 20,
-                          fontSize: 12.5,
-                          lineHeight: 1.55,
-                          color: "#92400e",
-                        }}
-                      >
-                        <div className="flex items-center gap-1.5 font-bold mb-1">
-                          <Icon name="warning" size={14} />
-                          <span>Online Paystack Gateway Wired</span>
-                        </div>
-                        <p style={{ margin: 0 }}>
-                          The Paystack automated payment gateway is fully
-                          integrated. When the administration enters their
-                          Paystack Public Key in the Admin Settings panel, live
-                          card and USSD checkouts will process live. You can
-                          test the automated clearance flow below.
-                        </p>
-                      </div>
-                    )}
-
                 {gatewayError && (
                   <div
                     className="login-error"
@@ -1009,97 +958,78 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                       )}
                     </Button>
                   )}
-
-                  {/* Sandbox test button if keys not configured */}
-                  {((isUSD && !hasFlutterwaveKeys) ||
-                    (!isUSD && !hasPaystackKeys)) && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleGatewaySuccess({
-                          reference: `${
-                            isUSD ? "FLW-USD" : "PSK-NGN"
-                          }-DEMO-${Date.now()}`,
-                          gateway: isUSD
-                            ? "Flutterwave USD (Test Clearance)"
-                            : "Paystack (Test Clearance)",
-                        })
-                      }
-                      style={{
-                        border: "1px dashed #cbd5e1",
-                        background: "#f8f9fa",
-                        color: "#475569",
-                        borderRadius: 8,
-                        padding: "10px 14px",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      ⚡ Simulate Instant Successful Payment ({currSymbol}
-                      {defaultAmount} {currency} - Demo Mode)
-                    </button>
-                  )}
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 16,
-                    marginTop: 20,
-                    fontSize: 11,
-                    color: "var(--muted)",
-                  }}
-                >
-                  <span>🔒 256-bit SSL Encryption</span>
-                  <span>•</span>
-                  <span>Instant Ledger Reconciliation</span>
-                  <span>•</span>
-                  <span>Official Downloadable Receipt</span>
                 </div>
               </div>
             ) : (
               /* Bank Transfer View */
               <div className="bank-card">
                 {/* Account details */}
-                <div className="bank-title">
+                <div
+                  className="bank-title"
+                  style={{
+                    padding: "20px 24px",
+                    background: "#fbfaf8",
+                    borderRadius: 12,
+                    border: "1px solid var(--line)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                  }}
+                >
                   <div
                     className="bank-logo"
                     style={{
-                      background:
-                        bankInfo.bankName.includes("GTB") ||
-                        bankInfo.bankName.includes("Guaranty")
-                          ? "#e65100"
-                          : "#00b875",
+                      background: "#e65100",
                       color: "white",
                       fontWeight: 800,
-                      fontSize: 15,
+                      fontSize: 16,
                       letterSpacing: "0.5px",
+                      width: 52,
+                      height: 52,
+                      borderRadius: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
                     }}
                     aria-hidden="true"
                   >
-                    {bankInfo.bankName.includes("GTB") ||
-                    bankInfo.bankName.includes("Guaranty")
-                      ? "GTB"
-                      : (bankInfo.bankName || "B").slice(0, 1).toUpperCase()}
+                    GTB
                   </div>
                   <div>
-                    <strong>{bankInfo.bankName}</strong>
-                    <span>
+                    <strong
+                      style={{
+                        fontSize: "1.25rem",
+                        fontWeight: 800,
+                        color: "var(--navy)",
+                        display: "block",
+                        letterSpacing: "0.2px",
+                      }}
+                    >
+                      {bankInfo.bankName || "Guaranty Trust Bank (GTBank)"}
+                    </strong>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: "var(--muted)",
+                        marginTop: 2,
+                        display: "block",
+                      }}
+                    >
                       {isUSD
-                        ? `Tuition equivalent: $${defaultAmount} USD (${bankInfo.bankName})`
+                        ? `Tuition equivalent: $${defaultAmount} USD (${bankInfo.bankName || "Guaranty Trust Bank (GTBank)"})`
                         : `Transfer exactly ₦${defaultAmount.toLocaleString("en-NG")}`}
                     </span>
                   </div>
                 </div>
+
                 <div
                   className="account-number"
                   style={{
                     background: "var(--navy)",
                     borderRadius: 12,
                     padding: "20px 24px",
+                    marginTop: 16,
                   }}
                 >
                   <div>
@@ -1108,21 +1038,23 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                         color: "#9dacb8",
                         letterSpacing: "1px",
                         textTransform: "uppercase",
-                        fontSize: 10,
+                        fontSize: 10.5,
                         fontWeight: 700,
                       }}
                     >
-                      Official Tuition Account ({bankInfo.bankName})
+                      Official Tuition Account · {bankInfo.bankName || "Guaranty Trust Bank (GTBank)"}
                     </small>
                     <strong
                       style={{
-                        fontSize: "clamp(20px, 6vw, 28px)",
-                        letterSpacing: "2px",
+                        fontSize: "clamp(22px, 6vw, 30px)",
+                        letterSpacing: "2.5px",
                         fontFamily: "monospace",
                         color: "white",
+                        display: "block",
+                        marginTop: 4,
                       }}
                     >
-                      {bankInfo.accountNumber}
+                      {bankInfo.accountNumber || "0236649229"}
                     </strong>
                   </div>
                   <button
@@ -1145,10 +1077,38 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                     <Icon name="copy" /> {copiedAccount ? "Copied!" : "Copy"}
                   </button>
                 </div>
+
                 <dl>
                   <div>
+                    <dt>Bank Name</dt>
+                    <dd
+                      style={{
+                        fontWeight: 800,
+                        color: "var(--navy)",
+                        fontSize: "1.05rem",
+                      }}
+                    >
+                      {bankInfo.bankName || "Guaranty Trust Bank (GTBank)"}
+                    </dd>
+                  </div>
+                  <div>
                     <dt>Account Name</dt>
-                    <dd>{bankInfo.accountName}</dd>
+                    <dd style={{ fontWeight: 700, color: "#1e293b" }}>
+                      {bankInfo.accountName || "Fredrerick Chysantus"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Account Number</dt>
+                    <dd
+                      style={{
+                        fontWeight: 800,
+                        fontFamily: "monospace",
+                        letterSpacing: "1.5px",
+                        color: "var(--navy)",
+                      }}
+                    >
+                      {bankInfo.accountNumber || "0236649229"}
+                    </dd>
                   </div>
                   <div>
                     <dt>Transfer Reference / Narration</dt>
@@ -1295,10 +1255,6 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                   minimumFractionDigits: isUSD ? 2 : 0,
                 })}
               </strong>
-              <small>
-                Includes certified syllabus instruction, orientation &amp;
-                student matriculation
-              </small>
             </div>
             <p>
               <Icon name="check" size={16} /> Official receipt issued upon

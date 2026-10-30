@@ -35,16 +35,16 @@ $defaultGeneral = [
 $defaultBank = [
     'bankName' => 'Guaranty Trust Bank (GTBank)',
     'accountNumber' => '0236649229',
-    'accountName' => 'Frederick Chrysantius',
-    'branch' => 'Kaduna Main Branch',
+    'accountName' => 'Fredrerick Chysantus',
+    'branch' => '',
     // Nigerian Payments (Naira / NGN)
     'paystackPublicKey' => '',
     'paystackSecretKey' => '',
-    'enablePaystack' => true,
+    'enablePaystack' => false,
     // Diaspora / International Payments (USD / Dollars)
     'flutterwavePublicKey' => '',
     'flutterwaveSecretKey' => '',
-    'enableFlutterwave' => true,
+    'enableFlutterwave' => false,
     'currency' => 'NGN',
     'usdRate' => 1500,
     'defaultTuitionFee' => 20000,

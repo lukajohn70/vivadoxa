@@ -268,6 +268,227 @@ function SecurityBarcode({ code }: { code: string }) {
   )
 }
 
+export function printDocumentElement(elementId: string) {
+  const target = document.getElementById(elementId)
+  if (!target) {
+    window.print()
+    return
+  }
+
+  try {
+    const existingFrame = document.getElementById("vdx-print-frame")
+    if (existingFrame) existingFrame.remove()
+
+    const iframe = document.createElement("iframe")
+    iframe.id = "vdx-print-frame"
+    iframe.style.position = "fixed"
+    iframe.style.right = "0"
+    iframe.style.bottom = "0"
+    iframe.style.width = "0"
+    iframe.style.height = "0"
+    iframe.style.border = "0"
+    iframe.setAttribute("aria-hidden", "true")
+    document.body.appendChild(iframe)
+
+    const frameDoc = iframe.contentWindow?.document
+    if (!frameDoc) {
+      window.print()
+      return
+    }
+
+    const headNodes = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style'),
+    )
+      .map((node) => node.outerHTML)
+      .join("\n")
+
+    frameDoc.open()
+    frameDoc.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${document.title || "Vivadoxa Official Document"}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  ${headNodes}
+  <style>
+    @page { size: auto; margin: 10mm 12mm; }
+    body {
+      background: #ffffff !important;
+      color: #1a1918 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .no-print { display: none !important; }
+    .doc-sheet {
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 auto !important;
+      width: 100% !important;
+      max-width: 820px !important;
+      padding: 0 !important;
+      position: relative !important;
+      overflow: visible !important;
+    }
+  </style>
+</head>
+<body>
+  <div style="padding: 10px 15px;">
+    ${target.outerHTML}
+  </div>
+</body>
+</html>`)
+    frameDoc.close()
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus()
+        iframe.contentWindow?.print()
+      } catch {
+        window.print()
+      }
+    }, 450)
+  } catch {
+    window.print()
+  }
+}
+
+export function downloadDocumentHtml(
+  elementId: string,
+  filename: string,
+  title: string,
+) {
+  const target = document.getElementById(elementId)
+  if (!target) return
+
+  const headNodes = Array.from(
+    document.querySelectorAll('link[rel="stylesheet"], style'),
+  )
+    .map((node) => node.outerHTML)
+    .join("\n")
+
+  const cleanFilename = (filename || "Vivadoxa-Official-Document").replace(
+    /[^a-zA-Z0-9_-]/g,
+    "_",
+  )
+
+  const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} | Vivadoxa Music School</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  ${headNodes}
+  <style>
+    :root {
+      --gold: #c96b32;
+      --gold2: #b35a24;
+      --gold-text: #964a1a;
+      --gold-text-dark: #e88c52;
+      --navy: #0b1a29;
+      --navy2: #14283d;
+      --ink: #1a1918;
+      --muted: #6b6964;
+      --line: #e6e4dc;
+      --cream: #faf9f5;
+    }
+    @page { size: auto; margin: 10mm 12mm; }
+    body {
+      background: #f4f2eb;
+      color: #1a1918;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .download-action-bar {
+      max-width: 820px;
+      margin: 0 auto 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0b1a29;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .download-action-bar button {
+      background: #c96b32;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      font-weight: 600;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .download-action-bar button:hover { background: #b35a24; }
+    .doc-sheet {
+      background: #ffffff !important;
+      width: 100% !important;
+      max-width: 820px !important;
+      margin: 0 auto !important;
+      border: 1px solid #d4cebe !important;
+      border-radius: 8px !important;
+      padding: 36px 42px !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
+      position: relative !important;
+      overflow: visible !important;
+    }
+    @media print {
+      body {
+        background: #ffffff !important;
+        padding: 0 !important;
+      }
+      .no-print, .download-action-bar { display: none !important; }
+      .doc-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="download-action-bar no-print">
+    <div>
+      <strong style="display:block;font-size:14px;">${title}</strong>
+      <span style="font-size:12px;opacity:0.8;">Vivadoxa Music School Official Credential</span>
+    </div>
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <div style="max-width: 820px; margin: 0 auto;">
+    ${target.outerHTML}
+  </div>
+</body>
+</html>`
+
+  const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `${cleanFilename}.html`
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 300)
+}
+
 // ── Official Admission Letter ────────────────────────────────────────────────
 export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
   const studentName =
@@ -357,6 +578,7 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
     >
       <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
         <div
+          id="admission-letter-doc"
           className="doc-sheet"
           role="region"
           aria-label="Printed Admission Letter"
@@ -810,12 +1032,28 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
           >
             Close
           </Button>
-          <Button
-            onClick={() => window.print()}
-            className="btn-primary w-full sm:w-auto justify-center"
-          >
-            <Icon name="copy" /> Print / Save as PDF
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() =>
+                downloadDocumentHtml(
+                  "admission-letter-doc",
+                  `Vivadoxa-Admission-Letter-${refNo}`,
+                  "Official Admission Letter",
+                )
+              }
+              variant="secondary"
+              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
+              className="w-full sm:w-auto justify-center"
+            >
+              <Icon name="copy" /> Download Letter
+            </Button>
+            <Button
+              onClick={() => printDocumentElement("admission-letter-doc")}
+              className="btn-primary w-full sm:w-auto justify-center"
+            >
+              <Icon name="copy" /> Print / Save as PDF
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -864,6 +1102,7 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
     >
       <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
         <div
+          id="payment-receipt-doc"
           className="doc-sheet"
           role="region"
           aria-label="Printed Payment Receipt"
@@ -1281,12 +1520,28 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
           >
             Close
           </Button>
-          <Button
-            onClick={() => window.print()}
-            className="btn-primary w-full sm:w-auto justify-center"
-          >
-            <Icon name="copy" /> Print / Save as PDF
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() =>
+                downloadDocumentHtml(
+                  "payment-receipt-doc",
+                  `Vivadoxa-Payment-Receipt-${refNo}`,
+                  "Official Payment Receipt",
+                )
+              }
+              variant="secondary"
+              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
+              className="w-full sm:w-auto justify-center"
+            >
+              <Icon name="check" /> Download Receipt
+            </Button>
+            <Button
+              onClick={() => printDocumentElement("payment-receipt-doc")}
+              className="btn-primary w-full sm:w-auto justify-center"
+            >
+              <Icon name="copy" /> Print / Save as PDF
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -1512,6 +1767,7 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
     >
       <div style={{ width: "min(820px, 100%)", margin: "auto" }}>
         <div
+          id="application-slip-doc"
           className="doc-sheet"
           role="region"
           aria-label="Printed Student Application Slip"
@@ -2361,12 +2617,28 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
           >
             Close
           </Button>
-          <Button
-            onClick={() => window.print()}
-            className="btn-primary w-full sm:w-auto justify-center"
-          >
-            <Icon name="copy" /> Print / Save Application Form (PDF)
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={() =>
+                downloadDocumentHtml(
+                  "application-slip-doc",
+                  `Vivadoxa-Application-Form-${refNo}`,
+                  "Official Application Form",
+                )
+              }
+              variant="secondary"
+              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
+              className="w-full sm:w-auto justify-center"
+            >
+              <Icon name="copy" /> Download Form
+            </Button>
+            <Button
+              onClick={() => printDocumentElement("application-slip-doc")}
+              className="btn-primary w-full sm:w-auto justify-center"
+            >
+              <Icon name="copy" /> Print / Save Application Form (PDF)
+            </Button>
+          </div>
         </div>
       </div>
     </div>

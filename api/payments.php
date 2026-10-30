@@ -104,34 +104,41 @@ if ($method === 'GET') {
             jsonResponse(['success' => false, 'error' => 'Valid payment amount required.'], 400);
         }
 
-        $stmt = $pdo->prepare("
-            INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`, `verified_at`)
-            VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'verified', :notes, NOW())
-            ON DUPLICATE KEY UPDATE
-                `payer_name` = VALUES(`payer_name`),
-                `amount` = VALUES(`amount`),
-                `currency` = VALUES(`currency`),
-                `method` = VALUES(`method`),
-                `status` = 'verified',
-                `notes` = VALUES(`notes`),
-                `verified_at` = NOW()
-        ");
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`, `verified_at`)
+                VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'verified', :notes, NOW())
+                ON DUPLICATE KEY UPDATE
+                    `payer_name` = VALUES(`payer_name`),
+                    `amount` = VALUES(`amount`),
+                    `currency` = VALUES(`currency`),
+                    `method` = VALUES(`method`),
+                    `status` = 'verified',
+                    `notes` = VALUES(`notes`),
+                    `verified_at` = NOW()
+            ");
 
-        $stmt->execute([
-            ':ref' => $reference,
-            ':app_no' => !empty($appNo) ? $appNo : null,
-            ':name' => $payerName,
-            ':email' => $payerEmail,
-            ':amt' => $amount,
-            ':curr' => $currency,
-            ':method' => $methodType,
-            ':notes' => $notes,
-        ]);
+            $stmt->execute([
+                ':ref' => $reference,
+                ':app_no' => !empty($appNo) ? $appNo : null,
+                ':name' => $payerName,
+                ':email' => !empty($payerEmail) ? $payerEmail : '',
+                ':amt' => $amount,
+                ':curr' => $currency,
+                ':method' => $methodType,
+                ':notes' => $notes,
+            ]);
 
-        // Automatically approve application upon successful online payment
-        if (!empty($appNo)) {
-            $upApp = $pdo->prepare("UPDATE `applications` SET `status` = 'approved' WHERE `application_no` = :no");
-            $upApp->execute([':no' => $appNo]);
+            // Automatically approve application upon successful online payment
+            if (!empty($appNo)) {
+                $upApp = $pdo->prepare("UPDATE `applications` SET `status` = 'approved' WHERE `application_no` = :no");
+                $upApp->execute([':no' => $appNo]);
+            }
+        } catch (Exception $gwEx) {
+            jsonResponse([
+                'success' => false,
+                'error' => 'Unable to record online settlement: ' . $gwEx->getMessage(),
+            ], 500);
         }
 
         // Notify Admissions & Student
@@ -185,26 +192,33 @@ if ($method === 'GET') {
         jsonResponse(['success' => false, 'error' => 'Please provide payer name and payment amount.'], 400);
     }
 
-    $stmt = $pdo->prepare("
-        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`)
-        VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes)
-        ON DUPLICATE KEY UPDATE
-            `payer_name` = VALUES(`payer_name`),
-            `amount` = VALUES(`amount`),
-            `currency` = VALUES(`currency`),
-            `notes` = VALUES(`notes`)
-    ");
+    try {
+        $stmt = $pdo->prepare("
+            INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`)
+            VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes)
+            ON DUPLICATE KEY UPDATE
+                `payer_name` = VALUES(`payer_name`),
+                `amount` = VALUES(`amount`),
+                `currency` = VALUES(`currency`),
+                `notes` = VALUES(`notes`)
+        ");
 
-    $stmt->execute([
-        ':ref' => $reference,
-        ':app_no' => !empty($appNo) ? $appNo : null,
-        ':name' => $payerName,
-        ':email' => $payerEmail,
-        ':amt' => $amount,
-        ':curr' => $currency,
-        ':method' => $methodType,
-        ':notes' => $notes,
-    ]);
+        $stmt->execute([
+            ':ref' => $reference,
+            ':app_no' => !empty($appNo) ? $appNo : null,
+            ':name' => $payerName,
+            ':email' => !empty($payerEmail) ? $payerEmail : '',
+            ':amt' => $amount,
+            ':curr' => $currency,
+            ':method' => $methodType,
+            ':notes' => $notes,
+        ]);
+    } catch (Exception $dbEx) {
+        jsonResponse([
+            'success' => false,
+            'error' => 'Unable to record payment: ' . $dbEx->getMessage(),
+        ], 500);
+    }
 
     // Automated Notifications Pipeline
     try {

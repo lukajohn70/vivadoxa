@@ -954,12 +954,72 @@ footer a:hover{color:white}
   .doc-watermark{font-size:90px;letter-spacing:4px}
 }
 
-@media print{
-  body *{visibility:hidden}
-  .doc-sheet, .doc-sheet *{visibility:visible}
-  .doc-sheet{position:absolute;left:0;top:0;width:100%!important;max-width:none!important;border:none!important;box-shadow:none!important;padding:12mm 15mm!important}
-  .modal-overlay{background:none!important;padding:0!important;position:static!important}
-  .modal-head, .modal-foot, .no-print{display:none!important}
+@media print {
+  @page {
+    margin: 10mm 12mm;
+    size: auto;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #1a1918 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  header, nav, footer, .no-print, .modal-action-bar, .modal-close {
+    display: none !important;
+  }
+  body > *:not(.modal-overlay):not(#root) {
+    display: none !important;
+  }
+  #root > *:not(.modal-overlay) {
+    display: none !important;
+  }
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    z-index: auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .modal-overlay > div {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .doc-sheet {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 8mm 10mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #1a1918 !important;
+    page-break-inside: auto;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .modal-head, .modal-foot {
+    display: none !important;
+  }
+  .doc-watermark {
+    opacity: 0.06 !important;
+  }
 }
 
 

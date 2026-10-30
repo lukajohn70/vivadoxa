@@ -21,10 +21,16 @@ if (typeof window !== "undefined") {
 export const getApiUrl = (endpoint: string): string => {
   const clean = endpoint.replace(/^\//, "")
 
-  // Local development: if running directly under MAMP document root without Vite proxy
+  if (typeof window === "undefined") {
+    return `/api/${clean}`
+  }
+
+  // Local development under MAMP document root without Vite proxy
   if (
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/Vivadoxa")
+    window.location.pathname.startsWith("/Vivadoxa") ||
+    ((window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1") &&
+      (window.location.port === "" || window.location.port === "80"))
   ) {
     return `/Vivadoxa/api/${clean}`
   }
@@ -915,6 +921,16 @@ export async function submitPaymentProof(
     const result = await res.json().catch(() => null)
     if (res.ok && result?.success) return result
     if (result?.error) return { success: false, error: result.error }
+    if (!res.ok) {
+      return {
+        success: false,
+        error:
+          result?.error ||
+          result?.message ||
+          `Server (${res.status}): Payment submission could not be processed.`,
+      }
+    }
+    if (result) return result
   } catch (err: any) {
     return {
       success: false,
@@ -1534,16 +1550,16 @@ export interface BankSettings {
 }
 
 export const DEFAULT_BANK_SETTINGS: BankSettings = {
-  bankName: "Guaranty Trust Bank (GTB)",
+  bankName: "Guaranty Trust Bank (GTBank)",
   accountNumber: "0236649229",
-  accountName: "Frederick Chrysantius",
-  branch: "Kaduna Main Branch",
+  accountName: "Fredrerick Chysantus",
+  branch: "",
   paystackPublicKey: "",
   paystackSecretKey: "",
-  enablePaystack: true,
+  enablePaystack: false,
   flutterwavePublicKey: "",
   flutterwaveSecretKey: "",
-  enableFlutterwave: true,
+  enableFlutterwave: false,
   currency: "NGN",
   defaultTuitionFee: 20000,
   usdRate: 1500,
