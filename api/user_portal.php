@@ -26,7 +26,7 @@ if ($method === 'GET') {
 
     // 1. Applications
     $appStmt = $pdo->prepare("
-        SELECT id, application_no, first_name, last_name, email, phone, program, study_mode, skill_level, status, tuition_fee, created_at
+        SELECT id, application_no, first_name, last_name, email, phone, program, study_mode, skill_level, status, tuition_fee, passport_photo, duration, currency, address, class_type, session_time, created_at
         FROM applications
         WHERE LOWER(email) = :em OR phone = :ph
         ORDER BY created_at DESC

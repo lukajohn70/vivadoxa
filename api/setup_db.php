@@ -68,10 +68,15 @@ try {
             `currency` VARCHAR(10) DEFAULT 'NGN',
             `status` ENUM('pending', 'reviewing', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
             `tuition_fee` DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+            `passport_photo` LONGTEXT NULL,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB;
     ");
+
+    try {
+        $pdo->exec("ALTER TABLE `applications` ADD COLUMN `passport_photo` LONGTEXT NULL");
+    } catch (Exception $e) {}
 
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `payments` (

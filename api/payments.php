@@ -10,8 +10,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     $ref = trim($_GET['ref'] ?? '');
     if (!empty($ref)) {
-        $stmt = $pdo->prepare("SELECT * FROM `payments` WHERE reference = :ref OR application_no = :ref LIMIT 1");
-        $stmt->execute([':ref' => $ref]);
+        $stmt = $pdo->prepare("SELECT * FROM `payments` WHERE reference = :ref1 OR application_no = :ref2 LIMIT 1");
+        $stmt->execute([':ref1' => $ref, ':ref2' => $ref]);
         $row = $stmt->fetch();
         if ($row) {
             jsonResponse(['success' => true, 'data' => $row]);
@@ -57,10 +57,10 @@ if ($method === 'GET') {
         if (!empty($ref)) {
             $stmt = $pdo->prepare("
                 UPDATE `payments`
-                SET `status` = :st, `verified_at` = CASE WHEN :st = 'verified' THEN NOW() ELSE `verified_at` END
+                SET `status` = :st, `verified_at` = CASE WHEN :st2 = 'verified' THEN NOW() ELSE `verified_at` END
                 WHERE `reference` = :ref
             ");
-            $stmt->execute([':st' => $newStatus, ':ref' => $ref]);
+            $stmt->execute([':st' => $newStatus, ':st2' => $newStatus, ':ref' => $ref]);
 
             // If verified and has application_no, also update the application to 'approved'
             if ($newStatus === 'verified') {
@@ -75,10 +75,10 @@ if ($method === 'GET') {
         } elseif ($id > 0) {
             $stmt = $pdo->prepare("
                 UPDATE `payments`
-                SET `status` = :st, `verified_at` = CASE WHEN :st = 'verified' THEN NOW() ELSE `verified_at` END
+                SET `status` = :st, `verified_at` = CASE WHEN :st2 = 'verified' THEN NOW() ELSE `verified_at` END
                 WHERE `id` = :id
             ");
-            $stmt->execute([':st' => $newStatus, ':id' => $id]);
+            $stmt->execute([':st' => $newStatus, ':st2' => $newStatus, ':id' => $id]);
         } else {
             jsonResponse(['success' => false, 'error' => 'Payment reference or ID required.'], 400);
         }

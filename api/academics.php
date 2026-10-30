@@ -159,7 +159,7 @@ if ($method === 'GET') {
             $stmt = $pdo->prepare("
                 UPDATE `programs`
                 SET `name` = :name, `category` = :cat, `tag` = :tag, `fee` = :fee, `desc` = :desc,
-                    `age_group` = :ag, `level` = :lvl, `image` = CASE WHEN :img != '' THEN :img ELSE `image` END, `is_active` = 1
+                    `age_group` = :ag, `level` = :lvl, `image` = CASE WHEN :img1 != '' THEN :img2 ELSE `image` END, `is_active` = 1
                 WHERE id = :id
             ");
             $stmt->execute([
@@ -170,7 +170,8 @@ if ($method === 'GET') {
                 ':desc' => $desc,
                 ':ag' => $ageGroup,
                 ':lvl' => $level,
-                ':img' => $image,
+                ':img1' => $image,
+                ':img2' => $image,
                 ':id' => $id,
             ]);
         } else {
@@ -237,7 +238,7 @@ if ($method === 'GET') {
             $stmt = $pdo->prepare("
                 UPDATE `instructors`
                 SET `name` = :name, `title` = :title, `specialization` = :spec, `location` = :loc,
-                    `bio` = :bio, `image` = CASE WHEN :img != '' THEN :img ELSE `image` END,
+                    `bio` = :bio, `image` = CASE WHEN :img1 != '' THEN :img2 ELSE `image` END,
                     `is_director` = :is_dir, `is_active` = 1
                 WHERE id = :id
             ");
@@ -247,7 +248,8 @@ if ($method === 'GET') {
                 ':spec' => $specialization,
                 ':loc' => $location,
                 ':bio' => $bio,
-                ':img' => $image,
+                ':img1' => $image,
+                ':img2' => $image,
                 ':is_dir' => $isDirector,
                 ':id' => $id,
             ]);
@@ -412,18 +414,22 @@ if ($method === 'GET') {
             $stmt = $pdo->prepare("
                 UPDATE `students`
                 SET `status` = :st,
-                    `cohort` = CASE WHEN :coh != '' THEN :coh ELSE `cohort` END,
-                    `phone` = CASE WHEN :ph != '' THEN :ph ELSE `phone` END,
-                    `email` = CASE WHEN :em != '' THEN :em ELSE `email` END,
-                    `program` = CASE WHEN :pr != '' THEN :pr ELSE `program` END
+                    `cohort` = CASE WHEN :coh1 != '' THEN :coh2 ELSE `cohort` END,
+                    `phone` = CASE WHEN :ph1 != '' THEN :ph2 ELSE `phone` END,
+                    `email` = CASE WHEN :em1 != '' THEN :em2 ELSE `email` END,
+                    `program` = CASE WHEN :pr1 != '' THEN :pr2 ELSE `program` END
                 WHERE `id` = :id OR `student_no` = :sno
             ");
             $stmt->execute([
                 ':st' => $status,
-                ':coh' => $cohort,
-                ':ph' => $phone,
-                ':em' => $email,
-                ':pr' => $program,
+                ':coh1' => $cohort,
+                ':coh2' => $cohort,
+                ':ph1' => $phone,
+                ':ph2' => $phone,
+                ':em1' => $email,
+                ':em2' => $email,
+                ':pr1' => $program,
+                ':pr2' => $program,
                 ':id' => $id,
                 ':sno' => $studentNo,
             ]);

@@ -152,6 +152,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
     "Strings & Frets",
     "Percussion",
     "Voice",
+    "Production",
   ] as const
 
   const allCategoryInstruments =
@@ -191,7 +192,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
             <p>
               Kaduna&apos;s premier music academy, master instrument clinic, and
               purpose-built recording studio. Structured conservatory
-              preparation across 13 core disciplines, master technicians, and
+              preparation across 17 core disciplines, master technicians, and
               dedicated stage recitals.
             </p>
             <div className="button-row">
@@ -392,8 +393,8 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     lineHeight: 1.6,
                   }}
                 >
-                  Structured, practical instruction across 13 core instrumental
-                  disciplines and voice training. Available via in-studio
+                  Structured, practical instruction across 17 core instrumental
+                  disciplines and audio engineering. Available via in-studio
                   lessons in Kaduna or private home coaching.
                 </p>
               </div>
@@ -491,10 +492,12 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 <span>
                   {showAllInstruments
                     ? "Show Fewer Disciplines"
-                    : "Show All 13 Disciplines"}
+                    : `Show All ${soundExplorerInstruments.length} Disciplines`}
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--gold)]/15 text-[var(--gold2)] font-semibold">
-                  {showAllInstruments ? "Showing 13" : "+7 more"}
+                  {showAllInstruments
+                    ? `Showing ${soundExplorerInstruments.length}`
+                    : `+${soundExplorerInstruments.length - 6} more`}
                 </span>
                 <Icon
                   name={showAllInstruments ? "arrowUp" : "arrowDown"}

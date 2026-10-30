@@ -1,168 +1,79 @@
-import { useState, useEffect } from "react"
-import {
-  PageHero,
-  SectionHead,
-  Cta,
-  Button,
-  Icon,
-  WhatsAppIcon,
-} from "@/components/ui"
+import { PageHero, SectionHead, Icon } from "@/components/ui"
 import { SEO } from "@/components/SEO"
-import {
-  drumsImg,
-  trumpetImg,
-  portraitImg,
-  heroImg,
-  cohortImg,
-  rcBadgeImg,
-  repairSaxImg,
-} from "@/lib/data"
-import { fetchAcademics } from "@/lib/api"
-import { WHATSAPP_URL } from "@/lib/utils"
+import { cohortImg } from "@/lib/data"
 import type { Page } from "@/types"
 
-interface FacultyMember {
-  name: string
-  title: string
-  specialization: string
-  bio?: string
-  image?: string
-  is_director?: number
-}
-
-const defaultFaculty: FacultyMember[] = [
-  {
-    name: "Frederick Chrysantius",
-    title: "Founder & Artistic Director",
-    specialization: "Classical, Contemporary & Jazz / Composition",
-    bio: "Pianist, composer, and educator guiding aspiring musicians, church music directors, and concert instrumentalists in Kaduna.",
-    image: portraitImg,
-    is_director: 1,
-  },
-  {
-    name: "David Eze",
-    title: "Guitar & Production Instructor",
-    specialization: "Acoustic, Electric & DAWs",
-    bio: "Multi-instrumentalist and session engineer specializing in fretboard harmony and audio production.",
-    image: trumpetImg,
-    is_director: 0,
-  },
-  {
-    name: "Morenike Bello",
-    title: "Vocal Performance Lead",
-    specialization: "Breathing, Pitch & Stagecraft",
-    bio: "Vocal coach experienced in classical choral direction and contemporary gospel performance.",
-    image: heroImg,
-    is_director: 0,
-  },
-]
-
 export function About({ go }: { go: (p: Page) => void }) {
-  const [faculty, setFaculty] = useState<FacultyMember[]>(defaultFaculty)
-
-  // Frontend-backend live data synchronization
-  useEffect(() => {
-    fetchAcademics("instructors")
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setFaculty(
-            data.map((ins: any) => ({
-              name: ins.name,
-              title: ins.title || "Instructor",
-              specialization: ins.specialization || "Music Instruction",
-              bio: ins.bio || "",
-              image: ins.image || (ins.is_director ? portraitImg : trumpetImg),
-              is_director: ins.is_director ? 1 : 0,
-            })),
-          )
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const director = faculty.find((f) => f.is_director === 1) || faculty[0]
-  const otherFaculty = faculty.filter((f) => f !== director)
-
   return (
     <main>
       <SEO
-        title="About Vivadoxa — Music School, Instrument Hospital & Recording Studio | Kaduna"
-        description="Learn about Vivadoxa in Kaduna, Nigeria. Our story, artistic directors, faculty, and four core pillars: innovative music lessons, certified instrument repairs, sales, and a modern recording studio."
-        keywords="about vivadoxa, music school kaduna, instrument hospital kaduna, recording studio kaduna, frederick chrysantius"
+        title="About Us — Vivadoxa Music"
+        description="Our Story: Built on a Passion for Music. Learn about Vivadoxa Music's vision, mission, core values, and philosophy."
+        keywords="about vivadoxa, vivadoxa music, music education, kaduna music school"
         canonicalUrl="/about"
         ogImage="/media/studio/academy-cohort-group.jpeg"
       />
 
       <PageHero
-        eyebrow="About Vivadoxa"
-        title="Music changes people. We help that happen."
-        body="Since 2013, we have helped young people, church music leaders, and adults in Kaduna discover their voice, master an instrument, and perform with confidence."
+        eyebrow="About Us"
+        title="Built on a Passion for Music"
+        body="Music is more than sound. It is a language of expression, a source of inspiration, a profession, and a powerful force that brings people together."
         image={cohortImg}
       />
 
-      {/* Origin Story */}
-      <section className="section">
+      {/* Our Story, Vision & Mission */}
+      <section className="section" style={{ background: "white" }}>
         <div className="container story-grid">
           <div>
             <SectionHead
-              eyebrow="Our story"
-              title="Rooted in craft. Driven by purpose."
+              eyebrow="Our Story"
+              title="Built on a Passion for Music"
             />
             <p>
-              What began as an intimate keyboard class in Kaduna has grown into
-              a vibrant conservatory and instrument clinic. Our pedagogy bridges
-              deep classical technique, authentic African musicality, and
-              real-world stage performance.
+              Music is more than sound. It is a language of expression, a
+              source of inspiration, a profession, and a powerful force that
+              brings people together.
             </p>
             <p>
-              We believe elite music education should feel personal,
-              disciplined, and deeply inspiring—regardless of whether a student
-              is four years old or sixty.
+              Founded in 2019, Vivadoxa Music was established to provide
+              musicians with access to the training, equipment, creative
+              facilities, and technical support they need to thrive.
+            </p>
+            <p>
+              Over the years, we have developed an integrated music environment
+              that brings essential musical services together in one place.
+            </p>
+            <p>
+              From nurturing young talents to supporting experienced performers,
+              our purpose remains the same: to make quality music education,
+              equipment, production, and technical services more accessible.
+            </p>
+            <p>
+              Based in Kaduna, Nigeria, we continue to work towards raising
+              musical standards and building a community where talent is
+              discovered, creativity is encouraged, and excellence is pursued.
             </p>
           </div>
+
           <div className="mission-card">
-            <div
+            <span
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
-                marginBottom: 6,
+                color: "var(--gold)",
+                textTransform: "uppercase",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 1,
               }}
             >
-              <span>Our Motto</span>
-              <span
-                className="badge badge-gold"
-                style={{
-                  fontSize: 10,
-                  padding: "2px 8px",
-                  textTransform: "none",
-                  letterSpacing: "normal",
-                }}
-              >
-                Official Credo
-              </span>
-            </div>
+              Our Vision
+            </span>
             <h3
               style={{
                 fontFamily: "'DM Serif Display', serif",
-                fontSize: "1.65rem",
+                fontSize: "1.3rem",
+                lineHeight: 1.5,
                 color: "var(--navy)",
-                margin: "4px 0 16px",
-              }}
-            >
-              &ldquo;Actualize your passion&rdquo;
-            </h3>
-
-            <hr style={{ margin: "20px 0" }} />
-
-            <span>Our vision</span>
-            <h3
-              style={{
-                fontSize: "1.2rem",
-                lineHeight: 1.45,
-                margin: "8px 0 12px",
-                fontFamily: "'DM Serif Display', serif",
-                color: "var(--navy)",
+                margin: "10px 0 16px",
               }}
             >
               &ldquo;A world where every musician, from beginner to pro, has
@@ -170,16 +81,26 @@ export function About({ go }: { go: (p: Page) => void }) {
               unique sound to life.&rdquo;
             </h3>
 
-            <hr style={{ margin: "20px 0" }} />
+            <hr style={{ margin: "24px 0" }} />
 
-            <span>Our mission</span>
+            <span
+              style={{
+                color: "var(--gold)",
+                textTransform: "uppercase",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 1,
+              }}
+            >
+              Our Mission
+            </span>
             <p
               style={{
                 fontFamily: "'DM Serif Display', serif",
-                fontSize: "1.2rem",
-                lineHeight: 1.45,
+                fontSize: "1.15rem",
+                lineHeight: 1.5,
                 color: "var(--navy)",
-                margin: "8px 0 12px",
+                margin: "10px 0 14px",
               }}
             >
               To deliver exceptional musical experiences through four core
@@ -193,8 +114,8 @@ export function About({ go }: { go: (p: Page) => void }) {
                 color: "var(--gold)",
                 fontWeight: 700,
                 fontStyle: "italic",
-                fontSize: "0.92rem",
-                margin: "0 0 4px",
+                fontSize: "0.95rem",
+                margin: 0,
               }}
             >
               &ldquo;At Vivadoxa, we don&apos;t just sell music. We create it,
@@ -204,7 +125,7 @@ export function About({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
 
-      {/* Four Core Pillars of Vivadoxa */}
+      {/* Our Core Values */}
       <section
         className="section alt"
         style={{
@@ -215,475 +136,388 @@ export function About({ go }: { go: (p: Page) => void }) {
         <div className="container">
           <SectionHead
             center
-            eyebrow="The Vivadoxa Framework"
-            title="Four Pillars of Musical Excellence"
-            body="How we deliver exceptional musical experiences across Northern Nigeria and beyond—uniting world-class instruction, premium equipment, master repairs, and audio production."
+            eyebrow="Values"
+            title="Our Core Values"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
-            {/* Pillar 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+            {/* Excellence */}
             <div
               style={{
                 background: "white",
                 border: "1px solid var(--line)",
                 borderRadius: "var(--radius)",
                 padding: "32px 24px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
               }}
             >
-              <div>
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 12,
-                    background: "rgba(201,107,50,0.12)",
-                    color: "var(--gold)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 18,
-                  }}
-                >
-                  <Icon name="music" size={22} />
-                </div>
-                <span
-                  className="eyebrow"
-                  style={{ color: "var(--gold)", fontSize: 11 }}
-                >
-                  Pillar 01
-                </span>
-                <h3
-                  style={{
-                    fontSize: 20,
-                    margin: "6px 0 10px",
-                    color: "var(--navy)",
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
-                >
-                  Innovative Lessons
-                </h3>
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  Structured pedagogy spanning classical techniques,
-                  contemporary praise medleys, and graded syllabi (ABRSM &amp;
-                  MUSON). Tailored cohorts for children, teens, and adults.
-                </p>
-              </div>
-              <button
-                onClick={() => go("programs")}
-                className="btn btn-secondary"
-                style={{
-                  marginTop: 22,
-                  width: "100%",
-                  justifyContent: "center",
-                  fontSize: 13,
-                }}
-              >
-                Explore Programs →
-              </button>
-            </div>
-
-            {/* Pillar 2 */}
-            <div
-              style={{
-                background: "white",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius)",
-                padding: "32px 24px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 12,
-                    background: "rgba(30,58,95,0.1)",
-                    color: "var(--navy)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 18,
-                  }}
-                >
-                  <Icon name="home" size={22} />
-                </div>
-                <span
-                  className="eyebrow"
-                  style={{ color: "var(--gold)", fontSize: 11 }}
-                >
-                  Pillar 02
-                </span>
-                <h3
-                  style={{
-                    fontSize: 20,
-                    margin: "6px 0 10px",
-                    color: "var(--navy)",
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
-                >
-                  Studio &amp; Home Coaching
-                </h3>
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  Learn at our fully equipped Angwan Sunday studio or request
-                  certified instructors for private doorstep music lessons
-                  across Kaduna, as well as Sunday Specials for church
-                  instrumentalists.
-                </p>
-              </div>
-              <button
-                onClick={() => go("modes")}
-                className="btn btn-secondary"
-                style={{
-                  marginTop: 22,
-                  width: "100%",
-                  justifyContent: "center",
-                  fontSize: 13,
-                }}
-              >
-                Explore Study Modes →
-              </button>
-            </div>
-
-            {/* Pillar 3 */}
-            <div
-              style={{
-                background: "white",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius)",
-                padding: "32px 24px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    height: 140,
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    marginBottom: 16,
-                    background: "#0a192f",
-                  }}
-                >
-                  <img
-                    src={repairSaxImg}
-                    alt="Vivadoxa instrument hospital craftsman repairing saxophone"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                    loading="lazy"
-                  />
-                </div>
-                <span
-                  className="eyebrow"
-                  style={{ color: "var(--gold)", fontSize: 11 }}
-                >
-                  Pillar 03
-                </span>
-                <h3
-                  style={{
-                    fontSize: 20,
-                    margin: "6px 0 10px",
-                    color: "var(--navy)",
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
-                >
-                  Dependable Repair Services
-                </h3>
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  Kaduna&apos;s premier instrument hospital. Comprehensive
-                  diagnostics, piano action regulation, brass ultrasonic
-                  flushes, electronic keyboard servicing, and courier pickup
-                  right to your doorstep.
-                </p>
-              </div>
-              <button
-                onClick={() => go("repairs")}
-                className="btn btn-secondary"
-                style={{
-                  marginTop: 22,
-                  width: "100%",
-                  justifyContent: "center",
-                  fontSize: 13,
-                }}
-              >
-                Book Instrument Clinic →
-              </button>
-            </div>
-
-            {/* Pillar 4 */}
-            <div
-              style={{
-                background: "white",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius)",
-                padding: "32px 24px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 12,
-                    background: "rgba(30,58,95,0.1)",
-                    color: "var(--navy)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 18,
-                  }}
-                >
-                  <Icon name="video" size={22} />
-                </div>
-                <span
-                  className="eyebrow"
-                  style={{ color: "var(--gold)", fontSize: 11 }}
-                >
-                  Pillar 04
-                </span>
-                <h3
-                  style={{
-                    fontSize: 20,
-                    margin: "6px 0 10px",
-                    color: "var(--navy)",
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
-                >
-                  State-of-the-Art Studio
-                </h3>
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    margin: 0,
-                  }}
-                >
-                  A dedicated, acoustically treated recording studio for recital
-                  preservation, vocal tracking, gospel and band production,
-                  audio mixing, and multi-track session capture.
-                </p>
-              </div>
-              <button
-                onClick={() => go("contact")}
-                className="btn btn-secondary"
-                style={{
-                  marginTop: 22,
-                  width: "100%",
-                  justifyContent: "center",
-                  fontSize: 13,
-                }}
-              >
-                Inquire Studio Sessions →
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CEO & Founder Spotlight Section */}
-      <section
-        className="section"
-        style={{ background: "var(--navy)", color: "white" }}
-      >
-        <div className="container grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-center">
-          <div style={{ position: "relative" }}>
-            <div
-              style={{
-                borderRadius: "var(--radius)",
-                overflow: "hidden",
-                border: "1px solid rgba(201,107,50,0.3)",
-                boxShadow: "0 25px 60px rgba(0,0,0,0.5)",
-              }}
-            >
-              <img
-                src={director.image || portraitImg}
-                alt={`${director.name}, ${director.title} of Vivadoxa Music School`}
-                className="h-72 sm:h-96 lg:h-[460px] w-full object-cover"
-              />
               <div
                 style={{
-                  padding: "18px 20px",
-                  background: "var(--navy2)",
-                  borderTop: "1px solid rgba(201,107,50,0.2)",
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
                 }}
               >
-                <strong
-                  style={{
-                    fontSize: 20,
-                    color: "white",
-                    display: "block",
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
-                >
-                  {director.name}
-                </strong>
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: "var(--gold2)",
-                    textTransform: "uppercase",
-                    letterSpacing: "1.2px",
-                    fontWeight: 700,
-                  }}
-                >
-                  {director.title}
-                </span>
-                <p
-                  style={{ fontSize: 12, color: "#9dacb8", margin: "6px 0 0" }}
-                >
-                  {director.specialization}
-                </p>
+                <Icon name="star" size={22} />
               </div>
-            </div>
-          </div>
-
-          <div>
-            <span className="eyebrow" style={{ color: "var(--gold2)" }}>
-              Executive Leadership
-            </span>
-            <h2
-              style={{
-                color: "white",
-                fontSize: "clamp(30px, 4vw, 50px)",
-                margin: "12px 0 18px",
-              }}
-            >
-              A letter from our Artistic Director.
-            </h2>
-            <blockquote
-              style={{
-                color: "#c1ccd5",
-                fontSize: 15,
-                lineHeight: 1.7,
-                fontStyle: "italic",
-                margin: "0 0 20px",
-                borderLeft: "3px solid var(--gold)",
-                paddingLeft: 16,
-              }}
-            >
-              &ldquo;Music is not merely entertainment—it is a language that
-              shapes intellect, character, and spiritual expression. When we
-              founded Vivadoxa in 2013, our aim was clear: to raise music stars
-              with authentic technical discipline, giving African talents the
-              foundation to stand on any global stage.&rdquo;
-            </blockquote>
-            <p
-              style={{
-                color: "#9dacb8",
-                fontSize: 14,
-                lineHeight: 1.6,
-                marginBottom: 28,
-              }}
-            >
-              {director.bio}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-3.5">
-              <Button onClick={() => go("apply")}>
-                Start Your Journey <Icon name="arrow" />
-              </Button>
-              <a
-                href={`${WHATSAPP_URL}?text=Hello%20Director%20Frederick,%20I%20read%20your%20note%20on%20the%20Vivadoxa%20About%20page%20and%20would%20like%20to%20connect.`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary inline-flex items-center justify-center gap-2"
+              <h3
                 style={{
-                  borderColor: "rgba(37,211,102,0.4)",
-                  color: "#25D366",
-                  background: "rgba(37,211,102,0.08)",
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
                 }}
               >
-                <WhatsAppIcon size={18} /> Connect with the Director
-              </a>
+                Excellence
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                We pursue high standards in everything we do.
+              </p>
+            </div>
+
+            {/* Integrity */}
+            <div
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "32px 24px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Icon name="shield" size={22} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Integrity
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                We value honesty, transparency, and responsible service.
+              </p>
+            </div>
+
+            {/* Passion */}
+            <div
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "32px 24px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={22}
+                  height={22}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Passion
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                Our love for music inspires our work and our relationships with
+                customers.
+              </p>
+            </div>
+
+            {/* Innovation */}
+            <div
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "32px 24px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Icon name="sparkles" size={22} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Innovation
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                We embrace new ideas, technologies, and approaches that improve
+                musical experiences.
+              </p>
+            </div>
+
+            {/* Community */}
+            <div
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "32px 24px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Icon name="users" size={22} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Community
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                We believe music thrives when people learn, create, and grow
+                together.
+              </p>
+            </div>
+
+            {/* Customer Commitment */}
+            <div
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: "var(--radius)",
+                padding: "32px 24px",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.03)",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: "rgba(201,107,50,0.12)",
+                  color: "var(--gold)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={22}
+                  height={22}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: "1.3rem",
+                  color: "var(--navy)",
+                  margin: "0 0 8px",
+                }}
+              >
+                Customer Commitment
+              </h3>
+              <p
+                style={{
+                  color: "var(--muted)",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                We listen to our customers and work to provide solutions that
+                meet their needs.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Faculty Team */}
-      <section className="section alt">
-        <div className="container">
-          <SectionHead
-            center
-            eyebrow="Meet your mentors"
-            title="Learn from working musicians"
-            body="Our faculty comprises seasoned recitalists, sound engineers, and choral leaders dedicated to personalized instruction."
-          />
-          <div className="team-grid">
-            {faculty.map((ins) => (
-              <article className="team-card" key={ins.name}>
-                <img
-                  src={ins.image || trumpetImg}
-                  alt={`${ins.name}, ${ins.title} at Vivadoxa`}
-                  loading="lazy"
-                  style={{ width: "100%", height: 320, objectFit: "cover" }}
-                />
-                <h3>{ins.name}</h3>
-                <p
-                  style={{
-                    color: "var(--gold)",
-                    fontWeight: 700,
-                    fontSize: 12,
-                  }}
-                >
-                  {ins.title}
-                </p>
-                <p>{ins.specialization}</p>
-              </article>
-            ))}
+      {/* Our Philosophy */}
+      <section
+        className="section"
+        style={{
+          background: "var(--navy2)",
+          borderTop: "3px solid var(--gold)",
+          borderBottom: "4px solid var(--gold)",
+          padding: "90px 0 85px",
+        }}
+      >
+        <div
+          className="container"
+          style={{ maxWidth: 860, textAlign: "center" }}
+        >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "4px 16px",
+              borderRadius: "var(--radius)",
+              background: "rgba(201,107,50,0.18)",
+              border: "1px solid rgba(201,107,50,0.35)",
+              marginBottom: 16,
+            }}
+          >
+            <span
+              style={{
+                color: "var(--gold-text-dark)",
+                fontSize: 11,
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                fontWeight: 700,
+              }}
+            >
+              Our Philosophy
+            </span>
           </div>
 
-          <div style={{ textAlign: "center", marginTop: 45 }}>
-            <button
-              onClick={() => go("performances")}
-              className="btn btn-secondary inline-flex items-center gap-2"
-            >
-              Watch student recitals & concerts →
-            </button>
-          </div>
+          <h2
+            style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: "clamp(26px, 3.8vw, 42px)",
+              color: "white",
+              margin: "10px 0 18px",
+              lineHeight: 1.35,
+            }}
+          >
+            &ldquo;We believe every musical dream deserves an opportunity to
+            grow.&rdquo;
+          </h2>
+
+          <p
+            style={{
+              color: "var(--line-strong)",
+              fontSize: "1.12rem",
+              lineHeight: 1.8,
+              maxWidth: 720,
+              margin: "0 auto",
+            }}
+          >
+            At Vivadoxa Music, we do more than provide services. We help people
+            discover possibilities, develop their abilities, and bring their
+            musical ambitions to life.
+          </p>
         </div>
       </section>
-
-      <Cta go={go} />
     </main>
   )
 }

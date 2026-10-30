@@ -21,18 +21,7 @@ if (typeof window !== "undefined") {
 export const getApiUrl = (endpoint: string): string => {
   const clean = endpoint.replace(/^\//, "")
 
-  // When deployed to production (running on domain other than localhost/127.0.0.1)
-  const isDevHost =
-    typeof window !== "undefined" &&
-    (window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1")
-
-  // On production (cPanel domain or remote server), ALWAYS use same-origin relative `/api/...`
-  if (!isDevHost) {
-    return `/api/${clean}`
-  }
-
-  // Local development: if running inside MAMP under /Vivadoxa/ subfolder
+  // Local development: if running directly under MAMP document root without Vite proxy
   if (
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/Vivadoxa")
@@ -40,15 +29,9 @@ export const getApiUrl = (endpoint: string): string => {
     return `/Vivadoxa/api/${clean}`
   }
 
-  // Local development on Vite dev server (e.g. localhost:8443 hitting local MAMP on port 80)
-  if (
-    typeof window !== "undefined" &&
-    window.location.port &&
-    window.location.port !== "80"
-  ) {
-    return `http://${window.location.hostname}/Vivadoxa/api/${clean}`
-  }
-
+  // Same-origin relative path works universally:
+  // - On Vite dev server / Figma Make, Vite proxies `/api/...` directly to the PHP backend
+  // - On production / cPanel, Apache serves `/api/...` directly from the web root
   return `/api/${clean}`
 }
 
@@ -1991,6 +1974,7 @@ export async function loginUser(
     const res = await fetch(getApiUrl("user_auth.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "login", identifier, password }),
     })
     const data = await res.json()
@@ -2017,6 +2001,7 @@ export async function registerUser(data: {
     const res = await fetch(getApiUrl("user_auth.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "register", ...data }),
     })
     const result = await res.json()
@@ -2031,7 +2016,9 @@ export async function registerUser(data: {
 
 export async function checkUserSession(): Promise<PortalUser | null> {
   try {
-    const res = await fetch(getApiUrl("user_auth.php"))
+    const res = await fetch(getApiUrl("user_auth.php"), {
+      credentials: "include",
+    })
     if (res.ok) {
       const data = await res.json()
       if (data.authenticated && data.user) {
@@ -2052,6 +2039,7 @@ export async function logoutUser(): Promise<void> {
     await fetch(getApiUrl("user_auth.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "logout" }),
     })
   } catch {}
@@ -2065,6 +2053,7 @@ export async function updateUserProfile(
     const res = await fetch(getApiUrl("user_auth.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "update_profile", ...data }),
     })
     const result = await res.json()
@@ -2087,7 +2076,9 @@ export async function fetchUserPortalData(
 }> {
   try {
     const query = email ? `?email=${encodeURIComponent(email)}` : ""
-    const res = await fetch(getApiUrl(`user_portal.php${query}`))
+    const res = await fetch(getApiUrl(`user_portal.php${query}`), {
+      credentials: "include",
+    })
     if (res.ok) {
       return await res.json()
     }
@@ -2104,6 +2095,7 @@ export async function approveRepairEstimate(
     const res = await fetch(getApiUrl("user_portal.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "approve_repair", tracking_code }),
     })
     return await res.json()
@@ -2134,6 +2126,7 @@ export async function submitScheduleRequest(data: {
     const res = await fetch(getApiUrl("schedule_requests.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "create", ...data }),
     })
     return await res.json()
@@ -2157,6 +2150,7 @@ export async function fetchScheduleRequests(
 
     const res = await fetch(
       getApiUrl(`schedule_requests.php?${params.toString()}`),
+      { credentials: "include" },
     )
     if (res.ok) {
       const data = await res.json()
@@ -2177,6 +2171,7 @@ export async function respondToScheduleRequest(data: {
     const res = await fetch(getApiUrl("schedule_requests.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ action: "respond", ...data }),
     })
     return await res.json()

@@ -47,8 +47,12 @@ if ($method === 'GET') {
     $params = [];
 
     if (!empty($search)) {
-        $sql .= " AND (first_name LIKE :s OR last_name LIKE :s OR email LIKE :s OR application_no LIKE :s)";
-        $params[':s'] = "%$search%";
+        $sql .= " AND (first_name LIKE :s1 OR last_name LIKE :s2 OR email LIKE :s3 OR application_no LIKE :s4)";
+        $term = "%$search%";
+        $params[':s1'] = $term;
+        $params[':s2'] = $term;
+        $params[':s3'] = $term;
+        $params[':s4'] = $term;
     }
 
     if (!empty($status)) {
@@ -173,11 +177,12 @@ if ($method === 'GET') {
 
     // Generate readable Vivadoxa application reference
     $appNo = 'VDX-' . date('Y') . '-' . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT);
+    $passportPhoto = trim($input['passportPhoto'] ?? $input['passport_photo'] ?? '');
 
     $stmt = $pdo->prepare("
         INSERT INTO `applications`
-        (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `dob`, `gender`, `guardian_name`, `guardian_phone`, `address`, `class_type`, `state_of_origin`, `marital_status`, `nationality`, `occupation`, `sponsor`, `session_time`, `duration`, `currency`, `status`, `tuition_fee`)
-        VALUES (:no, :fn, :ln, :em, :ph, :pr, :sm, :sl, :dob, :gen, :gname, :gph, :addr, :ctype, :state, :marital, :nat, :occ, :spon, :stime, :dur, :curr, 'pending', :fee)
+        (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `dob`, `gender`, `guardian_name`, `guardian_phone`, `address`, `class_type`, `state_of_origin`, `marital_status`, `nationality`, `occupation`, `sponsor`, `session_time`, `duration`, `currency`, `status`, `tuition_fee`, `passport_photo`)
+        VALUES (:no, :fn, :ln, :em, :ph, :pr, :sm, :sl, :dob, :gen, :gname, :gph, :addr, :ctype, :state, :marital, :nat, :occ, :spon, :stime, :dur, :curr, 'pending', :fee, :passport)
     ");
 
     $stmt->execute([
@@ -204,6 +209,7 @@ if ($method === 'GET') {
         ':dur' => $duration,
         ':curr' => $currency,
         ':fee' => $tuitionFee,
+        ':passport' => !empty($passportPhoto) ? $passportPhoto : null,
     ]);
 
     // Auto-provision Student Portal Account if not existing

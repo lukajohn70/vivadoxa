@@ -589,7 +589,7 @@ export function ReviewsHub() {
                   Kaduna's Top-Rated Academy
                 </strong>
                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  98% five-star rating across all 13 official instruments and
+                  98% five-star rating across all 17 official instruments and
                   studio disciplines.
                 </p>
               </div>
