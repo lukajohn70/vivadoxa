@@ -275,105 +275,59 @@ export function printDocumentElement(elementId: string) {
     return
   }
 
-  try {
-    const existingFrame = document.getElementById("vdx-print-frame")
-    if (existingFrame) existingFrame.remove()
+  // Inject a one-time print stylesheet that hides everything except the
+  // target element. This avoids the blank-page issue caused by iframe/blob
+  // approaches failing to load Vite-hashed CSS bundles.
+  const styleId = "vdx-print-only-style"
+  const existing = document.getElementById(styleId)
+  if (existing) existing.remove()
 
-    const iframe = document.createElement("iframe")
-    iframe.id = "vdx-print-frame"
-    iframe.style.position = "fixed"
-    iframe.style.top = "0"
-    iframe.style.left = "0"
-    iframe.style.width = "210mm"
-    iframe.style.height = "297mm"
-    iframe.style.border = "none"
-    iframe.style.zIndex = "-9999"
-    iframe.style.opacity = "0.01"
-    iframe.style.pointerEvents = "none"
-    iframe.setAttribute("aria-hidden", "true")
-    document.body.appendChild(iframe)
-
-    const frameDoc = iframe.contentWindow?.document
-    if (!frameDoc) {
-      window.print()
-      return
-    }
-
-    const headNodes = Array.from(
-      document.querySelectorAll('link[rel="stylesheet"], style'),
-    )
-      .map((node) => {
-        if (node.tagName === "LINK") {
-          // Use the browser-resolved absolute href so the blob window can fetch it
-          const href = (node as HTMLLinkElement).href
-          return `<link rel="stylesheet" href="${href}">`
-        }
-        return node.outerHTML
-      })
-      .join("\n")
-
-    frameDoc.open()
-    frameDoc.write(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${document.title || "Vivadoxa Official Document"}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  ${headNodes}
-  <style>
-    @page {
-      size: A4 portrait;
-      margin: 8mm 10mm 8mm 10mm;
-    }
-    * {
-      box-sizing: border-box !important;
-    }
-    html, body {
-      background: #ffffff !important;
-      color: #1a1918 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    .no-print { display: none !important; }
-    .doc-sheet {
-      box-shadow: none !important;
-      border: none !important;
-      border-radius: 0 !important;
-      margin: 0 auto !important;
-      width: 100% !important;
-      max-width: 190mm !important;
-      padding: 0 !important;
-      position: relative !important;
-      overflow: visible !important;
-      box-sizing: border-box !important;
-    }
-  </style>
-</head>
-<body>
-  <div style="margin: 0 auto; width: 100%; max-width: 190mm;">
-    ${target.outerHTML}
-  </div>
-</body>
-</html>`)
-    frameDoc.close()
-
-    setTimeout(() => {
-      try {
-        iframe.contentWindow?.focus()
-        iframe.contentWindow?.print()
-      } catch {
-        window.print()
+  const style = document.createElement("style")
+  style.id = styleId
+  style.innerHTML = `
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 10mm 8mm 10mm; }
+      body > *:not(#vdx-print-root) { display: none !important; }
+      #vdx-print-root {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        background: #ffffff !important;
       }
-    }, 450)
-  } catch {
+      .no-print, .download-action-bar { display: none !important; }
+      .doc-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 190mm !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+    }
+  `
+  document.head.appendChild(style)
+
+  // Wrap the target in a print root container at the top of body
+  const existingRoot = document.getElementById("vdx-print-root")
+  if (existingRoot) existingRoot.remove()
+
+  const printRoot = document.createElement("div")
+  printRoot.id = "vdx-print-root"
+  printRoot.style.cssText = "display:none;position:fixed;top:0;left:0;width:100%;z-index:-1;"
+  printRoot.appendChild(target.cloneNode(true))
+  document.body.appendChild(printRoot)
+
+  setTimeout(() => {
+    printRoot.style.cssText = ""
     window.print()
-  }
+    // Cleanup after print dialog closes
+    setTimeout(() => {
+      printRoot.remove()
+      style.remove()
+    }, 1000)
+  }, 80)
 }
 
 export function downloadDocumentHtml(
