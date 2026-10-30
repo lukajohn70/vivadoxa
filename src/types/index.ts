@@ -1,6 +1,6 @@
 // ─── Application-wide type definitions ───────────────────────────────────────
 
-export type Page = "home" | "about" | "programs" | "modes" | "repairs" | "studio" | "performances" | "reviews" | "apply" | "payment" | "status" | "portal" | "portal-login" | "contact" | "admin" | "admin-login" | "privacy" | "terms" | "tuition-policy" | "safeguarding" | "cookies" | "cookie-policy"
+export type Page = "home" | "about" | "programs" | "modes" | "repairs" | "studio" | "performances" | "reviews" | "apply" | "payment" | "status" | "portal" | "portal-login" | "contact" | "admin" | "admin-login" | "privacy" | "terms" | "tuition-policy" | "safeguarding" | "cookies" | "cookie-policy" | "rentals" | "store"
 
 // Application form data
 export interface ApplicationData {

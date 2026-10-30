@@ -221,6 +221,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [termsError, setTermsError] = useState("")
   const [accountPassword, setAccountPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
 
@@ -587,6 +588,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
           <form
             onSubmit={handleFormSubmit}
             noValidate
+            autoComplete="off"
             className="apply-card"
             style={{
               background: "#ffffff",
@@ -1927,21 +1929,51 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   Create an optional password to view term lesson notes and
                   track practice assignments.
                 </p>
-                <input
-                  type="password"
-                  placeholder="Create portal password (optional, min 6 characters)"
-                  value={accountPassword}
-                  onChange={(e) => setAccountPassword(e.target.value)}
-                  style={{
-                    width: "100%",
-                    minHeight: 36,
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    padding: "0 10px",
-                    fontSize: 13,
-                    background: "white",
-                  }}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="portal-access-password"
+                    name="vdx_portal_secret_key"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                    data-bwignore="true"
+                    placeholder="Create portal password (optional, min 6 characters)"
+                    value={accountPassword}
+                    onChange={(e) => setAccountPassword(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: 36,
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      padding: "0 36px 0 10px",
+                      fontSize: 13,
+                      background: "white",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      padding: 4,
+                      color: "var(--muted)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <Icon name={showPassword ? "eyeoff" : "eye"} size={14} />
+                  </button>
+                </div>
               </div>
 
               {/* Terms Checkbox */}
