@@ -767,7 +767,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
     {
       title: "Verified Revenue",
       count: liveStats ? liveStats.formatted_revenue : "—",
-      sub: "",
+      sub: "Cleared Payments",
       tone: "gold",
       badge: null,
       target: "Payments",
