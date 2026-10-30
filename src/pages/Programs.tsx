@@ -817,7 +817,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                       href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20am%20interested%20in%20the%20${encodeURIComponent(tier.name)}%20(${encodeURIComponent(tier.fee)}).`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-[var(--line)] text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-[var(--line)] text-[var(--gold)] hover:bg-[var(--gold)]/10 transition-colors"
                       title="Inquire on WhatsApp"
                       aria-label={`Ask about ${tier.name} on WhatsApp`}
                     >

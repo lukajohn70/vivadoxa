@@ -370,7 +370,7 @@ export function Repairs() {
       <section className="bg-white border-b border-[var(--line)] py-4">
         <div className="container flex flex-wrap items-center justify-between gap-4 text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--gold)] animate-pulse" />
             <strong className="text-[var(--navy)] font-bold">
               Service Centre Lines:
             </strong>
@@ -407,9 +407,9 @@ export function Repairs() {
 
       {/* ── Submission Confirmation Banner if Sent ── */}
       {sentCode && (
-        <section className="section bg-emerald-50/50 border-b border-emerald-200 py-10">
+        <section className="section bg-[var(--cream)] border-b border-[var(--gold)]/30 py-10">
           <div className="container max-w-3xl">
-            <div className="form-shell !p-6 sm:!p-8 bg-white border border-emerald-300 shadow-md">
+            <div className="form-shell !p-6 sm:!p-8 bg-white border border-[var(--gold)]/40 shadow-md">
               <Success
                 title="Repair request logged successfully"
                 body={
@@ -950,7 +950,7 @@ export function Repairs() {
               {/* Step 5 */}
               <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)] flex flex-col justify-between">
                 <div>
-                  <span className="w-7 h-7 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center mb-3">
+                  <span className="w-7 h-7 rounded-full bg-[var(--gold)] text-white text-xs font-bold flex items-center justify-center mb-3">
                     5
                   </span>
                   <h4 className="font-bold text-sm text-[var(--navy)] mb-1">
@@ -1924,7 +1924,7 @@ export function Repairs() {
                   </div>
                   <div className="p-2">
                     <span className="text-slate-500 block">Repair status</span>
-                    <span className="text-emerald-700 font-bold uppercase">Received</span>
+                    <span className="text-[var(--gold)] font-bold uppercase">Received</span>
                   </div>
                   <div className="p-2">
                     <span className="text-slate-500 block">Date customer notified</span>

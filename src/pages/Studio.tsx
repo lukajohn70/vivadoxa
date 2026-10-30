@@ -804,7 +804,7 @@ export function Studio({ go }: { go: (p: Page) => void }) {
               href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20have%20a%20question%20about%20your%20music%20studio.`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+              className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-[var(--gold-text)] bg-[var(--gold)]/10 border border-[var(--gold)]/30 hover:bg-[var(--gold)]/20 transition-colors"
             >
               <WhatsAppIcon size={18} />
               <span>

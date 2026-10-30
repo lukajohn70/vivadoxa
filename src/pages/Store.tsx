@@ -1055,7 +1055,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
               href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Sales%20Team,%20I%20would%20like%20guidance%20on%20choosing%20an%20instrument."
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary !bg-emerald-600/20 !text-emerald-400 !border-emerald-500/30 hover:!bg-emerald-600/30 inline-flex items-center gap-2"
+              className="btn btn-secondary !bg-[var(--gold)]/20 !text-[var(--gold2)] !border-[var(--gold)]/30 hover:!bg-[var(--gold)]/30 inline-flex items-center gap-2"
             >
               <WhatsAppIcon size={16} /> Contact Our Sales Team
             </a>
@@ -1134,7 +1134,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
                   <button
                     type="button"
                     onClick={() => removeSelectedItem(item.id)}
-                    className="text-slate-400 hover:text-rose-600 text-xs shrink-0 cursor-pointer"
+                    className="text-[var(--muted)] hover:text-[var(--gold)] text-xs shrink-0 cursor-pointer"
                   >
                     ✕
                   </button>
