@@ -649,7 +649,7 @@ export function ShopAndRentalsView({
                   <button
                     type="button"
                     onClick={() =>
-                      setFormImage("/media/programs/piano-recital-mastery.jpeg")
+                      setFormImage("/media/programs/piano-syllabus.jpeg")
                     }
                     className="underline hover:text-[var(--gold)]"
                   >
@@ -659,7 +659,7 @@ export function ShopAndRentalsView({
                   <button
                     type="button"
                     onClick={() =>
-                      setFormImage("/media/programs/saxophone-solo-stage.jpeg")
+                      setFormImage("/media/programs/sax-solo-grey.jpeg")
                     }
                     className="underline hover:text-[var(--gold)]"
                   >
@@ -669,7 +669,7 @@ export function ShopAndRentalsView({
                   <button
                     type="button"
                     onClick={() =>
-                      setFormImage("/media/programs/drums-contemporary-groove.jpeg")
+                      setFormImage("/media/programs/drums-tama-red.jpeg")
                     }
                     className="underline hover:text-[var(--gold)]"
                   >

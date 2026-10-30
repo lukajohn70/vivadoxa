@@ -23,7 +23,7 @@ $defaultStoreProducts = [
         'id' => 'fender-strat-pack',
         'name' => 'Squier by Fender Affinity Stratocaster Electric Guitar',
         'category' => 'Guitars',
-        'image' => '/media/programs/guitar-stage-live.jpeg',
+        'image' => '/media/programs/guitar-electric-player.jpeg',
         'brand' => 'Fender',
         'badge' => '',
         'inStock' => true,
@@ -45,7 +45,7 @@ $defaultStoreProducts = [
         'id' => 'yamaha-psr-keyboard',
         'name' => 'Yamaha PSR-E373 61-Key Touch-Sensitive Portable Keyboard',
         'category' => 'Keys',
-        'image' => '/media/programs/piano-recital-mastery.jpeg',
+        'image' => '/media/programs/piano-syllabus.jpeg',
         'brand' => 'Yamaha',
         'badge' => 'Popular',
         'inStock' => true,
@@ -56,7 +56,7 @@ $defaultStoreProducts = [
         'id' => 'eb-alto-sax',
         'name' => 'Jean Paul USA / Vivadoxa Eb Intermediate Alto Saxophone',
         'category' => 'Woodwinds',
-        'image' => '/media/programs/saxophone-solo-stage.jpeg',
+        'image' => '/media/programs/sax-solo-grey.jpeg',
         'brand' => 'Jean Paul / Vivadoxa',
         'badge' => 'Conservatory Grade',
         'inStock' => true,
@@ -67,7 +67,7 @@ $defaultStoreProducts = [
         'id' => 'silver-flute',
         'name' => 'Eastman / Vivadoxa Nickel Silver C Flute with Split-E',
         'category' => 'Woodwinds',
-        'image' => '/media/programs/flute-practice-hall.jpeg',
+        'image' => '/media/programs/flute-recital-boy.jpeg',
         'brand' => 'Eastman',
         'badge' => '',
         'inStock' => true,
@@ -78,7 +78,7 @@ $defaultStoreProducts = [
         'id' => 'student-trumpet-bb',
         'name' => 'Bach Prelude Bb Student Brass Trumpet',
         'category' => 'Brass',
-        'image' => '/media/programs/trumpet-brass-mastery.jpeg',
+        'image' => '/media/programs/trumpet-brass.jpeg',
         'brand' => 'Bach Prelude',
         'badge' => '',
         'inStock' => true,
@@ -89,7 +89,7 @@ $defaultStoreProducts = [
         'id' => 'tama-stage-drums',
         'name' => 'TAMA Imperialstar 5-Piece Complete Drum Kit',
         'category' => 'Percussion',
-        'image' => '/media/programs/drums-contemporary-groove.jpeg',
+        'image' => '/media/programs/drums-tama-red.jpeg',
         'brand' => 'TAMA',
         'badge' => '',
         'inStock' => true,
@@ -100,7 +100,7 @@ $defaultStoreProducts = [
         'id' => 'yoruba-talking-drum',
         'name' => 'Authentic Hand-Carved Nigerian Gangan Talking Drum',
         'category' => 'Percussion',
-        'image' => '/media/programs/talking-drums-heritage.jpeg',
+        'image' => '/media/programs/talking-drum-nigeria.jpeg',
         'brand' => 'Heritage Art',
         'badge' => '',
         'inStock' => true,
@@ -122,7 +122,7 @@ $defaultStoreProducts = [
         'id' => 'vandoren-reeds-sax',
         'name' => 'Vandoren Traditional Eb Alto Saxophone Reeds (Box of 10)',
         'category' => 'Accessories',
-        'image' => '/media/programs/saxophone-solo-stage.jpeg',
+        'image' => '/media/programs/sax-solo-grey.jpeg',
         'brand' => 'Vandoren Paris',
         'badge' => 'French Import',
         'inStock' => true,
@@ -163,7 +163,7 @@ $defaultRentalItems = [
         'name' => '61-Key Touch-Sensitive Student Keyboard',
         'category' => 'Keys',
         'type' => 'student',
-        'image' => '/media/programs/piano-recital-mastery.jpeg',
+        'image' => '/media/programs/piano-syllabus.jpeg',
         'recommendedFor' => 'Piano syllabus practice, ear training & theory',
         'inStock' => true,
         'inclusions' => [
@@ -193,7 +193,7 @@ $defaultRentalItems = [
         'name' => 'Eb Alto Saxophone (Lacquered Brass)',
         'category' => 'Woodwinds',
         'type' => 'student',
-        'image' => '/media/programs/saxophone-solo-stage.jpeg',
+        'image' => '/media/programs/sax-solo-grey.jpeg',
         'recommendedFor' => 'Wind players, band members & soloists',
         'inStock' => true,
         'inclusions' => [
@@ -208,7 +208,7 @@ $defaultRentalItems = [
         'name' => 'C Concert Concert Flute (Silver Plated)',
         'category' => 'Woodwinds',
         'type' => 'student',
-        'image' => '/media/programs/flute-practice-hall.jpeg',
+        'image' => '/media/programs/flute-recital-boy.jpeg',
         'recommendedFor' => 'Classical repertoire, breath control & orchestra',
         'inStock' => true,
         'inclusions' => [
@@ -223,7 +223,7 @@ $defaultRentalItems = [
         'name' => 'Bb Standard Student Trumpet',
         'category' => 'Brass',
         'type' => 'student',
-        'image' => '/media/programs/trumpet-brass-mastery.jpeg',
+        'image' => '/media/programs/trumpet-brass.jpeg',
         'recommendedFor' => 'Brass fundamentals, embouchure & ensemble playing',
         'inStock' => true,
         'inclusions' => [
@@ -238,7 +238,7 @@ $defaultRentalItems = [
         'name' => 'Active Concert PA System (2x Tops + Subwoofer)',
         'category' => 'PA & Sound',
         'type' => 'event',
-        'image' => '/media/programs/studio-mixing-console.jpeg',
+        'image' => '/media/studio/multi-instrument-lab.jpeg',
         'recommendedFor' => 'Church crusades, live outdoor concerts, wedding banquets',
         'inStock' => true,
         'inclusions' => [
@@ -253,7 +253,7 @@ $defaultRentalItems = [
         'name' => '5-Piece Stage Drum Kit & Heavy Hardware Pack',
         'category' => 'Backline',
         'type' => 'event',
-        'image' => '/media/programs/drums-contemporary-groove.jpeg',
+        'image' => '/media/programs/drums-tama-red.jpeg',
         'recommendedFor' => 'Concerts, youth rallies, music video shoots & recitals',
         'inStock' => true,
         'inclusions' => [
@@ -268,7 +268,7 @@ $defaultRentalItems = [
         'name' => '300W Bass Combo & Stage Guitar Amplifier Rig',
         'category' => 'Backline',
         'type' => 'event',
-        'image' => '/media/programs/bass-groove-mastery.jpeg',
+        'image' => '/media/programs/bass-electric.jpeg',
         'recommendedFor' => 'Ensemble rehearsals, church guest bands & stage live backline',
         'inStock' => true,
         'inclusions' => [
@@ -283,7 +283,7 @@ $defaultRentalItems = [
         'name' => '88-Key Weighted Action Stage Piano & Synthesizer',
         'category' => 'Keys',
         'type' => 'event',
-        'image' => '/media/programs/piano-recital-mastery.jpeg',
+        'image' => '/media/programs/piano-syllabus.jpeg',
         'recommendedFor' => 'Classical recitals, worship conferences & corporate galas',
         'inStock' => true,
         'inclusions' => [
@@ -295,12 +295,35 @@ $defaultRentalItems = [
     ],
 ];
 
+function sanitizeCatalogImage(?string $path): string {
+    if (empty($path)) {
+        return '/media/programs/guitar-acoustic-recital.jpeg';
+    }
+    $map = [
+        '/media/programs/guitar-stage-live.jpeg' => '/media/programs/guitar-electric-player.jpeg',
+        '/media/programs/piano-recital-mastery.jpeg' => '/media/programs/piano-syllabus.jpeg',
+        '/media/programs/saxophone-solo-stage.jpeg' => '/media/programs/sax-solo-grey.jpeg',
+        '/media/programs/flute-practice-hall.jpeg' => '/media/programs/flute-recital-boy.jpeg',
+        '/media/programs/trumpet-brass-mastery.jpeg' => '/media/programs/trumpet-brass.jpeg',
+        '/media/programs/drums-contemporary-groove.jpeg' => '/media/programs/drums-tama-red.jpeg',
+        '/media/programs/talking-drums-heritage.jpeg' => '/media/programs/talking-drum-nigeria.jpeg',
+        '/media/programs/studio-mixing-console.jpeg' => '/media/studio/multi-instrument-lab.jpeg',
+        '/media/programs/bass-groove-mastery.jpeg' => '/media/programs/bass-electric.jpeg',
+    ];
+    return $map[$path] ?? $path;
+}
+
 // Helper to get store products from system_settings
 function getCatalogStoreProducts(array $defaults): array {
     $saved = getSystemSetting('store_catalog_items', null);
     if (!is_array($saved) || empty($saved)) {
         saveSystemSetting('store_catalog_items', $defaults);
         return $defaults;
+    }
+    foreach ($saved as &$item) {
+        if (isset($item['image'])) {
+            $item['image'] = sanitizeCatalogImage($item['image']);
+        }
     }
     return $saved;
 }
@@ -311,6 +334,11 @@ function getCatalogRentalItems(array $defaults): array {
     if (!is_array($saved) || empty($saved)) {
         saveSystemSetting('rental_catalog_items', $defaults);
         return $defaults;
+    }
+    foreach ($saved as &$item) {
+        if (isset($item['image'])) {
+            $item['image'] = sanitizeCatalogImage($item['image']);
+        }
     }
     return $saved;
 }

@@ -221,6 +221,12 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
   const studentItems = rentals.filter((r) => r.type === "student" || (!r.type && r.category !== "PA & Sound" && r.category !== "Backline"))
   const eventItems = rentals.filter((r) => r.type === "event" || r.category === "PA & Sound" || r.category === "Backline")
 
+  const [visibleStudentCount, setVisibleStudentCount] = useState(6)
+  const [visibleEventCount, setVisibleEventCount] = useState(4)
+
+  const displayedStudentItems = studentItems.slice(0, visibleStudentCount)
+  const displayedEventItems = eventItems.slice(0, visibleEventCount)
+
   // Multi-selection helpers
   const isSelected = (id: string) => selectedRentals.some((item) => item.id === id)
 
@@ -433,8 +439,9 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
           {/* Tab 1: Student Rentals */}
           {activeTab === "students" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {studentItems.map((item) => {
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayedStudentItems.map((item) => {
                 const selected = isSelected(item.id)
                 return (
                   <div
@@ -471,6 +478,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget
+                          if (!target.dataset.fallback) {
+                            target.dataset.fallback = "1"
+                            target.src = "/media/programs/violin-solo-rainbow.jpeg"
+                          }
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs">
@@ -529,12 +544,43 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 )
               })}
             </div>
+
+            {studentItems.length > visibleStudentCount && (
+              <div className="text-center mt-10">
+                <button
+                  type="button"
+                  onClick={() => setVisibleStudentCount((prev) => prev + 6)}
+                  className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
+                >
+                  <span>View More Student Instruments ({studentItems.length - visibleStudentCount} remaining)</span>
+                  <Icon name="arrow" size={13} className="rotate-90" />
+                </button>
+              </div>
+            )}
+
+            {visibleStudentCount >= studentItems.length && studentItems.length > 6 && (
+              <div className="text-center mt-10 flex items-center justify-center gap-3">
+                <span className="text-xs text-[var(--muted)]">Showing all {studentItems.length} student practice instruments</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibleStudentCount(6)
+                    document.getElementById("rental-catalog")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
+                >
+                  Show Less ↑
+                </button>
+              </div>
+            )}
+            </>
           )}
 
           {/* Tab 2: Stage & Event Backline */}
           {activeTab === "events" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {eventItems.map((item) => {
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {displayedEventItems.map((item) => {
                 const selected = isSelected(item.id)
                 return (
                   <div
@@ -571,6 +617,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                         src={item.image}
                         alt={item.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          const target = e.currentTarget
+                          if (!target.dataset.fallback) {
+                            target.dataset.fallback = "1"
+                            target.src = "/media/studio/multi-instrument-lab.jpeg"
+                          }
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden" />
                       <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md">
@@ -620,6 +674,36 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 )
               })}
             </div>
+
+            {eventItems.length > visibleEventCount && (
+              <div className="text-center mt-10">
+                <button
+                  type="button"
+                  onClick={() => setVisibleEventCount((prev) => prev + 4)}
+                  className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
+                >
+                  <span>View More Event &amp; Sound Gear ({eventItems.length - visibleEventCount} remaining)</span>
+                  <Icon name="arrow" size={13} className="rotate-90" />
+                </button>
+              </div>
+            )}
+
+            {visibleEventCount >= eventItems.length && eventItems.length > 4 && (
+              <div className="text-center mt-10 flex items-center justify-center gap-3">
+                <span className="text-xs text-[var(--muted)]">Showing all {eventItems.length} stage &amp; event sound packages</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibleEventCount(4)
+                    document.getElementById("rental-catalog")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
+                >
+                  Show Less ↑
+                </button>
+              </div>
+            )}
+            </>
           )}
 
           {/* Tab 3: Terms & FAQ (NO 100% refund promise) */}

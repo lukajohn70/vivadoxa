@@ -232,6 +232,14 @@ export function Store({ go }: { go: (p: Page) => void }) {
     return matchesCategory && matchesSearch
   })
 
+  const [visibleCount, setVisibleCount] = useState(8)
+
+  useEffect(() => {
+    setVisibleCount(8)
+  }, [selectedCategory, searchQuery])
+
+  const displayedProducts = filteredProducts.slice(0, visibleCount)
+
   // Multi-selection helpers
   const isSelected = (id: string) => selectedItems.some((item) => item.id === id)
 
@@ -913,8 +921,9 @@ export function Store({ go }: { go: (p: Page) => void }) {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => {
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {displayedProducts.map((product) => {
                 const checked = isSelected(product.id)
                 return (
                   <div
@@ -933,6 +942,13 @@ export function Store({ go }: { go: (p: Page) => void }) {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
+                          onError={(e) => {
+                            const target = e.currentTarget
+                            if (!target.dataset.fallback) {
+                              target.dataset.fallback = "1"
+                              target.src = "/media/programs/guitar-acoustic-recital.jpeg"
+                            }
+                          }}
                         />
 
                         {/* Top Badges */}
@@ -1022,6 +1038,38 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 )
               })}
             </div>
+
+            {filteredProducts.length > visibleCount && (
+              <div className="text-center mt-12">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => prev + 8)}
+                  className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
+                >
+                  <span>View More Instruments ({filteredProducts.length - visibleCount} more)</span>
+                  <Icon name="arrow" size={13} className="rotate-90" />
+                </button>
+              </div>
+            )}
+
+            {visibleCount >= filteredProducts.length && filteredProducts.length > 8 && (
+              <div className="text-center mt-12 flex items-center justify-center gap-3">
+                <span className="text-xs text-[var(--muted)]">
+                  Showing all {filteredProducts.length} showroom instruments
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibleCount(8)
+                    document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth" })
+                  }}
+                  className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
+                >
+                  Show Less ↑
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </section>

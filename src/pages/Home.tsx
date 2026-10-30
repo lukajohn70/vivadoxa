@@ -190,27 +190,30 @@ export function Home({ go }: { go: (p: Page) => void }) {
               <em>passion.</em>
             </h1>
             <p>
-              Kaduna&apos;s premier music academy, master instrument clinic, and
-              purpose-built recording studio. Structured conservatory
-              preparation across 17 core disciplines, master technicians, and
-              dedicated stage recitals.
+              Kaduna&apos;s premier music academy, master instrument clinic,
+              purpose-built recording studio, vetted instrument sales, and sound
+              equipment rentals. Structured conservatory preparation across 17
+              core disciplines, master technicians, and dedicated stage recitals.
             </p>
             <div className="button-row">
               <Button onClick={() => go("apply")}>
                 Apply for Admission <Icon name="arrow" />
               </Button>
-              <Button variant="secondary" onClick={() => go("programs")}>
-                Explore Curriculum
+              <Button variant="secondary" onClick={() => go("store")}>
+                Shop Instruments
+              </Button>
+              <Button variant="secondary" onClick={() => go("rentals")}>
+                Hire Gear &amp; PA
               </Button>
               <a
                 href={WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-concierge"
-                aria-label="Direct Admissions Consultation on WhatsApp"
+                aria-label="Direct WhatsApp Concierge Desk"
               >
                 <WhatsAppIcon size={18} />
-                <span>Admissions Concierge</span>
+                <span>WhatsApp Desk</span>
               </a>
             </div>
             <div

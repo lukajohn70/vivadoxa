@@ -343,14 +343,13 @@ export function Repairs() {
       />
 
       <PageHero
-        eyebrow="Vivadoxa Repairs &amp; Service Centre"
-        title="Expert Care for Your Instruments."
-        body="Your instrument is more than equipment. It is an essential part of your musical expression. At Vivadoxa Repairs & Service Centre, we provide instrument maintenance and repair services designed to help musicians protect their equipment and maintain reliable performance. From routine servicing to diagnosing technical problems, we work to restore functionality and extend the useful life of musical instruments."
-        image={repairSaxImg}
+        eyebrow="Repairs &amp; Service Clinic"
+        title="Expert care for your instruments."
+        body="Precision diagnostic overhaul, fret leveling, electronic troubleshooting, and routine maintenance in Kaduna. Talk directly with our master technicians or book a workshop intake assessment."
         actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <a href="#repair-form" className="btn btn-primary">
-              Request a Repair Assessment <Icon name="arrow" />
+          <>
+            <a href="#repair-form" className="btn btn-primary inline-flex items-center gap-2">
+              Request Repair Assessment <Icon name="arrow" size={14} />
             </a>
             <a
               href={`https://wa.me/2348031308881?text=${encodeURIComponent(
@@ -358,11 +357,11 @@ export function Repairs() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary inline-flex items-center gap-2"
+              className="btn-concierge inline-flex items-center gap-2 !text-white !border-white/20 hover:!border-[var(--gold2)]"
             >
               <WhatsAppIcon size={16} /> Speak to a Technician
             </a>
-          </div>
+          </>
         }
       />
 
