@@ -198,26 +198,25 @@ export function Studio({ go }: { go: (p: Page) => void }) {
       />
 
       <PageHero
-        eyebrow="Vivadoxa Studio"
-        title="Your Sound Deserves to Be Heard."
-        body="Welcome to Vivadoxa Studio, a creative environment where musical ideas become recorded productions. From your first single to a complete album, we help artists, vocalists, instrumentalists, churches, and creative teams bring their projects to life. Our goal is to help you capture your sound, communicate your message, and present your music with professionalism."
-        image={studioEngineeringImg}
+        eyebrow="Recording & Production Studio"
+        title="Your sound deserves to be heard."
+        body="A dedicated creative space for vocal tracking, album production, mixing, and band rehearsal in Kaduna. We help you capture your sound and present your music with clarity and power."
         actions={
-          <div className="flex flex-wrap items-center gap-3">
+          <>
             <a
               href={`${WHATSAPP_URL}?text=${encodeURIComponent(
                 "Hello Vivadoxa Studio, I would like to book a studio recording or production session.",
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-primary"
+              className="btn btn-primary inline-flex items-center gap-2"
             >
-              <WhatsAppIcon size={16} /> Book a Studio Session
+              <WhatsAppIcon size={16} /> Book Studio Session
             </a>
             <button
               type="button"
               onClick={() => go("contact")}
-              className="btn btn-secondary cursor-pointer"
+              className="btn-concierge cursor-pointer"
             >
               Discuss Your Project &rarr;
             </button>
@@ -227,11 +226,11 @@ export function Studio({ go }: { go: (p: Page) => void }) {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary inline-flex items-center gap-1.5"
+              className="btn-concierge inline-flex items-center gap-2"
             >
               <Icon name="tag" size={14} /> Request a Quote
             </a>
-          </div>
+          </>
         }
       />
 

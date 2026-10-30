@@ -345,18 +345,18 @@ export function Store({ go }: { go: (p: Page) => void }) {
       />
 
       <PageHero
-        eyebrow="Vivadoxa Store"
+        eyebrow="Vivadoxa Instrument & Audio Store"
         title="Quality Instruments. Exceptional Possibilities."
-        body="The right instrument can transform your musical experience. At Vivadoxa Store, we help musicians find instruments and equipment suited to their needs, skill levels, performance environments, and budgets. Whether you are purchasing your first keyboard, equipping a church, upgrading a studio, or sourcing instruments for a school or band, we aim to make your purchasing experience straightforward and rewarding."
+        body="Browse our showroom of vetted keyboards, guitars, violins, drums, and church audio equipment in Kaduna. Choose single or multiple items to wire directly to admin with technician setup guarantee."
         actions={
-          <div className="flex flex-wrap items-center gap-3">
-            <a href="#what-we-offer" className="btn btn-primary">
-              Browse Our Instruments <Icon name="arrow" size={14} />
+          <>
+            <a href="#products-section" className="btn btn-primary inline-flex items-center gap-2">
+              Browse Showroom <Icon name="arrow" size={14} />
             </a>
             <button
               type="button"
               onClick={() => setShowQuoteModal(true)}
-              className="btn btn-secondary cursor-pointer"
+              className="btn-concierge cursor-pointer"
             >
               Request a Quote &rarr;
             </button>
@@ -364,11 +364,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
               href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Store,%20I%20would%20like%20to%20speak%20with%20your%20sales%20team%20about%20an%20instrument%20purchase."
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary inline-flex items-center gap-1.5"
+              className="btn-concierge inline-flex items-center gap-2"
             >
-              <WhatsAppIcon size={16} /> Contact Our Sales Team
+              <WhatsAppIcon size={16} /> Sales WhatsApp
             </a>
-          </div>
+          </>
         }
       />
 

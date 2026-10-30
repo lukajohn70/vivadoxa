@@ -327,22 +327,28 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       />
 
       <PageHero
-        badge="Instrument &amp; Gear Hire Atelier"
+        eyebrow="Instrument & Sound Hire"
         title="Practice today. Perform tomorrow."
-        lead="Quality, vetted musical instruments for students to practice at home without an immediate large purchase, plus professional stage backline and PA audio systems for concerts, churches, and events in Kaduna. Select one or multiple items to wire your reservation to administration."
+        body="Vetted practice instruments for students and professional stage backline and PA sound systems for concerts and events in Kaduna. Select items to wire your reservation directly to admin."
         actions={
           <>
-            <Button onClick={() => handleInquiry("General Rental Inquiry")}>
-              Reserve Rental via Form <Icon name="arrow" />
-            </Button>
+            <a href="#rental-catalog" className="btn btn-primary inline-flex items-center gap-2">
+              Browse Rental Fleet <Icon name="arrow" size={14} />
+            </a>
+            <button
+              type="button"
+              onClick={() => handleInquiry("General Rental Inquiry")}
+              className="btn-concierge cursor-pointer"
+            >
+              Reserve via Form &rarr;
+            </button>
             <a
               href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admin%2C%20I%20would%20like%20to%20inquire%20about%20instrument%20and%20sound%20equipment%20rentals."
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-concierge"
+              className="btn-concierge inline-flex items-center gap-2"
             >
-              <WhatsAppIcon size={18} />
-              <span>Rental WhatsApp Concierge</span>
+              <WhatsAppIcon size={16} /> Rental WhatsApp
             </a>
           </>
         }
@@ -375,7 +381,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       </section>
 
       {/* ── Category Navigation Tabs ───────────────────────────────────── */}
-      <section className="section bg-[#FAF8F5]">
+      <section className="section bg-[#FAF8F5]" id="rental-catalog">
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
             <div>

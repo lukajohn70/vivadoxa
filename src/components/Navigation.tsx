@@ -35,10 +35,8 @@ interface NavbarProps {
 export function Navbar({ page, go }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const [programsOpen, setProgramsOpen] = useState(false)
-  const [servicesOpen, setServicesOpen] = useState(false)
 
   const programsRef = useRef<HTMLDivElement>(null)
-  const servicesRef = useRef<HTMLDivElement>(null)
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -47,9 +45,7 @@ export function Navbar({ page, go }: NavbarProps) {
       if (programsRef.current && !programsRef.current.contains(target)) {
         setProgramsOpen(false)
       }
-      if (servicesRef.current && !servicesRef.current.contains(target)) {
-        setServicesOpen(false)
-      }
+
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
@@ -66,7 +62,6 @@ export function Navbar({ page, go }: NavbarProps) {
       if (e.key === "Escape") {
         setOpen(false)
         setProgramsOpen(false)
-        setServicesOpen(false)
       }
     }
     window.addEventListener("keydown", handleKeyDown)
@@ -88,17 +83,7 @@ export function Navbar({ page, go }: NavbarProps) {
     }
   }
 
-  const handleServicesToggle = (e: React.MouseEvent) => {
-    if (typeof window !== "undefined" && window.innerWidth <= 800) {
-      e.preventDefault()
-      setServicesOpen((prev) => !prev)
-      setProgramsOpen(false)
-    } else {
-      setServicesOpen((prev) => !prev)
-    }
-  }
 
-  const isServicesActive = page === "repairs"
   const isProgramsActive = page === "programs" || page === "modes"
   const isPortalActive = page === "portal" || page === "status"
 
@@ -111,7 +96,6 @@ export function Navbar({ page, go }: NavbarProps) {
           onClick={() => {
             setOpen(false)
             setProgramsOpen(false)
-            setServicesOpen(false)
           }}
           aria-hidden="true"
         />
@@ -124,7 +108,6 @@ export function Navbar({ page, go }: NavbarProps) {
             go("home")
             setOpen(false)
             setProgramsOpen(false)
-            setServicesOpen(false)
           }}
           aria-label="Vivadoxa Music School Home"
         >
@@ -162,7 +145,7 @@ export function Navbar({ page, go }: NavbarProps) {
                 aria-expanded={programsOpen}
                 aria-haspopup="true"
               >
-                <span>Programs</span>
+                <span>Academy</span>
                 <svg
                   className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
                     programsOpen ? "rotate-180" : ""
@@ -186,9 +169,7 @@ export function Navbar({ page, go }: NavbarProps) {
                 }`}
               >
                 <div className="dropdown-section">
-                  <span className="dropdown-heading">
-                    Curriculum &amp; Fee Schedule
-                  </span>
+                  <span className="dropdown-heading">Academy</span>
                   <button
                     onClick={() => {
                       go("programs")
@@ -204,45 +185,14 @@ export function Navbar({ page, go }: NavbarProps) {
                         color: "var(--gold)",
                       }}
                     >
-                      <Icon name="calendar" size={16} />
-                    </div>
-                    <div>
-                      <strong>Official Fee Schedule</strong>
-                      <small>
-                        1 Mo · 3 Mos · 6 Mos · 12 Mos · 2 Yrs Diploma
-                      </small>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      go("programs")
-                      setProgramsOpen(false)
-                      setOpen(false)
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{
-                        background: "rgba(30,58,95,0.08)",
-                        color: "var(--navy)",
-                      }}
-                    >
                       <Icon name="music" size={16} />
                     </div>
                     <div>
-                      <strong>17 Available Disciplines</strong>
-                      <small>
-                        Sax, Trumpet, Piano, Bass, Flute, Drums, Voice &amp;
-                        more
-                      </small>
+                      <strong>Programmes &amp; Fee Schedule</strong>
+                      <small>17 disciplines · 1 Mo to 2-Yr Diploma</small>
                     </div>
                   </button>
-                </div>
 
-                <div className="dropdown-section border-t border-[var(--line)] pt-2 mt-2">
-                  <span className="dropdown-heading">Instruction Formats</span>
                   <button
                     onClick={() => {
                       go("modes")
@@ -261,36 +211,12 @@ export function Navbar({ page, go }: NavbarProps) {
                       <Icon name="pin" size={16} />
                     </div>
                     <div>
-                      <strong>Onsite Academy (Kaduna)</strong>
-                      <small>Hands-on lessons at Angwan Sunday studio</small>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      go("modes")
-                      setProgramsOpen(false)
-                      setOpen(false)
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{
-                        background: "rgba(184,142,86,0.12)",
-                        color: "var(--gold)",
-                      }}
-                    >
-                      <Icon name="user" size={16} />
-                    </div>
-                    <div>
-                      <strong>Private Home Lessons</strong>
-                      <small>
-                        1-on-1 coaching delivered to your home (₦70,000/mo)
-                      </small>
+                      <strong>Modes of Study</strong>
+                      <small>Onsite · Private Home · Online</small>
                     </div>
                   </button>
                 </div>
+
               </div>
             </div>
 
@@ -306,140 +232,17 @@ export function Navbar({ page, go }: NavbarProps) {
               Studio
             </button>
 
-            {/* 3. Core Professional Services Dropdown */}
-            <div
-              className={`nav-dropdown-wrapper ${
-                servicesOpen ? "expanded" : ""
-              }`}
-              ref={servicesRef}
-              onMouseEnter={() => {
-                if (typeof window !== "undefined" && window.innerWidth > 800) {
-                  setServicesOpen(true)
-                }
+            {/* 3. Instrument Repairs (Direct Link) */}
+            <button
+              className={page === "repairs" ? "active" : ""}
+              onClick={() => {
+                go("repairs")
+                setOpen(false)
               }}
-              onMouseLeave={() => {
-                if (typeof window !== "undefined" && window.innerWidth > 800) {
-                  setServicesOpen(false)
-                }
-              }}
+              aria-current={page === "repairs" ? "page" : undefined}
             >
-              <button
-                className={`nav-dropdown-trigger flex items-center justify-between w-full md:w-auto gap-1 ${
-                  isServicesActive ? "active" : ""
-                }`}
-                onClick={handleServicesToggle}
-                aria-expanded={servicesOpen}
-                aria-haspopup="true"
-              >
-                <span>Services</span>
-                <svg
-                  className={`w-3.5 h-3.5 transition-transform duration-200 shrink-0 ${
-                    servicesOpen ? "rotate-180" : ""
-                  }`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-
-              <div
-                className={`nav-dropdown-panel ${
-                  servicesOpen
-                    ? "open opacity-100 visible translate-y-0 max-h-[620px]"
-                    : "opacity-0 invisible -translate-y-2 pointer-events-none md:pointer-events-none max-h-0 md:max-h-none overflow-hidden md:overflow-visible"
-                }`}
-                style={{ width: "340px" }}
-              >
-                <div className="dropdown-section">
-                  <span className="dropdown-heading">
-                    Core Pillars &amp; Services
-                  </span>
-
-                  {/* 1. Academy */}
-                  <button
-                    onClick={() => {
-                      go("programs")
-                      setServicesOpen(false)
-                      setOpen(false)
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{
-                        background: "rgba(201,107,50,0.12)",
-                        color: "var(--gold)",
-                      }}
-                    >
-                      <Icon name="academic" size={16} />
-                    </div>
-                    <div>
-                      <strong>Academy &amp; Tuition</strong>
-                      <small>
-                        17 Disciplines, ABRSM &amp; MUSON prep, fee schedule
-                      </small>
-                    </div>
-                  </button>
-
-                  {/* 2. Studio */}
-                  <button
-                    onClick={() => {
-                      go("studio")
-                      setServicesOpen(false)
-                      setOpen(false)
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{
-                        background: "rgba(37,99,235,0.12)",
-                        color: "#2563EB",
-                      }}
-                    >
-                      <Icon name="mic" size={16} />
-                    </div>
-                    <div>
-                      <strong>Recording &amp; Rehearsal Studio</strong>
-                      <small>
-                        Treated vocal booths, mixing, mastering &amp; band room
-                      </small>
-                    </div>
-                  </button>
-
-                  {/* 3. Repairs & Service */}
-                  <button
-                    onClick={() => {
-                      go("repairs")
-                      setServicesOpen(false)
-                      setOpen(false)
-                    }}
-                    className="dropdown-item"
-                  >
-                    <div
-                      className="dropdown-icon-box"
-                      style={{
-                        background: "rgba(217,119,6,0.12)",
-                        color: "#D97706",
-                      }}
-                    >
-                      <Icon name="wrench" size={16} />
-                    </div>
-                    <div>
-                      <strong>Repairs &amp; Service Clinic</strong>
-                      <small>
-                        Diagnostics, precision overhaul &amp; courier pickup
-                      </small>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
+              Repairs
+            </button>
 
             {/* 4. Rentals (Individual Navbar Item) */}
             <button

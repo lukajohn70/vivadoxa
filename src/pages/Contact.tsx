@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { useState } from "react"
 import {
   Button,
@@ -66,6 +67,18 @@ const QUICK_QUESTIONS = [
   {
     label: "Private Home Coaching",
     text: "Hello Vivadoxa, I would like to inquire about private home music lessons in Kaduna.",
+  },
+  {
+    label: "Instrument Purchase (Store)",
+    text: "Hello Vivadoxa Store, I would like to inquire about purchasing a musical instrument or audio equipment.",
+  },
+  {
+    label: "Instrument Rental",
+    text: "Hello Vivadoxa, I would like to inquire about renting an instrument or sound equipment for practice or an event.",
+  },
+  {
+    label: "Studio Booking",
+    text: "Hello Vivadoxa Studio, I would like to book a recording or rehearsal session.",
   },
 ]
 
@@ -136,8 +149,183 @@ export function Contact() {
       <PageHero
         eyebrow="Admissions & Studio Desk"
         title="Let's talk about your music."
-        body="Questions about a course, instrument repair, or studio visit? Our admissions counselors in Kaduna are active and ready to assist you."
+        body="Questions about a course, instrument repair, studio booking, or instrument rental and purchase? Our admissions desk in Kaduna is active and ready to assist you."
+        actions={
+          <>
+            <a
+              href={`${WHATSAPP_URL}?text=${encodeURIComponent("Hello Vivadoxa, I would like to reach the admissions desk.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary inline-flex items-center gap-2"
+            >
+              <WhatsAppIcon size={16} /> WhatsApp Us Now
+            </a>
+            <a
+              href="#contact-form"
+              className="btn-concierge"
+            >
+              <Icon name="mail" size={15} /> Send a Message
+            </a>
+            <a
+              href={`tel:${SCHOOL_PHONE}`}
+              className="btn-concierge"
+            >
+              <Icon name="phone" size={15} /> Call the Desk
+            </a>
+          </>
+        }
       />
+
+      {/* ── Feature Desks Strip (New Features Direct Routing) ────────── */}
+      <section className="bg-white border-b border-[var(--line)] py-10">
+        <div className="container">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <span className="eyebrow">Direct Department Desks</span>
+              <h2 className="text-2xl sm:text-3xl font-serif text-[var(--navy)] mt-1">
+                Specialized Service Routing
+              </h2>
+              <p className="text-xs text-[var(--muted)] mt-1 max-w-xl">
+                Have a specific requirement? Connect directly with the right department lead or browse our online showcases.
+              </p>
+            </div>
+            <span className="text-xs text-[var(--gold)] font-bold uppercase tracking-wider">
+              ● All desks active in Kaduna
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* 1. Store */}
+            <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[var(--line)] hover:border-[var(--gold)] transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-[var(--gold)]/10 text-[var(--gold)] flex items-center justify-center mb-3">
+                  <Icon name="tag" size={20} />
+                </div>
+                <strong className="text-sm text-[var(--navy)] block mb-1">
+                  Instrument Store
+                </strong>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Keyboards, guitars, violins, drum kits &amp; PA audio gear with master clinic setup guarantee.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-[var(--line)]">
+                <Link
+                  to="/store"
+                  className="text-xs font-bold text-[var(--navy)] hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1"
+                >
+                  View Showcase <Icon name="arrow" size={12} />
+                </Link>
+                <span className="text-slate-300">·</span>
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent("Hello Vivadoxa Store, I would like to inquire about purchasing an instrument.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <WhatsAppIcon size={12} /> Sales
+                </a>
+              </div>
+            </div>
+
+            {/* 2. Rentals */}
+            <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[var(--line)] hover:border-[var(--gold)] transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                  <Icon name="music" size={20} />
+                </div>
+                <strong className="text-sm text-[var(--navy)] block mb-1">
+                  Gear &amp; Sound Rentals
+                </strong>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Student practice rentals &amp; concert stage sound gear. Multi-item reservation wiring.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-[var(--line)]">
+                <Link
+                  to="/rentals"
+                  className="text-xs font-bold text-[var(--navy)] hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1"
+                >
+                  Rentals Fleet <Icon name="arrow" size={12} />
+                </Link>
+                <span className="text-slate-300">·</span>
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent("Hello Vivadoxa Admin, I would like to inquire about renting an instrument or audio equipment.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <WhatsAppIcon size={12} /> Hire Desk
+                </a>
+              </div>
+            </div>
+
+            {/* 3. Studio */}
+            <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[var(--line)] hover:border-[var(--gold)] transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                  <Icon name="mic" size={20} />
+                </div>
+                <strong className="text-sm text-[var(--navy)] block mb-1">
+                  Recording Studio
+                </strong>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Acoustically-treated vocal booth, mixing &amp; mastering suites, and band rehearsal room.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-[var(--line)]">
+                <Link
+                  to="/studio"
+                  className="text-xs font-bold text-[var(--navy)] hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1"
+                >
+                  Explore Studio <Icon name="arrow" size={12} />
+                </Link>
+                <span className="text-slate-300">·</span>
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent("Hello Vivadoxa Studio, I want to book a session.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <WhatsAppIcon size={12} /> Booking
+                </a>
+              </div>
+            </div>
+
+            {/* 4. Repairs Clinic */}
+            <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[var(--line)] hover:border-[var(--gold)] transition-all flex flex-col justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+                  <Icon name="wrench" size={20} />
+                </div>
+                <strong className="text-sm text-[var(--navy)] block mb-1">
+                  Repair Clinic
+                </strong>
+                <p className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  Diagnostics, fret leveling, action setup, violin peg service &amp; electronic soldering.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-3 border-t border-[var(--line)]">
+                <Link
+                  to="/repairs"
+                  className="text-xs font-bold text-[var(--navy)] hover:text-[var(--gold)] transition-colors inline-flex items-center gap-1"
+                >
+                  Clinic Details <Icon name="arrow" size={12} />
+                </Link>
+                <span className="text-slate-300">·</span>
+                <a
+                  href={`${WHATSAPP_URL}?text=${encodeURIComponent("Hello Vivadoxa Clinic, I need to bring my instrument in for repair.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
+                >
+                  <WhatsAppIcon size={12} /> Clinic
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="section">
         <div className="container contact-grid">
           <div>
@@ -454,7 +642,7 @@ export function Contact() {
             </div>
           </div>
 
-          <div className="contact-form">
+          <div className="contact-form" id="contact-form">
             {sent ? (
               <Success
                 title="Message sent successfully"
@@ -502,7 +690,10 @@ export function Contact() {
                   >
                     <option value="Program enquiry">Program enquiry</option>
                     <option value="Admissions">Admissions</option>
-                    <option value="Repairs">Repairs</option>
+                    <option value="Instrument Purchase">Instrument Purchase (Store)</option>
+                    <option value="Instrument Rental">Instrument Rental</option>
+                    <option value="Studio Booking">Studio Booking</option>
+                    <option value="Repairs">Repairs &amp; Clinic</option>
                     <option value="Other">Other</option>
                   </SelectField>
                   <Textarea

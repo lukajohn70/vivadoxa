@@ -808,6 +808,7 @@ export function PageHero({
   body,
   lead,
   image,
+  actions,
   backTo,
   backLabel = "Back",
   showBack = true,
@@ -818,6 +819,7 @@ export function PageHero({
   body?: string
   lead?: string
   image?: string
+  actions?: React.ReactNode
   backTo?: string
   backLabel?: string
   showBack?: boolean
@@ -837,7 +839,7 @@ export function PageHero({
   }
 
   return (
-    <section className="page-hero">
+    <section className="page-hero py-12 md:py-20">
       <div className="container page-hero-inner">
         <div>
           {showBack && (
@@ -857,6 +859,11 @@ export function PageHero({
           {label && <span className="eyebrow">{label}</span>}
           <h1>{title}</h1>
           {description && <p>{description}</p>}
+          {actions && (
+            <div className="flex flex-wrap items-center gap-3 mt-7">
+              {actions}
+            </div>
+          )}
         </div>
         {image && <img src={image} alt="Vivadoxa music school" />}
       </div>
