@@ -767,7 +767,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
     {
       title: "Verified Revenue",
       count: liveStats ? liveStats.formatted_revenue : "—",
-      sub: "Cleared payments in DB",
+      sub: "",
       tone: "gold",
       badge: null,
       target: "Payments",
@@ -866,7 +866,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               )}
             </div>
             <strong>{card.count}</strong>
-            <small className={`tone-${card.tone}`}>{card.sub}</small>
+            {card.sub ? <small className={`tone-${card.tone}`}>{card.sub}</small> : null}
           </article>
         ))}
       </div>
