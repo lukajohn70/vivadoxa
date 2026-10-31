@@ -12,6 +12,7 @@ import { HomeReviewsSpotlight } from "@/components/HomeReviewsSpotlight"
 import { GallerySection } from "@/components/GallerySection"
 import { StatCounters } from "@/components/StatCounters"
 import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import { SEO } from "@/components/SEO"
 import {
   heroImg,
@@ -447,7 +448,12 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 >
                   <article className="sound-card group h-full">
                     <div className="sound-img-wrap">
-                      <img src={inst.image} alt={inst.name} loading="lazy" />
+                      <LazyImage
+                        src={inst.image}
+                        alt={inst.name}
+                        fallbackSrc="/media/programs/piano-syllabus.jpeg"
+                        className="w-full h-full object-cover"
+                      />
                       <div className="sound-img-overlay" />
                       <span className="sound-badge-pill">{inst.category}</span>
                     </div>
@@ -914,29 +920,19 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 <div style={{ position: "relative" }}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
                     <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
-                      <img
+                      <LazyImage
                         src={repairSaxImg}
                         alt="Brass & saxophone overhaul at Vivadoxa workshop"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        className="transition-transform duration-700 ease-out group-hover:scale-105"
-                        loading="lazy"
+                        fallbackSrc="/media/repairs/saxophone-overhaul.jpeg"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
                     </div>
                     <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
-                      <img
+                      <LazyImage
                         src={repairElectronicsImg}
                         alt="Keyboard electronics diagnostic with multimeter at Vivadoxa clinic"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                        className="transition-transform duration-700 ease-out group-hover:scale-105"
-                        loading="lazy"
+                        fallbackSrc="/media/repairs/keyboard-electronics.jpeg"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
                     </div>
                   </div>
@@ -1009,29 +1005,19 @@ export function Home({ go }: { go: (p: Page) => void }) {
               <div className="relative">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
                   <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
-                    <img
+                    <LazyImage
                       src="/media/studio/multi-instrument-lab.jpeg"
                       alt="Modern recording studio multitrack console at Vivadoxa Kaduna"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                      className="transition-transform duration-700 ease-out group-hover:scale-105"
-                      loading="lazy"
+                      fallbackSrc="/media/studio/studio-keyboard-lab.jpeg"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   </div>
                   <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
-                    <img
+                    <LazyImage
                       src="/media/studio/studio-keyboard-lab.jpeg"
                       alt="Acoustic keyboard workstation lab and recording booth in Kaduna"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                      className="transition-transform duration-700 ease-out group-hover:scale-105"
-                      loading="lazy"
+                      fallbackSrc="/media/studio/multi-instrument-lab.jpeg"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   </div>
                 </div>
@@ -1185,14 +1171,14 @@ export function Home({ go }: { go: (p: Page) => void }) {
             <ScrollReveal direction="left">
               <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group">
                 <div className="h-56 relative overflow-hidden bg-slate-900">
-                  <img
+                  <LazyImage
                     src="/media/programs/violin-solo-rainbow.jpeg"
                     alt="Vivadoxa student instrument rentals"
+                    fallbackSrc="/media/programs/violin-recital-purple.jpeg"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs z-10">
                     Rental Showcase
                   </span>
                 </div>
@@ -1232,14 +1218,14 @@ export function Home({ go }: { go: (p: Page) => void }) {
             <ScrollReveal direction="right" delay={120}>
               <div className="bg-white rounded-2xl border border-[var(--line)] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col h-full group">
                 <div className="h-56 relative overflow-hidden bg-slate-900">
-                  <img
+                  <LazyImage
                     src="/media/programs/guitar-acoustic-recital.jpeg"
                     alt="Vivadoxa music instrument store Kaduna"
+                    fallbackSrc="/media/programs/piano-syllabus.jpeg"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                  <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-xs px-3 py-1 rounded-md shadow-xs z-10">
                     Product Showcase
                   </span>
                 </div>
@@ -1336,11 +1322,11 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
                   }}
                 >
-                  <img
+                  <LazyImage
                     src="/media/team/frederick-chrysantius.jpeg"
                     alt="Frederick Chrysantius — Founder & CEO"
+                    fallbackSrc="/media/programs/sax-ensemble.jpeg"
                     className="w-full h-full object-cover object-top"
-                    loading="lazy"
                   />
                   <div
                     style={{

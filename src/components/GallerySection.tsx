@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button, Icon, WhatsAppIcon } from "@/components/ui"
 import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import { fetchGalleryItems } from "@/lib/api"
 import { initialGalleryItems } from "@/lib/data"
 import { WHATSAPP_URL } from "@/lib/utils"
@@ -396,10 +397,10 @@ export function GallerySection({
                       setLightboxIndex(fullIndex !== -1 ? fullIndex : idx)
                     }}
                   >
-                    <img
+                    <LazyImage
                       src={item.image}
                       alt={item.title}
-                      loading="lazy"
+                      fallbackSrc="/media/programs/piano-recital-denim.jpeg"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     {/* Category Pill Tag */}

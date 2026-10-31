@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom"
 import { PageHero, SectionHead, Icon } from "@/components/ui"
 import { SEO } from "@/components/SEO"
 import { cohortImg } from "@/lib/data"
+import { ScrollReveal } from "@/components/ScrollReveal"
 import type { Page } from "@/types"
 
 export function About({ go }: { go: (p: Page) => void }) {
@@ -50,6 +51,7 @@ export function About({ go }: { go: (p: Page) => void }) {
       >
         <div className="container">
           {/* Header */}
+          <ScrollReveal direction="left">
           <div className="max-w-3xl mb-12">
             <span
               className="eyebrow"
@@ -89,10 +91,12 @@ export function About({ go }: { go: (p: Page) => void }) {
               people together.
             </p>
           </div>
+          </ScrollReveal>
 
           {/* 3 Story Milestone Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {/* Card 1 */}
+            <ScrollReveal direction="up" delay={0}>
             <div
               style={{
                 background: "#FAF8F5",
@@ -146,8 +150,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Card 2 */}
+            <ScrollReveal direction="up" delay={80}>
             <div
               style={{
                 background: "#FAF8F5",
@@ -200,8 +206,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Card 3 */}
+            <ScrollReveal direction="up" delay={160}>
             <div
               style={{
                 background: "#FAF8F5",
@@ -254,13 +262,15 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
 
           {/* Dual Vision & Mission Showcase */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             {/* Vision Card */}
+            <ScrollReveal direction="left" className="lg:col-span-5">
             <div
-              className="lg:col-span-5"
+              className=""
               style={{
                 background: "linear-gradient(145deg, #FAF8F5 0%, #FFFFFF 100%)",
                 border: "1px solid var(--line)",
@@ -315,10 +325,12 @@ export function About({ go }: { go: (p: Page) => void }) {
                 confident, skilled musicians and creators.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Mission Card & 4 Pillars */}
+            <ScrollReveal direction="right" delay={120} className="lg:col-span-7">
             <div
-              className="lg:col-span-7"
+              className=""
               style={{
                 background: "white",
                 border: "1px solid var(--line)",
@@ -519,6 +531,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -555,7 +568,8 @@ export function About({ go }: { go: (p: Page) => void }) {
           {/* Row 1: Executive Portrait & Core Bio (Balanced Heights) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mb-12">
             {/* Left Column: Portrait & Quick Credentials Bar */}
-            <div className="lg:col-span-5">
+            <ScrollReveal direction="left" className="lg:col-span-5">
+            <div className="">
               <div
                 style={{
                   background: "#161311",
@@ -697,9 +711,11 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Right Column: Narrative & Executive Vision */}
-            <div className="lg:col-span-7">
+            <ScrollReveal direction="right" delay={120} className="lg:col-span-7">
+            <div className="">
               <span
                 className="eyebrow"
                 style={{
@@ -837,6 +853,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
 
           {/* Row 2: Leadership Philosophy (3-Column Full-Width Grid) */}
@@ -1038,6 +1055,7 @@ export function About({ go }: { go: (p: Page) => void }) {
             </div>
 
             {/* Row 3: Looking Ahead Creed Banner (Full-Width) */}
+            <ScrollReveal direction="up">
             <div
               style={{
                 background: "linear-gradient(135deg, #171412 0%, #201a16 100%)",
@@ -1126,6 +1144,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -1139,14 +1158,17 @@ export function About({ go }: { go: (p: Page) => void }) {
         }}
       >
         <div className="container">
+          <ScrollReveal direction="up">
           <SectionHead
             center
             eyebrow="Values"
             title="Our Core Values"
           />
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
             {/* Excellence */}
+            <ScrollReveal direction="up" delay={0}>
             <div
               style={{
                 background: "white",
@@ -1192,8 +1214,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 We pursue high standards in everything we do.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Integrity */}
+            <ScrollReveal direction="up" delay={80}>
             <div
               style={{
                 background: "white",
@@ -1239,8 +1263,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 We value honesty, transparency, and responsible service.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Passion */}
+            <ScrollReveal direction="up" delay={160}>
             <div
               style={{
                 background: "white",
@@ -1298,8 +1324,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 customers.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Innovation */}
+            <ScrollReveal direction="up" delay={0}>
             <div
               style={{
                 background: "white",
@@ -1346,8 +1374,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 musical experiences.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Community */}
+            <ScrollReveal direction="up" delay={80}>
             <div
               style={{
                 background: "white",
@@ -1394,8 +1424,10 @@ export function About({ go }: { go: (p: Page) => void }) {
                 together.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* Customer Commitment */}
+            <ScrollReveal direction="up" delay={160}>
             <div
               style={{
                 background: "white",
@@ -1453,6 +1485,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                 meet their needs.
               </p>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -1471,6 +1504,7 @@ export function About({ go }: { go: (p: Page) => void }) {
           className="container"
           style={{ maxWidth: 860, textAlign: "center" }}
         >
+          <ScrollReveal direction="up">
           <div
             style={{
               display: "inline-flex",
@@ -1521,6 +1555,7 @@ export function About({ go }: { go: (p: Page) => void }) {
             discover possibilities, develop their abilities, and bring their
             musical ambitions to life.
           </p>
+          </ScrollReveal>
         </div>
       </section>
     </main>

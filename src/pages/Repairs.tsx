@@ -20,6 +20,8 @@ import {
   fetchRepairByCode,
   checkUserSession,
 } from "@/lib/api"
+import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 
 interface RepairServicesSelection {
   diagnosis: boolean
@@ -471,6 +473,7 @@ export function Repairs() {
       <section className="section">
         <div className="container">
           {/* Tracking lookup section */}
+          <ScrollReveal direction="up">
           <div
             id="tracker-section"
             style={{
@@ -639,9 +642,11 @@ export function Repairs() {
               </div>
             )}
           </div>
+          </ScrollReveal>
 
           {/* ── 1. Our Services (Standardized Breakdown) ── */}
           <div className="mb-16 sm:mb-20">
+            <ScrollReveal direction="left">
             <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
               <span className="eyebrow">Specialist Workshop</span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -651,10 +656,12 @@ export function Repairs() {
                 Professional diagnostics, routine servicing, and careful restoration across major musical instruments and audio electronics.
               </p>
             </div>
+            </ScrollReveal>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
               {/* Service 1 */}
-              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <ScrollReveal direction="up" delay={0} className="h-full">
+              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                     01
@@ -698,9 +705,11 @@ export function Repairs() {
                   </a>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Service 2 */}
-              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <ScrollReveal direction="up" delay={70} className="h-full">
+              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                     02
@@ -740,9 +749,11 @@ export function Repairs() {
                   </a>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Service 3 */}
-              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <ScrollReveal direction="up" delay={140} className="h-full">
+              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                     03
@@ -782,9 +793,11 @@ export function Repairs() {
                   </a>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Service 4 */}
-              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+              <ScrollReveal direction="up" delay={210} className="h-full">
+              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                     04
@@ -824,9 +837,11 @@ export function Repairs() {
                   </a>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Service 5 */}
-              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all md:col-span-2 lg:col-span-2">
+              <ScrollReveal direction="up" delay={280} className="h-full md:col-span-2 lg:col-span-2">
+              <div className="bg-white p-6 rounded-2xl border border-[var(--line)] shadow-xs flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                     05
@@ -870,10 +885,12 @@ export function Repairs() {
                   </a>
                 </div>
               </div>
+              </ScrollReveal>
             </div>
           </div>
 
           {/* ── 2. Our Repair Process (5 Steps) ── */}
+          <ScrollReveal direction="up">
           <div className="mb-16 sm:mb-20 bg-white p-8 sm:p-14 rounded-3xl border border-[var(--line)] shadow-xs">
             <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
               <span className="eyebrow">Methodology &amp; Standards</span>
@@ -966,8 +983,10 @@ export function Repairs() {
               <strong>Please Note:</strong> Repair feasibility, turnaround time, and costs depend on the nature of the fault, spare-parts availability, and the instrument involved. No chargeable repair will proceed without your explicit approval.
             </div>
           </div>
+          </ScrollReveal>
 
           {/* ── 3. Give Your Instrument a Second Life Callout ── */}
+          <ScrollReveal direction="up">
           <div
             style={{
               marginBottom: 56,
@@ -1007,8 +1026,10 @@ export function Repairs() {
               Reliable service. Careful workmanship. Better musical performance.
             </p>
           </div>
+          </ScrollReveal>
 
           {/* ── 4. Official Instrument Repair Request Form (From Attached Document) ── */}
+          <ScrollReveal direction="up">
           <div
             id="repair-form"
             className="form-shell"
@@ -1556,9 +1577,11 @@ export function Repairs() {
               </div>
             </form>
           </div>
+          </ScrollReveal>
 
           {/* ── Inside Workshop Craftsmanship Photos ── */}
           <div style={{ margin: "64px 0" }}>
+            <ScrollReveal direction="left">
             <div
               style={{
                 textAlign: "center",
@@ -1588,18 +1611,19 @@ export function Repairs() {
                 Every instrument brought to our Kaduna clinic undergoes systematic diagnostic inspection by experienced technicians using precision leak-lights, digital multimeters, and specialized tooling.
               </p>
             </div>
+            </ScrollReveal>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {/* Workshop Card 1: Brass & Woodwinds */}
-              <div className="bg-white rounded-2xl overflow-hidden border border-[var(--line)] shadow-xs flex flex-col">
+              <ScrollReveal direction="up" delay={0} className="h-full">
+              <div className="bg-white rounded-2xl overflow-hidden border border-[var(--line)] shadow-xs flex flex-col h-full">
                 <div className="h-60 sm:h-72 overflow-hidden relative bg-[#0a192f]">
-                  <img
+                  <LazyImage
                     src={repairSaxImg}
                     alt="Vivadoxa master technician repairing a golden brass saxophone at the workbench"
                     className="w-full h-full object-cover"
-                    loading="lazy"
                   />
-                  <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider">
+                  <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider z-10">
                     Acoustic &amp; Brass Bench
                   </div>
                 </div>
@@ -1624,17 +1648,18 @@ export function Repairs() {
                   </ul>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Workshop Card 2: Electronics & Keyboards */}
-              <div className="bg-white rounded-2xl overflow-hidden border border-[var(--line)] shadow-xs flex flex-col">
+              <ScrollReveal direction="up" delay={120} className="h-full">
+              <div className="bg-white rounded-2xl overflow-hidden border border-[var(--line)] shadow-xs flex flex-col h-full">
                 <div className="h-60 sm:h-72 overflow-hidden relative bg-[#0a192f]">
-                  <img
+                  <LazyImage
                     src={repairElectronicsImg}
                     alt="Vivadoxa electronics technician using multimeter diagnosing synthesizer keyboard circuit board"
                     className="w-full h-full object-cover"
-                    loading="lazy"
                   />
-                  <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider">
+                  <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider z-10">
                     Electronics &amp; Circuit Bench
                   </div>
                 </div>
@@ -1659,6 +1684,7 @@ export function Repairs() {
                   </ul>
                 </div>
               </div>
+              </ScrollReveal>
             </div>
           </div>
         </div>

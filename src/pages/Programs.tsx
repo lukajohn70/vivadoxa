@@ -14,6 +14,8 @@ import {
 } from "@/lib/data"
 import { fetchAcademics } from "@/lib/api"
 import { WHATSAPP_URL } from "@/lib/utils"
+import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import type { Page, Program } from "@/types"
 
 interface ProgramCardProps {
@@ -25,12 +27,13 @@ function ProgramCard({ item, go }: ProgramCardProps) {
   const whatsappInquiry = `${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20inquire%20about%20the%20${encodeURIComponent(item.name)}%20program.`
 
   return (
-    <article className="program-card">
+    <article className="program-card h-full">
       <div className="card-image">
-        <img
+        <LazyImage
           src={item.image}
           alt={`${item.name} lessons at Vivadoxa`}
-          loading="lazy"
+          fallbackSrc="/media/programs/piano-syllabus.jpeg"
+          className="h-full"
         />
         <Badge tone="gold">{item.tag}</Badge>
       </div>
@@ -215,6 +218,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
         <div className="container">
           {/* ── 1. Our Music Training Programmes ── */}
           <div className="mb-16 sm:mb-20">
+            <ScrollReveal direction="left">
             <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
               <span className="eyebrow">Core Curriculum</span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -224,9 +228,11 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 Comprehensive, graded musical training tailored to personal enjoyment, academic certification, performance mastery, and church ministry.
               </p>
             </div>
+            </ScrollReveal>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Pillar 1: Instrumental Training */}
+              <ScrollReveal direction="up" delay={0} className="h-full">
               <div
                 style={{
                   background: "#ffffff",
@@ -237,7 +243,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   flexDirection: "column",
                   boxShadow: "0 2px 12px rgba(14, 13, 12, 0.03)",
                 }}
-                className="hover:border-[var(--gold)] hover:shadow-md transition-all"
+                className="hover:border-[var(--gold)] hover:shadow-md transition-all h-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm">
@@ -297,8 +303,10 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   </Button>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Pillar 2: Music Theory & Musicianship */}
+              <ScrollReveal direction="up" delay={80} className="h-full">
               <div
                 style={{
                   background: "#ffffff",
@@ -309,7 +317,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   flexDirection: "column",
                   boxShadow: "0 2px 12px rgba(14, 13, 12, 0.03)",
                 }}
-                className="hover:border-[var(--gold)] hover:shadow-md transition-all"
+                className="hover:border-[var(--gold)] hover:shadow-md transition-all h-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm">
@@ -369,8 +377,10 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   </Button>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Pillar 3: Vocal Training */}
+              <ScrollReveal direction="up" delay={160} className="h-full">
               <div
                 style={{
                   background: "#ffffff",
@@ -381,7 +391,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   flexDirection: "column",
                   boxShadow: "0 2px 12px rgba(14, 13, 12, 0.03)",
                 }}
-                className="hover:border-[var(--gold)] hover:shadow-md transition-all"
+                className="hover:border-[var(--gold)] hover:shadow-md transition-all h-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm">
@@ -441,8 +451,10 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   </Button>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Pillar 4: Church Musician Development */}
+              <ScrollReveal direction="up" delay={0} className="h-full">
               <div
                 style={{
                   background: "#ffffff",
@@ -453,7 +465,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   flexDirection: "column",
                   boxShadow: "0 2px 12px rgba(14, 13, 12, 0.03)",
                 }}
-                className="hover:border-[var(--gold)] hover:shadow-md transition-all md:col-span-1 lg:col-span-1"
+                className="hover:border-[var(--gold)] hover:shadow-md transition-all h-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm">
@@ -502,8 +514,10 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   </Button>
                 </div>
               </div>
+              </ScrollReveal>
 
               {/* Pillar 5: Professional Music Development */}
+              <ScrollReveal direction="up" delay={80} className="h-full md:col-span-2 lg:col-span-2">
               <div
                 style={{
                   background: "#ffffff",
@@ -514,7 +528,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   flexDirection: "column",
                   boxShadow: "0 2px 12px rgba(14, 13, 12, 0.03)",
                 }}
-                className="hover:border-[var(--gold)] hover:shadow-md transition-all md:col-span-2 lg:col-span-2"
+                className="hover:border-[var(--gold)] hover:shadow-md transition-all h-full"
               >
                 <div className="flex items-center justify-between mb-4">
                   <span className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm">
@@ -570,11 +584,13 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                   </Button>
                 </div>
               </div>
+              </ScrollReveal>
             </div>
           </div>
           {/* ── 2. Our Teaching Approach & Who Can Enrol ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 sm:mb-20">
             {/* Teaching Approach */}
+            <ScrollReveal direction="left" className="h-full">
             <div
               style={{
                 background: "linear-gradient(135deg, #0b0b0b 0%, #1c1917 100%)",
@@ -587,6 +603,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 justifyContent: "space-between",
                 boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
               }}
+              className="h-full"
             >
               <div>
                 <span className="eyebrow" style={{ color: "var(--gold2)" }}>
@@ -636,8 +653,10 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Who Can Enrol? */}
+            <ScrollReveal direction="right" delay={120} className="h-full">
             <div
               style={{
                 background: "var(--cream)",
@@ -648,6 +667,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 flexDirection: "column",
                 justifyContent: "space-between",
               }}
+              className="h-full"
             >
               <div>
                 <span className="eyebrow">Eligibility &amp; Accommodations</span>
@@ -698,10 +718,12 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
 
           {/* ── Official Duration Tiers & Price List ── */}
           <div className="mb-16 sm:mb-20">
+            <ScrollReveal direction="left">
             <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
               <span className="eyebrow">Tuition &amp; Durations</span>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -711,12 +733,18 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 Fixed tuition across all 17 musical instruments and vocal disciplines. Choose your track from foundational studies to our professional 2-year conservatory diploma.
               </p>
             </div>
+            </ScrollReveal>
 
             {/* 6-Card Grid for Tiers */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-9">
-              {officialPricingTiers.map((tier) => (
-                <div
+              {officialPricingTiers.map((tier, idx) => (
+                <ScrollReveal
                   key={tier.id}
+                  direction="up"
+                  delay={(idx % 3) * 60}
+                  className="h-full"
+                >
+                <div
                   style={{
                     background: tier.popular
                       ? "linear-gradient(180deg, #fffcf7 0%, #ffffff 100%)"
@@ -825,6 +853,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                     </a>
                   </div>
                 </div>
+                </ScrollReveal>
               ))}
             </div>
 
@@ -882,133 +911,139 @@ export function Programs({ go }: { go: (p: Page) => void }) {
 
           {/* ── 17 Available Instruments Showcase ── */}
           <div className="mb-16 sm:mb-20">
-            <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
-              <span className="eyebrow">Complete Instrument Catalog</span>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
-                17 Musical &amp; Audio Disciplines <em>Taught by Specialists</em>
-              </h2>
-              <p className="text-sm sm:text-base text-[var(--muted)] max-w-2xl mx-auto leading-relaxed">
-                Every instrument below is available across all program duration tiers (1 Month Intro, 3 Months Certificate, 6 Months Program, 12 Months Advanced Program, and 2 Years Diploma Program) plus Home Lessons.
-              </p>
-            </div>
+            <ScrollReveal direction="up">
+              <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+                <span className="eyebrow">Complete Instrument Catalog</span>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
+                  17 Musical &amp; Audio Disciplines <em>Taught by Specialists</em>
+                </h2>
+                <p className="text-sm sm:text-base text-[var(--muted)] max-w-2xl mx-auto leading-relaxed">
+                  Every instrument below is available across all program duration tiers (1 Month Intro, 3 Months Certificate, 6 Months Program, 12 Months Advanced Program, and 2 Years Diploma Program) plus Home Lessons.
+                </p>
+              </div>
+            </ScrollReveal>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-7">
-              {(showAllInstruments ? availableInstruments : availableInstruments.slice(0, 8)).map((inst) => (
-                <div
+              {(showAllInstruments ? availableInstruments : availableInstruments.slice(0, 8)).map((inst, idx) => (
+                <ScrollReveal
                   key={inst.id}
-                  style={{
-                    background: "white",
-                    borderRadius: "var(--radius)",
-                    border: "1px solid var(--line)",
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                    boxShadow: "0 3px 12px rgba(0,0,0,0.03)",
-                  }}
-                  className="hover:border-[var(--gold)] hover:shadow-md transition-all"
+                  direction="up"
+                  delay={(idx % 4) * 40}
+                  className="h-full"
                 >
                   <div
                     style={{
-                      height: 130,
-                      position: "relative",
+                      background: "white",
+                      borderRadius: "var(--radius)",
+                      border: "1px solid var(--line)",
                       overflow: "hidden",
-                      background: "#0a192f",
-                    }}
-                  >
-                    <img
-                      src={inst.image}
-                      alt={inst.name}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                      loading="lazy"
-                    />
-                    <span
-                      style={{
-                        position: "absolute",
-                        bottom: 8,
-                        left: 8,
-                        background: "rgba(10,25,47,0.85)",
-                        color: "var(--gold2)",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: "2px 8px",
-                        borderRadius: 4,
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      {inst.family}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      padding: "14px 14px 16px",
                       display: "flex",
                       flexDirection: "column",
-                      flex: 1,
+                      boxShadow: "0 3px 12px rgba(0,0,0,0.03)",
+                      height: "100%",
                     }}
+                    className="hover:border-[var(--gold)] hover:shadow-md transition-all"
                   >
-                    <h4
+                    <div
                       style={{
-                        margin: "0 0 4px",
-                        fontSize: 15,
-                        color: "var(--navy)",
-                        fontWeight: 700,
+                        height: 130,
+                        position: "relative",
+                        overflow: "hidden",
+                        background: "#0a192f",
                       }}
                     >
-                      {inst.name}
-                    </h4>
-                    <p
+                      <LazyImage
+                        src={inst.image}
+                        alt={inst.name}
+                        fallbackSrc="/media/programs/piano-syllabus.jpeg"
+                        className="w-full h-full object-cover"
+                      />
+                      <span
+                        style={{
+                          position: "absolute",
+                          bottom: 8,
+                          left: 8,
+                          background: "rgba(10,25,47,0.85)",
+                          color: "var(--gold2)",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                          backdropFilter: "blur(4px)",
+                          zIndex: 2,
+                        }}
+                      >
+                        {inst.family}
+                      </span>
+                    </div>
+                    <div
                       style={{
-                        fontSize: 11,
-                        color: "var(--muted)",
-                        margin: "0 0 10px",
-                        lineHeight: 1.45,
+                        padding: "14px 14px 16px",
+                        display: "flex",
+                        flexDirection: "column",
                         flex: 1,
                       }}
                     >
-                      {inst.description}
-                    </p>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        borderTop: "1px solid var(--line)",
-                        paddingTop: 10,
-                      }}
-                    >
-                      <span
+                      <h4
                         style={{
-                          fontSize: 10,
-                          color: "var(--gold)",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {inst.levels}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => go("apply")}
-                        style={{
-                          border: 0,
-                          background: "none",
+                          margin: "0 0 4px",
+                          fontSize: 15,
                           color: "var(--navy)",
-                          fontSize: 11,
                           fontWeight: 700,
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 2,
                         }}
                       >
-                        Enroll →
-                      </button>
+                        {inst.name}
+                      </h4>
+                      <p
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          margin: "0 0 10px",
+                          lineHeight: 1.45,
+                          flex: 1,
+                        }}
+                      >
+                        {inst.description}
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          borderTop: "1px solid var(--line)",
+                          paddingTop: 10,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 10,
+                            color: "var(--gold)",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {inst.levels}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => go("apply")}
+                          style={{
+                            border: 0,
+                            background: "none",
+                            color: "var(--navy)",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 2,
+                          }}
+                        >
+                          Enroll →
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </ScrollReveal>
               ))}
             </div>
 
@@ -1214,8 +1249,15 @@ export function Programs({ go }: { go: (p: Page) => void }) {
 
           {/* Program Grid */}
           <div className="program-grid" role="tabpanel">
-            {filtered.map((item) => (
-              <ProgramCard key={item.name} item={item} go={go} />
+            {filtered.map((item, idx) => (
+              <ScrollReveal
+                key={item.name}
+                direction="up"
+                delay={(idx % 3) * 60}
+                className="h-full"
+              >
+                <ProgramCard item={item} go={go} />
+              </ScrollReveal>
             ))}
           </div>
 

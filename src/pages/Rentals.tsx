@@ -30,6 +30,8 @@ import {
   studioImg,
 } from "@/lib/data"
 import { fetchCatalogRentals } from "@/lib/api"
+import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import type { Page } from "@/types"
 
 export interface RentalItem {
@@ -363,26 +365,34 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       {/* ── Value Pillars Strip (NO 100% refund promise) ─────────────── */}
       <section className="bg-white border-b border-[var(--line)] py-8">
         <div className="container grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--gold)] block">100%</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Technician Vetted</strong>
-            <small className="text-[11px] text-[var(--muted)]">Intonated &amp; setup by our clinic</small>
-          </div>
-          <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--navy)] block">Flexible</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Student Practice Terms</strong>
-            <small className="text-[11px] text-[var(--muted)]">Monthly &amp; term practice access</small>
-          </div>
-          <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--gold)] block">Security</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Caution Deposit</strong>
-            <small className="text-[11px] text-[var(--muted)]">Subject to return condition check</small>
-          </div>
-          <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-            <span className="text-2xl font-black text-[var(--navy)] block">Kaduna</span>
-            <strong className="text-xs text-[var(--navy)] block mt-1">Pickup &amp; Delivery</strong>
-            <small className="text-[11px] text-[var(--muted)]">Angwan Sunday Studio or doorstep</small>
-          </div>
+          <ScrollReveal direction="up" delay={0}>
+            <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+              <span className="text-2xl font-black text-[var(--gold)] block">100%</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Technician Vetted</strong>
+              <small className="text-[11px] text-[var(--muted)]">Intonated &amp; setup by our clinic</small>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={80}>
+            <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+              <span className="text-2xl font-black text-[var(--navy)] block">Flexible</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Student Practice Terms</strong>
+              <small className="text-[11px] text-[var(--muted)]">Monthly &amp; term practice access</small>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={160}>
+            <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+              <span className="text-2xl font-black text-[var(--gold)] block">Security</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Caution Deposit</strong>
+              <small className="text-[11px] text-[var(--muted)]">Subject to return condition check</small>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={240}>
+            <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+              <span className="text-2xl font-black text-[var(--navy)] block">Kaduna</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Pickup &amp; Delivery</strong>
+              <small className="text-[11px] text-[var(--muted)]">Angwan Sunday Studio or doorstep</small>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -390,63 +400,72 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       <section className="section bg-[#FAF8F5]" id="rental-catalog">
         <div className="container">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-            <div>
-              <span className="eyebrow">Rental Showcase</span>
-              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
-                Choose your rental gear
-              </h2>
-              <p className="text-xs text-[var(--muted)] mt-1">
-                Select single or multiple items with &ldquo;Select&rdquo;, then wire your reservation list to Admin.
-              </p>
-            </div>
+            <ScrollReveal direction="left">
+              <div>
+                <span className="eyebrow">Rental Showcase</span>
+                <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
+                  Choose your rental gear
+                </h2>
+                <p className="text-xs text-[var(--muted)] mt-1">
+                  Select single or multiple items with &ldquo;Select&rdquo;, then wire your reservation list to Admin.
+                </p>
+              </div>
+            </ScrollReveal>
 
-            <div className="inline-flex p-1.5 rounded-xl bg-white border border-[var(--line)] shadow-xs">
-              <button
-                type="button"
-                onClick={() => setActiveTab("students")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "students"
-                    ? "bg-[var(--gold)] text-white shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--navy)]"
-                }`}
-              >
-                Student Home Practice ({studentItems.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("events")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "events"
-                    ? "bg-[var(--gold)] text-white shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--navy)]"
-                }`}
-              >
-                Stage, PA &amp; Event Backline ({eventItems.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("terms")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeTab === "terms"
-                    ? "bg-[var(--gold)] text-white shadow-xs"
-                    : "text-[var(--muted)] hover:text-[var(--navy)]"
-                }`}
-              >
-                Protocol &amp; FAQ
-              </button>
-            </div>
+            <ScrollReveal direction="right" delay={100}>
+              <div className="inline-flex p-1.5 rounded-xl bg-white border border-[var(--line)] shadow-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("students")}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "students"
+                      ? "bg-[var(--gold)] text-white shadow-xs"
+                      : "text-[var(--muted)] hover:text-[var(--navy)]"
+                  }`}
+                >
+                  Student Home Practice ({studentItems.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("events")}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "events"
+                      ? "bg-[var(--gold)] text-white shadow-xs"
+                      : "text-[var(--muted)] hover:text-[var(--navy)]"
+                  }`}
+                >
+                  Stage, PA &amp; Event Backline ({eventItems.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("terms")}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeTab === "terms"
+                      ? "bg-[var(--gold)] text-white shadow-xs"
+                      : "text-[var(--muted)] hover:text-[var(--navy)]"
+                  }`}
+                >
+                  Protocol &amp; FAQ
+                </button>
+              </div>
+            </ScrollReveal>
           </div>
 
           {/* Tab 1: Student Rentals */}
           {activeTab === "students" && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedStudentItems.map((item) => {
+              {displayedStudentItems.map((item, idx) => {
                 const selected = isSelected(item.id)
                 return (
-                  <div
+                  <ScrollReveal
                     key={item.id}
-                    className={`bg-white rounded-2xl border transition-all flex flex-col group relative ${
+                    direction="up"
+                    delay={(idx % 3) * 70}
+                    className="h-full"
+                  >
+                  <div
+                    className={`bg-white rounded-2xl border transition-all flex flex-col group relative h-full ${
                       selected
                         ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
                         : "border-[var(--line)] shadow-xs hover:shadow-md"
@@ -474,24 +493,17 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                     </button>
 
                     <div className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl">
-                      <img
+                      <LazyImage
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        onError={(e) => {
-                          const target = e.currentTarget
-                          if (!target.dataset.fallback) {
-                            target.dataset.fallback = "1"
-                            target.src = "/media/programs/violin-solo-rainbow.jpeg"
-                          }
-                        }}
+                        fallbackSrc="/media/programs/violin-solo-rainbow.jpeg"
+                        className="group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs z-10">
                         {item.category}
                       </span>
-                      <span className="absolute bottom-3 left-3 bg-white/95 text-[var(--navy)] font-bold text-xs px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1.5">
+                      <span className="absolute bottom-3 left-3 bg-white/95 text-[var(--navy)] font-bold text-xs px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1.5 z-10">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Student Practice Fleet
                       </span>
                     </div>
@@ -541,6 +553,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                       </div>
                     </div>
                   </div>
+                  </ScrollReveal>
                 )
               })}
             </div>
@@ -580,12 +593,17 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
           {activeTab === "events" && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {displayedEventItems.map((item) => {
+              {displayedEventItems.map((item, idx) => {
                 const selected = isSelected(item.id)
                 return (
-                  <div
+                  <ScrollReveal
                     key={item.id}
-                    className={`bg-white rounded-2xl border transition-all flex flex-col sm:flex-row group relative ${
+                    direction="up"
+                    delay={(idx % 2) * 80}
+                    className="h-full"
+                  >
+                  <div
+                    className={`bg-white rounded-2xl border transition-all flex flex-col sm:flex-row group relative h-full ${
                       selected
                         ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
                         : "border-[var(--line)] shadow-xs hover:shadow-md"
@@ -613,21 +631,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                     </button>
 
                     <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
-                      <img
+                      <LazyImage
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        onError={(e) => {
-                          const target = e.currentTarget
-                          if (!target.dataset.fallback) {
-                            target.dataset.fallback = "1"
-                            target.src = "/media/studio/multi-instrument-lab.jpeg"
-                          }
-                        }}
+                        fallbackSrc="/media/studio/multi-instrument-lab.jpeg"
+                        className="group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden" />
-                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden pointer-events-none" />
+                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md z-10">
                         {item.category}
                       </span>
                     </div>
@@ -671,6 +682,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                       </div>
                     </div>
                   </div>
+                  </ScrollReveal>
                 )
               })}
             </div>
@@ -708,6 +720,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
           {/* Tab 3: Terms & FAQ (NO 100% refund promise) */}
           {activeTab === "terms" && (
+            <ScrollReveal direction="up">
             <div className="bg-white rounded-2xl border border-[var(--line)] p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
               <div>
                 <h3 className="font-bold text-lg text-[var(--navy)] mb-2">1. How Rental Security Deposits Work</h3>
@@ -746,6 +759,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           )}
         </div>
       </section>
@@ -989,6 +1003,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       {/* ── Interactive Rental Booking Form (Single / General) ────────── */}
       <section className="section bg-white border-t border-[var(--line)]" id="rental-inquiry-form">
         <div className="container max-w-2xl">
+          <ScrollReveal direction="up">
           <div className="text-center mb-8">
             <span className="eyebrow">Instant Reservation</span>
             <h2 className="text-2xl sm:text-3xl font-bold font-serif text-[var(--navy)] mt-1">
@@ -1127,6 +1142,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               </a>
             </div>
           </form>
+          </ScrollReveal>
         </div>
       </section>
     </main>

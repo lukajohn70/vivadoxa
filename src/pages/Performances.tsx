@@ -9,6 +9,8 @@ import {
   WhatsAppIcon,
 } from "@/components/ui"
 import { SEO } from "@/components/SEO"
+import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import {
   performances as staticPerformances,
   type PerformanceItem,
@@ -97,221 +99,48 @@ export function Performances({ go }: { go: (p: Page) => void }) {
           style={{ background: "white", borderBottom: "1px solid var(--line)" }}
         >
           <div className="container">
-            <SectionHead
-              eyebrow="Featured Performance"
-              title="Watch our students in action"
-              body="Every 12 weeks, Vivadoxa candidates take the stage to share what they've learned with family, friends, and the community."
-            />
+            <ScrollReveal direction="up">
+              <SectionHead
+                eyebrow="Featured Performance"
+                title="Watch our students in action"
+                body="Every 12 weeks, Vivadoxa candidates take the stage to share what they've learned with family, friends, and the community."
+              />
 
-            <div
-              className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-10 items-center mt-6 p-6 sm:p-9 rounded-2xl border"
-              style={{ background: "var(--cream)", borderColor: "var(--line)" }}
-            >
               <div
-                style={{
-                  borderRadius: 10,
-                  overflow: "hidden",
-                  background: featured.isShort ? "#080c14" : "#000",
-                  aspectRatio: featured.isShort ? undefined : "16/9",
-                  border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: featured.isShort ? 24 : 0,
-                }}
+                className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-10 items-center mt-6 p-6 sm:p-9 rounded-2xl border"
+                style={{ background: "var(--cream)", borderColor: "var(--line)" }}
               >
-                {featured.videoUrl ? (
-                  <video
-                    src={featured.videoUrl}
-                    poster={featured.thumbnail}
-                    controls
-                    playsInline
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      background: "#000",
-                    }}
-                  />
-                ) : featured.isShort ? (
-                  <div
-                    style={{
-                      width: "100%",
-                      maxWidth: 260,
-                      aspectRatio: "9/16",
-                      borderRadius: 14,
-                      overflow: "hidden",
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      position: "relative",
-                      background: "#000",
-                    }}
-                  >
-                    <iframe
-                      src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
-                      title={featured.title}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        border: 0,
-                      }}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
-                    title={featured.title}
-                    style={{ width: "100%", height: "100%", border: 0 }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                )}
-              </div>
-
-              <div>
-                <Badge tone="gold">{featured.category}</Badge>
-                <h2
-                  style={{
-                    fontSize: 28,
-                    margin: "14px 0 6px",
-                    color: "var(--navy)",
-                  }}
-                >
-                  {featured.title}
-                </h2>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--gold)",
-                    fontWeight: 700,
-                    margin: "0 0 14px",
-                  }}
-                >
-                  {featured.performer} • {featured.date}
-                </p>
-                <p
-                  style={{
-                    color: "var(--muted)",
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    marginBottom: 24,
-                  }}
-                >
-                  {featured.description}
-                </p>
                 <div
                   style={{
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    background: featured.isShort ? "#080c14" : "#000",
+                    aspectRatio: featured.isShort ? undefined : "16/9",
+                    border: "1px solid var(--line)",
                     display: "flex",
-                    gap: 12,
-                    flexWrap: "wrap",
                     alignItems: "center",
+                    justifyContent: "center",
+                    padding: featured.isShort ? 24 : 0,
                   }}
                 >
-                  <Button onClick={() => go("apply")}>
-                    Enroll for {featured.program} <Icon name="arrow" />
-                  </Button>
-                  <a
-                    href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20watched%20the%20${encodeURIComponent(featured.title)}%20recital%20and%20would%20like%20to%20learn%20more.`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-secondary inline-flex items-center gap-2"
-                    style={{
-                      borderColor: "rgba(37,211,102,0.4)",
-                      color: "#128C7E",
-                      background: "#f0fdf4",
-                    }}
-                  >
-                    <WhatsAppIcon size={18} /> Chat with Us
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Video Gallery */}
-      <section className="section" style={{ background: "var(--cream)" }}>
-        <div className="container">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
-            <div
-              className="tabs"
-              role="tablist"
-              aria-label="Performance filters"
-              style={{ margin: 0 }}
-            >
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  role="tab"
-                  aria-selected={filter === c}
-                  className={filter === c ? "active" : ""}
-                  onClick={() => handleFilterChange(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
-            <a
-              href={YOUTUBE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary inline-flex items-center gap-2 text-xs py-2 px-3.5"
-              style={{
-                borderColor: "rgba(255,0,0,0.3)",
-                color: "#cc0000",
-                background: "#ffffff",
-              }}
-            >
-              <Icon name="youtube" size={16} /> Subscribe on YouTube @vivadoxa
-            </a>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-7">
-            {visibleItems.map((item) => (
-              <article
-                key={item.id}
-                style={{
-                  background: "white",
-                  border: "1px solid var(--line)",
-                  borderRadius: "var(--radius)",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                }}
-              >
-                {item.isShort ? (
-                  <div
-                    style={{
-                      background: "#080c14",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: "24px 16px",
-                      borderBottom: "1px solid var(--line)",
-                    }}
-                  >
-                    {/* Dedicated vertical phone/short player */}
+                  {featured.videoUrl ? (
+                    <video
+                      src={featured.videoUrl}
+                      poster={featured.thumbnail}
+                      controls
+                      playsInline
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        background: "#000",
+                      }}
+                    />
+                  ) : featured.isShort ? (
                     <div
                       style={{
                         width: "100%",
-                        maxWidth: "240px",
+                        maxWidth: 260,
                         aspectRatio: "9/16",
                         borderRadius: 14,
                         overflow: "hidden",
@@ -322,8 +151,8 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                       }}
                     >
                       <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
-                        title={item.title}
+                        src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
+                        title={featured.title}
                         style={{
                           position: "absolute",
                           top: 0,
@@ -335,169 +164,353 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 10,
-                          left: 10,
-                          pointerEvents: "none",
-                          zIndex: 2,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                          padding: "3px 8px",
-                          borderRadius: 9999,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          letterSpacing: 0.5,
-                          textTransform: "uppercase",
-                          color: "white",
-                          background: "rgba(0,0,0,0.7)",
-                          backdropFilter: "blur(6px)",
-                          border: "1px solid rgba(255,255,255,0.25)",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            background: "#ef4444",
-                          }}
-                        />
-                        Short
-                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div
+                  ) : (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
+                      title={featured.title}
+                      style={{ width: "100%", height: "100%", border: 0 }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <Badge tone="gold">{featured.category}</Badge>
+                  <h2
                     style={{
-                      aspectRatio: "16/9",
-                      background: "#000",
-                      borderBottom: "1px solid var(--line)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      fontSize: 28,
+                      margin: "14px 0 6px",
+                      color: "var(--navy)",
                     }}
                   >
-                    {item.videoUrl ? (
-                      <video
-                        src={item.videoUrl}
-                        poster={item.thumbnail}
-                        controls
-                        playsInline
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
-                        title={item.title}
-                        style={{ width: "100%", height: "100%", border: 0 }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    )}
+                    {featured.title}
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: "var(--gold)",
+                      fontWeight: 700,
+                      margin: "0 0 14px",
+                    }}
+                  >
+                    {featured.performer} • {featured.date}
+                  </p>
+                  <p
+                    style={{
+                      color: "var(--muted)",
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      marginBottom: 24,
+                    }}
+                  >
+                    {featured.description}
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button onClick={() => go("apply")}>
+                      Enroll for {featured.program} <Icon name="arrow" />
+                    </Button>
+                    <a
+                      href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20watched%20the%20${encodeURIComponent(featured.title)}%20recital%20and%20would%20like%20to%20learn%20more.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary inline-flex items-center gap-2"
+                      style={{
+                        borderColor: "rgba(37,211,102,0.4)",
+                        color: "#128C7E",
+                        background: "#f0fdf4",
+                      }}
+                    >
+                      <WhatsAppIcon size={18} /> Chat with Us
+                    </a>
                   </div>
-                )}
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+      )}
 
-                <div
+      {/* Video Gallery */}
+      <section className="section" style={{ background: "var(--cream)" }}>
+        <div className="container">
+          <ScrollReveal direction="up">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div
+                className="tabs"
+                role="tablist"
+                aria-label="Performance filters"
+                style={{ margin: 0 }}
+              >
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    role="tab"
+                    aria-selected={filter === c}
+                    className={filter === c ? "active" : ""}
+                    onClick={() => handleFilterChange(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+
+              <a
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary inline-flex items-center gap-2 text-xs py-2 px-3.5"
+                style={{
+                  borderColor: "rgba(255,0,0,0.3)",
+                  color: "#cc0000",
+                  background: "#ffffff",
+                }}
+              >
+                <Icon name="youtube" size={16} /> Subscribe on YouTube @vivadoxa
+              </a>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-7">
+            {visibleItems.map((item, idx) => (
+              <ScrollReveal
+                key={item.id}
+                direction="up"
+                delay={(idx % 3) * 60}
+                className="h-full"
+              >
+                <article
                   style={{
-                    padding: 24,
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: "var(--radius)",
+                    overflow: "hidden",
                     display: "flex",
                     flexDirection: "column",
-                    flex: 1,
-                    justifyContent: "space-between",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.04)",
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    height: "100%",
                   }}
                 >
-                  <div>
+                  {item.isShort ? (
                     <div
                       style={{
+                        background: "#080c14",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "24px 16px",
+                        borderBottom: "1px solid var(--line)",
+                      }}
+                    >
+                      {/* Dedicated vertical phone/short player */}
+                      <div
+                        style={{
+                          width: "100%",
+                          maxWidth: "240px",
+                          aspectRatio: "9/16",
+                          borderRadius: 14,
+                          overflow: "hidden",
+                          boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          position: "relative",
+                          background: "#000",
+                        }}
+                      >
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
+                          title={item.title}
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            border: 0,
+                          }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 10,
+                            left: 10,
+                            pointerEvents: "none",
+                            zIndex: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                            padding: "3px 8px",
+                            borderRadius: 9999,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: 0.5,
+                            textTransform: "uppercase",
+                            color: "white",
+                            background: "rgba(0,0,0,0.7)",
+                            backdropFilter: "blur(6px)",
+                            border: "1px solid rgba(255,255,255,0.25)",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: "#ef4444",
+                            }}
+                          />
+                          Short
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        aspectRatio: "16/9",
+                        background: "#000",
+                        borderBottom: "1px solid var(--line)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {item.videoUrl ? (
+                        <video
+                          src={item.videoUrl}
+                          poster={item.thumbnail}
+                          controls
+                          playsInline
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
+                          title={item.title}
+                          style={{ width: "100%", height: "100%", border: 0 }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <div
+                    style={{
+                      padding: 24,
+                      display: "flex",
+                      flexDirection: "column",
+                      flex: 1,
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Badge tone="gold">{item.category}</Badge>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "var(--muted)",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {item.duration}
+                        </span>
+                      </div>
+                      <h3
+                        style={{
+                          fontSize: 20,
+                          margin: "6px 0 4px",
+                          color: "var(--navy)",
+                        }}
+                      >
+                        {item.title}
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "var(--gold)",
+                          fontWeight: 700,
+                          margin: "0 0 10px",
+                        }}
+                      >
+                        {item.performer} • {item.program}
+                      </p>
+                      <p
+                        style={{
+                          fontSize: 13,
+                          color: "var(--muted)",
+                          lineHeight: 1.5,
+                          margin: 0,
+                        }}
+                      >
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 20,
+                        paddingTop: 16,
+                        borderTop: "1px solid var(--line)",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        marginBottom: 8,
                       }}
                     >
-                      <Badge tone="gold">{item.category}</Badge>
-                      <span
+                      <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                        {item.date}
+                      </span>
+                      <button
+                        onClick={() => go("apply")}
                         style={{
+                          border: 0,
+                          background: "none",
+                          color: "var(--gold)",
+                          fontWeight: 700,
                           fontSize: 11,
-                          color: "var(--muted)",
-                          fontFamily: "monospace",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
                         }}
                       >
-                        {item.duration}
-                      </span>
+                        Join Course <Icon name="arrow" size={12} />
+                      </button>
                     </div>
-                    <h3
-                      style={{
-                        fontSize: 20,
-                        margin: "6px 0 4px",
-                        color: "var(--navy)",
-                      }}
-                    >
-                      {item.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: 12,
-                        color: "var(--gold)",
-                        fontWeight: 700,
-                        margin: "0 0 10px",
-                      }}
-                    >
-                      {item.performer} • {item.program}
-                    </p>
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: "var(--muted)",
-                        lineHeight: 1.5,
-                        margin: 0,
-                      }}
-                    >
-                      {item.description}
-                    </p>
                   </div>
-
-                  <div
-                    style={{
-                      marginTop: 20,
-                      paddingTop: 16,
-                      borderTop: "1px solid var(--line)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>
-                      {item.date}
-                    </span>
-                    <button
-                      onClick={() => go("apply")}
-                      style={{
-                        border: 0,
-                        background: "none",
-                        color: "var(--gold)",
-                        fontWeight: 700,
-                        fontSize: 11,
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      Join Course <Icon name="arrow" size={12} />
-                    </button>
-                  </div>
-                </div>
-              </article>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
 
@@ -540,150 +553,161 @@ export function Performances({ go }: { go: (p: Page) => void }) {
         style={{ background: "white", borderTop: "1px solid var(--line)" }}
       >
         <div className="container">
-          <SectionHead
-            center
-            eyebrow="Stage Philosophy"
-            title="Why performance is at the heart of our pedagogy"
-          />
+          <ScrollReveal direction="up">
+            <SectionHead
+              center
+              eyebrow="Stage Philosophy"
+              title="Why performance is at the heart of our pedagogy"
+            />
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            <div
-              style={{
-                padding: 28,
-                borderRadius: "var(--radius)",
-                background: "var(--cream)",
-                border: "1px solid var(--line)",
-              }}
-            >
+            <ScrollReveal direction="up" delay={0} className="h-full">
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "var(--navy)",
-                  color: "white",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 700,
-                  marginBottom: 16,
+                  padding: 28,
+                  borderRadius: "var(--radius)",
+                  background: "var(--cream)",
+                  border: "1px solid var(--line)",
+                  height: "100%",
                 }}
               >
-                01
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "var(--navy)",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    marginBottom: 16,
+                  }}
+                >
+                  01
+                </div>
+                <h3
+                  style={{
+                    fontSize: 18,
+                    color: "var(--navy)",
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Termly Live Recitals
+                </h3>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--muted)",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  Stage experience is built into every curriculum. Overcoming
+                  performance anxiety transforms practice room drills into
+                  authentic stage confidence.
+                </p>
               </div>
-              <h3
-                style={{
-                  fontSize: 18,
-                  color: "var(--navy)",
-                  margin: "0 0 8px",
-                }}
-              >
-                Termly Live Recitals
-              </h3>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--muted)",
-                  lineHeight: 1.6,
-                  margin: 0,
-                }}
-              >
-                Stage experience is built into every curriculum. Overcoming
-                performance anxiety transforms practice room drills into
-                authentic stage confidence.
-              </p>
-            </div>
+            </ScrollReveal>
 
-            <div
-              style={{
-                padding: 28,
-                borderRadius: "var(--radius)",
-                background: "var(--cream)",
-                border: "1px solid var(--line)",
-              }}
-            >
+            <ScrollReveal direction="up" delay={100} className="h-full">
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "var(--navy)",
-                  color: "white",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 700,
-                  marginBottom: 16,
+                  padding: 28,
+                  borderRadius: "var(--radius)",
+                  background: "var(--cream)",
+                  border: "1px solid var(--line)",
+                  height: "100%",
                 }}
               >
-                02
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "var(--navy)",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    marginBottom: 16,
+                  }}
+                >
+                  02
+                </div>
+                <h3
+                  style={{
+                    fontSize: 18,
+                    color: "var(--navy)",
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Ensemble Coordination
+                </h3>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--muted)",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  Students don&apos;t learn in isolation. We bring keyboardists,
+                  violinists, vocalists, and drummers together for collaborative
+                  live bands.
+                </p>
               </div>
-              <h3
-                style={{
-                  fontSize: 18,
-                  color: "var(--navy)",
-                  margin: "0 0 8px",
-                }}
-              >
-                Ensemble Coordination
-              </h3>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--muted)",
-                  lineHeight: 1.6,
-                  margin: 0,
-                }}
-              >
-                Students don&apos;t learn in isolation. We bring keyboardists,
-                violinists, vocalists, and drummers together for collaborative
-                live bands.
-              </p>
-            </div>
+            </ScrollReveal>
 
-            <div
-              style={{
-                padding: 28,
-                borderRadius: "var(--radius)",
-                background: "var(--cream)",
-                border: "1px solid var(--line)",
-              }}
-            >
+            <ScrollReveal direction="up" delay={200} className="h-full">
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  background: "var(--navy)",
-                  color: "white",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 700,
-                  marginBottom: 16,
+                  padding: 28,
+                  borderRadius: "var(--radius)",
+                  background: "var(--cream)",
+                  border: "1px solid var(--line)",
+                  height: "100%",
                 }}
               >
-                03
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: "var(--navy)",
+                    color: "white",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    marginBottom: 16,
+                  }}
+                >
+                  03
+                </div>
+                <h3
+                  style={{
+                    fontSize: 18,
+                    color: "var(--navy)",
+                    margin: "0 0 8px",
+                  }}
+                >
+                  Archived Video Portfolios
+                </h3>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "var(--muted)",
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  High-definition audio and video recordings of student
+                  performances are captured and provided to students and parents
+                  as lasting portfolios.
+                </p>
               </div>
-              <h3
-                style={{
-                  fontSize: 18,
-                  color: "var(--navy)",
-                  margin: "0 0 8px",
-                }}
-              >
-                Archived Video Portfolios
-              </h3>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "var(--muted)",
-                  lineHeight: 1.6,
-                  margin: 0,
-                }}
-              >
-                High-definition audio and video recordings of student
-                performances are captured and provided to students and parents
-                as lasting portfolios.
-              </p>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -694,12 +718,14 @@ export function Performances({ go }: { go: (p: Page) => void }) {
         style={{ background: "white", borderTop: "1px solid var(--line)" }}
       >
         <div className="container">
-          <SectionHead
-            center
-            eyebrow="Annual Concert Archives"
-            title="Moments from our Recitals & Stages"
-            body="A glimpse of Vivadoxa candidates bringing their unique sound to life across Kaduna community halls, outdoor recitals, and studio showcases."
-          />
+          <ScrollReveal direction="up">
+            <SectionHead
+              center
+              eyebrow="Annual Concert Archives"
+              title="Moments from our Recitals & Stages"
+              body="A glimpse of Vivadoxa candidates bringing their unique sound to life across Kaduna community halls, outdoor recitals, and studio showcases."
+            />
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-9">
             {[
@@ -752,76 +778,79 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                 tag: "All Faculty & Students",
               },
             ].map((photo, i) => (
-              <div
+              <ScrollReveal
                 key={i}
-                style={{
-                  borderRadius: "var(--radius)",
-                  overflow: "hidden",
-                  border: "1px solid var(--line)",
-                  background: "var(--cream)",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
-                  display: "flex",
-                  flexDirection: "column",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
+                direction="up"
+                delay={(i % 3) * 60}
+                className="h-full"
               >
                 <div
                   style={{
-                    height: 220,
+                    borderRadius: "var(--radius)",
                     overflow: "hidden",
-                    background: "#111",
-                  }}
-                >
-                  <img
-                    src={photo.src}
-                    alt={photo.title}
-                    loading="lazy"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
-                <div
-                  style={{
-                    padding: "16px 18px",
-                    flex: 1,
+                    border: "1px solid var(--line)",
+                    background: "var(--cream)",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.04)",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "space-between",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                    height: "100%",
                   }}
                 >
-                  <div>
-                    <span
-                      className="badge badge-gold"
-                      style={{ fontSize: 10, padding: "2px 8px" }}
-                    >
-                      {photo.tag}
-                    </span>
-                    <h4
-                      style={{
-                        margin: "8px 0 4px",
-                        fontSize: 16,
-                        color: "var(--navy)",
-                        fontFamily: "'DM Serif Display', serif",
-                      }}
-                    >
-                      {photo.title}
-                    </h4>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 12,
-                        color: "var(--muted)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {photo.desc}
-                    </p>
+                  <div
+                    style={{
+                      height: 220,
+                      overflow: "hidden",
+                      background: "#111",
+                    }}
+                  >
+                    <LazyImage
+                      src={photo.src}
+                      alt={photo.title}
+                      fallbackSrc="/media/programs/sax-ensemble.jpeg"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div
+                    style={{
+                      padding: "16px 18px",
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>
+                      <span
+                        className="badge badge-gold"
+                        style={{ fontSize: 10, padding: "2px 8px" }}
+                      >
+                        {photo.tag}
+                      </span>
+                      <h4
+                        style={{
+                          margin: "8px 0 4px",
+                          fontSize: 16,
+                          color: "var(--navy)",
+                          fontFamily: "'DM Serif Display', serif",
+                        }}
+                      >
+                        {photo.title}
+                      </h4>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 12,
+                          color: "var(--muted)",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {photo.desc}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -836,63 +865,65 @@ export function Performances({ go }: { go: (p: Page) => void }) {
           className="container"
           style={{ textAlign: "center", maxWidth: 760 }}
         >
-          <span className="eyebrow" style={{ color: "var(--gold2)" }}>
-            Live Performance Bookings
-          </span>
-          <h2
-            style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: 32,
-              color: "white",
-              margin: "12px 0 16px",
-            }}
-          >
-            Book a Vivadoxa Student Ensemble or Soloist for Your Event
-          </h2>
-          <p
-            style={{
-              fontSize: 14,
-              color: "#c1ccd5",
-              lineHeight: 1.7,
-              marginBottom: 32,
-            }}
-          >
-            Looking for refined string quartets, gospel jazz keyboardists, or
-            youth choral ensembles for your wedding, church convention, or
-            corporate dinner in Kaduna or Abuja? Connect with our event
-            coordinator directly.
-          </p>
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <a
-              href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20book%20a%20musician%20or%20student%20ensemble%20for%20an%20event.`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary inline-flex items-center gap-2"
+          <ScrollReveal direction="up">
+            <span className="eyebrow" style={{ color: "var(--gold2)" }}>
+              Live Performance Bookings
+            </span>
+            <h2
               style={{
-                background: "#25D366",
-                borderColor: "#25D366",
-                color: "#0a192f",
-                fontWeight: 700,
-                padding: "12px 24px",
+                fontFamily: "'DM Serif Display', serif",
+                fontSize: 32,
+                color: "white",
+                margin: "12px 0 16px",
               }}
             >
-              <WhatsAppIcon size={20} /> Book Musicians on WhatsApp
-            </a>
-            <Button
-              variant="secondary"
-              onClick={() => go("contact")}
-              style={{ borderColor: "rgba(255,255,255,0.3)", color: "white" }}
+              Book a Vivadoxa Student Ensemble or Soloist for Your Event
+            </h2>
+            <p
+              style={{
+                fontSize: 14,
+                color: "#c1ccd5",
+                lineHeight: 1.7,
+                marginBottom: 32,
+              }}
             >
-              Send Event Brief
-            </Button>
-          </div>
+              Looking for refined string quartets, gospel jazz keyboardists, or
+              youth choral ensembles for your wedding, church convention, or
+              corporate dinner in Kaduna or Abuja? Connect with our event
+              coordinator directly.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: 14,
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <a
+                href={`${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20book%20a%20musician%20or%20student%20ensemble%20for%20an%20event.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary inline-flex items-center gap-2"
+                style={{
+                  background: "#25D366",
+                  borderColor: "#25D366",
+                  color: "#0a192f",
+                  fontWeight: 700,
+                  padding: "12px 24px",
+                }}
+              >
+                <WhatsAppIcon size={20} /> Book Musicians on WhatsApp
+              </a>
+              <Button
+                variant="secondary"
+                onClick={() => go("contact")}
+                style={{ borderColor: "rgba(255,255,255,0.3)", color: "white" }}
+              >
+                Send Event Brief
+              </Button>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

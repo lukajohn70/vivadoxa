@@ -1,5 +1,6 @@
 import { Badge, Button, Icon, PageHero, SectionHead } from "@/components/ui"
 import { SEO } from "@/components/SEO"
+import { ScrollReveal } from "@/components/ScrollReveal"
 import type { Page } from "@/types"
 
 const MODES = [
@@ -56,64 +57,78 @@ export function Modes({ go }: { go: (p: Page) => void }) {
       />
       <section className="section">
         <div className="container comparison">
-          {MODES.map((m) => (
-            <article className={m.best ? "featured" : ""} key={m.name}>
-              {m.best && <Badge tone="gold">Most immersive</Badge>}
-              <h2>{m.name}</h2>
-              <p>{m.sub}</p>
-              <strong>
-                {m.price}
-                <small> / month</small>
-              </strong>
-              <ul>
-                {m.items.map((x) => (
-                  <li key={x}>
-                    <span>
-                      <Icon name="check" size={16} />
-                    </span>
-                    {x}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant={m.best ? "primary" : "secondary"}
-                onClick={() => go("apply")}
-                fullWidth
+          {MODES.map((m, idx) => (
+            <ScrollReveal
+              key={m.name}
+              direction="up"
+              delay={idx * 100}
+              className="h-full"
+            >
+              <article
+                className={`${m.best ? "featured" : ""} h-full flex flex-col justify-between`}
               >
-                Choose {m.name}
-              </Button>
-            </article>
+                <div>
+                  {m.best && <Badge tone="gold">Most immersive</Badge>}
+                  <h2>{m.name}</h2>
+                  <p>{m.sub}</p>
+                  <strong>
+                    {m.price}
+                    <small> / month</small>
+                  </strong>
+                  <ul>
+                    {m.items.map((x) => (
+                      <li key={x}>
+                        <span>
+                          <Icon name="check" size={16} />
+                        </span>
+                        {x}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  variant={m.best ? "primary" : "secondary"}
+                  onClick={() => go("apply")}
+                  fullWidth
+                  className="mt-6"
+                >
+                  Choose {m.name}
+                </Button>
+              </article>
+            </ScrollReveal>
           ))}
         </div>
 
-        <div className="faq">
-          <SectionHead
-            eyebrow="Common questions"
-            title="Everything you need to know"
-          />
-          {[
-            [
-              "Can I switch study modes during the term?",
-              "Yes. Speak with our admissions team and we will help you move to the best option, subject to instructor availability.",
-            ],
-            [
-              "Do I need to own an instrument?",
-              "For onsite lessons, studio instruments are provided. For online and home lessons, you will need access to your own instrument.",
-            ],
-            [
-              "How long is each lesson?",
-              "Standard lessons are 60 minutes. Intensive sessions of 90 minutes are available on request.",
-            ],
-          ].map(([q, a], i) => (
-            <details key={q} open={i === 0}>
-              <summary>
-                {q}
-                <span aria-hidden="true">+</span>
-              </summary>
-              <p>{a}</p>
-            </details>
-          ))}
-        </div>
+        <ScrollReveal direction="up">
+          <div className="faq">
+            <SectionHead
+              eyebrow="Common questions"
+              title="Everything you need to know"
+            />
+            {[
+              [
+                "Can I switch study modes during the term?",
+                "Yes. Speak with our admissions team and we will help you move to the best option, subject to instructor availability.",
+              ],
+              [
+                "Do I need to own an instrument?",
+                "For onsite lessons, studio instruments are provided. For online and home lessons, you will need access to your own instrument.",
+              ],
+              [
+                "How long is each lesson?",
+                "Standard lessons are 60 minutes. Intensive sessions of 90 minutes are available on request.",
+              ],
+            ].map(([q, a], i) => (
+              <details key={q} open={i === 0}>
+                <summary>
+                  {q}
+                  <span aria-hidden="true">+</span>
+                </summary>
+                <p>{a}</p>
+              </details>
+            ))}
+          </div>
+        </ScrollReveal>
       </section>
     </main>
   )

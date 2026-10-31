@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useNetworkStatus } from "@/hooks/useNetworkStatus"
 
 interface ScrollRevealProps {
   children: ReactNode
@@ -6,6 +7,7 @@ interface ScrollRevealProps {
   delay?: number // milliseconds
   className?: string
   threshold?: number
+  rootMargin?: string
 }
 
 export function ScrollReveal({
@@ -14,18 +16,22 @@ export function ScrollReveal({
   delay = 0,
   className = "",
   threshold = 0.15,
+  rootMargin = "0px 0px -40px 0px",
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isRevealed, setIsRevealed] = useState(false)
+  const { isSlow } = useNetworkStatus()
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
 
-    // Immediately show if user prefers reduced motion
+    // Immediately show if user prefers reduced motion OR is on a slow connection
+    // This gives an instantaneous, snappy, frustration-free experience on 2G/3G
     if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      (typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
+      isSlow
     ) {
       setIsRevealed(true)
       return
@@ -40,7 +46,7 @@ export function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: "0px 0px -40px 0px", // triggers slightly before center
+        rootMargin,
       },
     )
 
@@ -49,7 +55,7 @@ export function ScrollReveal({
     return () => {
       observer.disconnect()
     }
-  }, [threshold])
+  }, [threshold, rootMargin, isSlow])
 
   const directionClass =
     direction === "left"
@@ -63,7 +69,9 @@ export function ScrollReveal({
   return (
     <div
       ref={ref}
-      style={{ transitionDelay: delay ? `${delay}ms` : undefined }}
+      style={{
+        transitionDelay: !isSlow && delay ? `${delay}ms` : undefined,
+      }}
       className={`reveal-base ${directionClass} ${
         isRevealed ? "is-revealed" : ""
       } ${className}`}

@@ -27,6 +27,8 @@ import {
   talkingDrumsImg,
 } from "@/lib/data"
 import { fetchCatalogStore } from "@/lib/api"
+import { ScrollReveal } from "@/components/ScrollReveal"
+import { LazyImage } from "@/components/LazyImage"
 import type { Page } from "@/types"
 
 export interface ProductItem {
@@ -424,6 +426,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       {/* ── 1. What We Offer (Standardized Categories) ─────────────────── */}
       <section className="section bg-white" id="what-we-offer">
         <div className="container">
+          <ScrollReveal direction="left">
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <span className="eyebrow">Inventory &amp; Sourcing</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -433,10 +436,12 @@ export function Store({ go }: { go: (p: Page) => void }) {
               Carefully curated instruments, accessories, and professional audio gear suited to beginners, churches, institutions, and seasoned musicians.
             </p>
           </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Category 1: Keyboards & Pianos */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={0} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   01
@@ -484,9 +489,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Category 2: Drums & Percussion */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={70} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   02
@@ -534,9 +541,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Category 3: Guitars & String Instruments */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={140} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   03
@@ -584,9 +593,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Category 4: Wind & Brass Instruments */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={210} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   04
@@ -634,9 +645,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Category 5: Professional Audio Equipment */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={280} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   05
@@ -680,9 +693,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Category 6: Music Accessories */}
-            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all">
+            <ScrollReveal direction="up" delay={350} className="h-full">
+            <div className="p-6 sm:p-7 rounded-2xl bg-[#faf8f5] border border-[var(--line)] flex flex-col justify-between hover:border-[var(--gold)] hover:shadow-md transition-all h-full">
               <div>
                 <div className="w-10 h-10 rounded-xl bg-amber-50 text-[var(--gold)] border border-[var(--gold)]/20 flex items-center justify-center font-bold text-sm mb-4">
                   06
@@ -722,6 +737,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </span>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -729,6 +745,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       {/* ── 2. Who We Serve & Why Buy from Vivadoxa ────────────────────── */}
       <section className="section bg-[#FAF8F5] border-t border-b border-[var(--line)]">
         <div className="container">
+          <ScrollReveal direction="left">
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <span className="eyebrow">The Vivadoxa Advantage</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -738,10 +755,12 @@ export function Store({ go }: { go: (p: Page) => void }) {
               We understand that every musician has different needs. Our goal is to help you choose equipment that delivers lasting value and supports your musical development.
             </p>
           </div>
+          </ScrollReveal>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
             {/* Who We Serve */}
-            <div className="p-8 sm:p-10 rounded-2xl bg-white border border-[var(--line)] shadow-xs flex flex-col justify-between">
+            <ScrollReveal direction="left" className="h-full">
+            <div className="p-8 sm:p-10 rounded-2xl bg-white border border-[var(--line)] shadow-xs flex flex-col justify-between h-full">
               <div>
                 <span className="eyebrow block mb-2">Our Community</span>
                 <h3 className="text-2xl sm:text-3xl font-serif text-[var(--navy)] mb-4 font-bold">
@@ -793,9 +812,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Why Buy from Vivadoxa? */}
-            <div className="p-8 sm:p-10 rounded-2xl bg-[var(--navy)] text-white shadow-xs flex flex-col justify-between">
+            <ScrollReveal direction="right" delay={120} className="h-full">
+            <div className="p-8 sm:p-10 rounded-2xl bg-[var(--navy)] text-white shadow-xs flex flex-col justify-between h-full">
               <div>
                 <span className="eyebrow !text-[var(--gold2)] block mb-2">Our Value Proposition</span>
                 <h3 className="text-2xl sm:text-3xl font-serif text-white mb-4 font-bold">
@@ -841,6 +862,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -848,6 +870,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       {/* ── 3. Active Showcase Catalog (Interactive Filter & Multi-Select) ── */}
       <section className="section bg-white" id="products-section">
         <div className="container">
+          <ScrollReveal direction="left">
           <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
             <span className="eyebrow">Product Showcase</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[var(--navy)] tracking-tight leading-[1.15] mt-2 mb-4">
@@ -857,8 +880,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
               Select one or multiple items using the checkbox on each card, or contact our sales team to confirm current stock, specifications, and prices.
             </p>
           </div>
+          </ScrollReveal>
 
           {/* Search & Category Filter */}
+          <ScrollReveal direction="up" delay={50}>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-2 md:pb-0">
               {categories.map((cat) => (
@@ -900,6 +925,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
               )}
             </div>
           </div>
+          </ScrollReveal>
 
           {/* Product Grid */}
           {filteredProducts.length === 0 ? (
@@ -923,12 +949,17 @@ export function Store({ go }: { go: (p: Page) => void }) {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {displayedProducts.map((product) => {
+              {displayedProducts.map((product, idx) => {
                 const checked = isSelected(product.id)
                 return (
-                  <div
+                  <ScrollReveal
                     key={product.id}
-                    className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden flex flex-col justify-between group hover:shadow-md ${
+                    direction="up"
+                    delay={(idx % 4) * 50}
+                    className="h-full"
+                  >
+                  <div
+                    className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden flex flex-col justify-between group hover:shadow-md h-full ${
                       checked
                         ? "border-[var(--gold)] ring-2 ring-[var(--gold)]/20 shadow-md"
                         : "border-[var(--line)] hover:border-slate-300"
@@ -937,18 +968,11 @@ export function Store({ go }: { go: (p: Page) => void }) {
                     <div>
                       {/* Image Frame with Badge & Checkbox */}
                       <div className="relative aspect-4/3 bg-[#FAF8F5] overflow-hidden">
-                        <img
+                        <LazyImage
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                          onError={(e) => {
-                            const target = e.currentTarget
-                            if (!target.dataset.fallback) {
-                              target.dataset.fallback = "1"
-                              target.src = "/media/programs/guitar-acoustic-recital.jpeg"
-                            }
-                          }}
+                          fallbackSrc="/media/programs/guitar-acoustic-recital.jpeg"
+                          className="group-hover:scale-105 transition-transform duration-300"
                         />
 
                         {/* Top Badges */}
@@ -1004,8 +1028,8 @@ export function Store({ go }: { go: (p: Page) => void }) {
                         </div>
 
                         <ul className="space-y-1 mb-2">
-                          {product.specs.slice(0, 2).map((s, idx) => (
-                            <li key={idx} className="text-[11px] text-slate-600 flex items-start gap-1.5 leading-tight">
+                          {product.specs.slice(0, 2).map((s, specIdx) => (
+                            <li key={specIdx} className="text-[11px] text-slate-600 flex items-start gap-1.5 leading-tight">
                               <span className="text-[var(--gold)] shrink-0">•</span>
                               <span className="line-clamp-1">{s}</span>
                             </li>
@@ -1035,6 +1059,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
                       </div>
                     </div>
                   </div>
+                  </ScrollReveal>
                 )
               })}
             </div>
@@ -1076,6 +1101,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
 
       {/* ── 4. Find Your Perfect Sound (Call to Action Section) ────────── */}
       <section className="py-16 sm:py-24 bg-[var(--navy)] text-white relative overflow-hidden">
+        <ScrollReveal direction="up">
         <div className="container max-w-4xl text-center relative z-10">
           <span className="eyebrow !text-[var(--gold2)] mb-3 block">Bespoke Procurement</span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-white tracking-tight leading-[1.15] mb-4">
@@ -1109,6 +1135,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
             </a>
           </div>
         </div>
+        </ScrollReveal>
       </section>
 
       {/* ── STICKY MULTI-ITEM INQUIRY BAR (Floating Bottom) ───────────── */}
