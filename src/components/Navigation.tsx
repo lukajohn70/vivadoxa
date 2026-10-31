@@ -75,7 +75,7 @@ export function Navbar({ page, go }: NavbarProps) {
     if (typeof window !== "undefined" && window.innerWidth <= 800) {
       e.preventDefault()
       setProgramsOpen((prev) => !prev)
-      setServicesOpen(false)
+      // setServicesOpen(false) — services dropdown removed
     } else {
       go("programs")
       setProgramsOpen(false)

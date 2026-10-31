@@ -42,7 +42,7 @@ export function GallerySection({
   go,
   standalone = false,
 }: {
-  go?: (p: Page | string) => void
+  go?: (p: Page) => void
   standalone?: boolean
 }) {
   const [items, setItems] = useState<GalleryItem[]>(initialGalleryItems)

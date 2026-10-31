@@ -188,10 +188,12 @@ export const Icon = ({
   name,
   size = 20,
   className = "",
+  style,
 }: {
   name: string
   size?: number
   className?: string
+  style?: React.CSSProperties
 }) => {
   if (name === "whatsapp") {
     return <WhatsAppIcon size={size} className={className} />
@@ -496,6 +498,7 @@ export const Icon = ({
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
+      style={style}
     >
       {paths[name]}
     </svg>
@@ -591,9 +594,11 @@ export function Button({
   disabled = false,
   type = "button",
   fullWidth = false,
+  full = false,
   style,
   className = "",
   "aria-label": ariaLabel,
+  title,
 }: {
   children: React.ReactNode
   variant?: "primary" | "secondary" | "ghost" | "danger"
@@ -601,9 +606,11 @@ export function Button({
   disabled?: boolean
   type?: "button" | "submit"
   fullWidth?: boolean
+  full?: boolean
   style?: React.CSSProperties
   className?: string
   "aria-label"?: string
+  title?: string
 }) {
   return (
     <button
@@ -612,7 +619,8 @@ export function Button({
       onClick={onClick}
       style={style}
       aria-label={ariaLabel}
-      className={`btn btn-${variant}${fullWidth ? " btn-full" : ""}${
+      title={title}
+      className={`btn btn-${variant}${(fullWidth || full) ? " btn-full" : ""}${
         className ? ` ${className}` : ""
       }`}
     >
@@ -622,6 +630,14 @@ export function Button({
 }
 
 // ── Form field primitives ─────────────────────────────────────────────────────
+function createSyntheticValue(val: string) {
+  return Object.assign(new String(val), {
+    target: { value: val },
+    currentTarget: { value: val },
+    value: val,
+  })
+}
+
 export const Field = ({
   label,
   placeholder,
@@ -640,7 +656,7 @@ export const Field = ({
   type?: string
   value?: string
   defaultValue?: string
-  onChange?: (v: string) => void
+  onChange?: (v: any) => void
   required?: boolean
   readOnly?: boolean
   error?: string
@@ -664,7 +680,11 @@ export const Field = ({
       value={value}
       defaultValue={defaultValue}
       readOnly={readOnly}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      onChange={
+        onChange
+          ? (e) => onChange(createSyntheticValue(e.target.value))
+          : undefined
+      }
       required={required}
       autoComplete={autoComplete}
       aria-describedby={error ? `${id}-err` : undefined}
@@ -686,14 +706,16 @@ export const Textarea = ({
   required = false,
   id,
   error,
+  rows,
 }: {
   label: string
   placeholder?: string
   value?: string
-  onChange?: (v: string) => void
+  onChange?: (v: any) => void
   required?: boolean
   id?: string
   error?: string
+  rows?: number
 }) => (
   <label className={`field full${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
@@ -709,7 +731,12 @@ export const Textarea = ({
       id={id}
       placeholder={placeholder}
       value={value}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      rows={rows}
+      onChange={
+        onChange
+          ? (e) => onChange(createSyntheticValue(e.target.value))
+          : undefined
+      }
       required={required}
       aria-describedby={error ? `${id}-err` : undefined}
       aria-invalid={!!error}
@@ -731,15 +758,17 @@ export const SelectField = ({
   placeholder = "Select an option",
   error,
   children,
+  options,
 }: {
   label: string
   value?: string
-  onChange?: (v: string) => void
+  onChange?: (v: any) => void
   required?: boolean
   id?: string
   placeholder?: string
   error?: string
-  children: React.ReactNode
+  children?: React.ReactNode
+  options?: Array<{ value: string; label: string } | string>
 }) => (
   <label className={`field${error ? " field-error" : ""}`} htmlFor={id}>
     <span>
@@ -754,7 +783,11 @@ export const SelectField = ({
     <select
       id={id}
       value={value ?? ""}
-      onChange={onChange ? (e) => onChange(e.target.value) : undefined}
+      onChange={
+        onChange
+          ? (e) => onChange(createSyntheticValue(e.target.value))
+          : undefined
+      }
       required={required}
       aria-describedby={error ? `${id}-err` : undefined}
       aria-invalid={!!error}
@@ -762,7 +795,17 @@ export const SelectField = ({
       <option value="" disabled>
         {placeholder}
       </option>
-      {children}
+      {options
+        ? options.map((opt) => {
+            const val = typeof opt === "string" ? opt : opt.value
+            const lbl = typeof opt === "string" ? opt : opt.label
+            return (
+              <option key={val} value={val}>
+                {lbl}
+              </option>
+            )
+          })
+        : children}
     </select>
     {error && (
       <span id={`${id}-err`} className="field-hint error" role="alert">

@@ -2143,7 +2143,6 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
             residentialAddress: data.address,
             guardianName: data.guardianName || data.sponsor,
             guardianPhone: data.guardianPhone || data.phone,
-            passport_photo: data.passportPhoto,
             passportPhoto: data.passportPhoto,
             application_no:
               sessionStorage.getItem("vdx_current_ref") ||

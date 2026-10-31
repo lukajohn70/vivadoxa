@@ -108,9 +108,9 @@ export function AdminGalleryView({
 
     setUploading(true)
     try {
-      const res = await uploadGalleryPhoto(file)
+      const res = await uploadGalleryPhoto(file) as any
       if (res && res.success && res.image_url) {
-        setFormImage(res.image_url)
+        setFormImage(res.image_url as string)
         setActionNotice("Photo uploaded successfully!")
       } else {
         // Fallback for offline dev: create object URL or base64 preview
@@ -305,7 +305,7 @@ export function AdminGalleryView({
             variant="ghost"
             onClick={() => setResetConfirm(true)}
             className="text-xs text-slate-600 hover:text-red-700"
-            title="Reset gallery to the 16 original imported photos"
+            aria-label="Reset gallery to the 16 original imported photos"
           >
             Reset Defaults
           </Button>

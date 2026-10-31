@@ -29,7 +29,7 @@ import {
   bassGuitarImg,
   studioImg,
 } from "@/lib/data"
-import { fetchCatalogRentals } from "@/lib/api"
+import { fetchCatalogRentals, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
 import type { Page } from "@/types"
@@ -275,6 +275,15 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
 
+    // Connect to backend database & admin notification
+    submitEnquiry({
+      fullName: formName || "Rental Fleet Customer",
+      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      phone: formPhone,
+      subject: `Rental Reservation (${selectedRentals.length} Items): ${selectedRentals.map(r => r.name).slice(0, 2).join(", ")}`,
+      message: `Selected Fleet Items:\n${selectedRentals.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join("\n")}\n\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
+    }).catch(() => {})
+
     const msg = `Hello Vivadoxa Admin, I would like to reserve the following ${selectedRentals.length} rental items:%0A%0A${itemsList}%0A%0A• Duration: ${encodeURIComponent(
       formDuration,
     )}%0A• Customer: ${encodeURIComponent(formName || "Customer")}%0A• WhatsApp/Phone: ${encodeURIComponent(
@@ -298,6 +307,15 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
 
+    // Connect to backend database
+    submitEnquiry({
+      fullName: formName || "Rental Fleet Customer",
+      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      phone: formPhone,
+      subject: `Rental Reservation (${selectedRentals.length} Items): ${selectedRentals.map(r => r.name).slice(0, 2).join(", ")}`,
+      message: `Selected Fleet Items:\n${selectedRentals.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join("\n")}\n\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
+    }).catch(() => {})
+
     const body = `Hello Vivadoxa Administration,\n\nI would like to inquire about reserving the following ${selectedRentals.length} items from your rental fleet:\n\n${itemsList}\n\nRental Details:\n• Duration: ${formDuration}\n• Customer Name: ${formName || "Customer"}\n• Phone: ${formPhone || "Not provided"}\n• Intake Method: ${intakeText}\n• Notes: ${formNotes || "None"}\n\nPlease let me know the rental quote, caution deposit requirements, and handover schedule.\n\nThank you!`
 
     window.location.href = `mailto:${SCHOOL_EMAIL}?subject=${encodeURIComponent(
@@ -312,6 +330,16 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
     const gearText = selectedGear || "Musical Instrument / Equipment Rental"
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress}`
+
+    // Connect to backend database & admin notification
+    submitEnquiry({
+      fullName: formName || "Rental Customer",
+      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      phone: formPhone,
+      subject: `Rental Reservation: ${gearText}`,
+      message: `Item: ${gearText}\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
+    }).catch(() => {})
+
     const msg = `Hello Vivadoxa Admin, I would like to reserve a rental:%0A%0A• Item: ${encodeURIComponent(
       gearText,
     )}%0A• Duration: ${encodeURIComponent(formDuration)}%0A• Name: ${encodeURIComponent(
@@ -908,14 +936,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                   <Field
                     label="Your Full Name"
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
+                    onChange={(val: any) => setFormName(typeof val === "string" ? val : val?.target?.value ?? "")}
                     placeholder="e.g. Samuel Danladi"
                     required
                   />
                   <Field
                     label="WhatsApp / Phone Number"
                     value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
+                    onChange={(val: any) => setFormPhone(typeof val === "string" ? val : val?.target?.value ?? "")}
                     placeholder="0803 889 0786"
                     required
                   />
@@ -926,13 +954,13 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                     label="Email Address (Optional)"
                     type="email"
                     value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
+                    onChange={(val: any) => setFormEmail(typeof val === "string" ? val : val?.target?.value ?? "")}
                     placeholder="you@example.com"
                   />
                   <SelectField
                     label="Desired Rental Duration"
                     value={formDuration}
-                    onChange={(e) => setFormDuration(e.target.value)}
+                    onChange={(val: any) => setFormDuration(typeof val === "string" ? val : val?.target?.value ?? "")}
                     options={[
                       { value: "1 Month", label: "1 Month (Student Practice)" },
                       { value: "3 Months", label: "3 Months (Academic Term)" },
@@ -976,7 +1004,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                   <Field
                     label="Delivery Address & Landmark (Kaduna)"
                     value={formAddress}
-                    onChange={(e) => setFormAddress(e.target.value)}
+                    onChange={(val: any) => setFormAddress(typeof val === "string" ? val : val?.target?.value ?? "")}
                     placeholder="e.g. Barnawa Complex, near Market, Kaduna"
                     required
                   />
@@ -985,7 +1013,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 <Textarea
                   label="Notes / Instrument Specifications"
                   value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
+                  onChange={(val: any) => setFormNotes(typeof val === "string" ? val : val?.target?.value ?? "")}
                   placeholder="Specify size requirements (e.g. 1/2 vs 4/4 violin), sound engineer request, or dates."
                   rows={2}
                 />
@@ -1020,7 +1048,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               <Field
                 label="Selected Instrument or Equipment"
                 value={selectedGear}
-                onChange={(e) => setSelectedGear(e.target.value)}
+                onChange={(val: any) => setSelectedGear(typeof val === "string" ? val : val?.target?.value ?? "")}
                 placeholder="e.g. Student Conservatory Violin Outfit, 61-Key Keyboard, PA System"
                 required
               />
@@ -1030,14 +1058,14 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               <Field
                 label="Full Name"
                 value={formName}
-                onChange={(e) => setFormName(e.target.value)}
+                onChange={(val: any) => setFormName(typeof val === "string" ? val : val?.target?.value ?? "")}
                 placeholder="Your full name"
                 required
               />
               <Field
                 label="WhatsApp / Phone Number"
                 value={formPhone}
-                onChange={(e) => setFormPhone(e.target.value)}
+                onChange={(val: any) => setFormPhone(typeof val === "string" ? val : val?.target?.value ?? "")}
                 placeholder="0803 889 0786"
                 required
               />
@@ -1048,13 +1076,13 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 label="Email Address"
                 type="email"
                 value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
+                onChange={(val: any) => setFormEmail(typeof val === "string" ? val : val?.target?.value ?? "")}
                 placeholder="you@example.com"
               />
               <SelectField
                 label="Desired Rental Duration"
                 value={formDuration}
-                onChange={(e) => setFormDuration(e.target.value)}
+                onChange={(val: any) => setFormDuration(typeof val === "string" ? val : val?.target?.value ?? "")}
                 options={[
                   { value: "1 Month", label: "1 Month (Student Practice)" },
                   { value: "3 Months", label: "3 Months (Academic Term)" },
@@ -1098,7 +1126,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               <Field
                 label="Delivery Address & Landmark (Kaduna)"
                 value={formAddress}
-                onChange={(e) => setFormAddress(e.target.value)}
+                onChange={(val: any) => setFormAddress(typeof val === "string" ? val : val?.target?.value ?? "")}
                 placeholder="e.g. Barnawa Complex, near Market, Kaduna"
                 required
               />
@@ -1107,7 +1135,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
             <Textarea
               label="Additional Notes / Special Requirements"
               value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
+              onChange={(val: any) => setFormNotes(typeof val === "string" ? val : val?.target?.value ?? "")}
               placeholder="Specify size (e.g. 1/2 or 4/4 violin), music style, or delivery schedule preferences."
               rows={3}
             />

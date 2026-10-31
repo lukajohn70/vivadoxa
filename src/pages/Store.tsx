@@ -26,7 +26,7 @@ import {
   fluteImg,
   talkingDrumsImg,
 } from "@/lib/data"
-import { fetchCatalogStore } from "@/lib/api"
+import { fetchCatalogStore, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
 import type { Page } from "@/types"
@@ -288,6 +288,15 @@ export function Store({ go }: { go: (p: Page) => void }) {
 
     const intakeDesc = formIntake === "pickup" ? "Studio Pickup in Kaduna" : "Courier Delivery in Kaduna"
 
+    // Connect to backend database & admin notification
+    submitEnquiry({
+      fullName: formName || "Store Customer",
+      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@store.vivadoxa.ng` : "sales@vivadoxa.ng"),
+      phone: formPhone,
+      subject: `Store Inquiry (${selectedItems.length} items): ${selectedItems.map((i) => i.name).slice(0, 2).join(", ")}`,
+      message: `Selected Showcase Items:\n${selectedItems.map((item, i) => `${i + 1}. ${item.name} (${item.brand || "Vivadoxa"} - ${item.category})`).join("\n")}\n\nIntake: ${intakeDesc}\nNotes: ${formNotes || "N/A"}`,
+    }).catch(() => {})
+
     const msg = `Hello Vivadoxa Admin, I would like to purchase the following ${selectedItems.length} items from your showcase:%0A%0A${itemsList}%0A%0ACustomer Details:%0A• Name: ${encodeURIComponent(
       formName || "Customer",
     )}%0A• WhatsApp/Phone: ${encodeURIComponent(
@@ -323,6 +332,16 @@ export function Store({ go }: { go: (p: Page) => void }) {
   // Handle Request a Quote modal submit
   const handleQuoteSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Connect to backend database & admin notification
+    submitEnquiry({
+      fullName: quoteForm.name || "Quote Request",
+      email: quoteForm.email || (quoteForm.phone ? `${quoteForm.phone.replace(/\D/g, "")}@quote.vivadoxa.ng` : "sales@vivadoxa.ng"),
+      phone: quoteForm.phone,
+      subject: `Store Quote Request: ${quoteForm.instrumentNeeded} (${quoteForm.clientType})`,
+      message: `Client Type: ${quoteForm.clientType}\nInstrument Played: ${quoteForm.instrumentPlayed || "N/A"}\nInstrument Needed: ${quoteForm.instrumentNeeded}\nBudget: ${quoteForm.budget || "Flexible"}\nNotes: ${quoteForm.notes || "None"}`,
+    }).catch(() => {})
+
     const msg = `Hello Vivadoxa Store,%0A%0AI would like to request an instrument quotation:%0A%0A• Name: ${encodeURIComponent(
       quoteForm.name,
     )}%0A• Phone/WhatsApp: ${encodeURIComponent(

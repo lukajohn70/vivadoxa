@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import React, { useEffect, useRef, useState, type ReactNode } from "react"
 import { useNetworkStatus } from "@/hooks/useNetworkStatus"
 
 interface ScrollRevealProps {
@@ -6,6 +6,7 @@ interface ScrollRevealProps {
   direction?: "left" | "right" | "up" | "none"
   delay?: number // milliseconds
   className?: string
+  style?: React.CSSProperties
   threshold?: number
   rootMargin?: string
 }
@@ -15,6 +16,7 @@ export function ScrollReveal({
   direction = "up",
   delay = 0,
   className = "",
+  style,
   threshold = 0.15,
   rootMargin = "0px 0px -40px 0px",
 }: ScrollRevealProps) {
@@ -71,6 +73,7 @@ export function ScrollReveal({
       ref={ref}
       style={{
         transitionDelay: !isSlow && delay ? `${delay}ms` : undefined,
+        ...style,
       }}
       className={`reveal-base ${directionClass} ${
         isRevealed ? "is-revealed" : ""

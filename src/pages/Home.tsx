@@ -1435,7 +1435,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 <div className="flex flex-wrap items-center gap-4">
                   <button
                     type="button"
-                    onClick={() => go("/about#founder")}
+                    onClick={() => { go("about"); setTimeout(() => { const el = document.getElementById("founder"); if (el) el.scrollIntoView({ behavior: "smooth" }) }, 200) }}
                     className="btn btn-primary"
                   >
                     <span>Read Frederick&apos;s Full Story</span>
