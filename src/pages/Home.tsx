@@ -1290,6 +1290,38 @@ export function Home({ go }: { go: (p: Page) => void }) {
         }}
       >
         <div className="container">
+          {/* Section Header Before Content */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+            <ScrollReveal direction="left">
+              <div>
+                <span className="eyebrow" style={{ color: "var(--gold-text-dark, #e2925a)" }}>
+                  Executive Leadership
+                </span>
+                <h2
+                  style={{
+                    fontSize: "clamp(28px, 3.8vw, 42px)",
+                    margin: "8px 0 0",
+                    color: "white",
+                  }}
+                >
+                  Founder&apos;s Vision &amp; Leadership
+                </h2>
+                <p
+                  style={{
+                    color: "var(--line-strong)",
+                    fontSize: 15,
+                    margin: "6px 0 0",
+                    maxWidth: 620,
+                  }}
+                >
+                  Meet the visionary behind Vivadoxa Music, driving innovation,
+                  uncompromising excellence, and musical empowerment across
+                  Northern Nigeria and beyond.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Founder Portrait */}
             <ScrollReveal direction="left" className="lg:col-span-4">
@@ -1351,20 +1383,20 @@ export function Home({ go }: { go: (p: Page) => void }) {
             <ScrollReveal direction="right" className="lg:col-span-8">
               <div className="max-w-2xl">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-[var(--gold-text-dark,#e2925a)] uppercase tracking-wider mb-4">
-                  <span>Founder&apos;s Vision</span>
+                  <span>A Vision Beyond Music</span>
                 </div>
 
-                <h2
+                <h3
                   style={{
                     fontFamily: "'DM Serif Display', serif",
-                    fontSize: "clamp(28px, 3.8vw, 42px)",
+                    fontSize: "clamp(26px, 3.4vw, 38px)",
                     color: "white",
                     lineHeight: 1.25,
                     margin: "0 0 16px",
                   }}
                 >
                   &ldquo;A Vision Beyond Music. A Passion for Excellence.&rdquo;
-                </h2>
+                </h3>
 
                 <p
                   style={{
@@ -1417,7 +1449,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 <div className="flex flex-wrap items-center gap-4">
                   <button
                     type="button"
-                    onClick={() => go("about")}
+                    onClick={() => go("/about#founder")}
                     className="btn btn-primary"
                   >
                     <span>Read Frederick&apos;s Full Story</span>

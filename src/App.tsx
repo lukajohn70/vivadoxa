@@ -57,6 +57,7 @@ function AppShell() {
 
   // Standard navigation dispatcher compatible with legacy go() prop
   function go(p: Page | string) {
+    const hasHash = p.includes("#")
     const route =
       p === "home"
         ? "/"
@@ -68,7 +69,9 @@ function AppShell() {
               ? p
               : `/${p}`
     navigate(route)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    if (!hasHash) {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
   }
 
   const isStandalone =

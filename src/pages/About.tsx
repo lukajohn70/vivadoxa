@@ -1,9 +1,26 @@
+import { useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import { PageHero, SectionHead, Icon } from "@/components/ui"
 import { SEO } from "@/components/SEO"
 import { cohortImg } from "@/lib/data"
 import type { Page } from "@/types"
 
 export function About({ go }: { go: (p: Page) => void }) {
+  const location = useLocation()
+
+  useEffect(() => {
+    const hash = location.hash || window.location.hash
+    if (hash) {
+      const id = hash.replace("#", "")
+      const el = document.getElementById(id)
+      if (el) {
+        const timer = setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" })
+        }, 120)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [location.hash])
   return (
     <main>
       <SEO
@@ -509,7 +526,7 @@ export function About({ go }: { go: (p: Page) => void }) {
       {/* ── Meet Our CEO & Founder (High-Contrast Deep Brand Canvas) ───────── */}
       <section
         id="founder"
-        className="section"
+        className="section scroll-mt-24"
         style={{
           background: "#0B0B0B",
           color: "white",
@@ -517,6 +534,7 @@ export function About({ go }: { go: (p: Page) => void }) {
           borderBottom: "3px solid var(--gold)",
           position: "relative",
           overflow: "hidden",
+          scrollMarginTop: "90px",
         }}
       >
         {/* Subtle Brand Glow Accent in Background */}
