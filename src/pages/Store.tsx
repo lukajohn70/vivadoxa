@@ -291,8 +291,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
     // Connect to backend database & admin notification
     submitEnquiry({
       fullName: formName || "Store Customer",
-      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@store.vivadoxa.ng` : "sales@vivadoxa.ng"),
+      email: formEmail || "",
       phone: formPhone,
+      source: "store",
+      type: "inquiry",
       subject: `Store Inquiry (${selectedItems.length} items): ${selectedItems.map((i) => i.name).slice(0, 2).join(", ")}`,
       message: `Selected Showcase Items:\n${selectedItems.map((item, i) => `${i + 1}. ${item.name} (${item.brand || "Vivadoxa"} - ${item.category})`).join("\n")}\n\nIntake: ${intakeDesc}\nNotes: ${formNotes || "N/A"}`,
     }).catch(() => {})
@@ -336,8 +338,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
     // Connect to backend database & admin notification
     submitEnquiry({
       fullName: quoteForm.name || "Quote Request",
-      email: quoteForm.email || (quoteForm.phone ? `${quoteForm.phone.replace(/\D/g, "")}@quote.vivadoxa.ng` : "sales@vivadoxa.ng"),
+      email: quoteForm.email || "",
       phone: quoteForm.phone,
+      source: "store",
+      type: "quote",
       subject: `Store Quote Request: ${quoteForm.instrumentNeeded} (${quoteForm.clientType})`,
       message: `Client Type: ${quoteForm.clientType}\nInstrument Played: ${quoteForm.instrumentPlayed || "N/A"}\nInstrument Needed: ${quoteForm.instrumentNeeded}\nBudget: ${quoteForm.budget || "Flexible"}\nNotes: ${quoteForm.notes || "None"}`,
     }).catch(() => {})

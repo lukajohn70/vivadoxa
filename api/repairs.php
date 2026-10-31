@@ -113,6 +113,10 @@ if ($method === 'GET') {
     if (empty($name) || empty($phone) || empty($instrument)) {
         jsonResponse(['success' => false, 'error' => 'Please provide customer name, phone, and instrument details.'], 400);
     }
+    // Allow blank email — store empty string so NOT NULL constraint is satisfied
+    if (empty($email)) {
+        $email = '';
+    }
 
     if ($intakeMethod === 'pickup' && empty($pickupAddress)) {
         jsonResponse(['success' => false, 'error' => 'Please provide a pickup address and landmark for instrument collection.'], 400);

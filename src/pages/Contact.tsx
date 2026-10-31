@@ -122,6 +122,8 @@ export function Contact() {
         phone: form.phone,
         subject: form.subject,
         message: form.message,
+        source: "contact",
+        type: "general",
       })
 
       if (res && res.success) {

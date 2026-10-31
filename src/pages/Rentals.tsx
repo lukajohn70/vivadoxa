@@ -278,8 +278,10 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     // Connect to backend database & admin notification
     submitEnquiry({
       fullName: formName || "Rental Fleet Customer",
-      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      email: formEmail || "",
       phone: formPhone,
+      source: "rentals",
+      type: "reservation",
       subject: `Rental Reservation (${selectedRentals.length} Items): ${selectedRentals.map(r => r.name).slice(0, 2).join(", ")}`,
       message: `Selected Fleet Items:\n${selectedRentals.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join("\n")}\n\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
     }).catch(() => {})
@@ -310,8 +312,10 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     // Connect to backend database
     submitEnquiry({
       fullName: formName || "Rental Fleet Customer",
-      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      email: formEmail || "",
       phone: formPhone,
+      source: "rentals",
+      type: "reservation",
       subject: `Rental Reservation (${selectedRentals.length} Items): ${selectedRentals.map(r => r.name).slice(0, 2).join(", ")}`,
       message: `Selected Fleet Items:\n${selectedRentals.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join("\n")}\n\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
     }).catch(() => {})
@@ -334,8 +338,10 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     // Connect to backend database & admin notification
     submitEnquiry({
       fullName: formName || "Rental Customer",
-      email: formEmail || (formPhone ? `${formPhone.replace(/\D/g, "")}@rentals.vivadoxa.ng` : "rentals@vivadoxa.ng"),
+      email: formEmail || "",
       phone: formPhone,
+      source: "rentals",
+      type: "reservation",
       subject: `Rental Reservation: ${gearText}`,
       message: `Item: ${gearText}\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
     }).catch(() => {})
