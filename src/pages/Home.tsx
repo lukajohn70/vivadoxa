@@ -9,6 +9,7 @@ import {
   GoogleIcon,
 } from "@/components/ui"
 import { HomeReviewsSpotlight } from "@/components/HomeReviewsSpotlight"
+import { GallerySection } from "@/components/GallerySection"
 import { StatCounters } from "@/components/StatCounters"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { SEO } from "@/components/SEO"
@@ -858,6 +859,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
           </div>
         </div>
       </section>
+
+      {/* ── 9. Official Academy Photo Gallery (Authentic Moments & Scholars) ── */}
+      <GallerySection go={go} />
 
       {/* ── 10. Instrument Repairs Teaser (Killer Vivadoxa Differentiator) ─ */}
       <section

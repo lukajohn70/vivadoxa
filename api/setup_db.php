@@ -315,6 +315,21 @@ try {
         ) ENGINE=InnoDB;
     ");
 
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `gallery` (
+            `id` VARCHAR(100) PRIMARY KEY,
+            `title` VARCHAR(255) NOT NULL,
+            `category` VARCHAR(100) NOT NULL DEFAULT 'Ensembles & Bands',
+            `caption` TEXT NULL,
+            `image` VARCHAR(500) NOT NULL,
+            `featured` TINYINT(1) NOT NULL DEFAULT 0,
+            `date` VARCHAR(100) NULL,
+            `sort_order` INT NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;
+    ");
+
 
     // 4. Seed admins
     $adminsToSeed = [

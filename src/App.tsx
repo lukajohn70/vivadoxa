@@ -20,6 +20,7 @@ import {
   Studio,
   Contact,
   Performances,
+  Gallery,
   Rentals,
   Store,
 } from "@/pages/StaticPages"
@@ -103,6 +104,7 @@ function AppShell() {
           <Route path="/rentals" element={<Rentals go={go} />} />
           <Route path="/store" element={<Store go={go} />} />
           <Route path="/performances" element={<Performances go={go} />} />
+          <Route path="/gallery" element={<Gallery go={go} />} />
           <Route
             path="/reviews"
             element={

@@ -1,6 +1,18 @@
 // ─── Application-wide type definitions ───────────────────────────────────────
 
-export type Page = "home" | "about" | "programs" | "modes" | "repairs" | "studio" | "performances" | "reviews" | "apply" | "payment" | "status" | "portal" | "portal-login" | "contact" | "admin" | "admin-login" | "privacy" | "terms" | "tuition-policy" | "safeguarding" | "cookies" | "cookie-policy" | "rentals" | "store"
+export type Page = "home" | "about" | "programs" | "modes" | "repairs" | "studio" | "performances" | "reviews" | "gallery" | "apply" | "payment" | "status" | "portal" | "portal-login" | "contact" | "admin" | "admin-login" | "privacy" | "terms" | "tuition-policy" | "safeguarding" | "cookies" | "cookie-policy" | "rentals" | "store"
+
+// Photo Gallery Item
+export interface GalleryItem {
+  id: string
+  title: string
+  category: string
+  caption?: string
+  image: string
+  featured?: boolean
+  date?: string
+  sort_order?: number
+}
 
 // Application form data
 export interface ApplicationData {

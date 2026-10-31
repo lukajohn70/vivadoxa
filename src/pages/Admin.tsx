@@ -41,6 +41,7 @@ import {
   GeneralSettingsView,
 } from "@/components/AdminSystemViews"
 import { ShopAndRentalsView } from "@/components/AdminCatalogView"
+import { AdminGalleryView } from "@/components/AdminGalleryView"
 import { ClassScheduleManagerView } from "@/components/AdminScheduleViews"
 import {
   AdmissionLetterModal,
@@ -252,6 +253,7 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         "Programs & Courses",
         "Instructors",
         "Performances & Recitals",
+        "Photo Gallery",
         "Students",
         "Class Schedule",
       ],
@@ -1746,7 +1748,9 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {title === "Shop & Rentals" ? (
+      {title === "Photo Gallery" ? (
+        <AdminGalleryView setActionNotice={setActionNotice} />
+      ) : title === "Shop & Rentals" ? (
         <ShopAndRentalsView setActionNotice={setActionNotice} />
       ) : title === "Staff & Roles" ? (
         <StaffAndRolesView setActionNotice={setActionNotice} />

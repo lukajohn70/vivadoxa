@@ -1,3 +1,6 @@
+import type { GalleryItem } from "@/types"
+import { initialGalleryItems } from "@/lib/data"
+
 // ─── API client for Vivadoxa backend ───────────────────────────────────
 // Fully harmonized with the front-end admissions, payment, repairs, and academics.
 // All application records are strictly queried and committed to the MySQL database.
@@ -2412,6 +2415,128 @@ export async function resetCatalogDefaults(): Promise<ApiResponse> {
     return await res.json()
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to reset catalog." }
+  }
+}
+
+// ── GALLERY SHOWCASE API ───────────────────────────────────────────────────────
+export async function fetchGalleryItems(
+  category?: string,
+  featured?: boolean,
+): Promise<GalleryItem[]> {
+  try {
+    const params = new URLSearchParams()
+    if (category && category !== "All") params.append("category", category)
+    if (featured !== undefined) params.append("featured", String(featured))
+    const qs = params.toString() ? `?${params.toString()}` : ""
+
+    const res = await fetch(`${getApiUrl("gallery.php")}${qs}`, {
+      credentials: "include",
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success && Array.isArray(data.items)) {
+      return data.items
+    }
+  } catch (err) {
+    console.warn("fetchGalleryItems fallback to static data:", err)
+  }
+
+  // Fallback to static initial items
+  let items = [...initialGalleryItems]
+  if (category && category !== "All") {
+    items = items.filter(
+      (i) => i.category.toLowerCase() === category.toLowerCase(),
+    )
+  }
+  if (featured !== undefined) {
+    items = items.filter((i) => Boolean(i.featured) === featured)
+  }
+  return items
+}
+
+export async function saveGalleryItem(
+  item: Partial<GalleryItem>,
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save_item", item }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save photo." }
+  }
+}
+
+export async function deleteGalleryItem(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete_item", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete photo." }
+  }
+}
+
+export async function toggleGalleryFeatured(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_featured", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to toggle featured status." }
+  }
+}
+
+export async function reorderGallery(order: string[]): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "reorder", order }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to reorder gallery." }
+  }
+}
+
+export async function resetGalleryDefaults(): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "reset_defaults" }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to reset gallery." }
+  }
+}
+
+export async function uploadGalleryPhoto(file: File): Promise<ApiResponse> {
+  try {
+    const formData = new FormData()
+    formData.append("photo", file)
+    const res = await fetch(getApiUrl("gallery.php"), {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to upload photo." }
   }
 }
 

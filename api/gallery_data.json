@@ -1,0 +1,162 @@
+[
+    {
+        "id": "gal-1",
+        "title": "Youth Alto Saxophone Soloist",
+        "category": "Brass & Woodwinds",
+        "caption": "Junior scholar demonstrating breath control, embouchure, and tone production on the alto saxophone during masterclass.",
+        "image": "/media/gallery/gallery-01-youth-saxophone.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 1
+    },
+    {
+        "id": "gal-2",
+        "title": "Vocal & Yamaha Keyboard Performance",
+        "category": "Piano & Keys",
+        "caption": "Scholar accompanying himself on the Yamaha arranger workstation while performing contemporary vocals.",
+        "image": "/media/gallery/gallery-02-keyboard-vocals-boy.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 2
+    },
+    {
+        "id": "gal-3",
+        "title": "Young Pianist & Vocal Soloist",
+        "category": "Piano & Keys",
+        "caption": "Expressive vocal recital and two-handed keyboard accompaniment showcasing melody-harmony coordination.",
+        "image": "/media/gallery/gallery-03-keyboard-vocals-girl.jpeg",
+        "featured": false,
+        "date": "October 2026",
+        "sort_order": 3
+    },
+    {
+        "id": "gal-4",
+        "title": "Recital Hall & Community Audience",
+        "category": "Community & Recitals",
+        "caption": "Proud parents, families, and music enthusiasts gathered to cheer Vivadoxa scholars at the academy recital showcase.",
+        "image": "/media/gallery/gallery-04-recital-audience-community.jpeg",
+        "featured": false,
+        "date": "October 2026",
+        "sort_order": 4
+    },
+    {
+        "id": "gal-5",
+        "title": "Full Live Youth Ensemble & Directing",
+        "category": "Ensembles & Bands",
+        "caption": "Director-led academy ensemble masterclass featuring brass, keys, drums, electric bass, and student vocalists in live unison.",
+        "image": "/media/gallery/gallery-05-full-ensemble-masterclass.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 5
+    },
+    {
+        "id": "gal-6",
+        "title": "Saxophone Section & Groove Rhythm Section",
+        "category": "Brass & Woodwinds",
+        "caption": "Dual saxophone section synchronizing melodic motifs backed by solid electric bass groove and acoustic drums.",
+        "image": "/media/gallery/gallery-06-sax-and-bass-band.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 6
+    },
+    {
+        "id": "gal-7",
+        "title": "Conservatory Violin Technique",
+        "category": "Strings & Violin",
+        "caption": "Scholar executing graded violin repertoire with focused bow hold, chin-rest alignment, and intonation precision.",
+        "image": "/media/gallery/gallery-07-violin-student-recital.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 7
+    },
+    {
+        "id": "gal-8",
+        "title": "Community Worship & Vocal Showcase",
+        "category": "Community & Recitals",
+        "caption": "Audience and parent participation during uplifting vocal performance at the music conservatory hall.",
+        "image": "/media/gallery/gallery-08-community-vocals-showcase.jpeg",
+        "featured": false,
+        "date": "October 2026",
+        "sort_order": 8
+    },
+    {
+        "id": "gal-9",
+        "title": "Early Childhood Keys Lab",
+        "category": "Piano & Keys",
+        "caption": "Young scholar developing finger dexterity, ear training, and keyboard geography on digital workstation.",
+        "image": "/media/gallery/gallery-09-early-childhood-piano.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 9
+    },
+    {
+        "id": "gal-10",
+        "title": "Solo Violin Recital Presentation",
+        "category": "Strings & Violin",
+        "caption": "Graded string candidate performing classical repertoire with poised stage confidence.",
+        "image": "/media/gallery/gallery-10-violin-solo-performance.jpeg",
+        "featured": false,
+        "date": "October 2026",
+        "sort_order": 10
+    },
+    {
+        "id": "gal-11",
+        "title": "Executive Adult Saxophone Masterclass",
+        "category": "Brass & Woodwinds",
+        "caption": "Adult learner mastering melodic phrasing and jazz embellishments in Vivadoxa's flexible executive program.",
+        "image": "/media/gallery/gallery-11-adult-saxophone-mastery.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 11
+    },
+    {
+        "id": "gal-12",
+        "title": "Singer-Songwriter Acoustic Guitar Set",
+        "category": "Guitars",
+        "caption": "Acoustic scholar playing fingerstyle and chord progressions while delivering lead vocals before the Vivadoxa banner.",
+        "image": "/media/gallery/gallery-12-acoustic-guitar-vocalist.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 12
+    },
+    {
+        "id": "gal-13",
+        "title": "Youth Acoustic-Electric Guitarist",
+        "category": "Guitars",
+        "caption": "Young guitarist demonstrating rhythmic strumming and pick control in live workshop.",
+        "image": "/media/gallery/gallery-13-youth-guitar-performer.jpeg",
+        "featured": false,
+        "date": "October 2026",
+        "sort_order": 13
+    },
+    {
+        "id": "gal-14",
+        "title": "Concert Digital Piano Recital",
+        "category": "Piano & Keys",
+        "caption": "Young prodigy scholar delivering expressive piano solo with dynamic touch.",
+        "image": "/media/gallery/gallery-14-classical-piano-recital.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 14
+    },
+    {
+        "id": "gal-15",
+        "title": "Drum Kit Rhythm Lab & Time-Keeping",
+        "category": "Drums & Rhythm",
+        "caption": "Rhythm student mastering four-way limb independence, backbeats, and dynamic groove on the Yamaha acoustic kit.",
+        "image": "/media/gallery/gallery-15-drum-kit-rhythm-lab.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 15
+    },
+    {
+        "id": "gal-16",
+        "title": "Synchronized Keyboard Lab Class",
+        "category": "Piano & Keys",
+        "caption": "Group keyboard laboratory where scholars learn sight-reading, scale drills, and multi-part ensemble arrangements.",
+        "image": "/media/gallery/gallery-16-keyboard-lab-group-class.jpeg",
+        "featured": true,
+        "date": "October 2026",
+        "sort_order": 16
+    }
+]

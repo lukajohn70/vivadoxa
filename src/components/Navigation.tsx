@@ -272,6 +272,20 @@ export function Navbar({ page, go }: NavbarProps) {
               <span>Store</span>
             </button>
 
+            {/* 5B. Gallery Showcase */}
+            <button
+              className={`inline-flex items-center gap-1.5 ${
+                page === "gallery" ? "active" : ""
+              }`}
+              onClick={() => {
+                go("gallery")
+                setOpen(false)
+              }}
+              aria-current={page === "gallery" ? "page" : undefined}
+            >
+              <span>Gallery</span>
+            </button>
+
             {/* 6. About Vivadoxa */}
             <button
               className={page === "about" ? "active" : ""}
@@ -375,6 +389,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
               ["Instrument Repairs & Clinic", "repairs"],
               ["Instrument & Sound Rentals", "rentals"],
               ["Music Store & Supplies", "store"],
+              ["Photo Gallery", "gallery"],
               ["Student Recitals", "performances"],
               ["Study Modes & Home Lessons", "modes"],
             ] as [string, Page][]).map(([x, p]) => (
