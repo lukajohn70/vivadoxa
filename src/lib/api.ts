@@ -53,6 +53,7 @@ export interface ApiResponse<T = any> {
   tuition_fee?: number | string
   tracking_code?: string
   reference?: string
+  order_ref?: string
   application?: any
   payment?: any
   student_no?: string
@@ -1192,6 +1193,24 @@ export async function submitEnquiry(
     }
   }
   return { success: false, error: "Enquiry message submission failed." }
+}
+
+export async function submitOrder(data: Record<string, any>): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("orders.php")
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    })
+    const result = await res.json().catch(() => null)
+    if (res.ok && result?.success) return result
+    if (result?.error) return { success: false, error: result.error }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to submit order." }
+  }
+  return { success: false, error: "Order submission failed." }
 }
 
 export async function markEnquiryRead(

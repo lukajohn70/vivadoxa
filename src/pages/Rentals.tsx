@@ -32,6 +32,7 @@ import {
 import { fetchCatalogRentals, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
+import CartCheckout from "@/components/CartCheckout"
 import type { Page } from "@/types"
 
 export interface RentalItem {
@@ -194,9 +195,22 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
   const [rentals, setRentals] = useState<RentalItem[]>(DEFAULT_RENTALS)
   const [activeTab, setActiveTab] = useState<"students" | "events" | "terms">("students")
 
-  // Multi-Item Selection State
-  const [selectedRentals, setSelectedRentals] = useState<RentalItem[]>([])
+  // Multi-Item Selection State with localStorage persistence
+  const [selectedRentals, setSelectedRentals] = useState<RentalItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("vdx_rental_cart")
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
   const [showMultiDrawer, setShowMultiDrawer] = useState(false)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("vdx_rental_cart", JSON.stringify(selectedRentals))
+    } catch {}
+  }, [selectedRentals])
 
   // Single Item Inquiry Target
   const [selectedGear, setSelectedGear] = useState<string>("")
@@ -246,6 +260,9 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
   const clearRentalsSelection = () => {
     setSelectedRentals([])
+    try {
+      localStorage.removeItem("vdx_rental_cart")
+    } catch {}
     setShowMultiDrawer(false)
   }
 
@@ -798,9 +815,9 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
 
-      {/* ── STICKY MULTI-ITEM RENTAL BAR (Floating Bottom) ───────────── */}
+      {/* ── STICKY CART BAR (Floating Bottom) ─────────────────────────── */}
       {selectedRentals.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-amber-500/30 animate-in slide-in-from-bottom">
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-[var(--gold)] animate-in slide-in-from-bottom">
           <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-[var(--gold)] text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
@@ -808,7 +825,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               </span>
               <div>
                 <strong className="text-xs sm:text-sm font-bold block text-white">
-                  {selectedRentals.length} {selectedRentals.length === 1 ? "Rental Item" : "Rental Items"} Selected
+                  {selectedRentals.length} {selectedRentals.length === 1 ? "Rental Item" : "Rental Items"} in Cart
                 </strong>
                 <span className="text-[11px] text-slate-300 line-clamp-1">
                   {selectedRentals.map((i) => i.name).join(" · ")}
@@ -822,7 +839,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 onClick={clearRentalsSelection}
                 className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                Clear
+                Clear Cart
               </button>
 
               <button
@@ -830,209 +847,44 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 onClick={() => setShowMultiDrawer(true)}
                 className="btn btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
               >
-                <WhatsAppIcon size={14} />
-                <span>Review &amp; Wire to Admin ({selectedRentals.length})</span>
+                <Icon name="cart" size={15} />
+                <span>Review Cart &amp; Confirm ({selectedRentals.length}) &rarr;</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── MULTI-ITEM RENTAL RESERVATION MODAL ───────────────────────── */}
-      {showMultiDrawer && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
-          role="dialog"
-          aria-modal="true"
+      {/* ── FLOATING QUICK CART BUTTON ─────────────────────────────────── */}
+      {selectedRentals.length > 0 && !showMultiDrawer && (
+        <button
+          type="button"
+          onClick={() => setShowMultiDrawer(true)}
+          className="fixed bottom-20 right-4 sm:right-6 z-40 bg-[var(--gold)] text-white p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
+          aria-label={`View Rental Cart (${selectedRentals.length} items)`}
+          title="Open Cart"
         >
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-[var(--line)] relative max-h-[92vh] overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setShowMultiDrawer(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-[var(--navy)] p-1.5 rounded-lg hover:bg-slate-100"
-              aria-label="Close"
-            >
-              <Icon name="close" size={18} />
-            </button>
-
-            <div className="mb-4">
-              <span className="eyebrow block mb-1">Multi-Item Reservation</span>
-              <h3 className="font-bold text-base sm:text-xl text-[var(--navy)]">
-                Wire {selectedRentals.length} Selected Rentals to Admin
-              </h3>
-              <p className="text-xs text-[var(--muted)] mt-1">
-                Admin will verify availability for your dates, calculate security deposits, and arrange studio pickup or delivery in Kaduna.
-              </p>
-            </div>
-
-            {/* List of Selected Rentals */}
-            <div className="space-y-2 mb-5 max-h-52 overflow-y-auto pr-1">
-              {selectedRentals.map((item, idx) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)] text-xs"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
-                      {idx + 1}
-                    </span>
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-10 h-10 rounded-lg object-cover bg-slate-900 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h5 className="font-bold text-slate-800 truncate">{item.name}</h5>
-                      <span className="text-[10px] text-[var(--muted)]">
-                        {item.category} · {item.type === "event" ? "Event Backline" : "Student Practice"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeSelectedRental(item.id)}
-                    className="text-red-500 hover:text-red-700 text-xs px-2 py-1 rounded hover:bg-red-50 cursor-pointer shrink-0"
-                    title="Remove item"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Wire to Admin Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
-              <button
-                type="button"
-                onClick={wireMultipleRentalsToWhatsApp}
-                className="btn btn-primary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
-              >
-                <WhatsAppIcon size={16} />
-                <span>WhatsApp List</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={wireMultipleRentalsToEmail}
-                className="btn btn-secondary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full cursor-pointer"
-              >
-                <Icon name="mail" size={14} />
-                <span>Email List</span>
-              </button>
-
-              <a
-                href={`tel:${SCHOOL_PHONE}`}
-                className="btn btn-secondary !py-2.5 !px-3 !text-xs flex items-center justify-center gap-1.5 w-full text-center"
-              >
-                <Icon name="phone" size={14} />
-                <span>Call Admin</span>
-              </a>
-            </div>
-
-            {/* Reservation Form */}
-            <div className="bg-[#FAF8F5] p-4 sm:p-5 rounded-xl border border-[var(--line)]">
-              <h4 className="text-xs font-bold text-[var(--navy)] mb-2 flex items-center gap-1.5">
-                <Icon name="pen" size={12} className="text-[var(--gold)]" />
-                <span>Reservation Details:</span>
-              </h4>
-
-              <form onSubmit={wireMultipleRentalsToWhatsApp} className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field
-                    label="Your Full Name"
-                    value={formName}
-                    onChange={(val: any) => setFormName(typeof val === "string" ? val : val?.target?.value ?? "")}
-                    placeholder="e.g. Samuel Danladi"
-                    required
-                  />
-                  <Field
-                    label="WhatsApp / Phone Number"
-                    value={formPhone}
-                    onChange={(val: any) => setFormPhone(typeof val === "string" ? val : val?.target?.value ?? "")}
-                    placeholder="0803 889 0786"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Field
-                    label="Email Address (Optional)"
-                    type="email"
-                    value={formEmail}
-                    onChange={(val: any) => setFormEmail(typeof val === "string" ? val : val?.target?.value ?? "")}
-                    placeholder="you@example.com"
-                  />
-                  <SelectField
-                    label="Desired Rental Duration"
-                    value={formDuration}
-                    onChange={(val: any) => setFormDuration(typeof val === "string" ? val : val?.target?.value ?? "")}
-                    options={[
-                      { value: "1 Month", label: "1 Month (Student Practice)" },
-                      { value: "3 Months", label: "3 Months (Academic Term)" },
-                      { value: "6 Months", label: "6 Months (Semester)" },
-                      { value: "12 Months", label: "12 Months (Full Year)" },
-                      { value: "1 Day", label: "1 Day (Event / Concert)" },
-                      { value: "Weekend (2-3 Days)", label: "Weekend Event (2-3 Days)" },
-                    ]}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[var(--navy)] mb-1">Intake Method</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setFormIntake("pickup")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        formIntake === "pickup"
-                          ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
-                          : "border-[var(--line)] bg-white text-[var(--muted)]"
-                      }`}
-                    >
-                      Studio Pickup (Angwan Sunday)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormIntake("delivery")}
-                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        formIntake === "delivery"
-                          ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
-                          : "border-[var(--line)] bg-white text-[var(--muted)]"
-                      }`}
-                    >
-                      Kaduna Delivery
-                    </button>
-                  </div>
-                </div>
-
-                {formIntake === "delivery" && (
-                  <Field
-                    label="Delivery Address & Landmark (Kaduna)"
-                    value={formAddress}
-                    onChange={(val: any) => setFormAddress(typeof val === "string" ? val : val?.target?.value ?? "")}
-                    placeholder="e.g. Barnawa Complex, near Market, Kaduna"
-                    required
-                  />
-                )}
-
-                <Textarea
-                  label="Notes / Instrument Specifications"
-                  value={formNotes}
-                  onChange={(val: any) => setFormNotes(typeof val === "string" ? val : val?.target?.value ?? "")}
-                  placeholder="Specify size requirements (e.g. 1/2 vs 4/4 violin), sound engineer request, or dates."
-                  rows={2}
-                />
-
-                <Button type="submit" className="w-full justify-center !py-2.5 !text-xs">
-                  <WhatsAppIcon size={15} />
-                  <span>Reserve All {selectedRentals.length} Items via WhatsApp</span>
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
+          <Icon name="cart" size={20} />
+          <span className="absolute -top-1.5 -right-1.5 bg-[var(--navy)] text-white text-[11px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border border-white">
+            {selectedRentals.length}
+          </span>
+        </button>
       )}
+
+      {/* ── INTERACTIVE CART & CHECKOUT MODAL ──────────────────────────── */}
+      <CartCheckout
+        isOpen={showMultiDrawer}
+        onClose={() => setShowMultiDrawer(false)}
+        items={selectedRentals}
+        onRemoveItem={removeSelectedRental}
+        mode="rentals"
+        onConfirmed={(_ref) => {
+          setSelectedRentals([])
+          try {
+            localStorage.removeItem("vdx_rental_cart")
+          } catch {}
+        }}
+      />
 
       {/* ── Interactive Rental Booking Form (Single / General) ────────── */}
       <section className="section bg-white border-t border-[var(--line)]" id="rental-inquiry-form">

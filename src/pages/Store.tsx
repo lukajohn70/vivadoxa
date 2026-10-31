@@ -29,6 +29,7 @@ import {
 import { fetchCatalogStore, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
+import CartCheckout from "@/components/CartCheckout"
 import type { Page } from "@/types"
 
 export interface ProductItem {
@@ -177,9 +178,22 @@ export function Store({ go }: { go: (p: Page) => void }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
   const [searchQuery, setSearchQuery] = useState("")
 
-  // Multi-Item Selection State
-  const [selectedItems, setSelectedItems] = useState<ProductItem[]>([])
+  // Multi-Item Selection State with localStorage persistence
+  const [selectedItems, setSelectedItems] = useState<ProductItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("vdx_store_cart")
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
   const [showMultiDrawer, setShowMultiDrawer] = useState(false)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("vdx_store_cart", JSON.stringify(selectedItems))
+    } catch {}
+  }, [selectedItems])
 
   // Single Item Modal State
   const [singleInquiryProduct, setSingleInquiryProduct] = useState<ProductItem | null>(null)
@@ -259,6 +273,9 @@ export function Store({ go }: { go: (p: Page) => void }) {
 
   const clearSelection = () => {
     setSelectedItems([])
+    try {
+      localStorage.removeItem("vdx_store_cart")
+    } catch {}
     setShowMultiDrawer(false)
   }
 
@@ -1071,14 +1088,29 @@ export function Store({ go }: { go: (p: Page) => void }) {
                         >
                           View Details
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => contactViaWhatsApp(product)}
-                          className="btn btn-secondary !py-1.5 !px-3 !text-xs !min-h-0 inline-flex items-center gap-1.5 hover:!border-[var(--gold)]"
-                        >
-                          <WhatsAppIcon size={13} />
-                          <span>Inquire</span>
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => contactViaWhatsApp(product)}
+                            className="p-1.5 rounded-lg border border-[var(--line)] text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 transition-colors cursor-pointer"
+                            title="Quick WhatsApp Inquiry"
+                            aria-label="Inquire on WhatsApp"
+                          >
+                            <WhatsAppIcon size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectItem(product)}
+                            className={`btn !py-1.5 !px-3 !text-xs !min-h-0 inline-flex items-center gap-1.5 cursor-pointer ${
+                              isSelected(product.id)
+                                ? "btn-secondary !border-[var(--gold)] !text-[var(--gold)] font-bold bg-amber-50/50"
+                                : "btn-primary"
+                            }`}
+                          >
+                            <Icon name="cart" size={13} />
+                            <span>{isSelected(product.id) ? "In Cart ✓" : "Add to Cart"}</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1161,7 +1193,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
         </ScrollReveal>
       </section>
 
-      {/* ── STICKY MULTI-ITEM INQUIRY BAR (Floating Bottom) ───────────── */}
+      {/* ── STICKY CART BAR (Floating Bottom) ─────────────────────────── */}
       {selectedItems.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-[var(--gold)] animate-in slide-in-from-bottom">
           <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -1171,10 +1203,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
               </span>
               <div>
                 <strong className="text-xs sm:text-sm font-bold block text-white">
-                  {selectedItems.length} {selectedItems.length === 1 ? "Instrument" : "Instruments"} Selected
+                  {selectedItems.length} {selectedItems.length === 1 ? "Instrument" : "Instruments"} in Cart
                 </strong>
                 <span className="text-[11px] text-slate-300">
-                  Ready to wire list directly to Vivadoxa Administration
+                  Ready to review &amp; confirm order directly on website
                 </span>
               </div>
             </div>
@@ -1185,134 +1217,51 @@ export function Store({ go }: { go: (p: Page) => void }) {
                 onClick={clearSelection}
                 className="text-xs text-slate-300 hover:text-white px-2 py-1 cursor-pointer"
               >
-                Clear
+                Clear Cart
               </button>
               <button
                 type="button"
                 onClick={() => setShowMultiDrawer(true)}
-                className="btn btn-primary !py-2 !px-4 !text-xs !min-h-0 flex items-center gap-1.5"
+                className="btn btn-primary !py-2 !px-4 !text-xs !min-h-0 flex items-center gap-1.5 cursor-pointer shadow-md"
               >
-                <WhatsAppIcon size={14} />
-                <span>Wire to Admin &rarr;</span>
+                <Icon name="cart" size={15} />
+                <span>Review Cart &amp; Confirm ({selectedItems.length}) &rarr;</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── MULTI-ITEM INQUIRY MODAL / DRAWER ─────────────────────────── */}
-      {showMultiDrawer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--line)] p-6 sm:p-7 relative">
-            <button
-              type="button"
-              onClick={() => setShowMultiDrawer(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
-            >
-              <Icon name="close" size={18} />
-            </button>
-
-            <div className="mb-4">
-              <span className="eyebrow block mb-1">Multi-Item Inquiry</span>
-              <h3 className="font-bold text-base sm:text-xl text-[var(--navy)]">
-                Wire {selectedItems.length} Selected Items to Admin
-              </h3>
-              <p className="text-xs text-[var(--muted)] mt-1">
-                Confirm your selected gear. Our administration will contact you with availability and delivery details.
-              </p>
-            </div>
-
-            <div className="bg-[#FAF8F5] rounded-xl p-3 border border-[var(--line)] mb-5 max-h-40 overflow-y-auto space-y-2">
-              {selectedItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-xs py-1 border-b border-slate-200 last:border-0">
-                  <div className="flex items-center gap-2 pr-2">
-                    <span className="text-[var(--gold)] font-bold">•</span>
-                    <span className="font-semibold text-[var(--navy)]">{item.name}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeSelectedItem(item.id)}
-                    className="text-[var(--muted)] hover:text-[var(--gold)] text-xs shrink-0 cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={wireMultipleToWhatsApp} className="space-y-3.5">
-              <Field
-                label="Your Full Name *"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g. Samuel Adekunle"
-                required
-              />
-
-              <Field
-                label="WhatsApp / Phone Number *"
-                value={formPhone}
-                onChange={(e) => setFormPhone(e.target.value)}
-                placeholder="e.g. 0801 234 5678"
-                required
-              />
-
-              <Field
-                label="Email Address (Optional)"
-                type="email"
-                value={formEmail}
-                onChange={(e) => setFormEmail(e.target.value)}
-                placeholder="e.g. samuel@example.com"
-              />
-
-              <div>
-                <label className="block text-xs font-bold text-[var(--navy)] mb-1">
-                  Collection Preference:
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormIntake("pickup")}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      formIntake === "pickup"
-                        ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
-                        : "border-[var(--line)] bg-white text-[var(--muted)]"
-                    }`}
-                  >
-                    Studio Pickup (Kaduna)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormIntake("delivery")}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      formIntake === "delivery"
-                        ? "border-[var(--gold)] bg-amber-50 text-[var(--gold)] font-bold"
-                        : "border-[var(--line)] bg-white text-[var(--muted)]"
-                    }`}
-                  >
-                    Courier Delivery (Kaduna)
-                  </button>
-                </div>
-              </div>
-
-              <Textarea
-                label="Questions or Requirements"
-                value={formNotes}
-                onChange={(e) => setFormNotes(e.target.value)}
-                placeholder="Ask about discounts, payment options, or setup preferences."
-                rows={2}
-              />
-
-              <div className="pt-2 flex flex-col sm:flex-row gap-2">
-                <Button type="submit" className="flex-1 justify-center !py-2.5 !text-xs">
-                  <WhatsAppIcon size={15} />
-                  <span>Send via WhatsApp</span>
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* ── FLOATING QUICK CART BUTTON ─────────────────────────────────── */}
+      {selectedItems.length > 0 && !showMultiDrawer && (
+        <button
+          type="button"
+          onClick={() => setShowMultiDrawer(true)}
+          className="fixed bottom-20 right-4 sm:right-6 z-40 bg-[var(--gold)] text-white p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
+          aria-label={`View Cart (${selectedItems.length} items)`}
+          title="Open Cart"
+        >
+          <Icon name="cart" size={20} />
+          <span className="absolute -top-1.5 -right-1.5 bg-[var(--navy)] text-white text-[11px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center border border-white">
+            {selectedItems.length}
+          </span>
+        </button>
       )}
+
+      {/* ── INTERACTIVE CART & CHECKOUT MODAL ──────────────────────────── */}
+      <CartCheckout
+        isOpen={showMultiDrawer}
+        onClose={() => setShowMultiDrawer(false)}
+        items={selectedItems}
+        onRemoveItem={removeSelectedItem}
+        mode="store"
+        onConfirmed={(_ref) => {
+          setSelectedItems([])
+          try {
+            localStorage.removeItem("vdx_store_cart")
+          } catch {}
+        }}
+      />
 
       {/* ── REQUEST A QUOTE MODAL ─────────────────────────────────────── */}
       {showQuoteModal && (

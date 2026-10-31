@@ -201,6 +201,30 @@ migrate($pdo,
     $label, $log, $errors
 );
 
+// ── 12. orders table (Store & Rental Cart Checkouts) ─────────────────────────
+$label = "CREATE orders table";
+migrate($pdo,
+    "CREATE TABLE IF NOT EXISTS `orders` (
+        `id`               INT AUTO_INCREMENT PRIMARY KEY,
+        `order_ref`        VARCHAR(50)  NOT NULL UNIQUE,
+        `type`             ENUM('store','rentals') NOT NULL DEFAULT 'store',
+        `customer_name`    VARCHAR(150) NOT NULL,
+        `customer_phone`   VARCHAR(50)  NOT NULL,
+        `customer_email`   VARCHAR(191) NOT NULL DEFAULT '',
+        `items`            LONGTEXT     NOT NULL,
+        `intake_method`    ENUM('pickup','delivery') NOT NULL DEFAULT 'pickup',
+        `duration`         VARCHAR(100) NULL,
+        `delivery_address` TEXT         NULL,
+        `notes`            TEXT         NULL,
+        `status`           ENUM('pending','confirmed','processing','ready','completed','cancelled')
+                           NOT NULL DEFAULT 'pending',
+        `whatsapp_sent`    TINYINT(1)   NOT NULL DEFAULT 0,
+        `created_at`       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+        `updated_at`       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    $label, $log, $errors
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 // RESULT
 // ─────────────────────────────────────────────────────────────────────────────
