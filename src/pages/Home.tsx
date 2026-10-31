@@ -1277,6 +1277,165 @@ export function Home({ go }: { go: (p: Page) => void }) {
           </div>
         </div>
       </section>
+
+      {/* ── 11C. Meet Our Founder & CEO Spotlight ─────────────────────────── */}
+      <section
+        className="section overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%)",
+          color: "white",
+          borderTop: "3px solid var(--gold)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          position: "relative",
+        }}
+      >
+        <div className="container">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Founder Portrait */}
+            <ScrollReveal direction="left" className="lg:col-span-4">
+              <div className="relative max-w-sm mx-auto lg:max-w-none">
+                <div
+                  style={{
+                    position: "relative",
+                    borderRadius: "20px",
+                    overflow: "hidden",
+                    border: "2px solid rgba(201,107,50,0.5)",
+                    aspectRatio: "3/4",
+                    boxShadow: "0 20px 40px -10px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <img
+                    src="/media/team/frederick-chrysantius.jpeg"
+                    alt="Frederick Chrysantius — Founder & CEO"
+                    className="w-full h-full object-cover object-top"
+                    loading="lazy"
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "linear-gradient(to top, rgba(15,28,46,0.95), transparent)",
+                      padding: "24px 18px 16px",
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "12px",
+                        letterSpacing: "1px",
+                        textTransform: "uppercase",
+                        color: "var(--gold-text-dark, #e2925a)",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Founder &amp; CEO
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "18px",
+                        fontWeight: 700,
+                        color: "white",
+                      }}
+                    >
+                      Frederick Chrysantius
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Founder Message & CTA */}
+            <ScrollReveal direction="right" className="lg:col-span-8">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-[var(--gold-text-dark,#e2925a)] uppercase tracking-wider mb-4">
+                  <span>Founder&apos;s Vision</span>
+                </div>
+
+                <h2
+                  style={{
+                    fontFamily: "'DM Serif Display', serif",
+                    fontSize: "clamp(28px, 3.8vw, 42px)",
+                    color: "white",
+                    lineHeight: 1.25,
+                    margin: "0 0 16px",
+                  }}
+                >
+                  &ldquo;A Vision Beyond Music. A Passion for Excellence.&rdquo;
+                </h2>
+
+                <p
+                  style={{
+                    color: "var(--line-strong)",
+                    fontSize: "1.02rem",
+                    lineHeight: 1.75,
+                    marginBottom: "16px",
+                  }}
+                >
+                  At the heart of Vivadoxa Music is a vision driven by passion,
+                  purpose and an unwavering commitment to excellence. Founded in
+                  2019 by <strong>Frederick Chrysantius</strong>, Vivadoxa was
+                  built to unite world-class music training, premium instruments,
+                  repairs, and professional studio production under one roof —
+                  expanding across Northern Nigeria and beyond.
+                </p>
+
+                <div
+                  style={{
+                    borderLeft: "3px solid var(--gold)",
+                    paddingLeft: "16px",
+                    margin: "20px 0 24px",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: "'DM Serif Display', serif",
+                      fontSize: "1.08rem",
+                      color: "white",
+                      fontStyle: "italic",
+                      margin: 0,
+                    }}
+                  >
+                    &ldquo;The future of music belongs to those who dare to
+                    imagine it, invest in it and bring it to life.&rdquo;
+                  </p>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "6px",
+                      fontSize: "12px",
+                      color: "var(--gold-text-dark, #e2925a)",
+                      fontWeight: 700,
+                    }}
+                  >
+                    — Actualize your passion.
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => go("about")}
+                    className="btn btn-primary"
+                  >
+                    <span>Read Frederick&apos;s Full Story</span>
+                    <Icon name="arrow" size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => go("contact")}
+                    className="btn btn-secondary !border-white/20 !text-white hover:!bg-white/10"
+                  >
+                    <span>Connect with Vivadoxa</span>
+                  </button>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
       <section
         className="section overflow-hidden"
         style={{ background: "white" }}
