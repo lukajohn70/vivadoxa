@@ -243,35 +243,39 @@ export default function CartCheckout({
                     {items.map((item, idx) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)]"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)]"
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
-                            {idx + 1}
-                          </span>
-                          {item.image && (
+                        <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
+                          {idx + 1}
+                        </span>
+                        {item.image && (
+                          <div
+                            className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0"
+                            style={{ width: "48px", height: "48px", minWidth: "48px", maxWidth: "48px" }}
+                          >
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-10 h-10 rounded-lg object-cover bg-slate-100 shrink-0"
+                              className="w-full h-full object-cover"
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-[var(--navy)] truncate">{item.name}</p>
-                            <p className="text-[10px] text-[var(--muted)]">
-                              {item.category}
-                              {item.brand ? ` · ${item.brand}` : ""}
-                              {item.type ? ` · ${item.type === "event" ? "Event Backline" : "Student Practice"}` : ""}
-                            </p>
                           </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-[var(--navy)] truncate">{item.name}</p>
+                          <p className="text-[10px] text-[var(--muted)] truncate">
+                            {item.category}
+                            {item.brand ? ` · ${item.brand}` : ""}
+                            {item.type ? ` · ${item.type === "event" ? "Event Backline" : "Student Practice"}` : ""}
+                          </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => onRemoveItem(item.id)}
-                          className="text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 cursor-pointer shrink-0 transition-colors"
+                          className="text-red-400 hover:text-red-600 text-xs p-1.5 rounded-lg hover:bg-red-50 cursor-pointer shrink-0 transition-colors"
                           title="Remove item"
                         >
-                          <Icon name="trash" size={13} />
+                          <Icon name="trash" size={14} />
                         </button>
                       </div>
                     ))}

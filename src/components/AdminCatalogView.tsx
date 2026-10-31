@@ -396,11 +396,17 @@ export function ShopAndRentalsView({
             >
               <div>
                 <div className="flex items-start gap-3 mb-3">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-16 h-16 rounded-lg object-cover bg-slate-900 border border-[var(--line)] shrink-0"
-                  />
+                  <div
+                    className="w-16 h-16 rounded-lg overflow-hidden bg-slate-900 border border-[var(--line)] shrink-0"
+                    style={{ width: "64px", height: "64px", minWidth: "64px", maxWidth: "64px" }}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1 mb-0.5">
                       <span className="text-[10px] uppercase font-bold text-[var(--gold)] truncate">
@@ -676,18 +682,19 @@ export function ShopAndRentalsView({
                     Drums
                   </button>
                 </div>
-                {/* 16:9 image preview */}
-                <div className="mt-2 w-full aspect-video rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)]">
+                {/* 4:3 image preview matching catalog showcase cards */}
+                <div className="mt-2 w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)]">
                   <img
                     src={formImage}
                     alt="Image preview"
                     className="w-full h-full object-cover"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).style.opacity = "0.2"
                     }}
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1">16:9 preview — as it appears on product cards</p>
+                <p className="text-[10px] text-slate-400 mt-1">4:3 preview — as it appears on showcase cards</p>
               </div>
 
               {activeSubTab === "store" ? (

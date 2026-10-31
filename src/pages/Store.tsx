@@ -1384,7 +1384,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
               <Icon name="close" size={18} />
             </button>
 
-            <div className="aspect-16/9 bg-[#FAF8F5] rounded-xl overflow-hidden mb-4">
+            <div className="aspect-[4/3] sm:aspect-[16/9] bg-[#FAF8F5] rounded-xl overflow-hidden mb-4 border border-[var(--line)]">
               <img
                 src={selectedDetailProduct.image}
                 alt={selectedDetailProduct.name}
