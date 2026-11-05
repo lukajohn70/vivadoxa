@@ -281,7 +281,7 @@ if ($method === 'GET') {
                     <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #c96b32; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Open Admissions Manager</a></p>
                 </div>
             ";
-            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings);
+            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'academy');
 
             // Student confirmation
             if (!empty($settings['studentEmailConfirmation'] ?? true)) {
@@ -298,7 +298,7 @@ if ($method === 'GET') {
                         <p>Our admissions committee is reviewing your details. If you have questions, reply to this email or chat with us on WhatsApp at {$schoolWhatsapp}.</p>
                     </div>
                 ";
-                sendSystemEmail($email, $studentSubject, $studentHtml, $settings);
+                sendSystemEmail($email, $studentSubject, $studentHtml, $settings, 'academy');
             }
         }
 

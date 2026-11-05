@@ -1007,7 +1007,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
                   >
                     <div>
                       {/* Image Frame with Badge & Checkbox */}
-                      <div className="relative aspect-4/3 bg-[#FAF8F5] overflow-hidden">
+                      <div
+                        className="relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden"
+                        style={{ aspectRatio: "4/3" }}
+                      >
                         <LazyImage
                           src={product.image}
                           alt={product.name}

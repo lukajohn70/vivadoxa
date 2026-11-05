@@ -163,7 +163,7 @@ if ($method === 'GET') {
                         </table>
                     </div>
                 ";
-                sendSystemEmail($schoolEmail, $subject, $html, $settings);
+                sendSystemEmail($schoolEmail, $subject, $html, $settings, 'bursary');
             }
         } catch (Exception $e) {}
 
@@ -245,7 +245,27 @@ if ($method === 'GET') {
                     <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #157054; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Verify in Admin Portal</a></p>
                 </div>
             ";
-            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings);
+            sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'bursary');
+
+            // Send Payer Confirmation Email
+            if (!empty($payerEmail)) {
+                $payerSubject = "Vivadoxa Accounts — Payment Proof Received (#{$reference})";
+                $payerHtml = "
+                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
+                        <h2 style='color: #0b0b0b; margin-top: 0;'>Payment Submission Received</h2>
+                        <p>Dear {$payerName},</p>
+                        <p>We have received your payment proof for <strong>{$formattedAmt} {$currency}</strong> via {$methodType}.</p>
+                        <div style='background: #f7f5f0; padding: 14px; border-radius: 6px; margin: 15px 0;'>
+                            <p style='margin: 0;'><strong>Transaction Reference:</strong> <span style='color: #157054; font-size: 16px; font-weight: bold;'>{$reference}</span></p>
+                            " . ($appNo ? "<p style='margin: 4px 0 0;'><strong>Application Ref:</strong> {$appNo}</p>" : "") . "
+                            <p style='margin: 4px 0 0;'><strong>Status:</strong> Pending Bursary Verification</p>
+                        </div>
+                        <p>Our accounts team is reconciling the transfer with our bank statements. You will receive an official digital receipt once verified.</p>
+                        <p style='margin-top: 20px; font-size: 13px; color: #5c5954;'>Vivadoxa Music Academy Accounts & Bursary · Kaduna Studio</p>
+                    </div>
+                ";
+                sendSystemEmail($payerEmail, $payerSubject, $payerHtml, $settings, 'bursary');
+            }
         }
 
         // 2. WhatsApp notification

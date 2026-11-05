@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -103,6 +104,66 @@ if ($method === 'GET') {
         ':src'   => $source,
         ':typ'   => $type,
     ]);
+
+    // Send automated branded email confirmation
+    try {
+        $settings = getGeneralSettingsConfig();
+        $dept = 'contact';
+        if (in_array($source, ['store', 'rentals', 'repairs', 'academy'], true)) {
+            $dept = $source;
+        }
+        $deptInfo = getDepartmentSender($dept, $settings);
+
+        $enqHtml = "
+            <p style='margin: 0 0 16px; font-size: 15px; color: #333;'>Thank you for reaching out to Vivadoxa Music. We have received your inquiry and our desk team is on it.</p>
+            
+            <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; padding: 16px; margin: 18px 0; font-size: 13px;'>
+                <p style='margin: 0 0 8px;'><strong>Subject:</strong> " . htmlspecialchars($subject) . "</p>
+                <p style='margin: 0 0 8px;'><strong>Inquiry Department:</strong> " . htmlspecialchars($deptInfo['name']) . "</p>
+                <p style='margin: 0;'><strong>Your Message:</strong><br><em style='white-space: pre-line; color: #555; display: block; margin-top: 4px;'>" . htmlspecialchars($message) . "</em></p>
+            </div>
+
+            <p style='font-size: 14px; color: #444; margin-top: 18px;'>A member of our team will review your message and reply via email or phone/WhatsApp at <strong>" . htmlspecialchars($phone ?: $email) . "</strong> shortly.</p>
+        ";
+
+        if (!empty($email)) {
+            $customerEmailBody = buildBrandedEmailTemplate([
+                'title'      => 'Inquiry Received',
+                'badge'      => $deptInfo['badge'],
+                'clientName' => $name,
+                'headline'   => 'Message Received',
+                'bodyHtml'   => $enqHtml,
+                'deptName'   => $deptInfo['name'],
+                'deptEmail'  => $deptInfo['email'],
+                'ctaText'    => 'Visit Vivadoxa Music',
+                'ctaUrl'     => 'https://www.vivadoxamusic.com',
+            ]);
+            sendSystemEmail($email, "Vivadoxa — We received your inquiry [{$subject}]", $customerEmailBody, $settings, $dept);
+        }
+
+        // Notify Admin Desk
+        $adminRecipient = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+        $adminEmailBody = buildBrandedEmailTemplate([
+            'title'      => 'New Website Enquiry',
+            'badge'      => 'Desk Alert',
+            'clientName' => 'Team Desk',
+            'headline'   => "New Inquiry from {$name} ({$source})",
+            'bodyHtml'   => "
+                <p>A new enquiry has been submitted on the website:</p>
+                <p><strong>Name:</strong> " . htmlspecialchars($name) . "<br>
+                   <strong>Email:</strong> " . htmlspecialchars($email ?: 'Not provided') . "<br>
+                   <strong>Phone:</strong> " . htmlspecialchars($phone ?: 'Not provided') . "<br>
+                   <strong>Source:</strong> " . htmlspecialchars($source) . " (" . htmlspecialchars($type) . ")</p>
+                {$enqHtml}
+            ",
+            'deptName'   => $deptInfo['name'],
+            'deptEmail'  => $deptInfo['email'],
+            'ctaText'    => 'Open Enquiries in Admin',
+            'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+        ]);
+        sendSystemEmail($adminRecipient, "New Enquiry: {$subject} — {$name}", $adminEmailBody, $settings, $dept);
+
+    } catch (Exception $mailEx) {}
 
     jsonResponse([
         'success' => true,

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -191,6 +192,72 @@ if ($method === 'GET') {
             }
         }
     } catch (Exception $uEx) {}
+
+    // Send automated branded email confirmation
+    try {
+        $settings = getGeneralSettingsConfig();
+        $deptInfo = getDepartmentSender('repairs', $settings);
+
+        $intakeLabel = ($intakeMethod === 'pickup')
+            ? "Courier Collection from: <strong>" . htmlspecialchars($pickupAddress) . "</strong>"
+            : "Drop-off at Vivadoxa Instrument Clinic (Kaduna Studio)";
+
+        $repairHtml = "
+            <p style='margin: 0 0 16px; font-size: 15px; color: #333;'>We have safely logged your instrument repair request into our diagnostic clinic queue.</p>
+            
+            <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; padding: 16px; margin: 18px 0; font-size: 13px;'>
+                <p style='margin: 0 0 8px;'><strong>Instrument:</strong> " . htmlspecialchars($instrument) . ($brandModel ? " (" . htmlspecialchars($brandModel) . ")" : "") . "</p>
+                " . (!empty($serviceRequested) ? "<p style='margin: 0 0 8px;'><strong>Service Requested:</strong> " . htmlspecialchars($serviceRequested) . "</p>" : "") . "
+                " . (!empty($issue) ? "<p style='margin: 0 0 8px;'><strong>Reported Issue:</strong> <em>" . htmlspecialchars($issue) . "</em></p>" : "") . "
+                <p style='margin: 0 0 8px;'><strong>Intake Method:</strong> {$intakeLabel}</p>
+                <p style='margin: 0;'><strong>Current Status:</strong> <span style='display: inline-block; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;'>Intake Received</span></p>
+            </div>
+
+            <p style='font-size: 14px; color: #444; margin-top: 18px;'>Our luthier / technician will inspect your instrument and communicate an accurate diagnostic assessment and cost quotation before proceeding with any invasive work.</p>
+            <p style='font-size: 13px; color: #666;'>You can check live progress at any time using your tracking code on our website.</p>
+        ";
+
+        if (!empty($email)) {
+            $customerEmailBody = buildBrandedEmailTemplate([
+                'title'      => 'Instrument Clinic Intake',
+                'badge'      => 'Instrument Clinic',
+                'clientName' => $name,
+                'headline'   => 'Repair Intake Confirmed',
+                'refNumber'  => $trackingCode,
+                'refLabel'   => 'Repair Tracking Code',
+                'bodyHtml'   => $repairHtml,
+                'deptName'   => $deptInfo['name'],
+                'deptEmail'  => $deptInfo['email'],
+                'ctaText'    => 'Track Repair Online',
+                'ctaUrl'     => 'https://www.vivadoxamusic.com/#repairs',
+            ]);
+            sendSystemEmail($email, "Vivadoxa Instrument Clinic — Tracking Code: {$trackingCode}", $customerEmailBody, $settings, 'repairs');
+        }
+
+        // Notify Admin Desk
+        $adminRecipient = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+        $adminEmailBody = buildBrandedEmailTemplate([
+            'title'      => 'New Repair Request',
+            'badge'      => 'Clinic Alert',
+            'clientName' => 'Clinic Team',
+            'headline'   => "New Repair Lodged: {$instrument} ({$name})",
+            'refNumber'  => $trackingCode,
+            'refLabel'   => 'Tracking Code',
+            'bodyHtml'   => "
+                <p>A new repair order has been submitted via the Clinic intake form:</p>
+                <p><strong>Customer:</strong> " . htmlspecialchars($name) . "<br>
+                   <strong>Phone:</strong> " . htmlspecialchars($phone) . "<br>
+                   <strong>Email:</strong> " . htmlspecialchars($email ?: 'Not provided') . "</p>
+                {$repairHtml}
+            ",
+            'deptName'   => $deptInfo['name'],
+            'deptEmail'  => $deptInfo['email'],
+            'ctaText'    => 'Open Clinic Manager',
+            'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+        ]);
+        sendSystemEmail($adminRecipient, "New Repair Intake [{$trackingCode}] — {$name} ({$instrument})", $adminEmailBody, $settings, 'repairs');
+
+    } catch (Exception $mailEx) {}
 
     jsonResponse([
         'success' => true,

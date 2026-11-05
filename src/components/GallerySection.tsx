@@ -388,7 +388,8 @@ export function GallerySection({
                   }}
                 >
                   <div
-                    className="relative aspect-4/3 w-full overflow-hidden cursor-pointer"
+                    className="relative aspect-[4/3] w-full overflow-hidden cursor-pointer"
+                    style={{ aspectRatio: "4/3" }}
                     style={{ background: "var(--cream)" }}
                     onClick={() => {
                       const fullIndex = filteredItems.findIndex(

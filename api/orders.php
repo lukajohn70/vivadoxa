@@ -7,6 +7,7 @@
 // GET                         — list orders (admin)
 
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -183,6 +184,96 @@ if ($method === 'POST') {
             ':src'   => ($type === 'rentals') ? 'rentals' : 'store',
         ]);
     } catch (Exception $e) {}
+
+    // Send automated branded email confirmation
+    try {
+        $settings = getGeneralSettingsConfig();
+        $dept = ($type === 'rentals') ? 'rentals' : 'store';
+        $deptInfo = getDepartmentSender($dept, $settings);
+        $deptLabel = ($type === 'rentals') ? 'Rental Fleet Reservation' : 'Music Store Order';
+
+        $itemsRowsHtml = '';
+        foreach ($itemsSanitized as $i => $item) {
+            $num = $i + 1;
+            $itemName = htmlspecialchars($item['name'] ?? 'Item');
+            $itemCat = htmlspecialchars($item['category'] ?? '');
+            $itemBrand = htmlspecialchars($item['brand'] ?? '');
+            $extra = trim($itemCat . ($itemBrand ? " · $itemBrand" : ''));
+            $itemsRowsHtml .= "
+                <tr>
+                    <td style='padding: 10px 12px; border-bottom: 1px solid #ede8e0; font-size: 13px; font-weight: 700; color: #0b0b0b; width: 30px;'>{$num}.</td>
+                    <td style='padding: 10px 12px; border-bottom: 1px solid #ede8e0; font-size: 13px; color: #191715;'>
+                        <strong>{$itemName}</strong>
+                        " . ($extra ? "<div style='font-size: 11px; color: #7a756f; margin-top: 2px;'>{$extra}</div>" : "") . "
+                    </td>
+                </tr>
+            ";
+        }
+
+        $intakeLabel = ($intakeMethod === 'delivery') 
+            ? "Courier Dispatch to: <strong>" . htmlspecialchars($deliveryAddr) . "</strong>" 
+            : "Studio Pickup at Vivadoxa Kaduna Studio";
+
+        $orderHtml = "
+            <p style='margin: 0 0 16px; font-size: 15px; color: #333;'>Thank you for choosing Vivadoxa Music. We have received your order and reserved your selected equipment in our system.</p>
+            
+            <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; margin: 18px 0; overflow: hidden;'>
+                <div style='background: #0b0b0b; color: #fff; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;'>Selected Equipment & Gear</div>
+                <table width='100%' cellpadding='0' cellspacing='0' style='border-collapse: collapse;'>
+                    {$itemsRowsHtml}
+                </table>
+            </div>
+
+            <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; padding: 14px 16px; margin: 18px 0; font-size: 13px;'>
+                <p style='margin: 0 0 6px;'><strong>Fulfillment Method:</strong> {$intakeLabel}</p>
+                " . (!empty($duration) ? "<p style='margin: 0 0 6px;'><strong>Rental Duration:</strong> " . htmlspecialchars($duration) . "</p>" : "") . "
+                " . (!empty($notes) ? "<p style='margin: 0 0 6px;'><strong>Special Instructions:</strong> <em>" . htmlspecialchars($notes) . "</em></p>" : "") . "
+            </div>
+
+            <p style='font-size: 14px; color: #444; margin-top: 18px;'>Our concierge team is preparing your package. We will contact you shortly at <strong>" . htmlspecialchars($phone) . "</strong> or via WhatsApp to confirm pickup or dispatch timing.</p>
+        ";
+
+        if (!empty($email)) {
+            $customerEmailBody = buildBrandedEmailTemplate([
+                'title'      => $deptLabel,
+                'badge'      => $deptInfo['badge'],
+                'clientName' => $name,
+                'headline'   => "Order Confirmed: {$orderRef}",
+                'refNumber'  => $orderRef,
+                'refLabel'   => 'Order Reference',
+                'bodyHtml'   => $orderHtml,
+                'deptName'   => $deptInfo['name'],
+                'deptEmail'  => $deptInfo['email'],
+                'ctaText'    => 'Visit Vivadoxa Music',
+                'ctaUrl'     => 'https://www.vivadoxamusic.com',
+            ]);
+            sendSystemEmail($email, "Vivadoxa {$deptLabel} — Ref: {$orderRef}", $customerEmailBody, $settings, $dept);
+        }
+
+        // Send Admin Notification
+        $adminRecipient = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+        $adminEmailBody = buildBrandedEmailTemplate([
+            'title'      => "New {$deptLabel}",
+            'badge'      => 'Admin Alert',
+            'clientName' => 'Operations Team',
+            'headline'   => "New Order Received from {$name}",
+            'refNumber'  => $orderRef,
+            'refLabel'   => 'Order Reference',
+            'bodyHtml'   => "
+                <p>A new order has been submitted through the website catalog:</p>
+                <p><strong>Customer:</strong> " . htmlspecialchars($name) . "<br>
+                   <strong>Phone:</strong> " . htmlspecialchars($phone) . "<br>
+                   <strong>Email:</strong> " . htmlspecialchars($email ?: 'Not provided') . "</p>
+                {$orderHtml}
+            ",
+            'deptName'   => $deptInfo['name'],
+            'deptEmail'  => $deptInfo['email'],
+            'ctaText'    => 'Open Admin Portal',
+            'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+        ]);
+        sendSystemEmail($adminRecipient, "New {$deptLabel} [{$orderRef}] — {$name}", $adminEmailBody, $settings, $dept);
+
+    } catch (Exception $mailEx) {}
 
     jsonResponse([
         'success'   => true,

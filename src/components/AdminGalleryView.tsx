@@ -446,7 +446,8 @@ export function AdminGalleryView({
                     {/* Thumbnail */}
                     <td className="py-3.5 px-4">
                       <div
-                        className="w-16 h-12 rounded-lg bg-slate-100 overflow-hidden cursor-pointer border border-slate-200 group relative"
+                        className="w-16 h-12 rounded-lg bg-slate-100 overflow-hidden cursor-pointer border border-slate-200 group relative shrink-0"
+                        style={{ width: "64px", height: "48px", minWidth: "64px", maxWidth: "64px" }}
                         onClick={() => setPreviewPhoto(item)}
                         title="Click to preview"
                       >
@@ -454,6 +455,7 @@ export function AdminGalleryView({
                           src={item.image}
                           alt={item.title}
                           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                           <Icon name="search" size={14} className="text-white" />
@@ -554,12 +556,16 @@ export function AdminGalleryView({
                   Photo Asset
                 </label>
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  <div className="w-full sm:w-36 h-28 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative">
+                  <div
+                    className="w-36 h-28 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative shrink-0"
+                    style={{ width: "144px", height: "112px", minWidth: "144px", maxWidth: "144px" }}
+                  >
                     {formImage ? (
                       <img
                         src={formImage}
                         alt="Preview"
                         className="w-full h-full object-cover"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
                     ) : (
                       <Icon name="image" size={32} className="text-slate-300" />
@@ -798,11 +804,15 @@ export function AdminGalleryView({
             style={{ borderColor: "var(--line)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative aspect-4/3 bg-black flex items-center justify-center">
+            <div
+              className="relative aspect-[4/3] bg-black flex items-center justify-center overflow-hidden"
+              style={{ aspectRatio: "4/3" }}
+            >
               <img
                 src={previewPhoto.image}
                 alt={previewPhoto.title}
                 className="w-full h-full object-contain"
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
               <button
                 type="button"

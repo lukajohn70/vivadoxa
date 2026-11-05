@@ -77,7 +77,185 @@ function logNotification(string $channel, string $recipient, string $subject, st
     } catch (Exception $e) {}
 }
 
-function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBody, string $fromEmail, string $fromName): array {
+/**
+ * Returns departmental sender details for branded emails & routing.
+ * Departmental 'From' & 'Reply-To' gives immediate recipient trust and routes replies
+ * directly to the respective department inbox while sharing domain reputation.
+ */
+function getDepartmentSender(string $dept = 'academy', ?array $settings = null): array {
+    $dept = strtolower(trim($dept));
+    
+    $departments = [
+        'academy' => [
+            'email' => 'academy@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Academy Admissions',
+            'badge' => 'Academy Admissions',
+        ],
+        'admissions' => [
+            'email' => 'academy@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Academy Admissions',
+            'badge' => 'Academy Admissions',
+        ],
+        'store' => [
+            'email' => 'store@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Store',
+            'badge' => 'Store & Catalog',
+        ],
+        'rentals' => [
+            'email' => 'rentals@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Rental Fleet',
+            'badge' => 'Rental Fleet & Backline',
+        ],
+        'repairs' => [
+            'email' => 'repairs@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Instrument Clinic & Care',
+            'badge' => 'Instrument Clinic',
+        ],
+        'clinic' => [
+            'email' => 'repairs@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Instrument Clinic & Care',
+            'badge' => 'Instrument Clinic',
+        ],
+        'bursary' => [
+            'email' => 'bursary@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Accounts & Bursary',
+            'badge' => 'Accounts & Bursary',
+        ],
+        'payments' => [
+            'email' => 'bursary@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Accounts & Bursary',
+            'badge' => 'Accounts & Bursary',
+        ],
+        'contact' => [
+            'email' => 'info@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Desk',
+            'badge' => 'Client Desk',
+        ],
+        'general' => [
+            'email' => 'info@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Academy & Studio',
+            'badge' => 'Studio Desk',
+        ],
+    ];
+
+    $resolved = $departments[$dept] ?? $departments['general'];
+
+    // If general_settings overrides fromEmail/fromName and no specific department was requested
+    if ($settings && !empty($settings['fromEmail']) && $dept === 'general') {
+        $resolved['email'] = $settings['fromEmail'];
+    }
+    if ($settings && !empty($settings['fromName']) && $dept === 'general') {
+        $resolved['name'] = $settings['fromName'];
+    }
+
+    return $resolved;
+}
+
+/**
+ * Builds a luxury, responsive HTML email matching Vivadoxa's visual identity.
+ */
+function buildBrandedEmailTemplate(array $params): string {
+    $title       = htmlspecialchars($params['title'] ?? 'Notification');
+    $badge       = htmlspecialchars($params['badge'] ?? 'Vivadoxa Music');
+    $clientName  = htmlspecialchars($params['clientName'] ?? 'Valued Musician');
+    $headline    = htmlspecialchars($params['headline'] ?? 'Thank you for reaching out.');
+    $bodyHtml    = $params['bodyHtml'] ?? '';
+    $refNumber   = htmlspecialchars($params['refNumber'] ?? '');
+    $refLabel    = htmlspecialchars($params['refLabel'] ?? 'Reference Code');
+    $ctaText     = htmlspecialchars($params['ctaText'] ?? '');
+    $ctaUrl      = htmlspecialchars($params['ctaUrl'] ?? '');
+    $deptName    = htmlspecialchars($params['deptName'] ?? 'Vivadoxa Music');
+    $deptEmail   = htmlspecialchars($params['deptEmail'] ?? 'info@vivadoxamusic.com');
+
+    $refBlock = '';
+    if (!empty($refNumber)) {
+        $refBlock = "
+        <div style='background: #f7f5f0; border: 1px solid #dfdad0; border-radius: 8px; padding: 14px 18px; margin: 20px 0; text-align: center;'>
+            <div style='font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #a24a18; font-weight: 700; margin-bottom: 4px;'>{$refLabel}</div>
+            <div style='font-size: 22px; font-weight: 700; letter-spacing: 2px; color: #0b0b0b; font-family: monospace;'>{$refNumber}</div>
+        </div>
+        ";
+    }
+
+    $ctaBlock = '';
+    if (!empty($ctaText) && !empty($ctaUrl)) {
+        $ctaBlock = "
+        <div style='text-align: center; margin: 28px 0 16px;'>
+            <a href='{$ctaUrl}' target='_blank' style='background: #c96b32; color: #ffffff; padding: 13px 26px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; display: inline-block; letter-spacing: 0.3px; box-shadow: 0 4px 14px rgba(201, 107, 50, 0.3);'>{$ctaText}</a>
+        </div>
+        ";
+    }
+
+    return "
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+        <meta charset='UTF-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>{$title}</title>
+    </head>
+    <body style='margin: 0; padding: 0; background-color: #f7f5f0; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; color: #191715; line-height: 1.6;'>
+        <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background-color: #f7f5f0; padding: 30px 12px;'>
+            <tr>
+                <td align='center'>
+                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e9e4dc; box-shadow: 0 10px 30px rgba(0,0,0,0.06);'>
+                        <!-- Brand Header -->
+                        <tr>
+                            <td style='background-color: #0b0b0b; padding: 26px 32px; text-align: left; border-bottom: 2px solid #c96b32;'>
+                                <table width='100%' cellpadding='0' cellspacing='0'>
+                                    <tr>
+                                        <td>
+                                            <div style='font-size: 10px; font-weight: 700; color: #f2a672; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;'>{$badge}</div>
+                                            <div style='font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;'>VIVADOXA MUSIC</div>
+                                        </td>
+                                        <td align='right' style='vertical-align: middle;'>
+                                            <span style='background: rgba(201, 107, 50, 0.2); border: 1px solid rgba(201, 107, 50, 0.5); color: #f2a672; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px;'>{$title}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Main Body -->
+                        <tr>
+                            <td style='padding: 32px 32px 24px;'>
+                                <h1 style='margin: 0 0 14px; font-size: 22px; font-weight: 700; color: #0b0b0b; line-height: 1.3;'>{$headline}</h1>
+                                <p style='margin: 0 0 18px; font-size: 15px; color: #5c5954;'>Dear <strong>{$clientName}</strong>,</p>
+                                
+                                {$refBlock}
+
+                                <div style='font-size: 14px; color: #191715; line-height: 1.6;'>
+                                    {$bodyHtml}
+                                </div>
+
+                                {$ctaBlock}
+
+                                <div style='margin-top: 30px; padding-top: 20px; border-top: 1px solid #f0ece5; font-size: 13px; color: #5c5954;'>
+                                    <p style='margin: 0;'>With excellence in sound,</p>
+                                    <p style='margin: 4px 0 0; font-weight: 700; color: #0b0b0b;'>{$deptName}</p>
+                                    <p style='margin: 2px 0 0; font-size: 12px; color: #a24a18;'><a href='mailto:{$deptEmail}' style='color: #c96b32; text-decoration: none;'>{$deptEmail}</a></p>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style='background-color: #faf8f5; padding: 22px 32px; border-top: 1px solid #ede8e0; text-align: center; font-size: 11px; color: #8a857e;'>
+                                <p style='margin: 0 0 6px; font-weight: 600; color: #5c5954;'>Vivadoxa Music Academy & Studio · Instrument Clinic · Audio Hub</p>
+                                <p style='margin: 0 0 6px;'>Kaduna Studio, Kaduna State, Nigeria · Phone: +234 907 533 0330 · WhatsApp: +234 803 130 8881</p>
+                                <p style='margin: 0;'>You received this email because you submitted a request or transaction on <a href='https://www.vivadoxamusic.com' style='color: #c96b32; text-decoration: none;'>vivadoxamusic.com</a>.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    ";
+}
+
+function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBody, string $fromEmail, string $fromName, ?string $replyTo = null): array {
     $host = trim($smtp['host'] ?? '');
     $port = (int)($smtp['port'] ?? 587);
     $user = trim($smtp['user'] ?? '');
@@ -150,11 +328,16 @@ function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBod
         }
     }
 
-    // Sender & recipient
+    // Sender & recipient (try departmental fromEmail first, fallback to authenticated user if rejected)
     $mailFrom = $sendCommand("MAIL FROM: <$fromEmail>");
     if (substr($mailFrom, 0, 3) !== '250') {
-        fclose($socket);
-        return ['success' => false, 'error' => "MAIL FROM failed: $mailFrom"];
+        if (!empty($user) && $user !== $fromEmail) {
+            $mailFrom = $sendCommand("MAIL FROM: <$user>");
+        }
+        if (substr($mailFrom, 0, 3) !== '250') {
+            fclose($socket);
+            return ['success' => false, 'error' => "MAIL FROM failed: $mailFrom"];
+        }
     }
 
     $rcptTo = $sendCommand("RCPT TO: <$to>");
@@ -169,11 +352,12 @@ function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBod
         return ['success' => false, 'error' => "DATA handshake failed: $dataResp"];
     }
 
-    // Build MIME message
+    // Build MIME message with departmental From and Reply-To
     $headers = [
         "MIME-Version: 1.0",
         "Content-Type: text/html; charset=UTF-8",
         "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <$fromEmail>",
+        "Reply-To: <" . ($replyTo ?: $fromEmail) . ">",
         "To: <$to>",
         "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=",
         "Date: " . date('r'),
@@ -192,7 +376,7 @@ function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBod
     return ['success' => false, 'error' => "SMTP DATA sending error: $sendResp"];
 }
 
-function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $overrideSettings = null): array {
+function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $overrideSettings = null, string $department = 'academy'): array {
     $settings = $overrideSettings ?: getSystemSetting('general_settings', [
         'schoolPhone' => '09075330330',
         'schoolEmail' => 'vivadoxa@gmail.com',
@@ -203,8 +387,8 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
         'smtpUser' => '',
         'smtpPass' => '',
         'smtpEncryption' => 'tls',
-        'fromEmail' => 'admissions@vivadoxa.ng',
-        'fromName' => 'Vivadoxa Music Academy',
+        'fromEmail' => 'academy@vivadoxamusic.com',
+        'fromName' => 'Vivadoxa Music Academy Admissions',
     ]);
 
     if (empty($settings['emailAlerts'])) {
@@ -212,8 +396,10 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
         return ['success' => false, 'error' => 'Email alerts are disabled in System Settings.'];
     }
 
-    $fromEmail = !empty($settings['fromEmail']) ? $settings['fromEmail'] : 'admissions@vivadoxa.ng';
-    $fromName = !empty($settings['fromName']) ? $settings['fromName'] : 'Vivadoxa Music Academy';
+    $deptInfo  = getDepartmentSender($department, $settings);
+    $fromEmail = $deptInfo['email'];
+    $fromName  = $deptInfo['name'];
+    $replyTo   = $deptInfo['email'];
 
     // 1. If SMTP is configured, attempt SMTP
     if (!empty($settings['smtpHost']) && !empty($settings['smtpUser'])) {
@@ -224,9 +410,9 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
             'pass' => $settings['smtpPass'] ?? '',
             'encryption' => $settings['smtpEncryption'] ?? 'tls',
         ];
-        $res = sendSmtpEmail($smtpConfig, $to, $subject, $htmlBody, $fromEmail, $fromName);
+        $res = sendSmtpEmail($smtpConfig, $to, $subject, $htmlBody, $fromEmail, $fromName, $replyTo);
         if ($res['success']) {
-            logNotification('email', $to, $subject, $htmlBody, 'sent', 'Delivered via SMTP (' . $settings['smtpHost'] . ')');
+            logNotification('email', $to, $subject, $htmlBody, 'sent', "Delivered via SMTP ({$settings['smtpHost']}) from $fromEmail");
             return $res;
         }
         // Fallback or log error
@@ -239,19 +425,19 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
     $headers = [
         'MIME-Version: 1.0',
         'Content-type: text/html; charset=UTF-8',
-        "From: $fromName <$fromEmail>",
-        "Reply-To: " . ($settings['schoolEmail'] ?? $fromEmail),
+        "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <$fromEmail>",
+        "Reply-To: <$replyTo>",
         'X-Mailer: PHP/' . phpversion(),
     ];
     $mailSent = @mail($to, $subject, $htmlBody, implode("\r\n", $headers));
 
     if ($mailSent) {
-        logNotification('email', $to, $subject, $htmlBody, 'sent', 'Sent via server mail()');
+        logNotification('email', $to, $subject, $htmlBody, 'sent', "Sent via server mail() from $fromEmail");
         return ['success' => true, 'message' => 'Email delivered via PHP mail().'];
     }
 
     // 3. If local environment (e.g., MAMP without configured MTA), record in notification log
-    logNotification('email', $to, $subject, $htmlBody, 'logged', 'Server MTA not active on localhost. Logged to system records.');
+    logNotification('email', $to, $subject, $htmlBody, 'logged', "Server MTA not active on localhost. Logged to system records (from $fromEmail).");
     return [
         'success' => true,
         'simulated' => true,
