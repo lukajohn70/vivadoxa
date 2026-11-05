@@ -153,23 +153,62 @@ if ($method === 'POST') {
 
     // Also register an enquiry record for instant visibility in Admin Enquiries view
     try {
-        $itemTitles = array_map(function($it) {
-            return ($it['name'] ?? 'Item') . (!empty($it['brand']) ? ' (' . $it['brand'] . ')' : '');
-        }, $itemsSanitized);
-        $summaryText = implode(', ', array_slice($itemTitles, 0, 3));
-        if (count($itemTitles) > 3) {
-            $summaryText .= ' +' . (count($itemTitles) - 3) . ' more';
+        $itemCount = count($itemsSanitized);
+        $typeTitle = ($type === 'rentals') ? 'Rental Reservation' : 'Store Instrument Order';
+
+        // Clean, concise subject line: e.g. "Rental Reservation [ORD-2026-001] · 4 Items (Violin, Keyboard +2)"
+        if ($itemCount === 1) {
+            $firstItem = $itemsSanitized[0]['name'] ?? 'Equipment Item';
+            $enqSubj = "{$typeTitle} [{$orderRef}] · {$firstItem}";
+        } else {
+            // Strip parenthesis like (1/2, 3/4, 4/4) so subject line stays neat
+            $cleanNames = array_map(function($it) {
+                $n = preg_replace('/\s*\(.*?\)\s*/', ' ', $it['name'] ?? 'Item');
+                return trim($n);
+            }, array_slice($itemsSanitized, 0, 2));
+            $overview = implode(', ', $cleanNames);
+            $extraCount = $itemCount - count($cleanNames);
+            $extraText = $extraCount > 0 ? " +{$extraCount} more" : "";
+            $enqSubj = "{$typeTitle} [{$orderRef}] · {$itemCount} Items ({$overview}{$extraText})";
         }
 
-        $enqMsg = "Order Reference: $orderRef\n"
-            . "Type: " . ($type === 'rentals' ? 'Rental Fleet Reservation' : 'Store Instrument Order') . "\n"
-            . "Items (" . count($itemTitles) . "):\n"
-            . implode("\n", array_map(function($t, $idx) { return ($idx + 1) . ". $t"; }, $itemTitles, array_keys($itemTitles))) . "\n\n"
-            . "Intake: " . ($intakeMethod === 'delivery' ? "Courier Delivery to: $deliveryAddr" : "Studio Pickup (Kaduna)") . "\n"
-            . ($duration ? "Duration: $duration\n" : "")
-            . ($notes ? "Notes: $notes\n" : "");
+        // Professional, coherent specification message
+        $fulfillmentText = ($intakeMethod === 'delivery')
+            ? "Courier Delivery\n  • Destination Address: " . ($deliveryAddr ?: 'To be confirmed by customer')
+            : "Studio Pickup at Vivadoxa Kaduna Studio";
 
-        $enqSubj = ($type === 'rentals' ? 'Rental Reservation [' : 'Store Order [') . $orderRef . ']: ' . $summaryText;
+        $itemLines = [];
+        foreach ($itemsSanitized as $idx => $it) {
+            $num = $idx + 1;
+            $iName = $it['name'] ?? 'Item';
+            $meta = array_filter([
+                $it['category'] ?? '',
+                $it['brand'] ?? '',
+                !empty($it['type']) ? ($it['type'] === 'event' ? 'Event Backline' : 'Student Practice') : ''
+            ]);
+            $metaStr = !empty($meta) ? ' (' . implode(' · ', $meta) . ')' : '';
+            $itemLines[] = "  {$num}. {$iName}{$metaStr}";
+        }
+        $itemsBlock = implode("\n", $itemLines);
+
+        $enqMsg = "════════════════════════════════════════════════════════\n"
+            . "  " . strtoupper($typeTitle) . " SPECIFICATION\n"
+            . "════════════════════════════════════════════════════════\n\n"
+            . "• Order Reference  : {$orderRef}\n"
+            . "• Service Category : " . ($type === 'rentals' ? 'Rental Fleet & Event Backline' : 'Music Store & Catalog Order') . "\n"
+            . "• Customer Name    : {$name}\n"
+            . "• Contact Phone    : {$phone}\n"
+            . "• Contact Email    : " . ($email ?: 'Not provided (phone contact only)') . "\n"
+            . "• Fulfillment Mode : {$fulfillmentText}\n"
+            . ($type === 'rentals' && !empty($duration) ? "• Rental Period    : {$duration}\n" : "")
+            . "\n"
+            . "── RESERVED GEAR & EQUIPMENT ({$itemCount} item" . ($itemCount === 1 ? '' : 's') . ") ──\n"
+            . "{$itemsBlock}\n\n"
+            . "── SPECIAL REQUESTS & CLIENT NOTES ──\n"
+            . (!empty($notes) ? "  \"{$notes}\"\n" : "  None provided.\n")
+            . "\n"
+            . "── ORDER STATUS ──\n"
+            . "  Pending studio confirmation and inventory allocation.";
 
         $eStmt = $pdo->prepare("
             INSERT INTO `enquiries` (`name`, `email`, `phone`, `subject`, `message`, `source`, `type`, `is_read`)

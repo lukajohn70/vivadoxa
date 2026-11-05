@@ -53,20 +53,20 @@ if ($method === 'GET') {
     // Build the message body from either a pre-built message or individual fields
     $message = trim($input['message'] ?? '');
 
-    // For Store / Rentals that pass structured fields, compose a message if none provided
+    // For Store / Rentals that pass structured fields, compose a coherent message if none provided
     if (empty($message)) {
         $parts = [];
         $equipList = $input['equipmentList'] ?? $input['equipment_list'] ?? $input['items'] ?? null;
         if ($equipList) {
             $listStr = is_array($equipList) ? implode(', ', $equipList) : $equipList;
-            $parts[] = "Equipment / Items: $listStr";
+            $parts[] = "• Requested Equipment: $listStr";
         }
         foreach (['duration','intake','intakeMethod','collectionMethod','budget','instrumentPlayed',
                   'instrumentNeeded','clientType','notes','additionalNotes','address','pickupAddress'] as $fld) {
             $val = trim($input[$fld] ?? '');
             if ($val !== '') {
                 $label = ucfirst(preg_replace('/(?<!^)[A-Z]/', ' $0', $fld));
-                $parts[] = "$label: $val";
+                $parts[] = "• $label: $val";
             }
         }
         $message = implode("\n", $parts);

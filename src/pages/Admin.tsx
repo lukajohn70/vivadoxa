@@ -3533,8 +3533,16 @@ function AdminManager({ title }: { title: string }) {
           <div className="modal-card">
             <div className="modal-head">
               <h3>
-                {title.slice(0, -1)} Details:{" "}
-                {selectedRecord.application_no ||
+                {(title === "Enquiries"
+                  ? "Enquiry"
+                  : title.endsWith("ies")
+                  ? title.slice(0, -3) + "y"
+                  : title.endsWith("s")
+                  ? title.slice(0, -1)
+                  : title)}{" "}
+                Details:{" "}
+                {selectedRecord.order_ref ||
+                  selectedRecord.application_no ||
                   selectedRecord.reference ||
                   selectedRecord.tracking_code ||
                   selectedRecord.student_no ||
@@ -4327,7 +4335,7 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     <div>
                       <small>Email</small>
-                      <strong>{selectedRecord.email}</strong>
+                      <strong>{selectedRecord.email || "—"}</strong>
                     </div>
                     <div>
                       <small>Phone</small>
@@ -4338,25 +4346,128 @@ function AdminManager({ title }: { title: string }) {
                       <strong>{selectedRecord.subject}</strong>
                     </div>
                   </div>
+
                   <div
                     style={{
-                      padding: 16,
+                      padding: "16px 20px",
                       background: "#faf9f6",
-                      borderRadius: 6,
-                      lineHeight: 1.6,
+                      borderRadius: 10,
+                      border: "1px solid var(--line)",
                     }}
                   >
-                    <small
+                    <div
                       style={{
-                        color: "var(--muted)",
-                        textTransform: "uppercase",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 12,
+                        paddingBottom: 8,
+                        borderBottom: "1px solid var(--line)",
                       }}
                     >
-                      Message Content:
-                    </small>
-                    <p style={{ margin: "8px 0 0", color: "#111" }}>
+                      <small
+                        style={{
+                          color: "var(--gold-text)",
+                          textTransform: "uppercase",
+                          fontWeight: 700,
+                          fontSize: 10,
+                          letterSpacing: "1.2px",
+                        }}
+                      >
+                        Enquiry &amp; Order Content
+                      </small>
+                      {selectedRecord.source && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            padding: "3px 9px",
+                            borderRadius: 6,
+                            background:
+                              selectedRecord.source === "rentals"
+                                ? "rgba(201,107,50,0.12)"
+                                : selectedRecord.source === "store"
+                                ? "rgba(21,112,84,0.1)"
+                                : "rgba(11,11,11,0.06)",
+                            color:
+                              selectedRecord.source === "rentals"
+                                ? "var(--gold-text)"
+                                : selectedRecord.source === "store"
+                                ? "var(--green)"
+                                : "var(--navy)",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}
+                        >
+                          {selectedRecord.source === "rentals"
+                            ? "Rental Fleet"
+                            : selectedRecord.source === "store"
+                            ? "Music Store"
+                            : selectedRecord.source}
+                        </span>
+                      )}
+                    </div>
+                    <div
+                      style={{
+                        margin: 0,
+                        color: "#191715",
+                        whiteSpace: "pre-wrap",
+                        fontFamily: "inherit",
+                        fontSize: 13,
+                        lineHeight: 1.7,
+                        wordBreak: "break-word",
+                      }}
+                    >
                       {selectedRecord.message}
-                    </p>
+                    </div>
+                  </div>
+
+                  {/* Quick Action Contact Bar */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      marginTop: 16,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {selectedRecord.email && (
+                      <a
+                        href={`mailto:${selectedRecord.email}?subject=RE: ${encodeURIComponent(
+                          selectedRecord.subject || "Vivadoxa Inquiry",
+                        )}`}
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: 12,
+                          padding: "8px 16px",
+                          minHeight: 36,
+                          textDecoration: "none",
+                        }}
+                      >
+                        <Icon name="mail" size={14} /> Reply via Email
+                      </a>
+                    )}
+                    {selectedRecord.phone && (
+                      <a
+                        href={`https://wa.me/${selectedRecord.phone.replace(
+                          /[^0-9]/g,
+                          "",
+                        )}?text=${encodeURIComponent(
+                          `Hello ${selectedRecord.name}, thank you for reaching out to Vivadoxa regarding ${selectedRecord.subject}.`,
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: 12,
+                          padding: "8px 16px",
+                          minHeight: 36,
+                          textDecoration: "none",
+                        }}
+                      >
+                        <WhatsAppIcon size={14} /> Message on WhatsApp
+                      </a>
+                    )}
                   </div>
                 </div>
               )}
