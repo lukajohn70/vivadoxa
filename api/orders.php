@@ -272,6 +272,10 @@ if ($method === 'POST') {
             'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
         ]);
         sendSystemEmail($adminRecipient, "New {$deptLabel} [{$orderRef}] — {$name}", $adminEmailBody, $settings, $dept);
+        $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+        if (!empty($officialGmail) && strcasecmp($adminRecipient, $officialGmail) !== 0) {
+            sendSystemEmail($officialGmail, "New {$deptLabel} [{$orderRef}] — {$name}", $adminEmailBody, $settings, $dept);
+        }
 
     } catch (Exception $mailEx) {}
 

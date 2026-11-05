@@ -1690,6 +1690,8 @@ export interface GeneralSettings {
   schoolPhone2: string
   schoolWhatsapp: string
   schoolEmail: string
+  officialGmail?: string
+  copyOfficialGmail?: boolean
   schoolAddress?: string
   emailAlerts: boolean
   whatsappAlerts: boolean
@@ -1715,6 +1717,8 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   schoolPhone2: "09010267234",
   schoolWhatsapp: "08031308881",
   schoolEmail: "vivadoxa@gmail.com",
+  officialGmail: "vivadoxa@gmail.com",
+  copyOfficialGmail: true,
   schoolAddress: "Kaduna Studio, Kaduna State, Nigeria",
   emailAlerts: true,
   whatsappAlerts: true,

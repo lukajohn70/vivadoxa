@@ -162,6 +162,10 @@ if ($method === 'GET') {
             'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
         ]);
         sendSystemEmail($adminRecipient, "New Enquiry: {$subject} — {$name}", $adminEmailBody, $settings, $dept);
+        $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+        if (!empty($officialGmail) && strcasecmp($adminRecipient, $officialGmail) !== 0) {
+            sendSystemEmail($officialGmail, "New Enquiry: {$subject} — {$name}", $adminEmailBody, $settings, $dept);
+        }
 
     } catch (Exception $mailEx) {}
 

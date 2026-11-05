@@ -2191,12 +2191,22 @@ export function GeneralSettingsView({
             />
             <Field
               id="cfg-school-email"
-              label="Official Admissions Email"
+              label="Primary Operations Email"
               value={generalSettings.schoolEmail}
               onChange={(v) => {
                 setGeneralSettings({ ...generalSettings, schoolEmail: v })
                 if (!testEmailRecipient) setTestEmailRecipient(v)
               }}
+              type="email"
+              required
+            />
+            <Field
+              id="cfg-official-gmail"
+              label="Official Gmail Backup / Archive"
+              value={generalSettings.officialGmail || "vivadoxa@gmail.com"}
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, officialGmail: v })
+              }
               type="email"
               required
             />
@@ -2343,6 +2353,57 @@ export function GeneralSettingsView({
                     })
                   }
                   aria-label="Email alerts"
+                />
+                <i aria-hidden="true" />
+              </label>
+            </div>
+
+            {/* Official Gmail Backup Toggle */}
+            <div
+              className="switch-row"
+              style={{
+                padding: 14,
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                background: "rgba(201,107,50,0.04)",
+              }}
+            >
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    background: "rgba(201,107,50,0.14)",
+                    color: "var(--gold-text)",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="mail" size={16} />
+                </div>
+                <div>
+                  <strong style={{ color: "#a24a18", display: "block" }}>
+                    Copy Every Form & Notification to Official Gmail
+                  </strong>
+                  <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                    Always route a backup / BCC of all form submissions and receipts to{" "}
+                    <strong>{generalSettings.officialGmail || "vivadoxa@gmail.com"}</strong>.
+                  </span>
+                </div>
+              </div>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={generalSettings.copyOfficialGmail ?? true}
+                  onChange={(e) =>
+                    setGeneralSettings({
+                      ...generalSettings,
+                      copyOfficialGmail: e.target.checked,
+                    })
+                  }
+                  aria-label="Copy to Official Gmail"
                 />
                 <i aria-hidden="true" />
               </label>

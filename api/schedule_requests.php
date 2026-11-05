@@ -126,7 +126,11 @@ if ($method === 'GET') {
                         <p><a href='http://localhost/Vivadoxa/#admin' style='background: #c96b32; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Review & Allocate Makeup in Admin</a></p>
                     </div>
                 ";
-                sendSystemEmail($schoolEmail, $subject, $html, $settings);
+                sendSystemEmail($schoolEmail, $subject, $html, $settings, 'academy');
+                $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+                if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
+                    sendSystemEmail($officialGmail, $subject, $html, $settings, 'academy');
+                }
 
                 // Student confirmation email
                 $studentSub = "Vivadoxa Academy — Schedule Request Received (#REQ-{$requestId})";
@@ -139,7 +143,7 @@ if ($method === 'GET') {
                         <p style='margin-top: 20px; font-size: 13px; color: #5c5954;'>Vivadoxa Music Academy Admissions & Studio Office · Kaduna</p>
                     </div>
                 ";
-                sendSystemEmail($studentEmail, $studentSub, $studentHtml, $settings);
+                sendSystemEmail($studentEmail, $studentSub, $studentHtml, $settings, 'academy');
             }
         } catch (Exception $e) {}
 
@@ -206,7 +210,7 @@ if ($method === 'GET') {
                         <p>You can view your updated timetable anytime in your <a href='http://localhost/Vivadoxa/#portal'>Student Portal</a>.</p>
                     </div>
                 ";
-                sendSystemEmail($sEmail, $sub, $html, $settings);
+                sendSystemEmail($sEmail, $sub, $html, $settings, 'academy');
             }
         } catch (Exception $e) {}
 

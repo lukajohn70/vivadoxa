@@ -164,6 +164,10 @@ if ($method === 'GET') {
                     </div>
                 ";
                 sendSystemEmail($schoolEmail, $subject, $html, $settings, 'bursary');
+                $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+                if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
+                    sendSystemEmail($officialGmail, $subject, $html, $settings, 'bursary');
+                }
             }
         } catch (Exception $e) {}
 
@@ -246,6 +250,10 @@ if ($method === 'GET') {
                 </div>
             ";
             sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'bursary');
+            $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+            if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
+                sendSystemEmail($officialGmail, $adminSubject, $adminHtml, $settings, 'bursary');
+            }
 
             // Send Payer Confirmation Email
             if (!empty($payerEmail)) {

@@ -256,6 +256,10 @@ if ($method === 'GET') {
             'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
         ]);
         sendSystemEmail($adminRecipient, "New Repair Intake [{$trackingCode}] — {$name} ({$instrument})", $adminEmailBody, $settings, 'repairs');
+        $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+        if (!empty($officialGmail) && strcasecmp($adminRecipient, $officialGmail) !== 0) {
+            sendSystemEmail($officialGmail, "New Repair Intake [{$trackingCode}] — {$name} ({$instrument})", $adminEmailBody, $settings, 'repairs');
+        }
 
     } catch (Exception $mailEx) {}
 

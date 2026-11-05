@@ -282,6 +282,10 @@ if ($method === 'GET') {
                 </div>
             ";
             sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'academy');
+            $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+            if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
+                sendSystemEmail($officialGmail, $adminSubject, $adminHtml, $settings, 'academy');
+            }
 
             // Student confirmation
             if (!empty($settings['studentEmailConfirmation'] ?? true)) {

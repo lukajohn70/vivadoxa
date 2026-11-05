@@ -21,6 +21,8 @@ function getGeneralSettingsConfig(): array {
         'schoolPhone2' => '09010267234',
         'schoolWhatsapp' => '08031308881',
         'schoolEmail' => 'vivadoxa@gmail.com',
+        'officialGmail' => 'vivadoxa@gmail.com',
+        'copyOfficialGmail' => true,
         'schoolAddress' => 'Kaduna Studio, Kaduna State, Nigeria',
         'emailAlerts' => true,
         'whatsappAlerts' => true,
@@ -34,7 +36,7 @@ function getGeneralSettingsConfig(): array {
         'smtpUser' => '',
         'smtpPass' => '',
         'smtpEncryption' => 'tls',
-        'fromEmail' => 'admissions@vivadoxa.ng',
+        'fromEmail' => 'academy@vivadoxamusic.com',
         'fromName' => 'Vivadoxa Music Academy Admissions',
         'whatsappMode' => 'direct',
         'whatsappGatewayUrl' => '',
@@ -255,7 +257,7 @@ function buildBrandedEmailTemplate(array $params): string {
     ";
 }
 
-function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBody, string $fromEmail, string $fromName, ?string $replyTo = null): array {
+function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBody, string $fromEmail, string $fromName, ?string $replyTo = null, ?string $bcc = null): array {
     $host = trim($smtp['host'] ?? '');
     $port = (int)($smtp['port'] ?? 587);
     $user = trim($smtp['user'] ?? '');
@@ -346,6 +348,12 @@ function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBod
         return ['success' => false, 'error' => "RCPT TO failed: $rcptTo"];
     }
 
+    // Envelope BCC: route copy to official Gmail without exposing Bcc header to recipient
+    if (!empty($bcc) && strcasecmp(trim($bcc), trim($to)) !== 0) {
+        $cleanBcc = trim($bcc);
+        $sendCommand("RCPT TO: <$cleanBcc>");
+    }
+
     $dataResp = $sendCommand("DATA");
     if (substr($dataResp, 0, 3) !== '354') {
         fclose($socket);
@@ -376,20 +384,15 @@ function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBod
     return ['success' => false, 'error' => "SMTP DATA sending error: $sendResp"];
 }
 
-function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $overrideSettings = null, string $department = 'academy'): array {
-    $settings = $overrideSettings ?: getSystemSetting('general_settings', [
-        'schoolPhone' => '09075330330',
-        'schoolEmail' => 'vivadoxa@gmail.com',
-        'emailAlerts' => true,
-        'whatsappAlerts' => true,
-        'smtpHost' => '',
-        'smtpPort' => 587,
-        'smtpUser' => '',
-        'smtpPass' => '',
-        'smtpEncryption' => 'tls',
-        'fromEmail' => 'academy@vivadoxamusic.com',
-        'fromName' => 'Vivadoxa Music Academy Admissions',
-    ]);
+function sendSystemEmail(
+    string $to,
+    string $subject,
+    string $htmlBody,
+    ?array $overrideSettings = null,
+    string $department = 'academy',
+    bool $bccOfficialGmail = true
+): array {
+    $settings = $overrideSettings ?: getGeneralSettingsConfig();
 
     if (empty($settings['emailAlerts'])) {
         logNotification('email', $to, $subject, $htmlBody, 'logged', 'Email alerts currently toggled off');
@@ -401,6 +404,13 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
     $fromName  = $deptInfo['name'];
     $replyTo   = $deptInfo['email'];
 
+    // Official Gmail account: every notification/form is duplicated/BCC'd here
+    $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+    if (empty($officialGmail)) {
+        $officialGmail = 'vivadoxa@gmail.com';
+    }
+    $bcc = ($bccOfficialGmail && strcasecmp(trim($to), $officialGmail) !== 0) ? $officialGmail : null;
+
     // 1. If SMTP is configured, attempt SMTP
     if (!empty($settings['smtpHost']) && !empty($settings['smtpUser'])) {
         $smtpConfig = [
@@ -410,9 +420,11 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
             'pass' => $settings['smtpPass'] ?? '',
             'encryption' => $settings['smtpEncryption'] ?? 'tls',
         ];
-        $res = sendSmtpEmail($smtpConfig, $to, $subject, $htmlBody, $fromEmail, $fromName, $replyTo);
+        $res = sendSmtpEmail($smtpConfig, $to, $subject, $htmlBody, $fromEmail, $fromName, $replyTo, $bcc);
         if ($res['success']) {
-            logNotification('email', $to, $subject, $htmlBody, 'sent', "Delivered via SMTP ({$settings['smtpHost']}) from $fromEmail");
+            $note = "Delivered via SMTP ({$settings['smtpHost']}) from $fromEmail";
+            if ($bcc) $note .= " (BCC: $bcc)";
+            logNotification('email', $to, $subject, $htmlBody, 'sent', $note);
             return $res;
         }
         // Fallback or log error
@@ -429,15 +441,23 @@ function sendSystemEmail(string $to, string $subject, string $htmlBody, ?array $
         "Reply-To: <$replyTo>",
         'X-Mailer: PHP/' . phpversion(),
     ];
+    if (!empty($bcc) && strcasecmp(trim($bcc), trim($to)) !== 0) {
+        $headers[] = "Bcc: <" . trim($bcc) . ">";
+    }
+
     $mailSent = @mail($to, $subject, $htmlBody, implode("\r\n", $headers));
 
     if ($mailSent) {
-        logNotification('email', $to, $subject, $htmlBody, 'sent', "Sent via server mail() from $fromEmail");
+        $note = "Sent via server mail() from $fromEmail";
+        if ($bcc) $note .= " (BCC: $bcc)";
+        logNotification('email', $to, $subject, $htmlBody, 'sent', $note);
         return ['success' => true, 'message' => 'Email delivered via PHP mail().'];
     }
 
     // 3. If local environment (e.g., MAMP without configured MTA), record in notification log
-    logNotification('email', $to, $subject, $htmlBody, 'logged', "Server MTA not active on localhost. Logged to system records (from $fromEmail).");
+    $note = "Server MTA not active on localhost. Logged to system records (from $fromEmail)";
+    if ($bcc) $note .= " [Official copy: $bcc]";
+    logNotification('email', $to, $subject, $htmlBody, 'logged', $note);
     return [
         'success' => true,
         'simulated' => true,
