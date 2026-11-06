@@ -1287,6 +1287,10 @@ function AdminManager({ title }: { title: string }) {
   })
   const [selectedRecitalIds, setSelectedRecitalIds] = useState<number[]>([])
 
+  // Repair workflow state
+  const [repairCostInput, setRepairCostInput] = useState<string>("")
+  const [repairStatusInput, setRepairStatusInput] = useState<string>("")
+
   async function handleBatchDeleteRecitals() {
     if (selectedRecitalIds.length === 0) return
     if (
@@ -1362,6 +1366,9 @@ function AdminManager({ title }: { title: string }) {
         email: selectedRecord.email || "",
         program: selectedRecord.program || "",
       })
+    } else if (selectedRecord && (title === "Repairs" || title.includes("Repairs"))) {
+      setRepairStatusInput(selectedRecord.status || "received")
+      setRepairCostInput(selectedRecord.estimated_cost ? String(selectedRecord.estimated_cost) : "")
     }
   }, [selectedRecord, title])
 
@@ -1771,6 +1778,96 @@ function AdminManager({ title }: { title: string }) {
       ) : (
         // Operational Data Tables
         <section className="table-panel manager-table">
+          {/* Repairs: Custom Filter Bar + Pipeline */}
+          {(title === "Repairs" || title.includes("Repairs")) ? (
+            <>
+              {/* Pipeline header */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0,
+                  overflowX: "auto",
+                  padding: "12px 0 4px",
+                }}>
+                  {[
+                    { key: "received", label: "Intake Received", color: "#0b0b0b" },
+                    { key: "assessing", label: "Under Assessment", color: "#c96b32" },
+                    { key: "in_progress", label: "Repair In Progress", color: "#2563eb" },
+                    { key: "ready", label: "Ready for Pickup", color: "#15803d" },
+                    { key: "collected", label: "Collected ✓", color: "#5c5954" },
+                  ].map((stage, i, arr) => {
+                    const count = records.filter(r => r.status === stage.key).length
+                    const isActive = statusFilter === stage.key
+                    return (
+                      <div key={stage.key} style={{ display: "flex", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => setStatusFilter(isActive ? "all" : stage.key)}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: 4,
+                            padding: "8px 14px",
+                            borderRadius: 8,
+                            border: isActive ? `2px solid ${stage.color}` : "2px solid var(--line)",
+                            background: isActive ? `${stage.color}12` : "white",
+                            cursor: "pointer",
+                            minWidth: 110,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          <span style={{
+                            fontSize: 20,
+                            fontWeight: 800,
+                            color: stage.color,
+                            lineHeight: 1,
+                          }}>{count}</span>
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: isActive ? 700 : 500,
+                            color: isActive ? stage.color : "var(--muted)",
+                            textAlign: "center",
+                            lineHeight: 1.3,
+                          }}>{stage.label}</span>
+                        </button>
+                        {i < arr.length - 1 && (
+                          <span style={{ color: "var(--muted)", fontSize: 16, margin: "0 2px", userSelect: "none" }}>›</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              {/* Repairs filter bar */}
+              <div className="manager-filters">
+                <div className="search-field">
+                  <Icon name="search" />
+                  <input
+                    placeholder="Search tickets, customers, instruments…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    aria-label="Search Repairs"
+                  />
+                </div>
+                <select
+                  aria-label="Filter by repair status"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Tickets ({records.length})</option>
+                  <option value="received">Received ({records.filter(r => r.status === "received").length})</option>
+                  <option value="assessing">Under Assessment ({records.filter(r => r.status === "assessing").length})</option>
+                  <option value="in_progress">In Progress ({records.filter(r => r.status === "in_progress").length})</option>
+                  <option value="ready">Ready for Pickup ({records.filter(r => r.status === "ready").length})</option>
+                  <option value="collected">Collected ({records.filter(r => r.status === "collected").length})</option>
+                </select>
+                <Button variant="ghost" onClick={loadData}>Refresh</Button>
+                <Button variant="ghost" onClick={exportCsv}>Export CSV</Button>
+              </div>
+            </>
+          ) : (
           <div className="manager-filters">
             <div className="search-field">
               <Icon name="search" />
@@ -1797,6 +1894,7 @@ function AdminManager({ title }: { title: string }) {
               Export CSV
             </Button>
           </div>
+          )}
 
           <div className="hidden md:block table-wrap">
             <table>
@@ -1823,11 +1921,11 @@ function AdminManager({ title }: { title: string }) {
                 )}
                 {(title === "Repairs" || title.includes("Repairs")) && (
                   <tr>
-                    <th scope="col">Tracking Code</th>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Instrument &amp; Issue</th>
-                    <th scope="col">Intake Method</th>
-                    <th scope="col">Status</th>
+                    <th scope="col">Ticket</th>
+                    <th scope="col">Customer &amp; Contact</th>
+                    <th scope="col">Instrument</th>
+                    <th scope="col">Service</th>
+                    <th scope="col">Stage</th>
                     <th scope="col">Actions</th>
                   </tr>
                 )}
@@ -2093,16 +2191,19 @@ function AdminManager({ title }: { title: string }) {
                       {(title === "Repairs" || title.includes("Repairs")) && (
                         <>
                           <td>
-                            <code>{row.tracking_code}</code>
+                            <code style={{ fontWeight: 700, color: "var(--navy)" }}>{row.tracking_code}</code>
+                            <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
+                              {row.created_at ? new Date(row.created_at).toLocaleDateString() : ""}
+                            </div>
                           </td>
                           <td>
-                            <div>{row.customer_name}</div>
+                            <div style={{ fontWeight: 600 }}>{row.customer_name}</div>
                             <small style={{ color: "var(--muted)" }}>
                               {row.customer_phone}
                             </small>
                           </td>
                           <td>
-                            <div>{row.instrument}</div>
+                            <div style={{ fontWeight: 600 }}>{row.instrument}{row.brand_model ? ` — ${row.brand_model}` : ""}</div>
                             <small
                               style={{
                                 color: "var(--muted)",
@@ -2117,26 +2218,38 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            <Badge
-                              tone={
-                                row.intake_method === "pickup" ? "gold" : "navy"
-                              }
+                            <div
+                              style={{
+                                maxWidth: 180,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                fontSize: 12,
+                              }}
                             >
-                              {row.intake_method === "pickup"
-                                ? "Pickup"
-                                : "Drop-off"}
-                            </Badge>
+                              {row.service_requested || "—"}
+                            </div>
                           </td>
                           <td>
                             <Badge
                               tone={
-                                row.status === "ready" ||
                                 row.status === "collected"
+                                  ? "muted"
+                                  : row.status === "ready"
                                   ? "green"
-                                  : "gold"
+                                  : row.status === "in_progress"
+                                  ? "navy"
+                                  : row.status === "assessing"
+                                  ? "gold"
+                                  : "navy"
                               }
                             >
-                              {row.status}
+                              {row.status === "received" ? "Received"
+                                : row.status === "assessing" ? "Assessing"
+                                : row.status === "in_progress" ? "In Progress"
+                                : row.status === "ready" ? "Ready ✓"
+                                : row.status === "collected" ? "Collected"
+                                : row.status}
                             </Badge>
                           </td>
                           <td>
@@ -2147,7 +2260,7 @@ function AdminManager({ title }: { title: string }) {
                                 setSelectedRecord(row)
                               }}
                             >
-                              Update
+                              View &amp; Update
                             </button>
                           </td>
                         </>
@@ -2883,22 +2996,32 @@ function AdminManager({ title }: { title: string }) {
                               >
                                 {row.customer_name}
                               </div>
+                              <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
+                                {row.customer_phone}
+                              </div>
                             </div>
                             <span style={{ whiteSpace: "nowrap" }}>
                               <Badge
                                 tone={
-                                  row.status === "ready" ||
                                   row.status === "collected"
+                                    ? "muted"
+                                    : row.status === "ready"
                                     ? "green"
-                                    : "gold"
+                                    : row.status === "in_progress"
+                                    ? "navy"
+                                    : row.status === "assessing"
+                                    ? "gold"
+                                    : "navy"
                                 }
                               >
-                                {row.status}
+                                {row.status === "received" ? "Received"
+                                  : row.status === "assessing" ? "Assessing"
+                                  : row.status === "in_progress" ? "In Progress"
+                                  : row.status === "ready" ? "Ready ✓"
+                                  : row.status === "collected" ? "Collected"
+                                  : row.status}
                               </Badge>
                             </span>
-                          </div>
-                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                            {row.customer_phone}
                           </div>
                           <div
                             style={{
@@ -2911,30 +3034,21 @@ function AdminManager({ title }: { title: string }) {
                             <div
                               style={{ fontWeight: 600, color: "var(--navy)" }}
                             >
-                              {row.instrument}
+                              {row.instrument}{row.brand_model ? ` — ${row.brand_model}` : ""}
                             </div>
                             <div
                               style={{ color: "var(--muted)", marginTop: 2 }}
                             >
-                              {row.issue}
+                              {row.service_requested || row.issue}
                             </div>
                           </div>
                           <div
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
+                              justifyContent: "flex-end",
                               alignItems: "center",
                             }}
                           >
-                            <Badge
-                              tone={
-                                row.intake_method === "pickup" ? "gold" : "navy"
-                              }
-                            >
-                              {row.intake_method === "pickup"
-                                ? "Pickup"
-                                : "Drop-off"}
-                            </Badge>
                             <button
                               type="button"
                               className="action-btn"
@@ -2948,7 +3062,7 @@ function AdminManager({ title }: { title: string }) {
                                 fontWeight: 600,
                               }}
                             >
-                              Update Status
+                              View &amp; Update
                             </button>
                           </div>
                         </>
@@ -4145,32 +4259,85 @@ function AdminManager({ title }: { title: string }) {
 
               {/* Repair Details */}
               {(title === "Repairs" || title.includes("Repairs")) && (
-                <div>
-                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
-                    <div>
-                      <small>Tracking Code</small>
-                      <strong>{selectedRecord.tracking_code}</strong>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+                  {/* Section A — Ticket Overview */}
+                  <div style={{
+                    background: "var(--navy)",
+                    color: "white",
+                    borderRadius: 10,
+                    padding: "16px 20px",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 12,
+                  }}>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 10, opacity: 0.6, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Ticket</div>
+                      <code style={{ fontSize: 18, fontWeight: 800, color: "#e9a16f", letterSpacing: "0.5px" }}>
+                        {selectedRecord.tracking_code}
+                      </code>
+                      <div style={{ fontSize: 11, opacity: 0.65, marginTop: 4 }}>
+                        Received: {selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      </div>
                     </div>
-                    <div>
-                      <small>Customer Name</small>
-                      <strong>{selectedRecord.customer_name}</strong>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                      <Badge
+                        tone={
+                          selectedRecord.status === "collected" ? "muted"
+                          : selectedRecord.status === "ready" ? "green"
+                          : selectedRecord.status === "in_progress" ? "navy"
+                          : selectedRecord.status === "assessing" ? "gold"
+                          : "navy"
+                        }
+                      >
+                        {selectedRecord.status === "received" ? "Intake Received"
+                          : selectedRecord.status === "assessing" ? "Under Assessment"
+                          : selectedRecord.status === "in_progress" ? "Repair In Progress"
+                          : selectedRecord.status === "ready" ? "Ready for Pickup ✓"
+                          : selectedRecord.status === "collected" ? "Collected / Delivered"
+                          : selectedRecord.status}
+                      </Badge>
+                      <Badge tone={selectedRecord.intake_method === "pickup" ? "gold" : "navy"}>
+                        {selectedRecord.intake_method === "pickup" ? "🚗 Logistics Pickup" : "📥 Studio Drop-off"}
+                      </Badge>
                     </div>
-                    <div>
-                      <small>Customer Phone</small>
-                      <strong>{selectedRecord.customer_phone}</strong>
+                    {selectedRecord.pickup_address && (
+                      <div style={{ width: "100%", fontSize: 12, borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 8, marginTop: 4 }}>
+                        <span style={{ opacity: 0.6 }}>Pickup address: </span>
+                        <strong style={{ color: "#e9a16f" }}>{selectedRecord.pickup_address}</strong>
+                        {selectedRecord.collection_arrangement && (
+                          <span style={{ opacity: 0.7 }}> · {selectedRecord.collection_arrangement}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section B — Customer */}
+                  <div style={{
+                    background: "#faf9f6",
+                    border: "1px solid var(--line)",
+                    borderRadius: 10,
+                    padding: "16px 20px",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--muted)", marginBottom: 12 }}>
+                      Customer
                     </div>
-                    <div>
-                      <small>Customer Email</small>
-                      <strong>{selectedRecord.customer_email || "—"}</strong>
+                    <div className="doc-grid" style={{ margin: 0 }}>
+                      <div>
+                        <small>Name</small>
+                        <strong>{selectedRecord.customer_name}</strong>
+                      </div>
+                      <div>
+                        <small>Phone</small>
+                        <strong>{selectedRecord.customer_phone}</strong>
+                      </div>
+                      <div>
+                        <small>Email</small>
+                        <strong>{selectedRecord.customer_email || "—"}</strong>
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        gridColumn: "1/-1",
-                        display: "flex",
-                        gap: 10,
-                        padding: "4px 0",
-                      }}
-                    >
+                    <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
                       <a
                         href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
                         target="_blank"
@@ -4179,9 +4346,9 @@ function AdminManager({ title }: { title: string }) {
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 6,
-                          padding: "6px 12px",
+                          padding: "7px 14px",
                           borderRadius: 6,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: 700,
                           background: "rgba(37, 211, 102, 0.15)",
                           color: "#075e54",
@@ -4199,9 +4366,9 @@ function AdminManager({ title }: { title: string }) {
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 6,
-                            padding: "6px 12px",
+                            padding: "7px 14px",
                             borderRadius: 6,
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 700,
                             background: "rgba(201, 107, 50, 0.12)",
                             color: "#a24a18",
@@ -4214,112 +4381,235 @@ function AdminManager({ title }: { title: string }) {
                         </a>
                       )}
                     </div>
-                    <div>
-                      <small>Instrument</small>
-                      <strong>{selectedRecord.instrument}</strong>
+                  </div>
+
+                  {/* Section C — Instrument Details */}
+                  <div style={{
+                    background: "#faf9f6",
+                    border: "1px solid var(--line)",
+                    borderRadius: 10,
+                    padding: "16px 20px",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--muted)", marginBottom: 12 }}>
+                      Instrument Details
                     </div>
-                    <div>
-                      <small>Delivery / Intake Method</small>
-                      <Badge
-                        tone={
-                          selectedRecord.intake_method === "pickup"
-                            ? "gold"
-                            : "navy"
-                        }
-                      >
-                        {selectedRecord.intake_method === "pickup"
-                          ? "Logistics Pickup Request"
-                          : "Studio Drop-off"}
-                      </Badge>
-                    </div>
-                    {selectedRecord.pickup_address && (
-                      <div style={{ gridColumn: "1/-1" }}>
-                        <small>Pickup Address &amp; Landmark</small>
-                        <strong style={{ color: "var(--gold)" }}>
-                          {selectedRecord.pickup_address}
-                        </strong>
+                    <div className="doc-grid" style={{ margin: 0 }}>
+                      <div>
+                        <small>Instrument Type</small>
+                        <strong>{selectedRecord.instrument || "—"}</strong>
                       </div>
-                    )}
-                    <div style={{ gridColumn: "1/-1" }}>
-                      <small>Reported Issue</small>
-                      <strong>{selectedRecord.issue}</strong>
+                      <div>
+                        <small>Brand / Model</small>
+                        <strong>{selectedRecord.brand_model || "—"}</strong>
+                      </div>
+                      {selectedRecord.serial_number && (
+                        <div>
+                          <small>Serial No.</small>
+                          <strong>{selectedRecord.serial_number}</strong>
+                        </div>
+                      )}
+                      {selectedRecord.equipment_age && (
+                        <div>
+                          <small>Instrument Age</small>
+                          <strong>{selectedRecord.equipment_age}</strong>
+                        </div>
+                      )}
+                      {selectedRecord.accessories && (
+                        <div>
+                          <small>Accessories Included</small>
+                          <strong>{selectedRecord.accessories}</strong>
+                        </div>
+                      )}
+                      <div style={{ gridColumn: "1/-1" }}>
+                        <small>Service Requested</small>
+                        <strong>{selectedRecord.service_requested || "—"}</strong>
+                      </div>
+                      <div style={{ gridColumn: "1/-1" }}>
+                        <small>Reported Issue</small>
+                        <strong>{selectedRecord.issue || "—"}</strong>
+                      </div>
+                      {selectedRecord.additional_notes && (
+                        <div style={{ gridColumn: "1/-1" }}>
+                          <small>Additional Notes</small>
+                          <strong>{selectedRecord.additional_notes}</strong>
+                        </div>
+                      )}
+                      <div>
+                        <small>Previously Repaired?</small>
+                        <strong>{selectedRecord.previously_repaired === "yes" || selectedRecord.previously_repaired === true || selectedRecord.previously_repaired === 1 ? "Yes" : "No"}</strong>
+                      </div>
+                      {selectedRecord.visible_damage && (
+                        <div>
+                          <small>Visible Damage</small>
+                          <strong>{selectedRecord.visible_damage}</strong>
+                        </div>
+                      )}
+                      {selectedRecord.problem_started && (
+                        <div>
+                          <small>Problem Started</small>
+                          <strong>{selectedRecord.problem_started}</strong>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      borderTop: "1px solid var(--line)",
-                      paddingTop: 16,
-                      display: "flex",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 180 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          marginBottom: 4,
-                        }}
-                      >
-                        Update Stage:
-                      </label>
-                      <select
-                        defaultValue={selectedRecord.status}
-                        onChange={(e) =>
-                          handleRepairStatus(
-                            selectedRecord.tracking_code,
-                            e.target.value,
-                          )
-                        }
-                        style={{
-                          width: "100%",
-                          padding: "8px",
-                          borderRadius: 6,
-                          border: "1px solid var(--line)",
-                        }}
-                      >
-                        <option value="received">Received</option>
-                        <option value="assessing">Assessing</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="ready">
-                          Ready for Pickup / Delivery
-                        </option>
-                        <option value="collected">Collected / Delivered</option>
-                      </select>
+                  {/* Section D — Workflow Actions */}
+                  <div style={{
+                    background: "rgba(201,107,50,0.05)",
+                    border: "2px solid var(--gold)",
+                    borderRadius: 10,
+                    padding: "18px 20px",
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--gold)", marginBottom: 14 }}>
+                      Update Repair Stage
                     </div>
 
-                    <div style={{ flex: 1, minWidth: 180 }}>
-                      <label
+                    {/* Visual stepper */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0,
+                      marginBottom: 18,
+                      overflowX: "auto",
+                      paddingBottom: 4,
+                    }}>
+                      {[
+                        { key: "received", label: "Received" },
+                        { key: "assessing", label: "Assessing" },
+                        { key: "in_progress", label: "In Progress" },
+                        { key: "ready", label: "Ready ✓" },
+                        { key: "collected", label: "Collected" },
+                      ].map((s, i, arr) => {
+                        const stageOrder = ["received", "assessing", "in_progress", "ready", "collected"]
+                        const currentIdx = stageOrder.indexOf(selectedRecord.status)
+                        const thisIdx = stageOrder.indexOf(s.key)
+                        const isCurrent = s.key === selectedRecord.status
+                        const isPast = thisIdx < currentIdx
+                        return (
+                          <div key={s.key} style={{ display: "flex", alignItems: "center" }}>
+                            <div style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: 4,
+                              minWidth: 60,
+                            }}>
+                              <div style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 11,
+                                fontWeight: 800,
+                                background: isCurrent ? "var(--gold)" : isPast ? "#15803d" : "var(--line)",
+                                color: isCurrent || isPast ? "white" : "var(--muted)",
+                                border: isCurrent ? "2px solid var(--gold)" : "2px solid transparent",
+                                boxShadow: isCurrent ? "0 0 0 3px rgba(201,107,50,0.2)" : "none",
+                              }}>
+                                {isPast ? "✓" : i + 1}
+                              </div>
+                              <span style={{
+                                fontSize: 9,
+                                fontWeight: isCurrent ? 700 : 500,
+                                color: isCurrent ? "var(--gold)" : isPast ? "#15803d" : "var(--muted)",
+                                textAlign: "center",
+                                lineHeight: 1.2,
+                              }}>
+                                {s.label}
+                              </span>
+                            </div>
+                            {i < arr.length - 1 && (
+                              <div style={{
+                                height: 2,
+                                width: 24,
+                                background: stageOrder.indexOf(s.key) < currentIdx ? "#15803d" : "var(--line)",
+                                marginBottom: 16,
+                              }} />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 160 }}>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>
+                          Change Stage:
+                        </label>
+                        <select
+                          value={repairStatusInput}
+                          onChange={(e) => setRepairStatusInput(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "9px 10px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            background: "white",
+                          }}
+                        >
+                          <option value="received">Intake Received</option>
+                          <option value="assessing">Under Assessment</option>
+                          <option value="in_progress">Repair In Progress</option>
+                          <option value="ready">Ready for Pickup / Delivery</option>
+                          <option value="collected">Collected / Delivered</option>
+                        </select>
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 160 }}>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>
+                          Set / Update Quoted Cost (₦):
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 15000"
+                          value={repairCostInput}
+                          onChange={(e) => setRepairCostInput(e.target.value)}
+                          style={{
+                            width: "100%",
+                            padding: "9px 10px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            fontSize: 13,
+                            background: "white",
+                          }}
+                        />
+                        {selectedRecord.estimated_cost && (
+                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
+                            Current: ₦{Number(selectedRecord.estimated_cost).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleRepairStatus(
+                          selectedRecord.tracking_code,
+                          repairStatusInput,
+                          repairCostInput ? Number(repairCostInput) : undefined,
+                        )}
                         style={{
-                          display: "block",
-                          fontSize: 11,
+                          padding: "10px 22px",
+                          borderRadius: 7,
+                          background: "var(--gold)",
+                          color: "white",
+                          border: "none",
                           fontWeight: 700,
-                          marginBottom: 4,
+                          fontSize: 13,
+                          cursor: "pointer",
+                          letterSpacing: "0.3px",
                         }}
                       >
-                        Set Repair Cost (₦):
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 15000"
-                        defaultValue={selectedRecord.estimated_cost || ""}
-                        onBlur={(e) =>
-                          handleRepairStatus(
-                            selectedRecord.tracking_code,
-                            selectedRecord.status,
-                            Number(e.target.value),
-                          )
-                        }
-                        style={{
-                          width: "100%",
-                          padding: "8px",
-                          borderRadius: 6,
-                          border: "1px solid var(--line)",
-                        }}
-                      />
+                        Save Changes
+                      </button>
+                      <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.4, flex: 1 }}>
+                        ⚠️ Customer will <strong>NOT</strong> be auto-notified — use WhatsApp / Email above to communicate updates.
+                      </div>
                     </div>
                   </div>
                 </div>
