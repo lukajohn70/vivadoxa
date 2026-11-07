@@ -1213,6 +1213,7 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
 
 // ─── Operational Manager & Data Tables ─────────────────────────────────────────
 function AdminManager({ title }: { title: string }) {
+  const { session } = useAdminAuth()
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -1533,40 +1534,54 @@ function AdminManager({ title }: { title: string }) {
   }
 
   async function handleSendEnquiryReply() {
-    if (!selectedRecord || !selectedRecord.id) return
+    if (!selectedRecord || !selectedRecord.id) {
+      alert("Error: Enquiry record identifier is missing.")
+      return
+    }
     if (!replyMessage.trim()) {
       alert("Please enter a reply message before sending.")
       return
     }
 
-    setSendingReply(true)
-    const adminName = session?.name || "Vivadoxa Admin Desk"
-    const res = await replyEnquiry({
-      id: selectedRecord.id,
-      reply: replyMessage.trim(),
-      subject: replySubject.trim() || undefined,
-      replied_by: adminName,
-    })
-    setSendingReply(false)
-
-    if (res && res.success) {
-      setActionNotice(`Email reply successfully sent to ${selectedRecord.email}!`)
-      const updated = {
-        ...selectedRecord,
-        is_read: 1,
-        reply_message: replyMessage.trim(),
-        replied_at: res.replied_at || new Date().toISOString(),
+    try {
+      setSendingReply(true)
+      const adminName = session?.name || "Vivadoxa Admin Desk"
+      const res = await replyEnquiry({
+        id: selectedRecord.id,
+        reply: replyMessage.trim(),
+        subject: replySubject.trim() || undefined,
         replied_by: adminName,
+      })
+
+      if (res && res.success) {
+        const clientEmail = selectedRecord.email || "the client"
+        setActionNotice(`Email reply successfully sent to ${clientEmail}!`)
+        const updated = {
+          ...selectedRecord,
+          is_read: 1,
+          reply_message: replyMessage.trim(),
+          replied_at: (res as any)?.replied_at || new Date().toISOString(),
+          replied_by: adminName,
+        }
+        setSelectedRecord(updated)
+        setRecords((prev) =>
+          prev.map((r) => (r.id === selectedRecord.id ? { ...r, ...updated } : r)),
+        )
+        setShowReplyForm(false)
+        setReplyMessage("")
+        alert(`Email reply successfully sent to ${clientEmail}!`)
+      } else {
+        const errorMsg = res?.error || "Failed to send email reply. Please check your system email settings."
+        setActionNotice(errorMsg)
+        alert(errorMsg)
       }
-      setSelectedRecord(updated)
-      setRecords((prev) =>
-        prev.map((r) => (r.id === selectedRecord.id ? { ...r, ...updated } : r)),
-      )
-      setShowReplyForm(false)
-      setReplyMessage("")
-    } else {
-      setActionNotice(res?.error || "Failed to send email reply.")
-      alert(res?.error || "Failed to send email reply. Please check your system email settings.")
+    } catch (err: any) {
+      console.error("handleSendEnquiryReply error:", err)
+      const errorMsg = err?.message || "An unexpected error occurred while sending the email."
+      setActionNotice(errorMsg)
+      alert(errorMsg)
+    } finally {
+      setSendingReply(false)
     }
   }
 
@@ -2346,7 +2361,7 @@ function AdminManager({ title }: { title: string }) {
                             <Badge
                               tone={
                                 row.status === "collected"
-                                  ? "muted"
+                                  ? "navy"
                                   : row.status === "ready"
                                   ? "green"
                                   : row.status === "in_progress"
@@ -3150,7 +3165,7 @@ function AdminManager({ title }: { title: string }) {
                               <Badge
                                 tone={
                                   row.status === "collected"
-                                    ? "muted"
+                                    ? "navy"
                                     : row.status === "ready"
                                     ? "green"
                                     : row.status === "in_progress"
@@ -4478,7 +4493,7 @@ function AdminManager({ title }: { title: string }) {
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                       <Badge
                         tone={
-                          selectedRecord.status === "collected" ? "muted"
+                          selectedRecord.status === "collected" ? "navy"
                           : selectedRecord.status === "ready" ? "green"
                           : selectedRecord.status === "in_progress" ? "navy"
                           : selectedRecord.status === "assessing" ? "gold"

@@ -389,8 +389,7 @@ export function GallerySection({
                 >
                   <div
                     className="relative aspect-[4/3] w-full overflow-hidden cursor-pointer"
-                    style={{ aspectRatio: "4/3" }}
-                    style={{ background: "var(--cream)" }}
+                    style={{ aspectRatio: "4/3", background: "var(--cream)" }}
                     onClick={() => {
                       const fullIndex = filteredItems.findIndex(
                         (fi) => fi.id === item.id,
