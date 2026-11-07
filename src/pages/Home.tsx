@@ -1195,7 +1195,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-emerald-600 font-bold">✓</span>
-                        <span>Refundable caution deposit (terms &amp; condition check apply)</span>
+                        <span>Upfront event &amp; gig rental (surcharges apply for late return or damages)</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-emerald-600 font-bold">✓</span>

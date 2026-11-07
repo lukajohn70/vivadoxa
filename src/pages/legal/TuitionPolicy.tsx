@@ -413,8 +413,7 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                       keyboard, acoustic guitar, or student saxophone.
                     </li>
                     <li>
-                      Requires a <strong>refundable security deposit</strong>{" "}
-                      (returned upon undamaged inspection at term conclusion).
+                      Requires upfront rental payment. Surcharges apply for late returns or damages.
                     </li>
                     <li>
                       Includes padded carry bag, tuner, and care starter kit.
@@ -448,9 +447,9 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                   Kaduna metropolis for a flat nominal transit charge.
                 </li>
                 <li>
-                  <strong>Return Condition:</strong> The renter agrees to return
-                  the instrument in the same cosmetic and acoustic condition,
-                  ordinary string/pad wear excepted.
+                  <strong>Return Condition &amp; Surcharges:</strong> The renter agrees to return
+                  the instrument on the agreed date in the same cosmetic and acoustic condition,
+                  ordinary string/pad wear excepted. Surcharges apply for overdue return or damages.
                 </li>
               </ul>
             </article>

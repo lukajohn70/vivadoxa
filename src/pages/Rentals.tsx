@@ -277,7 +277,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
   const directWhatsAppInquiry = (gearName: string) => {
     const msg = `Hello Vivadoxa Admin, I would like to inquire about renting:%0A%0A• Item: ${encodeURIComponent(
       gearName,
-    )}%0A%0APlease let me know current availability, rental terms, caution deposit requirements, and pickup/delivery options.`
+    )}%0A%0APlease let me know current availability, rental fee quote, and pickup/delivery options.`
     window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
   }
 
@@ -310,7 +310,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     )}%0A• Email: ${encodeURIComponent(formEmail || "Not provided")}%0A• Intake: ${encodeURIComponent(
       intakeText,
     )}%0A• Notes: ${encodeURIComponent(
-      formNotes || "Please provide rental quote, caution deposit details, and pickup/delivery terms.",
+      formNotes || "Please provide rental quote, payment details, and pickup/delivery terms.",
     )}`
 
     window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
@@ -337,7 +337,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       message: `Selected Fleet Items:\n${selectedRentals.map((r, i) => `${i + 1}. ${r.name} (${r.category})`).join("\n")}\n\nDuration: ${formDuration}\nIntake Method: ${intakeText}\nAdditional Notes: ${formNotes || "None"}`,
     }).catch(() => {})
 
-    const body = `Hello Vivadoxa Administration,\n\nI would like to inquire about reserving the following ${selectedRentals.length} items from your rental fleet:\n\n${itemsList}\n\nRental Details:\n• Duration: ${formDuration}\n• Customer Name: ${formName || "Customer"}\n• Phone: ${formPhone || "Not provided"}\n• Intake Method: ${intakeText}\n• Notes: ${formNotes || "None"}\n\nPlease let me know the rental quote, caution deposit requirements, and handover schedule.\n\nThank you!`
+    const body = `Hello Vivadoxa Administration,\n\nI would like to inquire about reserving the following ${selectedRentals.length} items from your rental fleet:\n\n${itemsList}\n\nRental Details:\n• Duration: ${formDuration}\n• Customer Name: ${formName || "Customer"}\n• Phone: ${formPhone || "Not provided"}\n• Intake Method: ${intakeText}\n• Notes: ${formNotes || "None"}\n\nPlease let me know the rental quote, payment details, and handover schedule.\n\nThank you!`
 
     window.location.href = `mailto:${SCHOOL_EMAIL}?subject=${encodeURIComponent(
       `Rental Fleet Inquiry (${selectedRentals.length} Items)`,
@@ -371,7 +371,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       formEmail || "Not provided",
     )}%0A• Intake: ${encodeURIComponent(intakeText)}%0A• Notes: ${encodeURIComponent(
       formNotes || "None",
-    )}%0A%0APlease provide rental rates, caution deposit details, and pickup/delivery arrangement.`
+    )}%0A%0APlease provide rental rates, payment details, and pickup/delivery arrangement.`
 
     window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
   }
@@ -432,9 +432,9 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
           </ScrollReveal>
           <ScrollReveal direction="up" delay={160}>
             <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-              <span className="text-2xl font-black text-[var(--gold)] block">Security</span>
-              <strong className="text-xs text-[var(--navy)] block mt-1">Caution Deposit</strong>
-              <small className="text-[11px] text-[var(--muted)]">Subject to return condition check</small>
+              <span className="text-2xl font-black text-[var(--gold)] block">Simple</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Upfront Rental</strong>
+              <small className="text-[11px] text-[var(--muted)]">Pay, pick up, use &amp; return</small>
             </div>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={240}>
@@ -580,9 +580,9 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                       <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
                         <div>
                           <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
-                            Caution Deposit
+                            Rental Policy
                           </small>
-                          <strong className="text-xs text-slate-700 font-semibold">Terms on Inspection</strong>
+                          <strong className="text-xs text-slate-700 font-semibold">Upfront Payment</strong>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <button
@@ -769,44 +769,43 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
             </>
           )}
 
-          {/* Tab 3: Terms & FAQ (NO 100% refund promise) */}
+          {/* Tab 3: Protocol & FAQ */}
           {activeTab === "terms" && (
             <ScrollReveal direction="up">
             <div className="bg-white rounded-2xl border border-[var(--line)] p-6 sm:p-8 max-w-3xl mx-auto space-y-6">
               <div>
-                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">1. How Rental Security Deposits Work</h3>
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">1. How Our Rental Workflow Works</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Every instrument rental requires a refundable caution deposit paid prior to dispatch. When you return the
-                  instrument at the conclusion of your rental term, our instrument clinic inspects its condition.
-                  The security deposit is refunded subject to return condition verification, less any applicable repair or
-                  overdue fees.
+                  Renting an instrument or event sound gear from Vivadoxa is simple and straightforward: choose your equipment
+                  or gadget for your event, pay the rental fee upfront to confirm your booking, pick it up from our Kaduna studio
+                  (or request local courier delivery), use it for your event, and return it once the event is over.
                 </p>
               </div>
 
               <div className="border-t border-[var(--line)] pt-4">
-                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">2. Free Clinic Maintenance Guarantee</h3>
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">2. Free Clinic Calibration Guarantee</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  If your rented instrument encounters normal wear issues (e.g. sticking pad, loose peg, or string
-                  intonation), bring it into the Vivadoxa Instrument Clinic at Angwan Sunday for <strong>free immediate
-                  calibration</strong>. You are never left stranded with unplayable equipment.
+                  Every instrument and audio device is thoroughly tested, tuned, and calibrated by our certified in-house
+                  instrument clinic prior to dispatch. You receive gig-ready, fully functional equipment with proper
+                  protective gig bags or flight cases and standard accessories.
                 </p>
               </div>
 
               <div className="border-t border-[var(--line)] pt-4">
                 <h3 className="font-bold text-lg text-[var(--navy)] mb-2">3. Studio Pickup or Kaduna Delivery</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  You can collect and test your instrument directly at our studio at No. 49B Umaru Ibrahim Street, Angwan
+                  You can collect and test your gear directly at our studio at No. 49B Umaru Ibrahim Street, Angwan
                   Sunday, Kaduna. Alternatively, we provide insured courier drop-off to Barnawa, Millennium City, Malali,
                   GRA, Sabon Tasha, and environs.
                 </p>
               </div>
 
               <div className="border-t border-[var(--line)] pt-4">
-                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">4. Rent-To-Own Credit</h3>
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">4. On-Time Returns &amp; Damage Surcharges</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Loved your rented instrument? If you decide to purchase it or upgrade to a brand-new instrument from the
-                  Vivadoxa Store within 3 months, <strong>50% of your paid rental fees</strong> are credited directly
-                  toward your purchase price!
+                  Equipment must be returned promptly at the agreed date and time following your event. There are no deposit refunds
+                  or rent-to-own schemes. Please note that surcharges apply for late returns past the agreed rental window or for
+                  any physical damages and unreturned accessories.
                 </p>
               </div>
             </div>
@@ -942,12 +941,11 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                 value={formDuration}
                 onChange={(val: any) => setFormDuration(typeof val === "string" ? val : val?.target?.value ?? "")}
                 options={[
-                  { value: "1 Month", label: "1 Month (Student Practice)" },
-                  { value: "3 Months", label: "3 Months (Academic Term)" },
-                  { value: "6 Months", label: "6 Months (Semester)" },
-                  { value: "12 Months", label: "12 Months (Full Year)" },
-                  { value: "1 Day", label: "1 Day (Event / Concert)" },
+                  { value: "1 Day (Event / Concert)", label: "1 Day (Event / Concert)" },
                   { value: "Weekend (2-3 Days)", label: "Weekend Event (2-3 Days)" },
+                  { value: "1 Week", label: "1 Week" },
+                  { value: "1 Month (Practice / Production)", label: "1 Month (Practice / Production)" },
+                  { value: "Academic Term (3 Months)", label: "Academic Term (3 Months)" },
                 ]}
               />
             </div>
@@ -1005,7 +1003,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
             <div className="flex items-center justify-center gap-2 text-[11px] text-[var(--muted)] pt-1">
               <Icon name="shield" size={13} className="text-emerald-600" />
-              <span>Free calibration · Security caution deposit subject to condition check</span>
+              <span>Tested &amp; gig-ready · Return after event · Late/damage surcharge terms apply</span>
             </div>
 
             {/* Alternative Contact Links */}

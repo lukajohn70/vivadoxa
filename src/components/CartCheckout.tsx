@@ -427,7 +427,7 @@ export default function CartCheckout({
               <p className="text-xs text-[var(--muted)] mb-4 leading-relaxed">
                 {mode === "store"
                   ? "Our sales team will contact you within 24 hours to confirm availability, pricing, and payment options."
-                  : "Our rental desk will contact you within 24 hours to confirm availability, security deposit, and handover details."}
+                  : "Our rental desk will contact you within 24 hours to confirm availability, rental fee payment, and handover details."}
               </p>
 
               {/* Order reference */}

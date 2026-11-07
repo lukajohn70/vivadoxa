@@ -1,4 +1,5 @@
 import brandLogo from "@/assets/vivadoxa-logo.png"
+import ceoSignature from "@/assets/ceo-signature.png"
 import { Button, Icon } from "@/components/ui"
 import {
   SCHOOL_ADDRESS,
@@ -165,65 +166,23 @@ function AcademicSeal({
   )
 }
 
-// ── Realistic Calligraphic Signatures ────────────────────────────────────────
-function SignatureDirector({ color = "#0b0b0b" }: { color?: string }) {
+// ── Official CEO Calligraphic Signature ──────────────────────────────────────
+export function CeoSignature({ height = 48 }: { height?: number }) {
   return (
-    <svg
-      width="145"
-      height="38"
-      viewBox="0 0 145 38"
-      fill="none"
-      style={{ display: "block" }}
-    >
-      <path
-        d="M 12 28 Q 24 6 36 16 T 52 26 Q 66 10 78 20 T 98 16 Q 112 8 132 18"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        fill="none"
+    <div style={{ height, display: "flex", alignItems: "flex-end", marginBottom: 2 }}>
+      <img
+        src={ceoSignature}
+        alt="Official Signature of Frederick Chrysantius (CEO)"
+        style={{
+          height: "100%",
+          maxHeight: height,
+          width: "auto",
+          maxWidth: 195,
+          display: "block",
+          objectFit: "contain",
+        }}
       />
-      <path
-        d="M 28 32 Q 62 28 118 30"
-        stroke={color}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M 40 16 Q 46 6 52 20"
-        stroke={color}
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
-  )
-}
-
-function SignatureRegistrar({ color = "#0b0b0b" }: { color?: string }) {
-  return (
-    <svg
-      width="140"
-      height="38"
-      viewBox="0 0 140 38"
-      fill="none"
-      style={{ display: "block" }}
-    >
-      <path
-        d="M 14 26 Q 30 8 44 20 T 64 16 Q 82 8 100 24 T 124 16"
-        stroke={color}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M 22 32 Q 68 29 116 31"
-        stroke={color}
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
+    </div>
   )
 }
 
@@ -484,7 +443,6 @@ export function downloadDocumentHtml(
         <strong style="display:block;font-size:14px;">${title}</strong>
         <span style="font-size:12px;opacity:0.8;">Vivadoxa Music School · Standard A4 Document</span>
       </div>
-      <button onclick="window.print()">Print / Save as PDF</button>
     </div>
     <div class="sheet-wrapper">
       ${target.outerHTML}
@@ -924,7 +882,7 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
             </ul>
           </div>
 
-          {/* Dual Signatures & Official Academic Seal */}
+          {/* Official Signatory & Academic Seal */}
           <div
             className="doc-sign-block"
             style={{
@@ -936,13 +894,13 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
               alignItems: "flex-end",
             }}
           >
-            {/* Left: Director */}
+            {/* Left: Official Signature of the CEO */}
             <div>
-              <SignatureDirector color="var(--navy, #0b0b0b)" />
+              <CeoSignature height={52} />
               <div
                 style={{
                   borderTop: "1.5px solid #64748b",
-                  width: 175,
+                  width: 195,
                   paddingTop: 4,
                   marginTop: 2,
                 }}
@@ -957,7 +915,7 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
                   Frederick Chrysantius
                 </strong>
                 <div style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}>
-                  Founder &amp; Artistic Director
+                  Founder &amp; Chief Executive Officer (CEO)
                 </div>
                 <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
                   Vivadoxa Music School Conservatory
@@ -965,46 +923,13 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
               </div>
             </div>
 
-            {/* Center: Official Seal */}
-            <div style={{ textAlign: "center" }}>
+            {/* Right: Official Academic Seal */}
+            <div style={{ textAlign: "right" }}>
               <AcademicSeal
                 color="#c96b32"
                 size={90}
                 title="ADMISSIONS APPROVED"
               />
-            </div>
-
-            {/* Right: Registrar */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ display: "inline-block", textAlign: "left" }}>
-                <SignatureRegistrar color="var(--navy, #0b0b0b)" />
-                <div
-                  style={{
-                    borderTop: "1.5px solid #64748b",
-                    width: 175,
-                    paddingTop: 4,
-                    marginTop: 2,
-                  }}
-                >
-                  <strong
-                    style={{
-                      display: "block",
-                      fontSize: 11,
-                      color: "var(--navy, #0b0b0b)",
-                    }}
-                  >
-                    Academic Board of Studies
-                  </strong>
-                  <div
-                    style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}
-                  >
-                    Registrar &amp; Records Division
-                  </div>
-                  <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                    Admissions Verification Unit
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1058,17 +983,9 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
                   "Official Admission Letter",
                 )
               }
-              variant="secondary"
-              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Icon name="copy" /> Download Letter
-            </Button>
-            <Button
-              onClick={() => printDocumentElement("admission-letter-doc")}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="copy" /> Print / Save as PDF
+              <Icon name="copy" /> Download Letter
             </Button>
           </div>
         </div>
@@ -1413,7 +1330,7 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
             </strong>
           </div>
 
-          {/* Signatures & Bursar Seal */}
+          {/* Official Signatory & Bursar Seal */}
           <div
             className="doc-sign-block"
             style={{
@@ -1425,13 +1342,13 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
               alignItems: "flex-end",
             }}
           >
-            {/* Left: Accounts */}
+            {/* Left: Official Signature of the CEO */}
             <div>
-              <SignatureDirector color="#157054" />
+              <CeoSignature height={52} />
               <div
                 style={{
                   borderTop: "1.5px solid #64748b",
-                  width: 175,
+                  width: 195,
                   paddingTop: 4,
                   marginTop: 2,
                 }}
@@ -1443,57 +1360,24 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
                     color: "var(--navy, #0b0b0b)",
                   }}
                 >
-                  Bursary Accounts Unit
+                  Frederick Chrysantius
                 </strong>
                 <div style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}>
-                  Directorate of Financial Services
+                  Founder &amp; Chief Executive Officer (CEO)
                 </div>
                 <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                  Vivadoxa Music School
+                  Vivadoxa Music School Conservatory
                 </div>
               </div>
             </div>
 
-            {/* Center: Official Seal */}
-            <div style={{ textAlign: "center" }}>
+            {/* Right: Official Seal */}
+            <div style={{ textAlign: "right" }}>
               <AcademicSeal
                 color="#157054"
                 size={90}
                 title="PAYMENT VERIFIED"
               />
-            </div>
-
-            {/* Right: Internal Audit */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ display: "inline-block", textAlign: "left" }}>
-                <SignatureRegistrar color="#157054" />
-                <div
-                  style={{
-                    borderTop: "1.5px solid #64748b",
-                    width: 175,
-                    paddingTop: 4,
-                    marginTop: 2,
-                  }}
-                >
-                  <strong
-                    style={{
-                      display: "block",
-                      fontSize: 11,
-                      color: "var(--navy, #0b0b0b)",
-                    }}
-                  >
-                    Internal Audit &amp; Revenue
-                  </strong>
-                  <div
-                    style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}
-                  >
-                    Treasury Ledger Reconciliation
-                  </div>
-                  <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                    Kaduna Main Campus
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1546,17 +1430,9 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
                   "Official Payment Receipt",
                 )
               }
-              variant="secondary"
-              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Icon name="check" /> Download Receipt
-            </Button>
-            <Button
-              onClick={() => printDocumentElement("payment-receipt-doc")}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="copy" /> Print / Save as PDF
+              <Icon name="check" /> Download Receipt
             </Button>
           </div>
         </div>
@@ -2521,7 +2397,7 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
             </div>
           </div>
 
-          {/* Dual Signatures & Official Academic Seal */}
+          {/* Official Signatory & Seal */}
           <div
             className="doc-sign-block"
             style={{
@@ -2536,11 +2412,11 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
             }}
           >
             <div style={{ flex: 1, minWidth: 150 }}>
-              <SignatureRegistrar color="var(--navy, #0b0b0b)" />
+              <CeoSignature height={46} />
               <div
                 style={{
                   borderTop: "1.5px solid #64748b",
-                  width: 175,
+                  width: 195,
                   paddingTop: 4,
                   marginTop: 2,
                 }}
@@ -2552,10 +2428,13 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
                     color: "var(--navy, #0b0b0b)",
                   }}
                 >
-                  B. S. Danladi
+                  Frederick Chrysantius
                 </strong>
                 <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                  Admissions &amp; Registrar
+                  Founder &amp; Chief Executive Officer (CEO)
+                </div>
+                <div style={{ fontSize: 8.5, color: "var(--muted, #64748b)" }}>
+                  Vivadoxa Music School Conservatory
                 </div>
               </div>
             </div>
@@ -2567,31 +2446,6 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
               }}
             >
               <AcademicSeal />
-            </div>
-            <div style={{ flex: 1, minWidth: 150, textAlign: "right" }}>
-              <div
-                style={{
-                  fontSize: 8.5,
-                  color: "var(--muted, #64748b)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                }}
-              >
-                Registry Verification
-              </div>
-              <strong
-                style={{
-                  fontSize: 10.5,
-                  color: "var(--navy, #0b0b0b)",
-                  display: "block",
-                  marginTop: 2,
-                }}
-              >
-                Academic Board Clearance
-              </strong>
-              <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                Vivadoxa Music School
-              </div>
             </div>
           </div>
 
