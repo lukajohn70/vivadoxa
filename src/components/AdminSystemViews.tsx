@@ -2224,6 +2224,41 @@ export function GeneralSettingsView({
               }
             />
           </div>
+          <div style={{ marginTop: 14 }}>
+            <Field
+              id="cfg-logo-url"
+              label="Official Brand Logo URL (For Outgoing Emails &amp; Documents)"
+              value={
+                generalSettings.logoUrl ||
+                "https://www.vivadoxamusic.com/vivadoxa-logo.png"
+              }
+              onChange={(v) =>
+                setGeneralSettings({ ...generalSettings, logoUrl: v })
+              }
+              placeholder="https://www.vivadoxamusic.com/vivadoxa-logo.png"
+            />
+            <div
+              style={{
+                marginTop: 8,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "8px 14px",
+                background: "#0b0b0b",
+                borderRadius: 8,
+                border: "1px solid rgba(201,107,50,0.35)",
+              }}
+            >
+              <img
+                src={generalSettings.logoUrl || "https://www.vivadoxamusic.com/vivadoxa-logo.png"}
+                alt="Vivadoxa Logo"
+                style={{ height: 32, width: "auto", display: "block" }}
+              />
+              <span style={{ fontSize: 11, color: "#f2a672", fontWeight: 600, letterSpacing: 0.5 }}>
+                Current Email Header Logo
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* SECTION 2: PRACTICAL NOTIFICATION PREFERENCES */}
@@ -2576,6 +2611,92 @@ export function GeneralSettingsView({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Email Dispatch & Logo Verification */}
+        <div
+          className="editor-section"
+          style={{
+            borderColor: "rgba(201, 107, 50, 0.3)",
+            background: "#fffdfb",
+            marginTop: 18,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 14,
+              flexWrap: "wrap",
+              gap: 10,
+            }}
+          >
+            <div>
+              <h3 style={{ margin: "0 0 4px", paddingBottom: 0, border: "none" }}>
+                Email Dispatch &amp; Official Logo Test
+              </h3>
+              <small style={{ color: "var(--muted)" }}>
+                Send a real-time verification email to ensure outgoing notifications proudly display the official Vivadoxa logo.
+              </small>
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ flex: "1 1 280px" }}>
+              <input
+                type="email"
+                className="input-field"
+                placeholder="Recipient email address"
+                value={testEmailRecipient}
+                onChange={(e) => setTestEmailRecipient(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px" }}
+              />
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleTestEmail}
+              disabled={testingEmail || !testEmailRecipient}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <Icon name="mail" size={15} />
+              {testingEmail ? "Dispatching..." : "Send Test Email (With Official Logo)"}
+            </button>
+          </div>
+          {testEmailResult && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "10px 14px",
+                borderRadius: 8,
+                fontSize: 12,
+                background: testEmailResult.success
+                  ? "rgba(21, 112, 84, 0.08)"
+                  : "rgba(184, 70, 70, 0.08)",
+                border: `1px solid ${
+                  testEmailResult.success
+                    ? "rgba(21, 112, 84, 0.3)"
+                    : "rgba(184, 70, 70, 0.3)"
+                }`,
+                color: testEmailResult.success ? "#157054" : "#b84646",
+              }}
+            >
+              <strong>
+                {testEmailResult.success
+                  ? "✓ Verification Dispatched"
+                  : "⚠ Dispatch Notice"}
+                :
+              </strong>{" "}
+              {testEmailResult.message || testEmailResult.error}
+            </div>
+          )}
         </div>
 
         {/* Database Hygiene & Mock Data Purge */}

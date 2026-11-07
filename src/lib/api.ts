@@ -1721,6 +1721,7 @@ export interface GeneralSettings {
   officialGmail?: string
   copyOfficialGmail?: boolean
   schoolAddress?: string
+  logoUrl?: string
   emailAlerts: boolean
   whatsappAlerts: boolean
   alertOnApplication?: boolean
@@ -1748,6 +1749,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   officialGmail: "vivadoxa@gmail.com",
   copyOfficialGmail: true,
   schoolAddress: "Kaduna Studio, Kaduna State, Nigeria",
+  logoUrl: "https://www.vivadoxamusic.com/vivadoxa-logo.png",
   emailAlerts: true,
   whatsappAlerts: true,
   alertOnApplication: true,

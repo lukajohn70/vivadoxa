@@ -109,23 +109,32 @@ if ($method === 'GET') {
             // 2. Email to School
             if (!empty($settings['emailAlerts'])) {
                 $subject = "📅 Schedule Update: {$studentName} ({$typeLabel})";
-                $html = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #0b0b0b; margin-top: 0;'>Student Schedule / Absence Notice</h2>
-                        <p>A student has logged an unavailability or reschedule request:</p>
-                        <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Student:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$studentName} ({$studentEmail})</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Program:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$program}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Current Schedule:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$currentSchedule}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Request Type:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$typeLabel}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Date(s) Affected:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$dateInfo}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reason:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reason}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Preferred Makeup:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($makeupRequested ? $preferredMakeup : 'No makeup needed') . "</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Student Notes:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$notes}</td></tr>
-                        </table>
-                        <p><a href='http://localhost/Vivadoxa/#admin' style='background: #c96b32; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Review & Allocate Makeup in Admin</a></p>
-                    </div>
+                $body = "
+                    <p>A student has logged an unavailability or reschedule request:</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Student:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$studentName} ({$studentEmail})</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Program:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$program}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Current Schedule:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$currentSchedule}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Request Type:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$typeLabel}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Date(s) Affected:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$dateInfo}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reason:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reason}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Preferred Makeup:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($makeupRequested ? $preferredMakeup : 'No makeup needed') . "</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Student Notes:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$notes}</td></tr>
+                    </table>
                 ";
+                $html = buildBrandedEmailTemplate([
+                    'title'      => 'Schedule Notice',
+                    'badge'      => 'Academic Coordinator',
+                    'clientName' => 'Admissions & Faculty',
+                    'headline'   => "Schedule Notice: {$studentName}",
+                    'refNumber'  => "REQ-{$requestId}",
+                    'refLabel'   => 'Notice Reference',
+                    'bodyHtml'   => $body,
+                    'deptName'   => 'Vivadoxa Music Academy Admissions',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'Review in Admin Portal',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+                ]);
                 sendSystemEmail($schoolEmail, $subject, $html, $settings, 'academy');
                 $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
                 if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
@@ -134,15 +143,24 @@ if ($method === 'GET') {
 
                 // Student confirmation email
                 $studentSub = "Vivadoxa Academy — Schedule Request Received (#REQ-{$requestId})";
-                $studentHtml = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #0b0b0b; margin-top: 0;'>Schedule Notice Received</h2>
-                        <p>Dear {$studentName},</p>
-                        <p>We have received your schedule notice regarding <strong>{$program}</strong> for <strong>{$dateInfo}</strong>.</p>
-                        <p>Our academic coordinator and instructors have been notified. If a makeup session was requested, we will allocate an open studio slot and confirm via WhatsApp and your portal.</p>
-                        <p style='margin-top: 20px; font-size: 13px; color: #5c5954;'>Vivadoxa Music Academy Admissions & Studio Office · Kaduna</p>
-                    </div>
+                $studentBody = "
+                    <p>We have received your schedule notice regarding <strong>{$program}</strong> for <strong>{$dateInfo}</strong>.</p>
+                    <p>Our academic coordinator and studio instructors have been notified. If a makeup session was requested, we will allocate an open studio slot and confirm via WhatsApp and your Student Portal.</p>
+                    <p style='font-size: 13px; color: #666; margin-top: 18px;'>If you have any urgent changes, reply directly to this email or chat with our admissions desk on WhatsApp.</p>
                 ";
+                $studentHtml = buildBrandedEmailTemplate([
+                    'title'      => 'Notice Received',
+                    'badge'      => 'Academic Coordinator',
+                    'clientName' => $studentName,
+                    'headline'   => 'Schedule Notice Logged',
+                    'refNumber'  => "REQ-{$requestId}",
+                    'refLabel'   => 'Notice Reference',
+                    'bodyHtml'   => $studentBody,
+                    'deptName'   => 'Vivadoxa Music Academy Admissions Office',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'Open Student Portal',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#portal',
+                ]);
                 sendSystemEmail($studentEmail, $studentSub, $studentHtml, $settings, 'academy');
             }
         } catch (Exception $e) {}
@@ -200,16 +218,25 @@ if ($method === 'GET') {
 
                 // Email to student
                 $sub = "Vivadoxa Academy — Schedule Request Approved ({$prog})";
-                $html = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #157054; margin-top: 0;'>Schedule Update Confirmed!</h2>
-                        <p>Dear {$sName},</p>
-                        <p>Your schedule notice for <strong>{$prog}</strong> has been approved by the academic desk.</p>
-                        " . ($makeupDate ? "<div style='background: #f7f5f0; padding: 14px; border-radius: 6px; margin: 15px 0;'><p style='margin: 0;'><strong>Makeup Session Date & Time:</strong> {$makeupStr}</p><p style='margin: 4px 0 0;'><strong>Studio Location:</strong> {$room}</p></div>" : "") . "
-                        " . ($staffNotes ? "<p><em>Instructor Note: {$staffNotes}</em></p>" : "") . "
-                        <p>You can view your updated timetable anytime in your <a href='http://localhost/Vivadoxa/#portal'>Student Portal</a>.</p>
-                    </div>
+                $approvedBody = "
+                    <p>Your schedule notice for <strong>{$prog}</strong> has been approved by the academic desk.</p>
+                    " . ($makeupDate ? "<div style='background: #f7f5f0; border: 1px solid #dfdad0; border-radius: 8px; padding: 14px 18px; margin: 15px 0;'><p style='margin: 0; color: #157054; font-weight: bold;'>Makeup Session Allocated</p><p style='margin: 4px 0 0;'><strong>Date & Time:</strong> {$makeupStr}</p><p style='margin: 4px 0 0;'><strong>Studio Location:</strong> {$room}</p></div>" : "") . "
+                    " . ($staffNotes ? "<p><em>Academic Coordinator Note: {$staffNotes}</em></p>" : "") . "
+                    <p>You can view your updated timetable and studio allocation anytime in your Student Portal.</p>
                 ";
+                $html = buildBrandedEmailTemplate([
+                    'title'      => 'Schedule Approved',
+                    'badge'      => 'Academic Coordinator',
+                    'clientName' => $sName,
+                    'headline'   => 'Schedule Update Approved',
+                    'refNumber'  => "REQ-{$id}",
+                    'refLabel'   => 'Notice Reference',
+                    'bodyHtml'   => $approvedBody,
+                    'deptName'   => 'Vivadoxa Music Academy Admissions Office',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'Open Student Portal',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#portal',
+                ]);
                 sendSystemEmail($sEmail, $sub, $html, $settings, 'academy');
             }
         } catch (Exception $e) {}

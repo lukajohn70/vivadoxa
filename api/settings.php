@@ -15,6 +15,7 @@ $defaultGeneral = [
     'officialGmail' => 'vivadoxa@gmail.com',
     'copyOfficialGmail' => true,
     'schoolAddress' => 'Kaduna Studio, Kaduna State, Nigeria',
+    'logoUrl' => 'https://www.vivadoxamusic.com/vivadoxa-logo.png',
     'emailAlerts' => true,
     'whatsappAlerts' => true,
     'alertOnApplication' => true,
@@ -105,26 +106,26 @@ if ($method === 'GET') {
     } elseif ($action === 'test_email') {
         $recipient = trim($input['recipient'] ?? $input['schoolEmail'] ?? 'vivadoxa@gmail.com');
         $subject = "🎵 Vivadoxa Academy — Email Notification Test";
-        $html = "
-        <div style='font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2ded8; border-radius: 12px; overflow: hidden;'>
-            <div style='background: #0b0b0b; padding: 24px; text-align: center;'>
-                <h1 style='color: #e9a16f; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 1px;'>VIVADOXA MUSIC ACADEMY</h1>
-                <p style='color: #a0aec0; margin: 6px 0 0; font-size: 13px;'>Admissions & System Notification Engine</p>
+        $testBody = "
+            <p>This is a real-time verification email dispatched from your <strong>Vivadoxa Academy System Settings</strong>.</p>
+            <div style='background: #f7f5f0; border-left: 4px solid #157054; padding: 14px 18px; margin: 20px 0; border-radius: 0 8px 8px 0;'>
+                <p style='margin: 0; font-weight: 600; color: #157054;'>✓ Notification Channel Status: Active & Operational</p>
+                <p style='margin: 6px 0 0; font-size: 12px; color: #5c5954;'>Timestamp: " . date('Y-m-d H:i:s') . " (WAT)</p>
             </div>
-            <div style='padding: 30px 24px; color: #191715; line-height: 1.6;'>
-                <h2 style='margin-top: 0; color: #0b0b0b; font-size: 18px;'>Email Dispatch Verification</h2>
-                <p>Hello Administrator,</p>
-                <p>This is a real-time verification email dispatched from your <strong>Vivadoxa Academy System Settings</strong>.</p>
-                <div style='background: #f7f5f0; border-left: 4px solid #157054; padding: 14px 18px; margin: 20px 0; border-radius: 0 8px 8px 0;'>
-                    <p style='margin: 0; font-weight: 600; color: #157054;'>✓ Notification Channel Status: Active & Operational</p>
-                    <p style='margin: 6px 0 0; font-size: 12px; color: #5c5954;'>Timestamp: " . date('Y-m-d H:i:s') . " (WAT)</p>
-                </div>
-                <p>When students submit admission applications, upload payment receipts, or request instrument repairs, automatic alerts will be dispatched through this pipeline.</p>
-                <hr style='border: none; border-top: 1px solid #e2ded8; margin: 24px 0;' />
-                <p style='margin: 0; font-size: 12px; color: #718096; text-align: center;'>Vivadoxa Music Academy & Studio · Kaduna, Nigeria</p>
-            </div>
-        </div>
+            <p>When students submit admission applications, upload payment receipts, or request instrument repairs, automatic alerts will be dispatched with the official Vivadoxa logo through this pipeline.</p>
         ";
+
+        $html = buildBrandedEmailTemplate([
+            'title'      => 'System Verification',
+            'badge'      => 'Admissions Engine',
+            'clientName' => 'Administrator',
+            'headline'   => 'Email Dispatch Verification',
+            'bodyHtml'   => $testBody,
+            'deptName'   => 'Vivadoxa Music Academy System Desk',
+            'deptEmail'  => $recipient,
+            'ctaText'    => 'Open System Dashboard',
+            'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+        ]);
 
         $res = sendSystemEmail($recipient, $subject, $html, $input['settings'] ?? null);
         jsonResponse([

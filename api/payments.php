@@ -150,19 +150,29 @@ if ($method === 'GET') {
 
             if (!empty($settings['emailAlerts']) && !empty($settings['alertOnPayment'] ?? true)) {
                 $subject = "💳 Instant Online Payment Received: {$payerName} ({$formattedAmt} via {$methodType})";
-                $html = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #157054; margin-top: 0;'>Automated Payment Cleared</h2>
-                        <p>An online tuition payment has cleared successfully via {$methodType}:</p>
-                        <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Online Checkout') . "</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount / Currency:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt} {$currency}</td></tr>
-                            <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Channel:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
-                        </table>
-                    </div>
+                $body = "
+                    <p>An online tuition payment has cleared successfully via <strong>{$methodType}</strong>:</p>
+                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Online Checkout') . "</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount / Currency:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt} {$currency}</td></tr>
+                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Channel:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
+                    </table>
                 ";
+                $html = buildBrandedEmailTemplate([
+                    'title'      => 'Online Payment',
+                    'badge'      => 'Bursary & Accounts',
+                    'clientName' => 'Finance Desk',
+                    'headline'   => 'Automated Payment Cleared',
+                    'refNumber'  => $reference,
+                    'refLabel'   => 'Transaction Reference',
+                    'bodyHtml'   => $body,
+                    'deptName'   => 'Vivadoxa Accounts & Bursary',
+                    'deptEmail'  => 'bursary@vivadoxamusic.com',
+                    'ctaText'    => 'View in Admin Portal',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+                ]);
                 sendSystemEmail($schoolEmail, $subject, $html, $settings, 'bursary');
                 $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
                 if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
@@ -234,21 +244,30 @@ if ($method === 'GET') {
         if (!empty($settings['emailAlerts']) && !empty($settings['alertOnPayment'] ?? true)) {
             $formattedAmt = '₦' . number_format($amount, 2);
             $adminSubject = "💰 New Payment Proof Submitted: {$payerName} ({$formattedAmt})";
-            $adminHtml = "
-                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                    <h2 style='color: #0b0b0b; margin-top: 0;'>New Payment Verification Needed</h2>
-                    <p>A student has submitted transfer payment proof:</p>
-                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Enrollment') . "</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerEmail}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Method:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
-                    </table>
-                    <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #157054; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Verify in Admin Portal</a></p>
-                </div>
+            $adminBody = "
+                <p>A student has submitted transfer payment proof for bursary verification:</p>
+                <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Reference:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$reference}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>" . ($appNo ?: 'Direct Enrollment') . "</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerName}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Payer Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$payerEmail}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Amount:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee; color: #157054; font-weight: bold;'>{$formattedAmt}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Method:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$methodType}</td></tr>
+                </table>
             ";
+            $adminHtml = buildBrandedEmailTemplate([
+                'title'      => 'Payment Verification',
+                'badge'      => 'Bursary & Accounts',
+                'clientName' => 'Accounts Desk',
+                'headline'   => 'Payment Proof Verification Needed',
+                'refNumber'  => $reference,
+                'refLabel'   => 'Transaction Reference',
+                'bodyHtml'   => $adminBody,
+                'deptName'   => 'Vivadoxa Accounts & Bursary',
+                'deptEmail'  => 'bursary@vivadoxamusic.com',
+                'ctaText'    => 'Verify in Admin Portal',
+                'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+            ]);
             sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'bursary');
             $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
             if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
@@ -258,20 +277,24 @@ if ($method === 'GET') {
             // Send Payer Confirmation Email
             if (!empty($payerEmail)) {
                 $payerSubject = "Vivadoxa Accounts — Payment Proof Received (#{$reference})";
-                $payerHtml = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #0b0b0b; margin-top: 0;'>Payment Submission Received</h2>
-                        <p>Dear {$payerName},</p>
-                        <p>We have received your payment proof for <strong>{$formattedAmt} {$currency}</strong> via {$methodType}.</p>
-                        <div style='background: #f7f5f0; padding: 14px; border-radius: 6px; margin: 15px 0;'>
-                            <p style='margin: 0;'><strong>Transaction Reference:</strong> <span style='color: #157054; font-size: 16px; font-weight: bold;'>{$reference}</span></p>
-                            " . ($appNo ? "<p style='margin: 4px 0 0;'><strong>Application Ref:</strong> {$appNo}</p>" : "") . "
-                            <p style='margin: 4px 0 0;'><strong>Status:</strong> Pending Bursary Verification</p>
-                        </div>
-                        <p>Our accounts team is reconciling the transfer with our bank statements. You will receive an official digital receipt once verified.</p>
-                        <p style='margin-top: 20px; font-size: 13px; color: #5c5954;'>Vivadoxa Music Academy Accounts & Bursary · Kaduna Studio</p>
-                    </div>
+                $payerBody = "
+                    <p>We have received your payment proof for <strong>{$formattedAmt} {$currency}</strong> via {$methodType}.</p>
+                    <p>Our accounts team is reconciling the transfer with our bank statements. You will receive an official digital receipt and confirmation once verified.</p>
+                    <p style='font-size: 13px; color: #666; margin-top: 18px;'>If you have questions regarding your transaction, please reply to this email or chat with our bursary desk on WhatsApp at <strong>{$schoolWhatsapp}</strong>.</p>
                 ";
+                $payerHtml = buildBrandedEmailTemplate([
+                    'title'      => 'Proof Received',
+                    'badge'      => 'Accounts & Bursary',
+                    'clientName' => $payerName,
+                    'headline'   => 'Payment Submission Received',
+                    'refNumber'  => $reference,
+                    'refLabel'   => 'Transaction Reference',
+                    'bodyHtml'   => $payerBody,
+                    'deptName'   => 'Vivadoxa Music Academy Accounts & Bursary',
+                    'deptEmail'  => 'bursary@vivadoxamusic.com',
+                    'ctaText'    => 'Track Admission Status',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#status',
+                ]);
                 sendSystemEmail($payerEmail, $payerSubject, $payerHtml, $settings, 'bursary');
             }
         }

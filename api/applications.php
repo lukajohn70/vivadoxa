@@ -365,21 +365,30 @@ if ($method === 'GET') {
         // 1. Email notification to Admissions Desk
         if (!empty($settings['emailAlerts']) && !empty($settings['alertOnApplication'] ?? true)) {
             $adminSubject = "🎵 New Application: {$firstName} {$lastName} [{$appNo}]";
-            $adminHtml = "
-                <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                    <h2 style='color: #0b0b0b; margin-top: 0;'>New Student Admission Application</h2>
-                    <p>A new student application has been submitted on the portal:</p>
-                    <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$appNo}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Applicant Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$firstName} {$lastName}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Program:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$program}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Study Mode / Level:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$studyMode} ({$skillLevel})</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Phone:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$phone}</td></tr>
-                        <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$email}</td></tr>
-                    </table>
-                    <p style='margin-top: 20px;'><a href='http://localhost/Vivadoxa/#admin' style='background: #c96b32; color: #fff; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: bold;'>Open Admissions Manager</a></p>
-                </div>
+            $adminDetails = "
+                <p>A new student application has been submitted on the portal:</p>
+                <table style='width: 100%; border-collapse: collapse; margin: 15px 0;'>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Application No:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$appNo}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Applicant Name:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$firstName} {$lastName}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Program:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$program}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Study Mode / Level:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$studyMode} ({$skillLevel})</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Phone:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$phone}</td></tr>
+                    <tr><td style='padding: 8px; border-bottom: 1px solid #eee;'><strong>Email:</strong></td><td style='padding: 8px; border-bottom: 1px solid #eee;'>{$email}</td></tr>
+                </table>
             ";
+            $adminHtml = buildBrandedEmailTemplate([
+                'title'      => 'New Application',
+                'badge'      => 'Admissions Board',
+                'clientName' => 'Admissions Team',
+                'headline'   => "New Admission Application: {$firstName} {$lastName}",
+                'refNumber'  => $appNo,
+                'refLabel'   => 'Application Number',
+                'bodyHtml'   => $adminDetails,
+                'deptName'   => 'Vivadoxa Music Academy Admissions Office',
+                'deptEmail'  => 'academy@vivadoxamusic.com',
+                'ctaText'    => 'Open Admissions Manager',
+                'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+            ]);
             sendSystemEmail($schoolEmail, $adminSubject, $adminHtml, $settings, 'academy');
             $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
             if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
@@ -389,18 +398,24 @@ if ($method === 'GET') {
             // Student confirmation
             if (!empty($settings['studentEmailConfirmation'] ?? true)) {
                 $studentSubject = "Welcome to Vivadoxa — Application #{$appNo} Received";
-                $studentHtml = "
-                    <div style='font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2ded8; border-radius: 8px;'>
-                        <h2 style='color: #0b0b0b; margin-top: 0;'>Application Received!</h2>
-                        <p>Dear {$firstName},</p>
-                        <p>Thank you for choosing Vivadoxa Music Academy. We have successfully received your admission application for <strong>{$program}</strong>.</p>
-                        <div style='background: #f7f5f0; padding: 14px; border-radius: 6px; margin: 15px 0;'>
-                            <p style='margin: 0;'><strong>Application Reference:</strong> <span style='color: #c96b32; font-size: 16px; font-weight: bold;'>{$appNo}</span></p>
-                            <p style='margin: 6px 0 0; font-size: 13px; color: #5c5954;'>Track your admission status anytime on our website using this reference.</p>
-                        </div>
-                        <p>Our admissions committee is reviewing your details. If you have questions, reply to this email or chat with us on WhatsApp at {$schoolWhatsapp}.</p>
-                    </div>
+                $studentBody = "
+                    <p>Thank you for choosing Vivadoxa Music Academy. We have successfully received your admission application for <strong>{$program}</strong>.</p>
+                    <p>Our admissions committee is reviewing your submission. You can track your admission status anytime on our website using your application number.</p>
+                    <p style='font-size: 13px; color: #666; margin-top: 18px;'>If you have any questions regarding your admission, program curriculum, or studio cohorts, reply to this email or chat with our admissions desk on WhatsApp at <strong>{$schoolWhatsapp}</strong>.</p>
                 ";
+                $studentHtml = buildBrandedEmailTemplate([
+                    'title'      => 'Application Received',
+                    'badge'      => 'Admissions Board',
+                    'clientName' => $firstName,
+                    'headline'   => 'Welcome to Vivadoxa Music Academy',
+                    'refNumber'  => $appNo,
+                    'refLabel'   => 'Application Number',
+                    'bodyHtml'   => $studentBody,
+                    'deptName'   => 'Vivadoxa Music Academy Admissions Office',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'Track Admission Status',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#status',
+                ]);
                 sendSystemEmail($email, $studentSubject, $studentHtml, $settings, 'academy');
             }
         }

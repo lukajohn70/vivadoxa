@@ -24,6 +24,7 @@ function getGeneralSettingsConfig(): array {
         'officialGmail' => 'vivadoxa@gmail.com',
         'copyOfficialGmail' => true,
         'schoolAddress' => 'Kaduna Studio, Kaduna State, Nigeria',
+        'logoUrl' => 'https://www.vivadoxamusic.com/vivadoxa-logo.png',
         'emailAlerts' => true,
         'whatsappAlerts' => true,
         'alertOnApplication' => true,
@@ -169,6 +170,12 @@ function buildBrandedEmailTemplate(array $params): string {
     $deptName    = htmlspecialchars($params['deptName'] ?? 'Vivadoxa Music');
     $deptEmail   = htmlspecialchars($params['deptEmail'] ?? 'info@vivadoxamusic.com');
 
+    // Official logo & portal URLs
+    $settings    = getGeneralSettingsConfig();
+    $logoUrl     = !empty($params['logoUrl']) ? $params['logoUrl'] : (!empty($settings['logoUrl']) ? $settings['logoUrl'] : 'https://www.vivadoxamusic.com/vivadoxa-logo.png');
+    $logoUrl     = htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8');
+    $homeUrl     = 'https://www.vivadoxamusic.com';
+
     $refBlock = '';
     if (!empty($refNumber)) {
         $refBlock = "
@@ -201,17 +208,19 @@ function buildBrandedEmailTemplate(array $params): string {
             <tr>
                 <td align='center'>
                     <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='max-width: 600px; background-color: #ffffff; border-radius: 14px; overflow: hidden; border: 1px solid #e9e4dc; box-shadow: 0 10px 30px rgba(0,0,0,0.06);'>
-                        <!-- Brand Header -->
+                        <!-- Brand Header with Official Logo -->
                         <tr>
-                            <td style='background-color: #0b0b0b; padding: 26px 32px; text-align: left; border-bottom: 2px solid #c96b32;'>
-                                <table width='100%' cellpadding='0' cellspacing='0'>
+                            <td style='background-color: #0b0b0b; padding: 22px 32px; text-align: left; border-bottom: 2px solid #c96b32;'>
+                                <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0'>
                                     <tr>
-                                        <td>
-                                            <div style='font-size: 10px; font-weight: 700; color: #f2a672; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px;'>{$badge}</div>
-                                            <div style='font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;'>VIVADOXA MUSIC</div>
+                                        <td style='vertical-align: middle;'>
+                                            <a href='{$homeUrl}' target='_blank' style='text-decoration: none; display: inline-block;'>
+                                                <img src='{$logoUrl}' alt='Vivadoxa Music' width='155' height='60' style='display: block; max-height: 48px; width: auto; max-width: 175px; border: 0; outline: none; text-decoration: none; color: #ffffff; font-size: 18px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;' />
+                                            </a>
+                                            <div style='font-size: 10px; font-weight: 700; color: #f2a672; text-transform: uppercase; letter-spacing: 2px; margin-top: 6px;'>{$badge}</div>
                                         </td>
                                         <td align='right' style='vertical-align: middle;'>
-                                            <span style='background: rgba(201, 107, 50, 0.2); border: 1px solid rgba(201, 107, 50, 0.5); color: #f2a672; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 10px; border-radius: 6px;'>{$title}</span>
+                                            <span style='background: rgba(201, 107, 50, 0.2); border: 1px solid rgba(201, 107, 50, 0.5); color: #f2a672; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 5px 12px; border-radius: 6px; display: inline-block; white-space: nowrap;'>{$title}</span>
                                         </td>
                                     </tr>
                                 </table>
