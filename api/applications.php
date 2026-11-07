@@ -126,7 +126,106 @@ if ($method === 'GET') {
         }
         $stmt = $pdo->prepare("UPDATE `applications` SET `letter_released` = 1, `updated_at` = NOW() WHERE `application_no` = :no");
         $stmt->execute([':no' => $appNo]);
-        jsonResponse(['success' => true, 'message' => 'Admission letter released for ' . $appNo]);
+
+        // Fetch application details to notify the candidate
+        $candStmt = $pdo->prepare("SELECT * FROM `applications` WHERE `application_no` = :no LIMIT 1");
+        $candStmt->execute([':no' => $appNo]);
+        $cand = $candStmt->fetch();
+
+        $emailSent = false;
+        if ($cand && !empty($cand['email'])) {
+            try {
+                $settings     = getGeneralSettingsConfig();
+                $firstName    = htmlspecialchars($cand['first_name'] ?? 'Candidate');
+                $lastName     = htmlspecialchars($cand['last_name'] ?? '');
+                $fullName     = trim("{$firstName} {$lastName}");
+                $program      = htmlspecialchars($cand['program'] ?? 'Music Program');
+                $studyMode    = htmlspecialchars($cand['study_mode'] ?? 'Onsite');
+                $skillLevel   = htmlspecialchars($cand['skill_level'] ?? 'Beginner');
+                $tuitionFee   = number_format((float)($cand['tuition_fee'] ?? 20000));
+                $currency     = htmlspecialchars($cand['currency'] ?? 'NGN');
+                $studentEmail = trim($cand['email']);
+                $studentPhone = trim($cand['phone'] ?? '');
+
+                $studentSubject = "🎉 Congratulations! Your Official Admission Letter Has Been Released (#{$appNo})";
+
+                $bodyHtml = "
+                    <p style='margin: 0 0 16px; font-size: 15px; color: #333;'>We are delighted to formally announce that the <strong>Vivadoxa Music Academy Admissions Board</strong> has approved your admission into our academy for the <strong>{$program}</strong> program.</p>
+                    
+                    <p style='margin: 0 0 16px; font-size: 15px; color: #333;'>Your official, digitally signed <strong>Admission Letter</strong> has now been generated, sealed, and released. You can preview, download, and print your letter anytime using your application reference code.</p>
+
+                    <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; padding: 18px 20px; margin: 20px 0; font-size: 14px;'>
+                        <p style='margin: 0 0 8px;'><strong>Candidate Name:</strong> {$fullName}</p>
+                        <p style='margin: 0 0 8px;'><strong>Application Ref:</strong> <span style='font-family: monospace; font-weight: bold; color: #a24a18;'>{$appNo}</span></p>
+                        <p style='margin: 0 0 8px;'><strong>Program &amp; Track:</strong> {$program} ({$studyMode} · {$skillLevel})</p>
+                        <p style='margin: 0 0 8px;'><strong>Term Tuition:</strong> ₦{$tuitionFee} {$currency}</p>
+                        <p style='margin: 0;'><strong>Official Status:</strong> <span style='display: inline-block; background: #ecfdf5; color: #047857; padding: 3px 10px; border-radius: 4px; font-weight: bold; font-size: 11px;'>Admission Letter Released &amp; Active</span></p>
+                    </div>
+
+                    <p style='margin: 18px 0 8px; font-size: 14px; font-weight: 700; color: #0b0b0b;'>Next Steps to Complete Your Enrollment:</p>
+                    <ol style='margin: 0 0 20px; padding-left: 20px; font-size: 14px; color: #555; line-height: 1.7;'>
+                        <li>Click the button below to preview and download your official Admission Letter (PDF).</li>
+                        <li>Review your cohort timetable and terms of enrollment.</li>
+                        <li>Submit your tuition payment proof via bank transfer or your student portal to secure your studio instrument slot.</li>
+                    </ol>
+
+                    <p style='font-size: 13px; color: #666; margin-top: 20px;'>If you have questions regarding orientation, studio cohort allocation, or payment reconciliation, our admissions team is here to assist you.</p>
+                ";
+
+                $studentEmailBody = buildBrandedEmailTemplate([
+                    'title'      => 'Official Admission Letter',
+                    'badge'      => 'Admissions Board',
+                    'clientName' => $firstName,
+                    'headline'   => "Congratulations, {$firstName}! Your Admission Letter is Ready.",
+                    'refNumber'  => $appNo,
+                    'refLabel'   => 'Application Number',
+                    'bodyHtml'   => $bodyHtml,
+                    'deptName'   => 'Vivadoxa Music Academy Admissions Office',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'View Admission Letter',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#status',
+                ]);
+
+                // Send to student (automatically BCCs official Gmail vivadoxa@gmail.com)
+                sendSystemEmail($studentEmail, $studentSubject, $studentEmailBody, $settings, 'academy');
+                $emailSent = true;
+
+                // Send notice to admissions desk and official Gmail
+                $adminDeskNotice = buildBrandedEmailTemplate([
+                    'title'      => 'Admission Letter Released',
+                    'badge'      => 'Admissions Alert',
+                    'clientName' => 'Admissions Team',
+                    'headline'   => "Admission Letter Released for {$fullName} ({$appNo})",
+                    'refNumber'  => $appNo,
+                    'refLabel'   => 'Candidate Ref',
+                    'bodyHtml'   => "
+                        <p>An official admission letter has been released to candidate:</p>
+                        <p><strong>Candidate:</strong> {$fullName}<br>
+                           <strong>Email:</strong> {$studentEmail}<br>
+                           <strong>Phone:</strong> {$studentPhone}<br>
+                           <strong>Program:</strong> {$program} ({$studyMode})</p>
+                        <p>The student has been sent their release notification email with download instructions.</p>
+                    ",
+                    'deptName'   => 'Vivadoxa Admissions Office',
+                    'deptEmail'  => 'academy@vivadoxamusic.com',
+                    'ctaText'    => 'Open Applications Manager',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#admin',
+                ]);
+
+                $schoolEmail = $settings['schoolEmail'] ?? 'vivadoxa@gmail.com';
+                sendSystemEmail($schoolEmail, "Letter Released: {$appNo} — {$fullName}", $adminDeskNotice, $settings, 'academy');
+                $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
+                if (!empty($officialGmail) && strcasecmp($schoolEmail, $officialGmail) !== 0) {
+                    sendSystemEmail($officialGmail, "Letter Released: {$appNo} — {$fullName}", $adminDeskNotice, $settings, 'academy');
+                }
+            } catch (Exception $mailEx) {}
+        }
+
+        jsonResponse([
+            'success'    => true,
+            'message'    => 'Admission letter released for ' . $appNo . ($emailSent ? ' and congratulatory email sent to student.' : '.'),
+            'email_sent' => $emailSent,
+        ]);
     }
 
     // ── Action: Revoke admission letter (Admin) ───────────────────────────────

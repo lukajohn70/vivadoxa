@@ -157,6 +157,11 @@ try {
             `phone` VARCHAR(50) NULL,
             `subject` VARCHAR(191) NULL,
             `message` TEXT NOT NULL,
+            `source` VARCHAR(50) NOT NULL DEFAULT 'contact',
+            `type` VARCHAR(50) NOT NULL DEFAULT 'general',
+            `reply_message` TEXT NULL,
+            `replied_at` DATETIME NULL,
+            `replied_by` VARCHAR(100) NULL,
             `is_read` TINYINT(1) NOT NULL DEFAULT 0,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB;

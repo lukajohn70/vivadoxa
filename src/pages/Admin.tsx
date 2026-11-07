@@ -1221,6 +1221,7 @@ function AdminManager({ title }: { title: string }) {
   // Modal inspection states
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null)
   const [showLetterModal, setShowLetterModal] = useState(false)
+  const [openedLetterFromTable, setOpenedLetterFromTable] = useState(false)
   const [showReceiptModal, setShowReceiptModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -1290,6 +1291,7 @@ function AdminManager({ title }: { title: string }) {
   // Repair workflow state
   const [repairCostInput, setRepairCostInput] = useState<string>("")
   const [repairStatusInput, setRepairStatusInput] = useState<string>("")
+  const [repairAdminNote, setRepairAdminNote] = useState<string>("")
 
   async function handleBatchDeleteRecitals() {
     if (selectedRecitalIds.length === 0) return
@@ -1369,6 +1371,7 @@ function AdminManager({ title }: { title: string }) {
     } else if (selectedRecord && (title === "Repairs" || title.includes("Repairs"))) {
       setRepairStatusInput(selectedRecord.status || "received")
       setRepairCostInput(selectedRecord.estimated_cost ? String(selectedRecord.estimated_cost) : "")
+      setRepairAdminNote("")
     }
   }, [selectedRecord, title])
 
@@ -1492,18 +1495,22 @@ function AdminManager({ title }: { title: string }) {
     code: string,
     newStatus: string,
     cost?: number,
+    adminNote?: string,
   ) {
-    const res = await updateRepairStatus(code, newStatus, cost)
+    const res = await updateRepairStatus(code, newStatus, cost, adminNote)
     if (res && res.success) {
-      setActionNotice(`Repair ${code} updated to ${newStatus}.`)
+      setActionNotice(`Repair ${code} updated to ${newStatus}. Customer auto-notified via branded email.`)
       loadData()
       if (selectedRecord && selectedRecord.tracking_code === code) {
         setSelectedRecord({
           ...selectedRecord,
           status: newStatus,
-          ...(cost ? { estimated_cost: cost } : {}),
+          ...(cost !== undefined ? { estimated_cost: cost } : {}),
         })
       }
+      setRepairAdminNote("")
+    } else {
+      setActionNotice(res?.error || `Failed to update repair ${code}.`)
     }
   }
 
@@ -2103,21 +2110,53 @@ function AdminManager({ title }: { title: string }) {
                                 </button>
                               )}
                               {row.status === "approved" && (
-                                <button
-                                  className={`action-btn ${row.letter_released ? "decline" : "accept"}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (row.letter_released) {
-                                      handleRevokeLetter(row.application_no)
-                                    } else {
-                                      handleReleaseLetter(row.application_no)
+                                <>
+                                  <button
+                                    type="button"
+                                    className="action-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setSelectedRecord(row)
+                                      setOpenedLetterFromTable(true)
+                                      setShowLetterModal(true)
+                                    }}
+                                    title="Preview Official Admission Letter (PDF)"
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      padding: "3px 8px",
+                                      background: "rgba(201, 107, 50, 0.12)",
+                                      color: "var(--gold-text)",
+                                      border: "1px solid rgba(201, 107, 50, 0.3)",
+                                      borderRadius: 5,
+                                      cursor: "pointer",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 3,
+                                    }}
+                                  >
+                                    👁 Preview
+                                  </button>
+                                  <button
+                                    className={`action-btn ${row.letter_released ? "decline" : "accept"}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      if (row.letter_released) {
+                                        handleRevokeLetter(row.application_no)
+                                      } else {
+                                        handleReleaseLetter(row.application_no)
+                                      }
+                                    }}
+                                    title={
+                                      row.letter_released
+                                        ? "Revoke admission letter access"
+                                        : "Release admission letter and email candidate"
                                     }
-                                  }}
-                                  title={row.letter_released ? "Revoke letter" : "Release admission letter"}
-                                  style={{ fontSize: 10, padding: "3px 6px" }}
-                                >
-                                  {row.letter_released ? "Revoke" : "Letter"}
-                                </button>
+                                    style={{ fontSize: 10, padding: "3px 6px" }}
+                                  >
+                                    {row.letter_released ? "Revoke" : "Letter"}
+                                  </button>
+                                </>
                               )}
                             </div>
                           </td>
@@ -2777,31 +2816,60 @@ function AdminManager({ title }: { title: string }) {
                               </button>
                             )}
                             {row.status === "approved" && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  if (row.letter_released) {
-                                    handleRevokeLetter(row.application_no)
-                                  } else {
-                                    handleReleaseLetter(row.application_no)
-                                  }
-                                }}
-                                style={{
-                                  flex: 1,
-                                  padding: "8px 12px",
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  background: row.letter_released ? "#fef3c7" : "#0b1a29",
-                                  color: row.letter_released ? "#92400e" : "white",
-                                  border: row.letter_released ? "1px solid #fcd34d" : "none",
-                                  borderRadius: 6,
-                                  cursor: "pointer",
-                                }}
-                                title={row.letter_released ? "Revoke letter access" : "Release admission letter to student"}
-                              >
-                                {row.letter_released ? "Revoke Letter" : "Release Letter"}
-                              </button>
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setSelectedRecord(row)
+                                    setOpenedLetterFromTable(true)
+                                    setShowLetterModal(true)
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: "8px 12px",
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    background: "rgba(201, 107, 50, 0.1)",
+                                    color: "var(--gold-text)",
+                                    border: "1px solid rgba(201, 107, 50, 0.3)",
+                                    borderRadius: 6,
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: 4,
+                                  }}
+                                  title="Preview Official Admission Letter"
+                                >
+                                  👁 Preview
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (row.letter_released) {
+                                      handleRevokeLetter(row.application_no)
+                                    } else {
+                                      handleReleaseLetter(row.application_no)
+                                    }
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: "8px 12px",
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    background: row.letter_released ? "#fef3c7" : "#0b1a29",
+                                    color: row.letter_released ? "#92400e" : "white",
+                                    border: row.letter_released ? "1px solid #fcd34d" : "none",
+                                    borderRadius: 6,
+                                    cursor: "pointer",
+                                  }}
+                                  title={row.letter_released ? "Revoke letter access" : "Release admission letter to student"}
+                                >
+                                  {row.letter_released ? "Revoke Letter" : "Release Letter"}
+                                </button>
+                              </>
                             )}
                             <button
                               type="button"
@@ -4114,7 +4182,7 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                   </div>
 
-                  {/* Admission Letter Release */}
+                  {/* Admission Letter Access & Preview */}
                   {selectedRecord.status === "approved" && (
                     <div
                       style={{
@@ -4123,48 +4191,93 @@ function AdminManager({ title }: { title: string }) {
                         marginTop: 16,
                       }}
                     >
-                      <label
+                      <div
                         style={{
-                          display: "block",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          marginBottom: 4,
-                        }}
-                      >
-                        Admission Letter Access
-                      </label>
-                      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 10px" }}>
-                        {selectedRecord.letter_released
-                          ? "Letter is currently visible to the student. Revoke to hide it again."
-                          : "Letter is not yet released. The student cannot view it until you release it below."}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (selectedRecord.letter_released) {
-                            handleRevokeLetter(selectedRecord.application_no)
-                          } else {
-                            handleReleaseLetter(selectedRecord.application_no)
-                          }
-                        }}
-                        style={{
-                          padding: "9px 18px",
-                          fontSize: 13,
-                          fontWeight: 700,
-                          background: selectedRecord.letter_released ? "#fef3c7" : "#0b1a29",
-                          color: selectedRecord.letter_released ? "#92400e" : "white",
-                          border: selectedRecord.letter_released ? "1px solid #fcd34d" : "none",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          display: "inline-flex",
+                          display: "flex",
+                          justifyContent: "space-between",
                           alignItems: "center",
-                          gap: 6,
+                          marginBottom: 6,
                         }}
                       >
+                        <label
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 700,
+                            margin: 0,
+                          }}
+                        >
+                          Admission Letter Access &amp; Preview
+                        </label>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            fontWeight: 700,
+                            background: selectedRecord.letter_released ? "#ecfdf5" : "#fef3c7",
+                            color: selectedRecord.letter_released ? "#047857" : "#92400e",
+                            border: `1px solid ${selectedRecord.letter_released ? "#a7f3d0" : "#fde68a"}`,
+                          }}
+                        >
+                          {selectedRecord.letter_released ? "● Released to Student" : "○ Draft (Not Released)"}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
                         {selectedRecord.letter_released
-                          ? "Revoke Admission Letter"
-                          : "Release Admission Letter to Student"}
-                      </button>
+                          ? "Letter is active. The candidate was emailed their official notification and can view, print, or download it."
+                          : "Preview the official signed letter below before releasing. Releasing will publish the letter and dispatch an official notification email to the student."}
+                      </p>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowLetterModal(true)
+                          }}
+                          style={{
+                            padding: "9px 18px",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            background: "var(--gold)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            boxShadow: "0 2px 8px rgba(201,107,50,0.25)",
+                          }}
+                        >
+                          <Icon name="copy" size={14} /> Preview Admission Letter (PDF)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedRecord.letter_released) {
+                              handleRevokeLetter(selectedRecord.application_no)
+                            } else {
+                              handleReleaseLetter(selectedRecord.application_no)
+                            }
+                          }}
+                          style={{
+                            padding: "9px 18px",
+                            fontSize: 13,
+                            fontWeight: 700,
+                            background: selectedRecord.letter_released ? "#fef3c7" : "#0b1a29",
+                            color: selectedRecord.letter_released ? "#92400e" : "white",
+                            border: selectedRecord.letter_released ? "1px solid #fcd34d" : "none",
+                            borderRadius: 6,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          {selectedRecord.letter_released
+                            ? "Revoke Admission Letter"
+                            : "Release Letter & Email Student"}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -4337,31 +4450,15 @@ function AdminManager({ title }: { title: string }) {
                         <strong>{selectedRecord.customer_email || "—"}</strong>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-                      <a
-                        href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          padding: "7px 14px",
-                          borderRadius: 6,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          background: "rgba(37, 211, 102, 0.15)",
-                          color: "#075e54",
-                          border: "1px solid rgba(37, 211, 102, 0.35)",
-                          textDecoration: "none",
-                        }}
-                      >
-                        <WhatsAppIcon size={14} fill="#075e54" />
-                        WhatsApp Customer
-                      </a>
-                      {selectedRecord.customer_email && (
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8, fontWeight: 600 }}>
+                        Optional Direct Follow-ups (Customer is auto-notified by email upon stage updates):
+                      </div>
+                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                         <a
-                          href={`mailto:${selectedRecord.customer_email}?subject=Vivadoxa%20Workshop%20Repair%20Ticket%20${selectedRecord.tracking_code}`}
+                          href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -4370,16 +4467,37 @@ function AdminManager({ title }: { title: string }) {
                             borderRadius: 6,
                             fontSize: 12,
                             fontWeight: 700,
-                            background: "rgba(201, 107, 50, 0.12)",
-                            color: "#a24a18",
-                            border: "1px solid rgba(201, 107, 50, 0.3)",
+                            background: "rgba(37, 211, 102, 0.15)",
+                            color: "#075e54",
+                            border: "1px solid rgba(37, 211, 102, 0.35)",
                             textDecoration: "none",
                           }}
                         >
-                          <Icon name="mail" size={14} />
-                          Email Customer
+                          <WhatsAppIcon size={14} fill="#075e54" />
+                          WhatsApp Customer
                         </a>
-                      )}
+                        {selectedRecord.customer_email && (
+                          <a
+                            href={`mailto:${selectedRecord.customer_email}?subject=Vivadoxa%20Workshop%20Repair%20Ticket%20${selectedRecord.tracking_code}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "7px 14px",
+                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              background: "rgba(201, 107, 50, 0.12)",
+                              color: "#a24a18",
+                              border: "1px solid rgba(201, 107, 50, 0.3)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <Icon name="mail" size={14} />
+                            Email Customer
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -4585,16 +4703,40 @@ function AdminManager({ title }: { title: string }) {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    {/* Optional Workshop Note to include in the email */}
+                    <div style={{ marginTop: 14 }}>
+                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                        Optional Custom Note (included in customer&apos;s email notification):
+                      </label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. Diaphragm replaced and octave key calibrated. Ready for play-testing."
+                        value={repairAdminNote}
+                        onChange={(e) => setRepairAdminNote(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "8px 10px",
+                          borderRadius: 6,
+                          border: "1px solid var(--line)",
+                          fontSize: 12,
+                          background: "white",
+                          fontFamily: "inherit",
+                          resize: "vertical",
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                       <button
                         type="button"
                         onClick={() => handleRepairStatus(
                           selectedRecord.tracking_code,
                           repairStatusInput,
                           repairCostInput ? Number(repairCostInput) : undefined,
+                          repairAdminNote.trim() || undefined,
                         )}
                         style={{
-                          padding: "10px 22px",
+                          padding: "10px 24px",
                           borderRadius: 7,
                           background: "var(--gold)",
                           color: "white",
@@ -4603,12 +4745,31 @@ function AdminManager({ title }: { title: string }) {
                           fontSize: 13,
                           cursor: "pointer",
                           letterSpacing: "0.3px",
+                          boxShadow: "0 2px 8px rgba(201,107,50,0.3)",
                         }}
                       >
-                        Save Changes
+                        Save &amp; Notify Customer
                       </button>
-                      <div style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.4, flex: 1 }}>
-                        ⚠️ Customer will <strong>NOT</strong> be auto-notified — use WhatsApp / Email above to communicate updates.
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "#166534",
+                          lineHeight: 1.4,
+                          flex: 1,
+                          minWidth: 220,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          background: "rgba(34, 197, 94, 0.08)",
+                          padding: "8px 12px",
+                          borderRadius: 6,
+                          border: "1px solid rgba(34, 197, 94, 0.25)",
+                        }}
+                      >
+                        <span style={{ fontSize: 14 }}>✉️</span>
+                        <span>
+                          Customer is <strong>automatically notified via email</strong> with updated stage, quotation &amp; live tracking.
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -4973,7 +5134,7 @@ function AdminManager({ title }: { title: string }) {
                       setShowLetterModal(true)
                     }}
                   >
-                    Official Admission Letter (PDF)
+                    <Icon name="copy" size={14} /> Preview Admission Letter (PDF)
                   </Button>
                 </>
               )}
@@ -5070,7 +5231,13 @@ function AdminManager({ title }: { title: string }) {
       {showLetterModal && selectedRecord && (
         <AdmissionLetterModal
           data={selectedRecord}
-          onClose={() => setShowLetterModal(false)}
+          onClose={() => {
+            setShowLetterModal(false)
+            if (openedLetterFromTable) {
+              setSelectedRecord(null)
+              setOpenedLetterFromTable(false)
+            }
+          }}
         />
       )}
 

@@ -49,6 +49,7 @@ if ($method === 'GET') {
         $id = (int)($input['id'] ?? 0);
         $newStatus = trim($input['status'] ?? '');
         $cost = isset($input['estimated_cost']) ? (float)$input['estimated_cost'] : null;
+        $adminNote = trim($input['admin_note'] ?? ''); // optional custom note from admin
 
         $validStatuses = ['received', 'assessing', 'in_progress', 'ready', 'collected'];
         if (!in_array($newStatus, $validStatuses, true)) {
@@ -65,6 +66,10 @@ if ($method === 'GET') {
             $sql .= " WHERE `tracking_code` = :code";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
+            // Fetch full record to use in notification
+            $fetchStmt = $pdo->prepare("SELECT * FROM `repairs` WHERE `tracking_code` = :code LIMIT 1");
+            $fetchStmt->execute([':code' => $code]);
+            $repairRow = $fetchStmt->fetch();
         } elseif ($id > 0) {
             $sql = "UPDATE `repairs` SET `status` = :st";
             $params = [':st' => $newStatus, ':id' => $id];
@@ -75,8 +80,107 @@ if ($method === 'GET') {
             $sql .= " WHERE `id` = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
+            $fetchStmt = $pdo->prepare("SELECT * FROM `repairs` WHERE `id` = :id LIMIT 1");
+            $fetchStmt->execute([':id' => $id]);
+            $repairRow = $fetchStmt->fetch();
+            $code = $repairRow['tracking_code'] ?? "REP-{$id}";
         } else {
             jsonResponse(['success' => false, 'error' => 'Tracking code or ID required.'], 400);
+        }
+
+        // ── Auto-notify customer by email ──────────────────────────────────────
+        try {
+            $settings = getGeneralSettingsConfig();
+            $deptInfo = getDepartmentSender('repairs', $settings);
+            $customerEmail = $repairRow['customer_email'] ?? '';
+            $customerName  = $repairRow['customer_name'] ?? 'Valued Customer';
+            $instrument    = $repairRow['instrument'] ?? 'Your Instrument';
+            $brandModel    = $repairRow['brand_model'] ?? '';
+            $estimatedCost = $cost ?? ($repairRow['estimated_cost'] ?? null);
+
+            // Human-readable status labels
+            $statusLabels = [
+                'received'    => 'Intake Received',
+                'assessing'   => 'Under Assessment',
+                'in_progress' => 'Repair In Progress',
+                'ready'       => 'Ready for Pickup / Delivery',
+                'collected'   => 'Collected / Delivered',
+            ];
+            $statusLabel = $statusLabels[$newStatus] ?? ucfirst(str_replace('_', ' ', $newStatus));
+
+            // Status-specific message body
+            $statusMessages = [
+                'received' => "We have received your instrument at the Vivadoxa Instrument Clinic and it is now in our intake queue. Our technician will begin an initial assessment shortly.",
+                'assessing' => "Our workshop technician is currently inspecting your instrument and diagnosing the reported issue. We will reach out with a full assessment and cost quotation before any repair work begins.",
+                'in_progress' => "Great news — your instrument is now actively being worked on by our workshop team. We will notify you again as soon as the repair is complete.",
+                'ready' => "Your instrument repair is now complete and ready for " . ($repairRow['intake_method'] === 'pickup' ? 'delivery back to you' : 'collection at our Kaduna Studio') . ". Please " . ($repairRow['intake_method'] === 'pickup' ? 'expect our logistics team to contact you shortly regarding delivery.' : 'visit the studio at your earliest convenience to collect it.'),
+                'collected' => "Your repair ticket is now marked as closed. We hope your instrument is performing well. Thank you for trusting Vivadoxa Instrument Clinic with your gear.",
+            ];
+            $statusMessage = $statusMessages[$newStatus] ?? "Your repair ticket has been updated to: <strong>{$statusLabel}</strong>.";
+
+            // Build cost block if cost has been set
+            $costBlock = '';
+            if ($estimatedCost !== null && $estimatedCost > 0) {
+                $formattedCost = '₦' . number_format((float)$estimatedCost, 2);
+                $costBlock = "
+                    <div style='margin: 14px 0; padding: 12px 16px; background: #f7f5f0; border: 1px solid #ede8e0; border-radius: 8px; font-size: 13px;'>
+                        <strong>Quoted / Repair Cost:</strong> <span style='color: #c96b32; font-weight: 700; font-size: 15px;'>{$formattedCost}</span>
+                    </div>";
+            }
+
+            // Build admin note block if present
+            $noteBlock = '';
+            if (!empty($adminNote)) {
+                $noteBlock = "
+                    <div style='margin: 14px 0; padding: 12px 16px; background: #f0f9ff; border-left: 4px solid #0369a1; border-radius: 0 8px 8px 0; font-size: 13px; color: #333;'>
+                        <strong>Message from our Workshop Team:</strong><br>" . nl2br(htmlspecialchars($adminNote)) . "
+                    </div>";
+            }
+
+            $bodyHtml = "
+                <p style='margin: 0 0 14px; font-size: 15px; color: #333;'>
+                    Here is a live status update on your instrument repair ticket at Vivadoxa Instrument Clinic.
+                </p>
+                <div style='background: #faf8f5; border: 1px solid #ede8e0; border-radius: 8px; padding: 16px 18px; margin: 0 0 18px; font-size: 13px;'>
+                    <p style='margin: 0 0 6px;'><strong>Instrument:</strong> " . htmlspecialchars($instrument . ($brandModel ? " ({$brandModel})" : '')) . "</p>
+                    <p style='margin: 0 0 6px;'><strong>Tracking Code:</strong> <code style='font-family: monospace; background: #eee; padding: 2px 6px; border-radius: 4px;'>{$code}</code></p>
+                    <p style='margin: 0;'><strong>Current Stage:</strong>
+                        <span style='display: inline-block; background: #c96b32; color: white; padding: 3px 10px; border-radius: 4px; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; margin-left: 6px;'>{$statusLabel}</span>
+                    </p>
+                </div>
+                <p style='font-size: 14px; color: #444; margin: 0 0 14px;'>{$statusMessage}</p>
+                {$costBlock}
+                {$noteBlock}
+                <p style='font-size: 13px; color: #666; margin: 16px 0 0;'>
+                    You can track your repair live at any time using your tracking code on our website. 
+                    If you have any questions, please don&rsquo;t hesitate to contact our clinic team directly.
+                </p>
+            ";
+
+            if (!empty($customerEmail)) {
+                $emailBody = buildBrandedEmailTemplate([
+                    'title'      => 'Repair Status Update',
+                    'badge'      => 'Instrument Clinic',
+                    'clientName' => $customerName,
+                    'headline'   => "Repair Update: {$statusLabel}",
+                    'refNumber'  => $code,
+                    'refLabel'   => 'Repair Tracking Code',
+                    'bodyHtml'   => $bodyHtml,
+                    'deptName'   => $deptInfo['name'],
+                    'deptEmail'  => $deptInfo['email'],
+                    'ctaText'    => 'Track Repair Online',
+                    'ctaUrl'     => 'https://www.vivadoxamusic.com/#repairs',
+                ]);
+                sendSystemEmail(
+                    $customerEmail,
+                    "Vivadoxa Clinic Update — {$statusLabel} [{$code}]",
+                    $emailBody,
+                    $settings,
+                    'repairs'
+                );
+            }
+        } catch (Exception $notifyEx) {
+            // Notification failure must not block the status update response
         }
 
         jsonResponse(['success' => true, 'message' => "Repair status updated to '$newStatus'."]);

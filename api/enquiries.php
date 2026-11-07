@@ -42,6 +42,122 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'message' => 'Enquiry status updated.']);
     }
 
+    // ── Action: Reply to client via in-app email (Admin) ──────────────────────
+    if ($action === 'reply') {
+        $id = (int)($input['id'] ?? 0);
+        $replyText = trim($input['reply'] ?? $input['message'] ?? '');
+        $subject = trim($input['subject'] ?? '');
+        $repliedBy = trim($input['replied_by'] ?? $input['admin_name'] ?? 'Vivadoxa Admin Desk');
+
+        if ($id <= 0) {
+            jsonResponse(['success' => false, 'error' => 'Valid enquiry ID required.'], 400);
+        }
+        if (empty($replyText)) {
+            jsonResponse(['success' => false, 'error' => 'Reply message cannot be empty.'], 400);
+        }
+
+        // Fetch the enquiry
+        $stmt = $pdo->prepare("SELECT * FROM `enquiries` WHERE `id` = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        $enquiry = $stmt->fetch();
+        if (!$enquiry) {
+            jsonResponse(['success' => false, 'error' => 'Enquiry record not found.'], 404);
+        }
+
+        $clientEmail = trim($enquiry['email'] ?? '');
+        if (empty($clientEmail)) {
+            jsonResponse(['success' => false, 'error' => 'This enquiry has no email address on file. Please reach out via phone or WhatsApp.'], 400);
+        }
+
+        // Ensure reply columns exist in database (idempotent)
+        try {
+            $pdo->exec("ALTER TABLE `enquiries` ADD COLUMN `reply_message` TEXT NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `enquiries` ADD COLUMN `replied_at` DATETIME NULL");
+        } catch (Exception $e) {}
+        try {
+            $pdo->exec("ALTER TABLE `enquiries` ADD COLUMN `replied_by` VARCHAR(100) NULL");
+        } catch (Exception $e) {}
+
+        // Format subject if not provided
+        if (empty($subject)) {
+            $origSubject = $enquiry['subject'] ?: 'Your Inquiry with Vivadoxa Music';
+            $subject = (stripos($origSubject, 'Re:') === 0) ? $origSubject : "Re: {$origSubject}";
+        }
+
+        $source = $enquiry['source'] ?? 'contact';
+        $settings = getGeneralSettingsConfig();
+        $dept = 'contact';
+        if (in_array($source, ['store', 'rentals', 'repairs', 'academy'], true)) {
+            $dept = $source;
+        }
+        $deptInfo = getDepartmentSender($dept, $settings);
+
+        // Format paragraphs for HTML email
+        $replyHtmlFormatted = nl2br(htmlspecialchars($replyText));
+        $originalMessageFormatted = nl2br(htmlspecialchars($enquiry['message'] ?? ''));
+
+        $bodyHtml = "
+            <div style='margin-bottom: 24px; font-size: 15px; color: #191715; line-height: 1.7;'>
+                {$replyHtmlFormatted}
+            </div>
+
+            <div style='background: #faf8f5; border: 1px solid #ede8e0; border-left: 4px solid #c96b32; border-radius: 6px; padding: 14px 18px; margin: 26px 0 16px; font-size: 13px; color: #5c5954;'>
+                <p style='margin: 0 0 6px; font-weight: 700; color: #191715; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;'>
+                    Your Original Inquiry (" . htmlspecialchars($enquiry['created_at'] ?? 'Recently') . "):
+                </p>
+                <div style='font-style: italic; color: #444; line-height: 1.6;'>
+                    {$originalMessageFormatted}
+                </div>
+            </div>
+
+            <p style='font-size: 13px; color: #777; margin-top: 18px;'>
+                Have additional questions or need immediate assistance? You can reply directly to this email or chat with our desk on WhatsApp at <strong style='color: #191715;'>" . htmlspecialchars($settings['schoolWhatsapp'] ?? '08031308881') . "</strong>.
+            </p>
+        ";
+
+        $emailContent = buildBrandedEmailTemplate([
+            'title'      => 'Vivadoxa Music Response',
+            'badge'      => $deptInfo['badge'] ?: 'Support Desk',
+            'clientName' => $enquiry['name'] ?: 'Valued Client',
+            'headline'   => 'Response to Your Inquiry',
+            'bodyHtml'   => $bodyHtml,
+            'deptName'   => $deptInfo['name'],
+            'deptEmail'  => $deptInfo['email'],
+            'ctaText'    => 'Visit Vivadoxa Website',
+            'ctaUrl'     => 'https://www.vivadoxamusic.com',
+        ]);
+
+        $emailResult = sendSystemEmail($clientEmail, $subject, $emailContent, $settings, $dept, true);
+
+        // Update database record with the reply details and set is_read = 1
+        $now = date('Y-m-d H:i:s');
+        $updateStmt = $pdo->prepare("
+            UPDATE `enquiries`
+            SET `is_read` = 1,
+                `reply_message` = :reply,
+                `replied_at` = :replied_at,
+                `replied_by` = :replied_by
+            WHERE `id` = :id
+        ");
+        $updateStmt->execute([
+            ':reply'      => $replyText,
+            ':replied_at' => $now,
+            ':replied_by' => $repliedBy,
+            ':id'         => $id,
+        ]);
+
+        jsonResponse([
+            'success'       => true,
+            'message'       => "Reply successfully sent to {$clientEmail}.",
+            'email_status'  => $emailResult,
+            'reply_message' => $replyText,
+            'replied_at'    => $now,
+            'replied_by'    => $repliedBy,
+        ]);
+    }
+
     // ── Action: Submit public enquiry (Contact / Store / Rentals / General) ──
     $name    = trim($input['fullName'] ?? $input['name'] ?? '');
     $email   = trim($input['email'] ?? '');

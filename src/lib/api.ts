@@ -1083,6 +1083,7 @@ export async function updateRepairStatus(
   tracking_code: string,
   status: string,
   estimated_cost?: number,
+  admin_note?: string,
 ): Promise<ApiResponse> {
   try {
     const url = getApiUrl("repairs.php")
@@ -1095,6 +1096,7 @@ export async function updateRepairStatus(
         tracking_code,
         status,
         estimated_cost,
+        admin_note,
       }),
     })
     const result = await res.json().catch(() => null)
@@ -1256,6 +1258,32 @@ export async function deleteEnquiry(id: number): Promise<ApiResponse> {
     }
   }
   return { success: false, error: "Failed to delete enquiry from database." }
+}
+
+export async function replyEnquiry(payload: {
+  id: number | string
+  reply: string
+  subject?: string
+  replied_by?: string
+}): Promise<ApiResponse> {
+  try {
+    const url = getApiUrl("enquiries.php")
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "reply", ...payload }),
+    })
+    const result = await res.json().catch(() => null)
+    if (res.ok && result?.success) return result
+    if (result?.error) return { success: false, error: result.error }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to send email reply.",
+    }
+  }
+  return { success: false, error: "Failed to send email reply." }
 }
 
 // ── Academics (Programs, Instructors, Students, Cohorts, Performances) ─────────
