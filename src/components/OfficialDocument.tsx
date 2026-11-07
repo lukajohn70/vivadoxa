@@ -2497,17 +2497,9 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
                   "Official Application Form",
                 )
               }
-              variant="secondary"
-              style={{ color: "white", borderColor: "rgba(255,255,255,0.25)" }}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Icon name="copy" /> Download Form
-            </Button>
-            <Button
-              onClick={() => printDocumentElement("application-slip-doc")}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="copy" /> Print / Save Application Form (PDF)
+              <Icon name="copy" /> Download Form
             </Button>
           </div>
         </div>
