@@ -15,6 +15,7 @@ import {
   updatePaymentStatus,
   updateRepairStatus,
   markEnquiryRead,
+  replyEnquiry,
   fetchAcademics,
   saveProgram,
   deleteProgram,
@@ -1250,6 +1251,12 @@ function AdminManager({ title }: { title: string }) {
     program: "",
   })
 
+  // In-app Email Reply states for Enquiries inspector
+  const [showReplyForm, setShowReplyForm] = useState(false)
+  const [replySubject, setReplySubject] = useState("")
+  const [replyMessage, setReplyMessage] = useState("")
+  const [sendingReply, setSendingReply] = useState(false)
+
   // Settings states
   const [bankSettings, setBankSettings] = useState(getBankSettings)
   const [generalSettings, setGeneralSettings] = useState(getGeneralSettings)
@@ -1522,6 +1529,72 @@ function AdminManager({ title }: { title: string }) {
       if (selectedRecord && selectedRecord.id === id) {
         setSelectedRecord({ ...selectedRecord, is_read: currentRead ? 0 : 1 })
       }
+    }
+  }
+
+  async function handleSendEnquiryReply() {
+    if (!selectedRecord || !selectedRecord.id) return
+    if (!replyMessage.trim()) {
+      alert("Please enter a reply message before sending.")
+      return
+    }
+
+    setSendingReply(true)
+    const adminName = session?.name || "Vivadoxa Admin Desk"
+    const res = await replyEnquiry({
+      id: selectedRecord.id,
+      reply: replyMessage.trim(),
+      subject: replySubject.trim() || undefined,
+      replied_by: adminName,
+    })
+    setSendingReply(false)
+
+    if (res && res.success) {
+      setActionNotice(`Email reply successfully sent to ${selectedRecord.email}!`)
+      const updated = {
+        ...selectedRecord,
+        is_read: 1,
+        reply_message: replyMessage.trim(),
+        replied_at: res.replied_at || new Date().toISOString(),
+        replied_by: adminName,
+      }
+      setSelectedRecord(updated)
+      setRecords((prev) =>
+        prev.map((r) => (r.id === selectedRecord.id ? { ...r, ...updated } : r)),
+      )
+      setShowReplyForm(false)
+      setReplyMessage("")
+    } else {
+      setActionNotice(res?.error || "Failed to send email reply.")
+      alert(res?.error || "Failed to send email reply. Please check your system email settings.")
+    }
+  }
+
+  function applyReplyTemplate(templateType: string) {
+    if (!selectedRecord) return
+    const name = selectedRecord.name || "Valued Client"
+    const subj = selectedRecord.subject || "your inquiry"
+
+    if (templateType === "general") {
+      setReplySubject(`Re: ${subj}`)
+      setReplyMessage(
+        `Dear ${name},\n\nThank you for reaching out to Vivadoxa Music.\n\nWe have reviewed your inquiry regarding "${subj}" and our team would be pleased to assist you.\n\n[Please enter your response details here]\n\nIf you have any further questions or would like to schedule a visit to our Kaduna studios at Angwan Sunday, feel free to reply directly to this email or reach us on WhatsApp at 08031308881.\n\nWarm regards,\nVivadoxa Music Support Team\nKaduna, Nigeria`,
+      )
+    } else if (templateType === "rentals") {
+      setReplySubject(`Re: Rental Booking Inquiry — ${subj}`)
+      setReplyMessage(
+        `Dear ${name},\n\nThank you for reaching out regarding our musical instrument and equipment rental services.\n\nWe have checked our fleet and the requested items are available for your dates. Our rental packages include:\n• Pre-delivery calibration by our certified in-house instrument clinic\n• Full protective gig bag / road flight cases and standard accessories\n• Studio pickup at No. 49B Umaru Ibrahim Street, Angwan Sunday, Kaduna, or insured courier delivery within Kaduna\n• 50% Rent-to-Own credit if you decide to purchase within 3 months\n\nPlease let us know your intended start date so we can issue your official rental reservation quote and arrange payment.\n\nBest regards,\nVivadoxa Rentals & Logistics Desk`,
+      )
+    } else if (templateType === "academy") {
+      setReplySubject(`Re: Music Academy Programs & Enrollment — ${name}`)
+      setReplyMessage(
+        `Dear ${name},\n\nThank you for your interest in joining Vivadoxa Music Academy!\n\nWe offer certified, graded curriculum coaching across 17 instruments, vocal training, and audio engineering. You can choose from:\n• Onsite studio private or group classes in Kaduna\n• Flexible Home Lessons at your residence\n• Interactive Live Online Coaching\n\nOur next cohort begins shortly with international ABRSM UK and MUSON syllabus alignment. You can review available courses and register directly at: https://www.vivadoxamusic.com/apply\n\nWe would love to welcome you. Would you like to schedule a free 15-minute studio orientation?\n\nWarm regards,\nVivadoxa Admissions Desk`,
+      )
+    } else if (templateType === "store") {
+      setReplySubject(`Re: Store Product Availability & Order — ${subj}`)
+      setReplyMessage(
+        `Dear ${name},\n\nThank you for your inquiry with the Vivadoxa Music Store.\n\nThe item you inquired about is available in our store stock. Every instrument sold by Vivadoxa is individually inspected, fret-leveled, and intonation-tested in our workshop prior to dispatch.\n\nWe offer both secure pickup at our Angwan Sunday studio and doorstep delivery across Kaduna.\n\nPlease let us know if you would like us to reserve the item or provide bank payment details for immediate dispatch.\n\nBest regards,\nVivadoxa Store & Supplies Team`,
+      )
     }
   }
 
@@ -2331,9 +2404,14 @@ function AdminManager({ title }: { title: string }) {
                             </div>
                           </td>
                           <td>
-                            <Badge tone={row.is_read ? "navy" : "green"}>
-                              {row.is_read ? "Read" : "New"}
-                            </Badge>
+                            <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                              <Badge tone={row.is_read ? "navy" : "green"}>
+                                {row.is_read ? "Read" : "New"}
+                              </Badge>
+                              {row.replied_at && (
+                                <Badge tone="gold">Replied ✓</Badge>
+                              )}
+                            </div>
                           </td>
                           <td>
                             <button
@@ -3163,10 +3241,13 @@ function AdminManager({ title }: { title: string }) {
                                 {row.email} · {row.phone}
                               </div>
                             </div>
-                            <span style={{ whiteSpace: "nowrap" }}>
+                            <span style={{ display: "flex", gap: 4, alignItems: "center", whiteSpace: "nowrap" }}>
                               <Badge tone={row.is_read ? "navy" : "green"}>
                                 {row.is_read ? "Read" : "New"}
                               </Badge>
+                              {row.replied_at && (
+                                <Badge tone="gold">Replied ✓</Badge>
+                              )}
                             </span>
                           </div>
                           <div
@@ -4873,6 +4954,291 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                   </div>
 
+                  {/* Existing Reply Thread if previously replied */}
+                  {selectedRecord.reply_message && (
+                    <div
+                      style={{
+                        marginTop: 16,
+                        padding: "14px 18px",
+                        background: "rgba(201, 107, 50, 0.06)",
+                        border: "1px solid rgba(201, 107, 50, 0.25)",
+                        borderRadius: 10,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 8,
+                          paddingBottom: 6,
+                          borderBottom: "1px solid rgba(201, 107, 50, 0.15)",
+                          flexWrap: "wrap",
+                          gap: 6,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              background: "var(--gold)",
+                            }}
+                          />
+                          <strong
+                            style={{
+                              fontSize: 11,
+                              color: "var(--gold-text)",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Staff Reply Sent
+                          </strong>
+                        </div>
+                        <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                          {selectedRecord.replied_at
+                            ? new Date(selectedRecord.replied_at).toLocaleString()
+                            : "Recently"}{" "}
+                          {selectedRecord.replied_by ? `· by ${selectedRecord.replied_by}` : ""}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                          color: "#191715",
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {selectedRecord.reply_message}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* In-App Reply Composer Drawer */}
+                  {showReplyForm && (
+                    <div
+                      style={{
+                        marginTop: 16,
+                        padding: "18px 20px",
+                        background: "#ffffff",
+                        border: "2px solid var(--gold)",
+                        borderRadius: 12,
+                        boxShadow: "0 4px 18px rgba(201, 107, 50, 0.12)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: 14,
+                        }}
+                      >
+                        <div>
+                          <strong
+                            style={{
+                              fontSize: 14,
+                              color: "var(--navy)",
+                              display: "block",
+                            }}
+                          >
+                            ✉️ Compose In-App Email Reply
+                          </strong>
+                          <small style={{ color: "var(--muted)", fontSize: 11 }}>
+                            Sent directly from Vivadoxa&apos;s verified mailer to{" "}
+                            <strong>{selectedRecord.email}</strong>
+                          </small>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowReplyForm(false)}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            fontSize: 16,
+                            cursor: "pointer",
+                            color: "var(--muted)",
+                          }}
+                          aria-label="Close reply form"
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Quick Template Presets */}
+                      <div style={{ marginBottom: 14 }}>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "var(--gold-text)",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            marginBottom: 6,
+                          }}
+                        >
+                          Quick Templates:
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          <button
+                            type="button"
+                            onClick={() => applyReplyTemplate("general")}
+                            className="btn btn-ghost"
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 10px",
+                              minHeight: 28,
+                              border: "1px solid var(--line-strong)",
+                              borderRadius: 20,
+                              background: "#fbfaf8",
+                            }}
+                          >
+                            General Response
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyReplyTemplate("rentals")}
+                            className="btn btn-ghost"
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 10px",
+                              minHeight: 28,
+                              border: "1px solid var(--line-strong)",
+                              borderRadius: 20,
+                              background: "#fbfaf8",
+                            }}
+                          >
+                            Rental Booking &amp; Quote
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyReplyTemplate("academy")}
+                            className="btn btn-ghost"
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 10px",
+                              minHeight: 28,
+                              border: "1px solid var(--line-strong)",
+                              borderRadius: 20,
+                              background: "#fbfaf8",
+                            }}
+                          >
+                            Academy Admission
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyReplyTemplate("store")}
+                            className="btn btn-ghost"
+                            style={{
+                              fontSize: 11,
+                              padding: "4px 10px",
+                              minHeight: 28,
+                              border: "1px solid var(--line-strong)",
+                              borderRadius: 20,
+                              background: "#fbfaf8",
+                            }}
+                          >
+                            Store Product Order
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Email Subject */}
+                      <div style={{ marginBottom: 12 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginBottom: 4,
+                            color: "var(--navy)",
+                          }}
+                        >
+                          Email Subject:
+                        </label>
+                        <input
+                          type="text"
+                          value={replySubject}
+                          onChange={(e) => setReplySubject(e.target.value)}
+                          placeholder={`Re: ${selectedRecord.subject || "Vivadoxa Inquiry"}`}
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line-strong)",
+                            fontSize: 13,
+                            background: "white",
+                          }}
+                        />
+                      </div>
+
+                      {/* Email Body Textarea */}
+                      <div style={{ marginBottom: 12 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginBottom: 4,
+                            color: "var(--navy)",
+                          }}
+                        >
+                          Reply Message Body:
+                        </label>
+                        <textarea
+                          rows={6}
+                          value={replyMessage}
+                          onChange={(e) => setReplyMessage(e.target.value)}
+                          placeholder="Type your official response to the client here..."
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line-strong)",
+                            fontSize: 13,
+                            background: "white",
+                            fontFamily: "inherit",
+                            lineHeight: 1.6,
+                            resize: "vertical",
+                          }}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          marginBottom: 14,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        Client will receive a branded Vivadoxa HTML email including their original inquiry for context.
+                      </div>
+
+                      {/* Action buttons */}
+                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                        <Button
+                          variant="primary"
+                          onClick={handleSendEnquiryReply}
+                          disabled={sendingReply || !replyMessage.trim()}
+                        >
+                          {sendingReply ? "Sending Email..." : "Send Email to Client"}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => setShowReplyForm(false)}
+                          disabled={sendingReply}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Quick Action Contact Bar */}
                   <div
                     style={{
@@ -4880,24 +5246,39 @@ function AdminManager({ title }: { title: string }) {
                       gap: 10,
                       marginTop: 16,
                       flexWrap: "wrap",
+                      alignItems: "center",
                     }}
                   >
                     {selectedRecord.email && (
-                      <a
-                        href={`mailto:${selectedRecord.email}?subject=RE: ${encodeURIComponent(
-                          selectedRecord.subject || "Vivadoxa Inquiry",
-                        )}`}
-                        className="btn btn-secondary"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const willShow = !showReplyForm
+                          setShowReplyForm(willShow)
+                          if (willShow && !replySubject) {
+                            const subj = selectedRecord.subject || "Vivadoxa Inquiry"
+                            setReplySubject(subj.startsWith("Re:") ? subj : `Re: ${subj}`)
+                          }
+                        }}
+                        className="btn btn-primary"
                         style={{
                           fontSize: 12,
-                          padding: "8px 16px",
-                          minHeight: 36,
-                          textDecoration: "none",
+                          padding: "8px 18px",
+                          minHeight: 38,
+                          cursor: "pointer",
                         }}
                       >
-                        <Icon name="mail" size={14} /> Reply via Email
-                      </a>
+                        <Icon name="mail" size={14} />
+                        <span>
+                          {showReplyForm
+                            ? "Close Email Composer"
+                            : selectedRecord.reply_message
+                            ? "Send Another Email Reply"
+                            : "Reply via In-App Email"}
+                        </span>
+                      </button>
                     )}
+
                     {selectedRecord.phone && (
                       <a
                         href={`https://wa.me/${selectedRecord.phone.replace(
@@ -4912,11 +5293,28 @@ function AdminManager({ title }: { title: string }) {
                         style={{
                           fontSize: 12,
                           padding: "8px 16px",
-                          minHeight: 36,
+                          minHeight: 38,
                           textDecoration: "none",
                         }}
                       >
                         <WhatsAppIcon size={14} /> Message on WhatsApp
+                      </a>
+                    )}
+
+                    {selectedRecord.email && (
+                      <a
+                        href={`mailto:${selectedRecord.email}?subject=RE: ${encodeURIComponent(
+                          selectedRecord.subject || "Vivadoxa Inquiry",
+                        )}`}
+                        style={{
+                          fontSize: 11,
+                          color: "var(--muted)",
+                          textDecoration: "underline",
+                          marginLeft: 4,
+                        }}
+                        title="Open default mail client on your computer"
+                      >
+                        or open external mail client
                       </a>
                     )}
                   </div>
