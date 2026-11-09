@@ -884,6 +884,22 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
   }
   const completionDateStr = formatAcademicDate(completionDate)
 
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true)
+      await downloadDocumentPdf(
+        "admission-letter-doc",
+        `Vivadoxa-Admission-Letter-${admissionNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+      )
+    } catch (err) {
+      console.error("Failed to generate PDF:", err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   return (
     <div
       className="modal-overlay"
@@ -1325,23 +1341,12 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
           </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
-              variant="secondary"
-              onClick={() => window.print()}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Icon name="check" /> Print / Save as PDF
-            </Button>
-            <Button
-              onClick={() =>
-                downloadDocumentHtml(
-                  "admission-letter-doc",
-                  `Vivadoxa-Admission-Letter-${admissionNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
-                  "Official Admission Letter",
-                )
-              }
+              onClick={handleDownload}
+              disabled={isDownloading}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="copy" /> Download Letter
+              <Icon name="copy" />{" "}
+              {isDownloading ? "Generating PDF..." : "Download Letter (PDF)"}
             </Button>
           </div>
         </div>
@@ -1382,6 +1387,23 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
         month: "long",
         year: "numeric",
       })
+
+  // Payment Receipt download handler
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true)
+      await downloadDocumentPdf(
+        "payment-receipt-doc",
+        `Vivadoxa-Payment-Receipt-${refNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+      )
+    } catch (err) {
+      console.error("Failed to generate PDF:", err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <div
@@ -1779,16 +1801,12 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
           </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
-              onClick={() =>
-                downloadDocumentHtml(
-                  "payment-receipt-doc",
-                  `Vivadoxa-Payment-Receipt-${refNo}`,
-                  "Official Payment Receipt",
-                )
-              }
+              onClick={handleDownload}
+              disabled={isDownloading}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="check" /> Download Receipt
+              <Icon name="check" />{" "}
+              {isDownloading ? "Generating PDF..." : "Download Receipt (PDF)"}
             </Button>
           </div>
         </div>
@@ -1942,6 +1960,22 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
         month: "long",
         year: "numeric",
       })
+
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  const handleDownload = async () => {
+    try {
+      setIsDownloading(true)
+      await downloadDocumentPdf(
+        "application-slip-doc",
+        `Vivadoxa-Application-Form-${refNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
+      )
+    } catch (err) {
+      console.error("Failed to generate PDF:", err)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   // Official Section B Interest List from official form docx & updated 17 instrument roster
   const interests = [
@@ -2846,16 +2880,12 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
           </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
-              onClick={() =>
-                downloadDocumentHtml(
-                  "application-slip-doc",
-                  `Vivadoxa-Application-Form-${refNo}`,
-                  "Official Application Form",
-                )
-              }
+              onClick={handleDownload}
+              disabled={isDownloading}
               className="btn-primary w-full sm:w-auto justify-center"
             >
-              <Icon name="copy" /> Download Form
+              <Icon name="copy" />{" "}
+              {isDownloading ? "Generating PDF..." : "Download Form (PDF)"}
             </Button>
           </div>
         </div>
