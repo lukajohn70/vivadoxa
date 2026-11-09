@@ -47,16 +47,18 @@ export function Status() {
       setShowSlip(true)
     } else if (searchParams.get("previewLetter") === "1") {
       setApplication({
-        fullName: "Chinedu Emmanuel Okonkwo",
-        application_no: "VDX-2026-0842",
-        program: "Piano/keyboard",
+        fullName: "John Adamu",
+        application_no: "VM/ADM20260026",
+        admission_no: "VM/ADM20260026",
+        program: "Piano Studies",
         planTier: "6-months",
         study_mode: "Onsite",
-        schedule: "Saturday Mornings (Weekly Masterclass)",
+        schedule: "Weekdays (3 days per week)",
         tuition_fee: 100000,
-        email: "c.okonkwo@example.com",
+        email: "john.adamu@example.com",
         phone: "08031234567",
         status: "Admitted",
+        created_at: "2026-11-09T10:00:00",
       })
       setShowLetter(true)
     } else if (searchParams.get("previewReceipt") === "1") {

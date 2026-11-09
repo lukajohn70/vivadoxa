@@ -1459,6 +1459,15 @@ function AdminManager({ title }: { title: string }) {
   const [editInstructor, setEditInstructor] = useState<any | null>(null)
   const [editPerformance, setEditPerformance] = useState<any | null>(null)
 
+  // Action Approval Modal state (approval of actions)
+  const [approvalModal, setApprovalModal] = useState<{
+    title: string
+    message: string
+    confirmLabel: string
+    confirmTone?: "danger" | "success" | "primary"
+    onConfirm: () => void | Promise<void>
+  } | null>(null)
+
   // In-line editing states for Application inspector
   const [editingApp, setEditingApp] = useState(false)
   const [appForm, setAppForm] = useState({
@@ -1532,25 +1541,26 @@ function AdminManager({ title }: { title: string }) {
 
   async function handleBatchDeleteRecitals() {
     if (selectedRecitalIds.length === 0) return
-    if (
-      !confirm(
-        `Are you sure you want to delete ${selectedRecitalIds.length} selected recital video${
-          selectedRecitalIds.length === 1 ? "" : "s"
-        }?`,
-      )
-    ) {
-      return
-    }
-    const res = await deletePerformancesBatch(selectedRecitalIds)
-    if (res && res.success) {
-      setActionNotice(
-        res.message || `${selectedRecitalIds.length} recital videos removed.`,
-      )
-      setSelectedRecitalIds([])
-      loadData()
-    } else {
-      setActionNotice(res?.error || "Failed to delete selected recitals.")
-    }
+    setApprovalModal({
+      title: "Delete Selected Recital Videos",
+      message: `Are you sure you want to delete ${selectedRecitalIds.length} selected recital video${
+        selectedRecitalIds.length === 1 ? "" : "s"
+      }?`,
+      confirmLabel: `Delete ${selectedRecitalIds.length} Videos`,
+      confirmTone: "danger",
+      onConfirm: async () => {
+        const res = await deletePerformancesBatch(selectedRecitalIds)
+        if (res && res.success) {
+          setActionNotice(
+            res.message || `${selectedRecitalIds.length} recital videos removed.`,
+          )
+          setSelectedRecitalIds([])
+          loadData()
+        } else {
+          setActionNotice(res?.error || "Failed to delete selected recitals.")
+        }
+      },
+    })
   }
 
   function handleToggleRecital(id: number) {
@@ -1569,20 +1579,21 @@ function AdminManager({ title }: { title: string }) {
 
   async function handleToggleInstructor(inst: any) {
     const actionText = inst.is_active === 0 ? "activate" : "deactivate"
-    if (
-      !confirm(
-        `Are you sure you want to ${actionText} the profile for "${inst.name}"? The profile record will be preserved.`,
-      )
-    ) {
-      return
-    }
-    const res = await toggleInstructorStatus(inst.id)
-    if (res && res.success) {
-      setActionNotice(res.message || `Instructor profile ${actionText}d.`)
-      loadData()
-    } else {
-      setActionNotice(res?.error || `Failed to update instructor status.`)
-    }
+    setApprovalModal({
+      title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Instructor Profile`,
+      message: `Are you sure you want to ${actionText} the profile for "${inst.name}"? The profile record will be preserved.`,
+      confirmLabel: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Profile`,
+      confirmTone: actionText === "activate" ? "success" : "danger",
+      onConfirm: async () => {
+        const res = await toggleInstructorStatus(inst.id)
+        if (res && res.success) {
+          setActionNotice(res.message || `Instructor profile ${actionText}d.`)
+          loadData()
+        } else {
+          setActionNotice(res?.error || `Failed to update instructor status.`)
+        }
+      },
+    })
   }
 
   useEffect(() => {
@@ -1865,7 +1876,6 @@ function AdminManager({ title }: { title: string }) {
   }
 
   async function handleDeleteStudent(id: number, name: string) {
-    if (!confirm(`Are you sure you want to remove student "${name}"?`)) return
     const res = await deleteStudent(id)
     if (res && res.success) {
       setActionNotice(`Student record for ${name} removed.`)
@@ -1995,61 +2005,290 @@ function AdminManager({ title }: { title: string }) {
     return matchesSearch && matchesStatus
   })
 
-  return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-          flexWrap: "wrap",
-          gap: 10,
-        }}
-      >
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20 }}>{title} Management</h2>
-        </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {title === "Performances & Recitals" &&
-            selectedRecitalIds.length > 0 && (
-              <button
-                type="button"
-                onClick={handleBatchDeleteRecitals}
+  const renderRecordActions = () => {
+    if (!selectedRecord) return null
+    return (
+      <>
+        {title === "Applications" && (
+          <>
+            <Button
+              variant="ghost"
+              style={{ color: "#dc2626" }}
+              onClick={() => {
+                setApprovalModal({
+                  title: "Reject Admission Application",
+                  message: `Are you sure you want to reject application ${selectedRecord.application_no} for ${selectedRecord.first_name || ""} ${selectedRecord.last_name || ""}?`,
+                  confirmLabel: "Reject Application",
+                  confirmTone: "danger",
+                  onConfirm: async () => {
+                    await handleAppStatus(selectedRecord.application_no, "rejected")
+                  },
+                })
+              }}
+            >
+              Reject Application
+            </Button>
+            <Button
+              onClick={() => {
+                setShowLetterModal(true)
+              }}
+            >
+              <Icon name="copy" size={14} /> Preview Admission Letter (PDF)
+            </Button>
+          </>
+        )}
+
+        {title === "Payments" && (
+          <>
+            {selectedRecord.status !== "verified" && (
+              <Button
+                onClick={() => {
+                  setApprovalModal({
+                    title: "Confirm Payment Verification",
+                    message: `Verify transaction reference ${selectedRecord.reference} for ₦${Number(selectedRecord.amount || 0).toLocaleString()}? This confirms student tuition standing.`,
+                    confirmLabel: "Verify Payment",
+                    confirmTone: "success",
+                    onConfirm: async () => {
+                      await handlePaymentVerify(selectedRecord.reference)
+                    },
+                  })
+                }}
+              >
+                Verify Payment
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setShowReceiptModal(true)
+              }}
+            >
+              Official Receipt (PDF)
+            </Button>
+          </>
+        )}
+
+        {title === "Students" && (
+          <>
+            <Button
+              variant="ghost"
+              style={{ color: "#dc2626" }}
+              onClick={() => {
+                setApprovalModal({
+                  title: "Delete Student Profile",
+                  message: `Are you sure you want to delete student "${selectedRecord.full_name || selectedRecord.name}"? Portal access and academic records will be removed.`,
+                  confirmLabel: "Delete Student",
+                  confirmTone: "danger",
+                  onConfirm: async () => {
+                    await handleDeleteStudent(
+                      selectedRecord.id,
+                      selectedRecord.full_name || selectedRecord.name,
+                    )
+                  },
+                })
+              }}
+            >
+              Delete Student
+            </Button>
+            <Button onClick={handleSaveStudentChanges}>
+              Save Database Updates
+            </Button>
+          </>
+        )}
+
+        {title === "Enquiries" && (
+          <>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                handleEnquiryToggle(
+                  selectedRecord.id,
+                  selectedRecord.is_read,
+                )
+              }
+            >
+              {selectedRecord.is_read ? "Mark as Unread" : "Mark as Read"}
+            </Button>
+            {selectedRecord.phone && (
+              <a
+                href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.name || "")},%20thank%20you%20for%20contacting%20Vivadoxa%20Music%20Academy.`}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
-                  padding: "8px 14px",
+                  padding: "8px 16px",
                   borderRadius: 6,
-                  background: "#dc2626",
+                  background: "#15803d",
                   color: "white",
-                  border: "none",
+                  fontSize: 13,
                   fontWeight: 700,
-                  fontSize: 12,
-                  cursor: "pointer",
+                  textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
                 }}
               >
-                <Icon name="trash" size={14} />
-                Delete Selected ({selectedRecitalIds.length})
-              </button>
+                <WhatsAppIcon size={14} fill="white" />
+                Reply on WhatsApp
+              </a>
             )}
-          {[
-            "Programs & Courses",
-            "Instructors",
-            "Performances & Recitals",
-          ].includes(title) && (
-            <Button onClick={() => setShowAddModal(true)}>
-              + Add{" "}
-              {title === "Instructors"
-                ? "Instructor"
-                : title === "Performances & Recitals"
-                  ? "Recital Video"
-                  : "Course"}
+          </>
+        )}
+
+        {title === "Programs & Courses" && (
+          <>
+            <Button
+              variant="ghost"
+              style={{ color: "#dc2626" }}
+              onClick={() => {
+                setApprovalModal({
+                  title: "Deactivate Course Program",
+                  message: `Are you sure you want to deactivate "${selectedRecord.name}"? This course will be hidden from the public admissions catalog.`,
+                  confirmLabel: "Deactivate Course",
+                  confirmTone: "danger",
+                  onConfirm: async () => {
+                    await deleteProgram(selectedRecord.id)
+                    setActionNotice(`Course "${selectedRecord.name}" deactivated.`)
+                    setSelectedRecord(null)
+                    loadData()
+                  },
+                })
+              }}
+            >
+              Deactivate Course
             </Button>
-          )}
+            <Button
+              onClick={() => {
+                const rec = selectedRecord
+                setSelectedRecord(null)
+                setEditCourse(rec)
+                setShowEditModal(true)
+              }}
+            >
+              Edit Course Details
+            </Button>
+          </>
+        )}
+
+        {title === "Instructors" && (
+          <>
+            <Button
+              variant="ghost"
+              style={{ color: "#dc2626" }}
+              onClick={() => {
+                setApprovalModal({
+                  title: "Deactivate Faculty Member",
+                  message: `Are you sure you want to deactivate instructor "${selectedRecord.name}"?`,
+                  confirmLabel: "Deactivate Instructor",
+                  confirmTone: "danger",
+                  onConfirm: async () => {
+                    await deleteInstructor(selectedRecord.id)
+                    setActionNotice(
+                      `Instructor "${selectedRecord.name}" deactivated.`,
+                    )
+                    setSelectedRecord(null)
+                    loadData()
+                  },
+                })
+              }}
+            >
+              Deactivate Instructor
+            </Button>
+            <Button
+              onClick={() => {
+                const rec = selectedRecord
+                setSelectedRecord(null)
+                setEditInstructor(rec)
+                setShowEditModal(true)
+              }}
+            >
+              Edit Instructor Details
+            </Button>
+          </>
+        )}
+
+        {title === "Performances & Recitals" && selectedRecord.youtube_id && (
+          <a
+            href={`https://www.youtube.com/watch?v=${selectedRecord.youtube_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              padding: "8px 16px",
+              borderRadius: 6,
+              background: "#dc2626",
+              color: "white",
+              fontSize: 13,
+              fontWeight: 700,
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Icon name="youtube" size={14} />
+            Watch on YouTube
+          </a>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <div>
+      {!selectedRecord && !showAddModal && !showEditModal && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+            flexWrap: "wrap",
+            gap: 10,
+          }}
+        >
+          <div>
+            <h2 style={{ margin: 0, fontSize: 20 }}>{title} Management</h2>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {title === "Performances & Recitals" &&
+              selectedRecitalIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBatchDeleteRecitals}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 6,
+                    background: "#dc2626",
+                    color: "white",
+                    border: "none",
+                    fontWeight: 700,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Icon name="trash" size={14} />
+                  Delete Selected ({selectedRecitalIds.length})
+                </button>
+              )}
+            {[
+              "Programs & Courses",
+              "Instructors",
+              "Performances & Recitals",
+            ].includes(title) && (
+              <Button onClick={() => setShowAddModal(true)}>
+                + Add{" "}
+                {title === "Instructors"
+                  ? "Instructor"
+                  : title === "Performances & Recitals"
+                    ? "Recital Video"
+                    : "Course"}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {actionNotice && (
         <div
@@ -2103,7 +2342,7 @@ function AdminManager({ title }: { title: string }) {
         />
       ) : title === "Class Schedule" ? (
         <ClassScheduleManagerView setActionNotice={setActionNotice} />
-      ) : (
+      ) : selectedRecord || showAddModal || showEditModal ? null : (
         // Operational Data Tables
         <section className="table-panel manager-table">
           {/* Repairs: Custom Filter Bar + Pipeline */}
@@ -2892,17 +3131,19 @@ function AdminManager({ title }: { title: string }) {
                           <td>
                             <button
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation()
-                                if (
-                                  confirm(`Remove performance "${row.title}"?`)
-                                ) {
-                                  await deletePerformance(row.id)
-                                  setActionNotice(
-                                    "Performance recital removed.",
-                                  )
-                                  loadData()
-                                }
+                                setApprovalModal({
+                                  title: "Remove Recital Showcase",
+                                  message: `Are you sure you want to remove performance recital "${row.title}"?`,
+                                  confirmLabel: "Remove Performance",
+                                  confirmTone: "danger",
+                                  onConfirm: async () => {
+                                    await deletePerformance(row.id)
+                                    setActionNotice("Performance recital removed.")
+                                    loadData()
+                                  },
+                                })
                               }}
                               style={{
                                 padding: "4px 8px",
@@ -3907,17 +4148,19 @@ function AdminManager({ title }: { title: string }) {
                           >
                             <button
                               type="button"
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation()
-                                if (
-                                  confirm(`Remove performance "${row.title}"?`)
-                                ) {
-                                  await deletePerformance(row.id)
-                                  setActionNotice(
-                                    "Performance recital removed.",
-                                  )
-                                  loadData()
-                                }
+                                setApprovalModal({
+                                  title: "Remove Recital Showcase",
+                                  message: `Are you sure you want to remove performance recital "${row.title}"?`,
+                                  confirmLabel: "Remove Performance",
+                                  confirmTone: "danger",
+                                  onConfirm: async () => {
+                                    await deletePerformance(row.id)
+                                    setActionNotice("Performance recital removed.")
+                                    loadData()
+                                  },
+                                })
                               }}
                               style={{
                                 flex: 1,
@@ -4030,50 +4273,126 @@ function AdminManager({ title }: { title: string }) {
         </section>
       )}
 
-      {/* ── Record Detail Inspector Modal ────────────────────────────────────── */}
+      {/* ── Record Detail Dedicated Page ─────────────────────────────────────── */}
       {selectedRecord && !showLetterModal && !showReceiptModal && (
         <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Record Details"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedRecord(null)
+          className="admin-page-view"
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto 30px",
+            animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="modal-card">
-            <div className="modal-head">
-              <h3>
-                {(title === "Enquiries"
-                  ? "Enquiry"
-                  : title === "Programs & Courses"
-                  ? "Course Program"
-                  : title === "Performances & Recitals"
-                  ? "Recital Showcase"
-                  : title.endsWith("ies")
-                  ? title.slice(0, -3) + "y"
-                  : title.endsWith("s")
-                  ? title.slice(0, -1)
-                  : title)}{" "}
-                Details:{" "}
-                {selectedRecord.order_ref ||
-                  selectedRecord.application_no ||
-                  selectedRecord.reference ||
-                  selectedRecord.tracking_code ||
-                  selectedRecord.student_no ||
-                  selectedRecord.title ||
-                  selectedRecord.name}
-              </h3>
-              <button
-                className="modal-close"
-                onClick={() => setSelectedRecord(null)}
-                aria-label="Close"
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            {/* Page Header Bar */}
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
               >
-                ✕
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRecord(null)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to {title} Table
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {title} Record Details
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 14,
+                }}
+              >
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: 22,
+                    fontWeight: 800,
+                    color: "var(--navy)",
+                  }}
+                >
+                  {(title === "Enquiries"
+                    ? "Enquiry"
+                    : title === "Programs & Courses"
+                    ? "Course Program"
+                    : title === "Performances & Recitals"
+                    ? "Recital Showcase"
+                    : title.endsWith("ies")
+                    ? title.slice(0, -3) + "y"
+                    : title.endsWith("s")
+                    ? title.slice(0, -1)
+                    : title)}{" "}
+                  Details:{" "}
+                  <span style={{ color: "var(--gold)" }}>
+                    {selectedRecord.order_ref ||
+                      selectedRecord.application_no ||
+                      selectedRecord.reference ||
+                      selectedRecord.tracking_code ||
+                      selectedRecord.student_no ||
+                      selectedRecord.title ||
+                      selectedRecord.name}
+                  </span>
+                </h2>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {renderRecordActions()}
+                </div>
+              </div>
             </div>
 
-            <div className="modal-body">
+            <div style={{ padding: "28px 32px" }}>
               {/* Application Details */}
               {title === "Applications" && (
                 <div>
@@ -6472,9 +6791,34 @@ function AdminManager({ title }: { title: string }) {
                 </a>
               )}
 
+            </div>
+
+            {/* Page Footer Action Bar */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "18px 32px",
+                borderTop: "1px solid var(--line)",
+                background: "#faf8f5",
+                flexWrap: "wrap",
+                gap: 12,
+              }}
+            >
               <Button variant="ghost" onClick={() => setSelectedRecord(null)}>
-                Close
+                ← Return to {title} Table
               </Button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {renderRecordActions()}
+              </div>
             </div>
           </div>
         </div>
@@ -6501,37 +6845,89 @@ function AdminManager({ title }: { title: string }) {
         />
       )}
 
-      {/* ── Add Course / Instructor Modal ────────────────────────────────────── */}
+      {/* ── Add Course / Instructor Dedicated Page ──────────────────────────── */}
       {showAddModal && (
         <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Add Record"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowAddModal(false)
+          className="admin-page-view"
+          style={{
+            maxWidth: 920,
+            margin: "0 auto 30px",
+            animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="modal-card">
-            <div className="modal-head">
-              <h3>
-                {title === "Instructors"
-                  ? "Add New Instructor"
-                  : title === "Performances & Recitals"
-                    ? "Add Recital Video"
-                    : "Add New Course"}
-              </h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowAddModal(false)}
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
               >
-                ✕
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to {title} Table
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Create New Record
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                {title === "Instructors"
+                  ? "Add New Faculty Instructor"
+                  : title === "Performances & Recitals"
+                    ? "Add Recital Video Showcase"
+                    : "Create New Course Program"}
+              </h2>
             </div>
 
             {title === "Programs & Courses" && (
               <form onSubmit={handleAddProgram}>
-                <div className="modal-body">
+                <div style={{ padding: "28px 32px" }}>
                   <Field
                     id="add-p-name"
                     label="Course Name"
@@ -6596,7 +6992,16 @@ function AdminManager({ title }: { title: string }) {
                     placeholder="Syllabus highlights, techniques covered..."
                   />
                 </div>
-                <div className="modal-foot">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 10,
+                    padding: "18px 32px",
+                    borderTop: "1px solid var(--line)",
+                    background: "#faf8f5",
+                  }}
+                >
                   <Button
                     variant="ghost"
                     type="button"
@@ -6611,7 +7016,7 @@ function AdminManager({ title }: { title: string }) {
 
             {title === "Instructors" && (
               <form onSubmit={handleAddInstructor}>
-                <div className="modal-body">
+                <div style={{ padding: "28px 32px" }}>
                   <Field
                     id="add-i-name"
                     label="Instructor Full Name"
@@ -6704,7 +7109,16 @@ function AdminManager({ title }: { title: string }) {
                     placeholder="Conservatory background, performance history, awards..."
                   />
                 </div>
-                <div className="modal-foot">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 10,
+                    padding: "18px 32px",
+                    borderTop: "1px solid var(--line)",
+                    background: "#faf8f5",
+                  }}
+                >
                   <Button
                     variant="ghost"
                     type="button"
@@ -6719,7 +7133,7 @@ function AdminManager({ title }: { title: string }) {
 
             {title === "Performances & Recitals" && (
               <form onSubmit={handleAddPerformance}>
-                <div className="modal-body">
+                <div style={{ padding: "28px 32px" }}>
                   <Field
                     id="add-pf-title"
                     label="Performance Title"
@@ -6781,7 +7195,16 @@ function AdminManager({ title }: { title: string }) {
                     placeholder="Performance context, milestone celebration..."
                   />
                 </div>
-                <div className="modal-foot">
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: 10,
+                    padding: "18px 32px",
+                    borderTop: "1px solid var(--line)",
+                    background: "#faf8f5",
+                  }}
+                >
                   <Button
                     variant="ghost"
                     type="button"
@@ -6797,31 +7220,83 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {/* ── Edit Course / Instructor Modal ───────────────────────────────────── */}
+      {/* ── Edit Course Dedicated Page ─────────────────────────────────────── */}
       {showEditModal && editCourse && (
         <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowEditModal(false)
-              setEditCourse(null)
-            }
+          className="admin-page-view"
+          style={{
+            maxWidth: 920,
+            margin: "0 auto 30px",
+            animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="modal-card">
-            <div className="modal-head">
-              <h3>Edit Course: {editCourse.name}</h3>
-              <button
-                className="modal-close"
-                onClick={() => {
-                  setShowEditModal(false)
-                  setEditCourse(null)
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
                 }}
               >
-                ✕
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditCourse(null)
+                  }}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Programs & Courses Table
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Course
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                Edit Course: {editCourse.name}
+              </h2>
             </div>
             <form
               onSubmit={async (e) => {
@@ -6835,7 +7310,7 @@ function AdminManager({ title }: { title: string }) {
                 }
               }}
             >
-              <div className="modal-body">
+              <div style={{ padding: "28px 32px" }}>
                 <Field
                   id="edit-p-name"
                   label="Course Name"
@@ -6866,54 +7341,134 @@ function AdminManager({ title }: { title: string }) {
                   onChange={(v) => setEditCourse({ ...editCourse, desc: v })}
                 />
               </div>
-              <div className="modal-foot">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "18px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                }}
+              >
                 <Button
                   variant="ghost"
                   type="button"
                   style={{ color: "#dc2626" }}
-                  onClick={async () => {
-                    if (confirm(`Deactivate course "${editCourse.name}"?`)) {
-                      await deleteProgram(editCourse.id)
-                      setShowEditModal(false)
-                      setEditCourse(null)
-                      setActionNotice("Course removed from catalog.")
-                      loadData()
-                    }
+                  onClick={() => {
+                    setApprovalModal({
+                      title: "Deactivate Course Program",
+                      message: `Are you sure you want to deactivate "${editCourse.name}"? It will be hidden from the public admissions catalog.`,
+                      confirmLabel: "Deactivate Course",
+                      confirmTone: "danger",
+                      onConfirm: async () => {
+                        await deleteProgram(editCourse.id)
+                        setShowEditModal(false)
+                        setEditCourse(null)
+                        setActionNotice("Course removed from catalog.")
+                        loadData()
+                      },
+                    })
                   }}
                 >
                   Deactivate Course
                 </Button>
-                <Button type="submit">Save Modifications</Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditCourse(null)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Modifications</Button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* ── Edit Instructor Dedicated Page ──────────────────────────────────── */}
       {showEditModal && editInstructor && (
         <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowEditModal(false)
-              setEditInstructor(null)
-            }
+          className="admin-page-view"
+          style={{
+            maxWidth: 920,
+            margin: "0 auto 30px",
+            animation: "fadeIn 0.15s ease-out",
           }}
         >
-          <div className="modal-card">
-            <div className="modal-head">
-              <h3>Edit Instructor: {editInstructor.name}</h3>
-              <button
-                className="modal-close"
-                onClick={() => {
-                  setShowEditModal(false)
-                  setEditInstructor(null)
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 12,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
                 }}
               >
-                ✕
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditInstructor(null)
+                  }}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Instructors Table
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Faculty Member
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                Edit Instructor: {editInstructor.name}
+              </h2>
             </div>
             <form
               onSubmit={async (e) => {
@@ -6929,7 +7484,7 @@ function AdminManager({ title }: { title: string }) {
                 }
               }}
             >
-              <div className="modal-body">
+              <div style={{ padding: "28px 32px" }}>
                 <Field
                   id="edit-i-name"
                   label="Instructor Name"
@@ -6978,7 +7533,16 @@ function AdminManager({ title }: { title: string }) {
                   }
                 />
               </div>
-              <div className="modal-foot">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "18px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                }}
+              >
                 <Button
                   variant="ghost"
                   type="button"
@@ -6986,31 +7550,162 @@ function AdminManager({ title }: { title: string }) {
                     color:
                       editInstructor.is_active === 0 ? "#166534" : "#dc2626",
                   }}
-                  onClick={async () => {
+                  onClick={() => {
                     const action =
                       editInstructor.is_active === 0 ? "activate" : "deactivate"
-                    if (
-                      confirm(
-                        `${action.charAt(0).toUpperCase() + action.slice(1)} profile for "${editInstructor.name}"? (Profile will be preserved)`,
-                      )
-                    ) {
-                      await toggleInstructorStatus(editInstructor.id)
-                      setShowEditModal(false)
-                      setEditInstructor(null)
-                      setActionNotice(
-                        `Instructor profile ${action}d (preserved).`,
-                      )
-                      loadData()
-                    }
+                    setApprovalModal({
+                      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Instructor Profile`,
+                      message: `${action.charAt(0).toUpperCase() + action.slice(1)} profile for "${editInstructor.name}"? (Profile will be preserved)`,
+                      confirmLabel: `${action.charAt(0).toUpperCase() + action.slice(1)} Profile`,
+                      confirmTone: action === "activate" ? "success" : "danger",
+                      onConfirm: async () => {
+                        await toggleInstructorStatus(editInstructor.id)
+                        setShowEditModal(false)
+                        setEditInstructor(null)
+                        setActionNotice(
+                          `Instructor profile ${action}d (preserved).`,
+                        )
+                        loadData()
+                      },
+                    })
                   }}
                 >
                   {editInstructor.is_active === 0
                     ? "Activate Profile"
                     : "Deactivate Profile"}
                 </Button>
-                <Button type="submit">Save Modifications</Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false)
+                      setEditInstructor(null)
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Modifications</Button>
+                </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Action Approval Modal (Small confirmation dialog) ───────────────── */}
+      {approvalModal && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setApprovalModal(null)
+          }}
+        >
+          <div
+            className="modal-card"
+            style={{
+              maxWidth: 440,
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+            }}
+          >
+            <div
+              style={{
+                padding: "24px 28px 16px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  background:
+                    approvalModal.confirmTone === "danger"
+                      ? "rgba(220, 38, 38, 0.12)"
+                      : approvalModal.confirmTone === "success"
+                      ? "rgba(21, 112, 84, 0.12)"
+                      : "rgba(201, 107, 50, 0.12)",
+                  color:
+                    approvalModal.confirmTone === "danger"
+                      ? "#dc2626"
+                      : approvalModal.confirmTone === "success"
+                      ? "#15803d"
+                      : "var(--gold)",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                  fontSize: 20,
+                  fontWeight: 700,
+                }}
+              >
+                {approvalModal.confirmTone === "danger"
+                  ? "✕"
+                  : approvalModal.confirmTone === "success"
+                  ? "✓"
+                  : "ℹ"}
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3
+                  style={{
+                    margin: "0 0 6px",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                  }}
+                >
+                  {approvalModal.title}
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13.5,
+                    color: "var(--muted)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {approvalModal.message}
+                </p>
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                padding: "16px 28px",
+                background: "#faf8f5",
+                borderTop: "1px solid var(--line)",
+              }}
+            >
+              <Button variant="ghost" onClick={() => setApprovalModal(null)}>
+                Cancel
+              </Button>
+              <Button
+                style={{
+                  background:
+                    approvalModal.confirmTone === "danger"
+                      ? "#dc2626"
+                      : approvalModal.confirmTone === "success"
+                      ? "#15803d"
+                      : "var(--gold)",
+                  color: "white",
+                  borderColor: "transparent",
+                }}
+                onClick={async () => {
+                  const onConfirm = approvalModal.onConfirm
+                  setApprovalModal(null)
+                  await onConfirm()
+                }}
+              >
+                {approvalModal.confirmLabel}
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -18,13 +18,24 @@ interface AdmissionLetterProps {
     last_name?: string
     fullName?: string
     application_no?: string
+    admission_no?: string
+    admissionNo?: string
     program?: string
     study_mode?: string
     tuition_fee?: number | string
     currency?: string
     created_at?: string
+    date?: string
+    issue_date?: string
+    commencement_date?: string
+    start_date?: string
+    startDate?: string
+    completion_date?: string
+    finish_date?: string
+    endDate?: string
     schedule?: string
     planTier?: string
+    duration?: string
     email?: string
     phone?: string
   }
@@ -464,85 +475,338 @@ export function downloadDocumentHtml(
   }, 300)
 }
 
+// ── Helpers for Official Admission Letter ──────────────────────────────────
+/** Formats Date into academic style: "9 November 2026" */
+function formatAcademicDate(d: Date): string {
+  const day = d.getDate()
+  const month = d.toLocaleDateString("en-GB", { month: "long" })
+  const year = d.getFullYear()
+  return `${day} ${month} ${year}`
+}
+
+/** Safely adds months without month-end skipping */
+function addMonthsSafe(startDate: Date, months: number): Date {
+  const result = new Date(startDate.getTime())
+  const targetDay = startDate.getDate()
+  result.setDate(1)
+  result.setMonth(result.getMonth() + months)
+  const daysInTargetMonth = new Date(
+    result.getFullYear(),
+    result.getMonth() + 1,
+    0,
+  ).getDate()
+  result.setDate(Math.min(targetDay, daysInTargetMonth))
+  return result
+}
+
+/** Determines duration wording, label, and number of months based on duration or plan tier */
+function getDurationDetails(
+  planTier?: string,
+  rawDuration?: string,
+  rawProgram?: string,
+) {
+  const combined = `${planTier || ""} ${rawDuration || ""} ${rawProgram || ""}`.toLowerCase()
+
+  if (
+    combined.includes("2-year") ||
+    combined.includes("2 years") ||
+    combined.includes("two year")
+  ) {
+    return {
+      words: "two-year",
+      label: "Two (2) Years",
+      months: 24,
+    }
+  }
+  if (
+    combined.includes("1-year") ||
+    combined.includes("1 year") ||
+    combined.includes("12 month") ||
+    combined.includes("one year")
+  ) {
+    return {
+      words: "one-year",
+      label: "One (1) Year",
+      months: 12,
+    }
+  }
+  if (
+    combined.includes("6-month") ||
+    combined.includes("6 month") ||
+    combined.includes("six month") ||
+    combined.includes("six (6) month")
+  ) {
+    return {
+      words: "six-month",
+      label: "Six (6) Months",
+      months: 6,
+    }
+  }
+  if (
+    combined.includes("1-month") ||
+    combined.includes("1 month") ||
+    combined.includes("one month") ||
+    combined.includes("one (1) month")
+  ) {
+    return {
+      words: "one-month",
+      label: "One (1) Month",
+      months: 1,
+    }
+  }
+  if (
+    combined.includes("home-lessons") ||
+    combined.includes("home lesson") ||
+    combined.includes("private")
+  ) {
+    return {
+      words: "monthly private",
+      label: "Monthly (Private Coaching)",
+      months: 1,
+    }
+  }
+  if (
+    combined.includes("3-month") ||
+    combined.includes("3 month") ||
+    combined.includes("three month") ||
+    combined.includes("three (3) month")
+  ) {
+    return {
+      words: "three-month",
+      label: "Three (3) Months",
+      months: 3,
+    }
+  }
+
+  // Default to Six (6) Months as demonstrated in the official admission standard
+  return {
+    words: "six-month",
+    label: "Six (6) Months",
+    months: 6,
+  }
+}
+
+/** Adapts the program name and specific instruction text based on the selected course */
+function getProgramDetails(rawProgram?: string) {
+  const p = (rawProgram || "Piano Studies").trim()
+  const lower = p.toLowerCase()
+
+  if (lower.includes("piano") || lower.includes("keyboard")) {
+    return {
+      title: "Piano Studies",
+      instruction:
+        "structured piano instruction designed to develop your musical knowledge, keyboard techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("alto sax")) {
+    return {
+      title: "Alto Saxophone Studies",
+      instruction:
+        "structured alto saxophone instruction designed to develop your musical knowledge, embouchure and breath control techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("soprano sax")) {
+    return {
+      title: "Soprano Saxophone Studies",
+      instruction:
+        "structured soprano saxophone instruction designed to develop your musical knowledge, embouchure, intonation and breath control techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("sax")) {
+    return {
+      title: "Saxophone Studies",
+      instruction:
+        "structured saxophone instruction designed to develop your musical knowledge, embouchure and breath control techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("violin")) {
+    return {
+      title: "Violin Studies",
+      instruction:
+        "structured violin instruction designed to develop your musical knowledge, bowing mechanics, intonation techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("bass guitar")) {
+    return {
+      title: "Bass Guitar Studies",
+      instruction:
+        "structured bass guitar instruction designed to develop your musical knowledge, groove locking, fretboard techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("lead guitar")) {
+    return {
+      title: "Lead Guitar Studies",
+      instruction:
+        "structured lead guitar instruction designed to develop your musical knowledge, picking articulation, solo improvisation techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("acoustic guitar")) {
+    return {
+      title: "Acoustic Guitar Studies",
+      instruction:
+        "structured acoustic guitar instruction designed to develop your musical knowledge, fingerpicking, strumming mechanics, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("guitar")) {
+    return {
+      title: "Guitar Studies",
+      instruction:
+        "structured guitar instruction designed to develop your musical knowledge, fretboard mechanics, fingerstyle techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("trumpet")) {
+    return {
+      title: "Trumpet Studies",
+      instruction:
+        "structured trumpet instruction designed to develop your musical knowledge, lip articulation, tone production techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("flute")) {
+    return {
+      title: "Flute Studies",
+      instruction:
+        "structured flute instruction designed to develop your musical knowledge, embouchure, breathing techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("clarinet")) {
+    return {
+      title: "Clarinet Studies",
+      instruction:
+        "structured clarinet instruction designed to develop your musical knowledge, reed embouchure, fingering dexterity, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("euphonium")) {
+    return {
+      title: "Euphonium Studies",
+      instruction:
+        "structured euphonium brass instruction designed to develop your musical knowledge, buzzing mechanics, valve dexterity, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("set drum") || lower.includes("drum set")) {
+    return {
+      title: "Drum Set & Percussion Studies",
+      instruction:
+        "structured drum kit instruction designed to develop your musical knowledge, limb independence, rudiment techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("talking drum")) {
+    return {
+      title: "Talking Drum Studies",
+      instruction:
+        "structured traditional talking drum instruction designed to develop your musical knowledge, tonal modulation, pitch bending techniques, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("drum")) {
+    return {
+      title: "Drum & Percussion Studies",
+      instruction:
+        "structured percussion instruction designed to develop your musical knowledge, rhythmic coordination and rudiment techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("voice") || lower.includes("vocal")) {
+    return {
+      title: "Vocal Studies",
+      instruction:
+        "structured vocal instruction designed to develop your musical knowledge, vocal range, breathing and pitch control techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (
+    lower.includes("sound") ||
+    lower.includes("studio") ||
+    lower.includes("engineering")
+  ) {
+    return {
+      title: "Sound & Audio Engineering Studies",
+      instruction:
+        "structured audio engineering instruction designed to develop your musical knowledge, signal routing, multi-track mixing and acoustic techniques, critical listening abilities, technical production skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("ukulele")) {
+    return {
+      title: "Ukulele Studies",
+      instruction:
+        "structured ukulele instruction designed to develop your musical knowledge, chord phrasing, rhythmic strumming techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+
+  const clean = p
+    .replace(/^(Beginner|Intermediate|Advance|Advanced)\s+/i, "")
+    .trim()
+  const title = clean.toLowerCase().endsWith("studies")
+    ? clean
+    : `${clean} Studies`
+  return {
+    title,
+    instruction: `structured ${clean.toLowerCase()} instruction designed to develop your musical knowledge, specialized instrumental techniques, sight-reading abilities, performance skills and overall musicianship.`,
+  }
+}
+
+/** Formats the Admission Number into official VM/ADM... convention */
+function formatAdmissionNo(
+  admissionNo?: string,
+  applicationNo?: string,
+): string {
+  if (admissionNo && admissionNo.trim()) return admissionNo.trim()
+  if (applicationNo && applicationNo.trim()) {
+    const raw = applicationNo.trim()
+    if (raw.startsWith("VM/")) return raw
+    const match = raw.match(/^VDX-(\d{4})-?(\d+)$/i)
+    if (match) {
+      return `VM/ADM${match[1]}${match[2].padStart(4, "0")}`
+    }
+    return raw
+  }
+  return "VM/ADM20260026"
+}
+
 // ── Official Admission Letter ────────────────────────────────────────────────
 export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
   const studentName =
     data.fullName ||
     `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
-    "Prospective Student"
-  const refNo = data.application_no || "VDX-ADM-2026-OFFICIAL"
-  const program = data.program || "Piano & Keyboard Performance"
+    "John Adamu"
 
-  const trackName =
-    data.planTier === "1-month"
-      ? "1 Month Intensive Foundation Track"
-      : data.planTier === "6-months"
-        ? "6 Months Diploma Program (Accredited)"
-        : data.planTier === "1-year"
-          ? "1 Year Advance Diploma (Mastery Level)"
-          : data.planTier === "home-lessons"
-            ? "Private Home Lessons Track (1-on-1 at Residence)"
-            : "3 Months Certificate Program (Comprehensive)"
+  const admissionNo = formatAdmissionNo(
+    data.admission_no || data.admissionNo,
+    data.application_no,
+  )
 
-  const studyModeLabel =
-    data.study_mode === "Home Lessons"
-      ? "Private Home Lessons (1-on-1 Coaching at Residence)"
-      : data.study_mode === "Online"
-        ? "Live Interactive Video Coaching"
-        : "Onsite Conservatory Studio Practice"
+  // 1. Issue Date of Admission
+  const rawIssue = data.created_at || data.issue_date || data.date
+  const issueDate =
+    rawIssue && !isNaN(new Date(rawIssue).getTime())
+      ? new Date(rawIssue)
+      : new Date()
+  const issueDateStr = formatAcademicDate(issueDate)
 
-  const scheduleText =
-    data.schedule || "Weekdays (3 days per week) / Weekends (Friday & Saturday)"
+  // 2. Commencement Date (Start Date based on issue date + 6 days, or explicit field)
+  const rawCommencement =
+    data.commencement_date || data.start_date || data.startDate
+  const commencementDate =
+    rawCommencement && !isNaN(new Date(rawCommencement).getTime())
+      ? new Date(rawCommencement)
+      : new Date(issueDate.getTime() + 6 * 24 * 60 * 60 * 1000)
+  const commencementDateStr = formatAcademicDate(commencementDate)
 
-  const isUSD =
-    data.currency === "USD" ||
-    String(data.tuition_fee || "").includes("$") ||
-    String(data.schedule || "")
-      .toLowerCase()
-      .includes("diaspora")
-  const currSymbol = isUSD ? "$" : "₦"
+  // 3. Dynamic Course & Duration Details
+  const durationInfo = getDurationDetails(
+    data.planTier,
+    data.duration,
+    data.program,
+  )
+  const programInfo = getProgramDetails(data.program)
 
-  const tuitionNum =
-    Number(data.tuition_fee) ||
-    (data.planTier === "1-month"
-      ? isUSD
-        ? 25
-        : 20000
-      : data.planTier === "3-months"
-        ? isUSD
-          ? 70
-          : 55000
-        : data.planTier === "6-months"
-          ? isUSD
-            ? 125
-            : 100000
-          : data.planTier === "1-year"
-            ? isUSD
-              ? 240
-              : 195000
-            : data.planTier === "2-years"
-              ? isUSD
-                ? 600
-                : 500000
-              : data.planTier === "home-lessons"
-                ? isUSD
-                  ? 90
-                  : 70000
-                : isUSD
-                  ? 70
-                  : 55000)
-
-  const dateStr = data.created_at
-    ? new Date(data.created_at).toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : new Date().toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
+  // 4. Completion Date (Finish Date based on commencement date + duration chosen minus 1 day)
+  const rawCompletion =
+    data.completion_date || data.finish_date || data.endDate
+  let completionDate: Date
+  if (rawCompletion && !isNaN(new Date(rawCompletion).getTime())) {
+    completionDate = new Date(rawCompletion)
+  } else {
+    completionDate = addMonthsSafe(commencementDate, durationInfo.months)
+    completionDate.setDate(completionDate.getDate() - 1)
+  }
+  const completionDateStr = formatAcademicDate(completionDate)
 
   return (
     <div
@@ -557,6 +821,7 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
           className="doc-sheet"
           role="region"
           aria-label="Printed Admission Letter"
+          style={{ padding: "40px 48px" }}
         >
           {/* Subtle Watermark */}
           <div className="doc-watermark" aria-hidden="true">
@@ -564,8 +829,16 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
           </div>
 
           {/* Academic Letterhead Masthead */}
-          <div className="doc-header">
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 14,
+                marginBottom: 4,
+              }}
+            >
               <div
                 style={{
                   background: "#000000",
@@ -581,353 +854,353 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
               >
                 <img
                   src={brandLogo}
-                  alt="Vivadoxa Music School Logo"
-                  style={{ height: 42, width: "auto", display: "block" }}
+                  alt="Vivadoxa Music Logo"
+                  style={{ height: 40, width: "auto", display: "block" }}
                 />
               </div>
-              <div>
+              <div style={{ textAlign: "left" }}>
                 <h1
                   style={{
                     margin: 0,
-                    fontFamily: "serif",
-                    fontSize: 22,
+                    fontFamily: "'DM Serif Display', Georgia, serif",
+                    fontSize: 26,
                     fontWeight: 700,
                     color: "var(--navy, #0b0b0b)",
-                    letterSpacing: "0.5px",
+                    letterSpacing: "1.2px",
                     lineHeight: 1.15,
                   }}
                 >
-                  VIVADOXA MUSIC SCHOOL
+                  VIVADOXA MUSIC
                 </h1>
                 <div
                   style={{
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    color: "var(--gold-text, #a24a18)",
-                    letterSpacing: "0.8px",
-                    textTransform: "uppercase",
-                    marginTop: 2,
-                  }}
-                >
-                  Conservatory of Music &amp; Performing Arts · RC 3184525
-                </div>
-                <div
-                  style={{
-                    fontSize: 9.5,
-                    color: "var(--muted, #64748b)",
-                    marginTop: 2,
+                    fontSize: 13,
                     fontStyle: "italic",
+                    color: "var(--gold-text, #a24a18)",
+                    marginTop: 2,
+                    letterSpacing: "0.5px",
                   }}
                 >
-                  Motto: &ldquo;Actualize your passion&rdquo; · Kaduna, Nigeria
+                  Actualize your passion
                 </div>
               </div>
             </div>
 
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "4px 10px",
-                  background: "var(--navy, #0b0b0b)",
-                  color: "white",
-                  fontSize: 9.5,
-                  fontWeight: 700,
-                  borderRadius: 4,
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                  border: "1px solid var(--gold, #c96b32)",
-                }}
-              >
-                Official Admission Offer
-              </span>
-              <div
-                style={{
-                  marginTop: 6,
-                  fontSize: 10.5,
-                  color: "var(--muted, #64748b)",
-                  lineHeight: 1.45,
-                }}
-              >
-                Ref:{" "}
-                <strong
-                  style={{
-                    color: "var(--navy, #0b0b0b)",
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {refNo}
-                </strong>
-                <br />
-                Date:{" "}
-                <strong style={{ color: "var(--navy, #0b0b0b)" }}>
-                  {dateStr}
-                </strong>
-                <br />
-                Session: <strong>2026 / 2027</strong>
-              </div>
-            </div>
+            <div
+              style={{
+                height: 2,
+                background:
+                  "linear-gradient(to right, transparent, #c96b32 15%, #c96b32 85%, transparent)",
+                margin: "12px auto 16px",
+                maxWidth: 580,
+              }}
+            />
+
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+                fontSize: 18,
+                fontWeight: 800,
+                letterSpacing: "2.5px",
+                color: "var(--navy, #0b0b0b)",
+                textTransform: "uppercase",
+              }}
+            >
+              ADMISSION LETTER
+            </h2>
           </div>
 
-          {/* Registry Address Bar */}
+          {/* Reference & Date Information Bar */}
           <div
             style={{
-              fontSize: 10,
-              color: "#64748b",
-              lineHeight: 1.4,
-              borderBottom: "1px solid var(--line, #e2ded8)",
-              paddingBottom: 10,
-              marginBottom: 16,
               display: "flex",
               justifyContent: "space-between",
+              alignItems: "flex-start",
               flexWrap: "wrap",
-              gap: 6,
-            }}
-          >
-            <span>
-              <strong>Campus:</strong> {SCHOOL_ADDRESS}
-            </span>
-            <span>
-              <strong>Admissions Registry:</strong> {SCHOOL_PHONE} ·{" "}
-              {SCHOOL_EMAIL}
-            </span>
-          </div>
-
-          {/* Candidate Clearance Banner */}
-          <div
-            style={{
-              background: "linear-gradient(to right, #fcfbf9, #ffffff)",
-              border: "1px solid var(--line, #e2ded8)",
-              borderLeft: "4px solid var(--gold, #c96b32)",
-              borderRadius: 6,
-              padding: "12px 16px",
-              marginBottom: 16,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 10,
+              gap: 8,
+              margin: "18px 0 14px",
+              fontSize: 13,
+              color: "#1a1918",
             }}
           >
             <div>
-              <span
+              <span style={{ color: "#64748b" }}>Admission No.: </span>
+              <strong
                 style={{
-                  fontSize: 9.5,
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                  fontWeight: 700,
-                  color: "var(--gold-text, #a24a18)",
-                }}
-              >
-                Admitted Candidate:
-              </span>
-              <h2
-                style={{
-                  margin: "2px 0 0",
-                  fontSize: 20,
                   color: "var(--navy, #0b0b0b)",
-                  fontFamily: "serif",
-                  fontWeight: 700,
+                  fontFamily: "monospace",
+                  fontSize: 13.5,
                 }}
               >
-                {studentName}
-              </h2>
-              {(data.email || data.phone) && (
-                <div
-                  style={{
-                    fontSize: 10.5,
-                    color: "var(--muted, #64748b)",
-                    marginTop: 2,
-                  }}
-                >
-                  {data.email} {data.email && data.phone && "·"} {data.phone}
-                </div>
-              )}
+                {admissionNo}
+              </strong>
             </div>
-
-            <div style={{ textAlign: "right" }}>
-              <span
-                style={{
-                  fontSize: 9.5,
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                  color: "var(--muted, #64748b)",
-                  display: "block",
-                }}
-              >
-                Matriculation Clearance
-              </span>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  color: "var(--green, #157054)",
-                  background: "rgba(21, 112, 84, 0.08)",
-                  border: "1px solid rgba(21, 112, 84, 0.25)",
-                  padding: "3px 8px",
-                  borderRadius: 4,
-                  marginTop: 2,
-                }}
-              >
-                ● Provisionally Cleared
-              </span>
+            <div>
+              <span style={{ color: "#64748b" }}>Date: </span>
+              <strong style={{ color: "var(--navy, #0b0b0b)" }}>
+                {issueDateStr}
+              </strong>
             </div>
           </div>
 
-          {/* Formal Body Text */}
+          {/* Addressee & Salutation */}
           <div
             style={{
-              fontSize: 12.5,
-              lineHeight: 1.65,
+              marginBottom: 14,
+              fontSize: 13.5,
+              lineHeight: 1.6,
+              color: "#1a1918",
+            }}
+          >
+            <div>
+              <span style={{ color: "#64748b", fontWeight: 600 }}>TO: </span>
+              <strong style={{ color: "var(--navy, #0b0b0b)" }}>
+                {studentName}
+              </strong>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              Dear <strong>{studentName}</strong>,
+            </div>
+          </div>
+
+          {/* Subject Line */}
+          <div
+            style={{
+              margin: "14px 0 16px",
+              paddingBottom: 6,
+              borderBottom: "1.5px solid var(--line, #e2ded8)",
+              fontSize: 13.5,
+              fontWeight: 800,
+              color: "var(--navy, #0b0b0b)",
+              letterSpacing: "0.5px",
+            }}
+          >
+            RE: OFFICIAL LETTER OF ADMISSION – {programInfo.title.toUpperCase()}
+          </div>
+
+          {/* Formal Body Paragraphs 1 & 2 */}
+          <div
+            style={{
+              fontSize: 13,
+              lineHeight: 1.7,
               color: "#2d3748",
               marginBottom: 16,
             }}
           >
+            <p style={{ margin: "0 0 10px" }}>
+              We are delighted to formally offer you admission into Vivadoxa Music to
+              undertake a {durationInfo.words} professional training programme in{" "}
+              <strong>{programInfo.title}</strong>.
+            </p>
             <p style={{ margin: 0 }}>
-              On behalf of the{" "}
-              <strong>
-                Academic Board of Governors, Faculty Council, and Directorate of
-                Admissions
-              </strong>{" "}
-              of Vivadoxa Music School, we are pleased to convey official
-              provisional admission into the Vivadoxa Music Conservatory for the
-              upcoming academic session.
-            </p>
-            <p style={{ margin: "6px 0 0" }}>
-              Following formal appraisal of your application profile, you have
-              been accepted into our specialized performance curriculum designed
-              to cultivate technical facility, repertoire musicianship, and
-              artistic stagecraft under certified conservatory instructors.
+              Following your successful admission, we welcome you to our institution and
+              look forward to providing you with quality musical education, practical
+              training and professional guidance.
             </p>
           </div>
 
-          {/* Matriculation Particulars Ledger */}
-          <div className="doc-grid" style={{ margin: "14px 0 16px" }}>
-            <div>
-              <small>Major Discipline / Instrument</small>
-              <strong>{program}</strong>
-            </div>
-            <div>
-              <small>Program Track &amp; Credential</small>
-              <strong>{trackName}</strong>
-            </div>
-            <div>
-              <small>Study Mode</small>
-              <strong>{studyModeLabel}</strong>
-            </div>
-            <div>
-              <small>Cohort Schedule</small>
-              <strong>{scheduleText}</strong>
-            </div>
-            <div>
-              <small>Conservatory Campus</small>
-              <strong>
-                Vivadoxa Main Studio, 49B Umaru Ibrahim St., Kaduna
-              </strong>
-            </div>
-            <div>
-              <small>Tuition Assessment</small>
-              <strong style={{ color: "var(--gold-text, #a24a18)" }}>
-                {currSymbol}
-                {tuitionNum.toLocaleString(isUSD ? "en-US" : "en-NG")}
-              </strong>
-            </div>
-          </div>
-
-          {/* Mandatory Directives & Orientation Protocol */}
+          {/* ADMISSION DETAILS Ledger */}
           <div
             style={{
-              fontSize: 11,
-              lineHeight: 1.55,
-              color: "#334155",
-              background: "#faf9f6",
+              margin: "16px 0",
+              background: "#fbfaf7",
               border: "1px solid var(--line, #e2ded8)",
+              borderLeft: "4px solid var(--gold, #c96b32)",
               borderRadius: 6,
-              padding: "12px 16px",
-              marginTop: 12,
+              padding: "14px 20px",
             }}
           >
-            <strong
+            <div
               style={{
-                display: "block",
+                fontSize: 11.5,
+                fontWeight: 800,
                 color: "var(--navy, #0b0b0b)",
-                fontSize: 11,
-                marginBottom: 5,
+                letterSpacing: "1px",
                 textTransform: "uppercase",
-                letterSpacing: "0.6px",
+                marginBottom: 10,
               }}
             >
-              Orientation &amp; Enrollment Directives:
-            </strong>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              <li style={{ marginBottom: 3 }}>
-                <strong>Studio Instrument Allocation:</strong> Arrive at the
-                Vivadoxa Studio 15 minutes prior to your allocated cohort time
-                for rehearsal room orientation and instrument assignment.
-              </li>
-              <li style={{ marginBottom: 3 }}>
-                <strong>Curriculum &amp; Syllabus:</strong> Enrolled candidates
-                will receive their syllabus orientation and digital learning
-                guides during the first orientation session.
+              ADMISSION DETAILS
+            </div>
+            <ul
+              style={{
+                listStyleType: "none",
+                margin: 0,
+                padding: 0,
+                fontSize: 13,
+                lineHeight: 1.9,
+                color: "#2d3748",
+              }}
+            >
+              <li>
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Student&apos;s Name:</strong> {studentName}
               </li>
               <li>
-                <strong>Recital Eligibility:</strong> A minimum studio
-                attendance rate of 80% is mandatory to qualify for the
-                end-of-term Public Ensemble Recital and formal award of the
-                diploma/certificate.
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Admission Number:</strong>{" "}
+                <span style={{ fontFamily: "monospace", fontWeight: 700 }}>
+                  {admissionNo}
+                </span>
+              </li>
+              <li>
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Programme:</strong> {programInfo.title}
+              </li>
+              <li>
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Programme Duration:</strong> {durationInfo.label}
+              </li>
+              <li>
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Commencement Date:</strong> {commencementDateStr}
+              </li>
+              <li>
+                <span
+                  style={{
+                    color: "var(--gold, #c96b32)",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  –
+                </span>
+                <strong>Completion Date:</strong> {completionDateStr}
               </li>
             </ul>
           </div>
 
-          {/* Official Signatory & Academic Seal */}
+          {/* Curriculum & Conduct Paragraphs 3, 4, 5 */}
           <div
-            className="doc-sign-block"
             style={{
-              marginTop: 22,
-              paddingTop: 16,
+              fontSize: 13,
+              lineHeight: 1.7,
+              color: "#2d3748",
+              marginBottom: 18,
+            }}
+          >
+            <p style={{ margin: "0 0 10px" }}>
+              During your period of study, you will receive {programInfo.instruction}
+            </p>
+            <p style={{ margin: "0 0 10px" }}>
+              You are expected to demonstrate commitment, punctuality, discipline and
+              active participation throughout the programme.
+            </p>
+            <p style={{ margin: 0 }}>
+              Please accept our warm congratulations on your admission. We are
+              excited to have you join the Vivadoxa Music family and wish you a
+              rewarding and successful musical journey.
+            </p>
+          </div>
+
+          {/* Signatory & Academic Seal Block */}
+          <div
+            style={{
+              marginTop: 20,
+              paddingTop: 14,
               borderTop: "1.5px solid var(--line, #e2ded8)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-end",
+              flexWrap: "wrap",
+              gap: 16,
             }}
           >
-            {/* Left: Official Signature of the CEO */}
             <div>
-              <CeoSignature height={52} />
+              <div style={{ fontSize: 13, color: "#1a1918", marginBottom: 4 }}>
+                Yours faithfully,
+              </div>
+              <CeoSignature height={48} />
               <div
                 style={{
-                  borderTop: "1.5px solid #64748b",
-                  width: 195,
-                  paddingTop: 4,
+                  color: "#64748b",
+                  letterSpacing: "1px",
+                  marginBottom: 4,
+                  userSelect: "none",
+                }}
+              >
+                ____________________________
+              </div>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  color: "var(--navy, #0b0b0b)",
+                }}
+              >
+                Frederick Chrysantius
+              </strong>
+              <div style={{ fontSize: 11, color: "var(--muted, #64748b)" }}>
+                Chief Executive Officer
+              </div>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: "var(--navy, #0b0b0b)",
+                  letterSpacing: "0.5px",
                   marginTop: 2,
                 }}
               >
-                <strong
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    color: "var(--navy, #0b0b0b)",
-                  }}
-                >
-                  Frederick Chrysantius
-                </strong>
-                <div style={{ fontSize: 9.5, color: "var(--muted, #64748b)" }}>
-                  Founder &amp; Chief Executive Officer (CEO)
-                </div>
-                <div style={{ fontSize: 9, color: "var(--muted, #64748b)" }}>
-                  Vivadoxa Music School Conservatory
-                </div>
+                VIVADOXA MUSIC
+              </div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontStyle: "italic",
+                  color: "var(--gold-text, #a24a18)",
+                  marginTop: 4,
+                }}
+              >
+                Where Music Comes Alive.
               </div>
             </div>
 
-            {/* Right: Official Academic Seal */}
             <div style={{ textAlign: "right" }}>
               <AcademicSeal
                 color="#c96b32"
-                size={90}
+                size={88}
                 title="ADMISSIONS APPROVED"
               />
             </div>
@@ -955,12 +1228,12 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
               }}
             >
               <strong>OFFICIAL ELECTRONIC CREDENTIAL:</strong> Issued under the
-              statutory authority of Vivadoxa Music School (RC 3184525). Any
+              statutory authority of Vivadoxa Music (RC 3184525). Any
               unauthorized alteration invalidates this document. Verification of
               authenticity can be performed online at <u>vivadoxa.ng/status</u>{" "}
-              with Reference: <strong>{refNo}</strong>.
+              with Reference: <strong>{admissionNo}</strong>.
             </div>
-            <SecurityBarcode code={refNo} />
+            <SecurityBarcode code={admissionNo} />
           </div>
         </div>
 
@@ -976,10 +1249,17 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
           </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
+              variant="secondary"
+              onClick={() => window.print()}
+              className="w-full sm:w-auto justify-center"
+            >
+              <Icon name="check" /> Print / Save as PDF
+            </Button>
+            <Button
               onClick={() =>
                 downloadDocumentHtml(
                   "admission-letter-doc",
-                  `Vivadoxa-Admission-Letter-${refNo}`,
+                  `Vivadoxa-Admission-Letter-${admissionNo.replace(/[^a-zA-Z0-9_-]/g, "_")}`,
                   "Official Admission Letter",
                 )
               }
