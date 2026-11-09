@@ -59,7 +59,7 @@ function ensureBulletinTables(PDO $pdo): void {
                 <p>All Saturday cohort students are reminded to arrive <strong>15 minutes prior</strong> to allocated rehearsal slots. Studio Hall 1 (Piano Lab) and Studio Hall 2 (Acoustic Strings & Ensemble Room) have been pre-tuned for ensemble play.</p>
                 
                 <div style='background: #fff8f3; border-left: 4px solid #c96b32; padding: 14px 18px; margin: 18px 0; border-radius: 0 8px 8px 0;'>
-                    <strong style='color: #0b0b0b;'>💡 Rehearsal Note from Artistic Director:</strong>
+                    <strong style='color: #0b0b0b;'>Artistic Director's Rehearsal Note:</strong>
                     <p style='margin: 4px 0 0; font-size: 13.5px; color: #5c5954;'>Sight-reading candidates for Grade 3–5 ABRSM examinations should review harmonic minor scales and dynamic articulation before Thursday evening coaching.</p>
                 </div>
 
@@ -290,66 +290,40 @@ if ($method === 'GET') {
             $lastError = null;
 
             $serviceCtasHtml = "
-                <div style='margin-top: 36px; padding-top: 24px; border-top: 2px solid #ede8e0;'>
-                    <div style='text-align: center; margin-bottom: 20px;'>
-                        <span style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #c96b32; background: #fff5ee; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffd8c0; display: inline-block;'>
-                            Vivadoxa Creative Ecosystem
-                        </span>
-                        <h3 style='margin: 8px 0 4px; font-size: 18px; font-weight: 700; color: #0b0b0b;'>
-                            Programs &amp; Professional Services
-                        </h3>
-                        <p style='margin: 0; font-size: 13px; color: #78716c;'>
-                            Instruction, luthier clinic, concert sound fleet, and studio recording
-                        </p>
+                <div style='margin-top: 26px; padding-top: 18px; border-top: 1px solid #e7e2d9;'>
+                    <div style='font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #8a847c; margin-bottom: 10px;'>
+                        Vivadoxa Services &amp; Programs
                     </div>
 
-                    <!-- Service Cards Table Grid (Universal Email Friendly) -->
-                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='margin-bottom: 12px;'>
+                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='font-size: 12px; color: #44403c;'>
                         <tr>
-                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🎓 Music Academy</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>17 Instrument Cohorts</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Graded tuition across piano, violin, guitar, saxophone, drums, voice & theory. Onsite, home or online.</p>
-                                <a href='https://www.vivadoxamusic.com/apply' target='_blank' style='display: inline-block; background-color: #c96b32; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Apply / Enroll &rarr;</a>
+                            <td width='50%' style='padding: 5px 10px 5px 0; border-bottom: 1px solid #f2ede4; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Music Academy</span> &middot; 17 Cohorts
+                                <div style='margin-top: 2px;'><a href='https://www.vivadoxamusic.com/apply' target='_blank' style='color: #c96b32; text-decoration: none; font-size: 11px; font-weight: 600;'>Apply / Enroll &rarr;</a></div>
                             </td>
-                            <td width='4%'>&nbsp;</td>
-                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🔧 Instrument Clinic</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Luthier &amp; Repair Care</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Precision setups, fret leveling, electronics, piano tuning, brass overhaul & diagnostics.</p>
-                                <a href='https://www.vivadoxamusic.com/repairs' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Book Repair &rarr;</a>
+                            <td width='50%' style='padding: 5px 0 5px 10px; border-bottom: 1px solid #f2ede4; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Instrument Clinic</span> &middot; Luthier Care
+                                <div style='margin-top: 2px;'><a href='https://www.vivadoxamusic.com/repairs' target='_blank' style='color: #c96b32; text-decoration: none; font-size: 11px; font-weight: 600;'>Book Repair &rarr;</a></div>
                             </td>
                         </tr>
-                        <tr><td height='12' colspan='3'></td></tr>
                         <tr>
-                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🔊 Sound &amp; Gear Rentals</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Concert Fleet &amp; Backline</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Stage pianos, acoustic/electronic drum kits, powered PA line arrays, and wireless microphones.</p>
-                                <a href='https://www.vivadoxamusic.com/rentals' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Browse Rentals &rarr;</a>
+                            <td width='50%' style='padding: 5px 10px 5px 0; border-bottom: 1px solid #f2ede4; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Rentals &amp; Backline</span> &middot; Concert Fleet
+                                <div style='margin-top: 2px;'><a href='https://www.vivadoxamusic.com/rentals' target='_blank' style='color: #c96b32; text-decoration: none; font-size: 11px; font-weight: 600;'>Browse Rentals &rarr;</a></div>
                             </td>
-                            <td width='4%'>&nbsp;</td>
-                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🛍️ Music Store</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Instruments &amp; Accessories</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Guitars, violins, keyboards, strings, reeds, audio cables, and musician gear.</p>
-                                <a href='https://www.vivadoxamusic.com/store' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Shop Store &rarr;</a>
+                            <td width='50%' style='padding: 5px 0 5px 10px; border-bottom: 1px solid #f2ede4; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Music Store</span> &middot; Instruments &amp; Supplies
+                                <div style='margin-top: 2px;'><a href='https://www.vivadoxamusic.com/store' target='_blank' style='color: #c96b32; text-decoration: none; font-size: 11px; font-weight: 600;'>Shop Catalog &rarr;</a></div>
                             </td>
                         </tr>
-                        <tr><td height='12' colspan='3'></td></tr>
                         <tr>
-                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🎙️ Recording &amp; Rehearsal</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Acoustic Live Studio</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Sound-isolated band rehearsal hall, vocal booth, multi-track recording & mixing suite.</p>
-                                <a href='https://www.vivadoxamusic.com/studio' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Book Studio &rarr;</a>
+                            <td width='50%' style='padding: 5px 10px 5px 0; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Studio &amp; Rehearsal</span> &middot; Live Room
+                                <div style='margin-top: 2px;'><a href='https://www.vivadoxamusic.com/studio' target='_blank' style='color: #c96b32; text-decoration: none; font-size: 11px; font-weight: 600;'>Book Studio &rarr;</a></div>
                             </td>
-                            <td width='4%'>&nbsp;</td>
-                            <td width='48%' style='background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; vertical-align: top;'>
-                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #16a34a; margin-bottom: 4px;'>💬 WhatsApp Concierge</div>
-                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Direct Support Desk</div>
-                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Chat directly with our instructors, sound engineers, or repair techs in real time.</p>
-                                <a href='https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Music%2C%20I%20am%20enquiring%20about%20your%20services' target='_blank' style='display: inline-block; background-color: #16a34a; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Chat on WhatsApp &rarr;</a>
+                            <td width='50%' style='padding: 5px 0 5px 10px; vertical-align: top;'>
+                                <span style='font-weight: 700; color: #0b0b0b;'>Client Concierge</span> &middot; WhatsApp
+                                <div style='margin-top: 2px;'><a href='https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Music%2C%20I%20am%20enquiring%20about%20your%20services' target='_blank' style='color: #16a34a; text-decoration: none; font-size: 11px; font-weight: 600;'>Chat with Desk &rarr;</a></div>
                             </td>
                         </tr>
                     </table>
@@ -382,6 +356,8 @@ if ($method === 'GET') {
                 $emailHtml = buildBrandedEmailTemplate([
                     'title' => $bulletin['title'],
                     'badge' => $bulletin['edition'],
+                    'headerBadge' => $bulletin['category'] ?: 'Weekly Bulletin',
+                    'category' => $bulletin['category'] ?: 'Weekly Bulletin',
                     'headline' => $bulletin['title'],
                     'clientName' => $name,
                     'bodyHtml' => $bodyHtml,

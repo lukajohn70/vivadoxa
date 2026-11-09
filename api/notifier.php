@@ -185,6 +185,15 @@ function buildBrandedEmailTemplate(array $params): string {
     $deptName    = htmlspecialchars($params['deptName'] ?? 'Vivadoxa Music');
     $deptEmail   = htmlspecialchars($params['deptEmail'] ?? 'info@vivadoxamusic.com');
 
+    // Header badge on the top right must always be a concise tag/category, never an overflowing full article title
+    $headerBadge = !empty($params['headerBadge'])
+        ? htmlspecialchars($params['headerBadge'])
+        : (!empty($params['category'])
+            ? htmlspecialchars($params['category'])
+            : (!empty($params['badge']) && strlen($params['badge']) <= 25
+                ? htmlspecialchars($params['badge'])
+                : 'Weekly Bulletin'));
+
     // Official logo & portal URLs
     $settings    = getGeneralSettingsConfig();
     $logoUrl     = !empty($params['logoUrl']) ? $params['logoUrl'] : (!empty($settings['logoUrl']) ? $settings['logoUrl'] : 'https://www.vivadoxamusic.com/vivadoxa-logo.png');
@@ -234,8 +243,8 @@ function buildBrandedEmailTemplate(array $params): string {
                                             </a>
                                             <div style='font-size: 10px; font-weight: 700; color: #f2a672; text-transform: uppercase; letter-spacing: 2px; margin-top: 6px;'>{$badge}</div>
                                         </td>
-                                        <td align='right' style='vertical-align: middle;'>
-                                            <span style='background: rgba(201, 107, 50, 0.2); border: 1px solid rgba(201, 107, 50, 0.5); color: #f2a672; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 5px 12px; border-radius: 6px; display: inline-block; white-space: nowrap;'>{$title}</span>
+                                        <td align='right' style='vertical-align: middle; padding-left: 14px;'>
+                                            <span style='background: rgba(201, 107, 50, 0.18); border: 1px solid rgba(201, 107, 50, 0.45); color: #f2a672; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 5px 12px; border-radius: 6px; display: inline-block; white-space: nowrap;'>{$headerBadge}</span>
                                         </td>
                                     </tr>
                                 </table>

@@ -78,7 +78,7 @@ export function AdminBulletinView({
 <h3>1. Rehearsal & Timetable Announcements</h3>
 <p>Please review your cohort schedule for upcoming studio sessions and ensemble practice.</p>
 <div style="background: #fff8f3; border-left: 4px solid #c96b32; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0;">
-  <strong>💡 Tip of the Week:</strong> Warm up with 5 minutes of chromatic scales and diaphragm support exercises before jumping into repertoire.
+  <strong>Tip of the Week:</strong> Warm up with 5 minutes of chromatic scales and diaphragm support exercises before jumping into repertoire.
 </div>
 <h3>2. Studio & Workshop Highlights</h3>
 <p>Our luthier desk is accepting instruments for seasonal maintenance and restringing.</p>`
@@ -1246,250 +1246,71 @@ export function AdminBulletinView({
                           dangerouslySetInnerHTML={{ __html: contentHtml }}
                         />
 
-                        {/* Service CTAs Footer Block */}
+                        {/* Service Directory Footer */}
                         <div
                           style={{
-                            marginTop: 28,
-                            paddingTop: 20,
-                            borderTop: "2px solid #ede8e0",
+                            marginTop: 26,
+                            paddingTop: 18,
+                            borderTop: "1px solid #e7e2d9",
                           }}
                         >
-                          <div style={{ textAlign: "center", marginBottom: 18 }}>
-                            <span
-                              style={{
-                                fontSize: 10,
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                letterSpacing: 1.5,
-                                color: "#c96b32",
-                                background: "#fff5ee",
-                                padding: "3px 10px",
-                                borderRadius: 20,
-                                border: "1px solid #ffd8c0",
-                                display: "inline-block",
-                              }}
-                            >
-                              Vivadoxa Creative Ecosystem
-                            </span>
-                            <h3
-                              style={{
-                                margin: "6px 0 2px",
-                                fontSize: 16,
-                                fontWeight: 700,
-                                color: "#0b0b0b",
-                              }}
-                            >
-                              Programs &amp; Professional Services
-                            </h3>
-                            <p style={{ margin: 0, fontSize: 12, color: "#78716c" }}>
-                              Instruction, luthier clinic, concert sound fleet, and studio recording
-                            </p>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: 1.5,
+                              color: "#8a847c",
+                              marginBottom: 10,
+                            }}
+                          >
+                            Vivadoxa Services &amp; Programs
                           </div>
 
                           <div
                             style={{
                               display: "grid",
                               gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                              gap: 10,
-                              marginBottom: 16,
+                              gap: "8px 16px",
+                              fontSize: 12,
+                              color: "#44403c",
                             }}
                           >
-                            {/* Card 1: Academy */}
-                            <div
-                              style={{
-                                background: "#faf8f5",
-                                border: "1px solid #ede8e0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#c96b32", marginBottom: 2 }}>
-                                🎓 Music Academy
+                            <div style={{ paddingBottom: 6, borderBottom: "1px solid #f2ede4" }}>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Music Academy</span> · 17 Cohorts
+                              <div>
+                                <span style={{ color: "#c96b32", fontWeight: 600, fontSize: 11 }}>Apply / Enroll &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                17 Instrument Cohorts
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Graded tuition across piano, violin, guitar, saxophone, drums, voice &amp; theory.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#c96b32",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                Apply / Enroll &rarr;
-                              </span>
                             </div>
-
-                            {/* Card 2: Clinic */}
-                            <div
-                              style={{
-                                background: "#faf8f5",
-                                border: "1px solid #ede8e0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#c96b32", marginBottom: 2 }}>
-                                🔧 Instrument Clinic
+                            <div style={{ paddingBottom: 6, borderBottom: "1px solid #f2ede4" }}>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Instrument Clinic</span> · Luthier Care
+                              <div>
+                                <span style={{ color: "#c96b32", fontWeight: 600, fontSize: 11 }}>Book Repair &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                Luthier &amp; Repair Care
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Setups, fret leveling, electronics, piano tuning, brass overhaul &amp; diagnostics.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#0b0b0b",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                Book Repair &rarr;
-                              </span>
                             </div>
-
-                            {/* Card 3: Rentals */}
-                            <div
-                              style={{
-                                background: "#faf8f5",
-                                border: "1px solid #ede8e0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#c96b32", marginBottom: 2 }}>
-                                🔊 Sound &amp; Gear Rentals
+                            <div style={{ paddingBottom: 6, borderBottom: "1px solid #f2ede4" }}>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Rentals &amp; Backline</span> · Concert Fleet
+                              <div>
+                                <span style={{ color: "#c96b32", fontWeight: 600, fontSize: 11 }}>Browse Rentals &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                Concert Fleet &amp; Backline
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Stage pianos, drum kits, powered line arrays, monitors &amp; wireless mics.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#0b0b0b",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                Browse Rentals &rarr;
-                              </span>
                             </div>
-
-                            {/* Card 4: Store */}
-                            <div
-                              style={{
-                                background: "#faf8f5",
-                                border: "1px solid #ede8e0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#c96b32", marginBottom: 2 }}>
-                                🛍️ Music Store
+                            <div style={{ paddingBottom: 6, borderBottom: "1px solid #f2ede4" }}>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Music Store</span> · Gear &amp; Supplies
+                              <div>
+                                <span style={{ color: "#c96b32", fontWeight: 600, fontSize: 11 }}>Shop Catalog &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                Instruments &amp; Accessories
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Guitars, violins, keyboards, strings, reeds, tuners, stands &amp; audio cables.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#0b0b0b",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                Shop Store &rarr;
-                              </span>
                             </div>
-
-                            {/* Card 5: Studio */}
-                            <div
-                              style={{
-                                background: "#faf8f5",
-                                border: "1px solid #ede8e0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#c96b32", marginBottom: 2 }}>
-                                🎙️ Recording &amp; Rehearsal
+                            <div>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Studio &amp; Rehearsal</span> · Live Room
+                              <div>
+                                <span style={{ color: "#c96b32", fontWeight: 600, fontSize: 11 }}>Book Studio &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                Acoustic Live Studio
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Sound-isolated band rehearsal hall, vocal booth &amp; multi-track studio.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#0b0b0b",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                Book Studio &rarr;
-                              </span>
                             </div>
-
-                            {/* Card 6: WhatsApp Concierge */}
-                            <div
-                              style={{
-                                background: "#f0fdf4",
-                                border: "1px solid #bbf7d0",
-                                borderRadius: 8,
-                                padding: 12,
-                              }}
-                            >
-                              <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: "#16a34a", marginBottom: 2 }}>
-                                💬 WhatsApp Concierge
+                            <div>
+                              <span style={{ fontWeight: 700, color: "#0b0b0b" }}>Client Concierge</span> · WhatsApp
+                              <div>
+                                <span style={{ color: "#16a34a", fontWeight: 600, fontSize: 11 }}>Chat with Desk &rarr;</span>
                               </div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0b0b", marginBottom: 4 }}>
-                                Direct Support Desk
-                              </div>
-                              <p style={{ margin: "0 0 8px", fontSize: 11, color: "#5c5954", lineHeight: 1.4 }}>
-                                Chat directly with instructors, sound engineers or repair techs in real time.
-                              </p>
-                              <span
-                                style={{
-                                  display: "inline-block",
-                                  background: "#16a34a",
-                                  color: "#fff",
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  padding: "4px 9px",
-                                  borderRadius: 5,
-                                }}
-                              >
-                                WhatsApp Us &rarr;
-                              </span>
                             </div>
                           </div>
                         </div>

@@ -209,7 +209,7 @@ function generateAndSend2FACode(
     // Send the email (do not BCC official gmail to preserve privacy of OTP codes)
     sendSystemEmail(
         $email,
-        "🔐 {$code} is your Vivadoxa sign-in code",
+        "{$code} is your Vivadoxa sign-in verification code",
         $emailTemplate,
         null,
         'security',
