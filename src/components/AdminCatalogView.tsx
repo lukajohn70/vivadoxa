@@ -268,6 +268,315 @@ export function ShopAndRentalsView({
 
   return (
     <div className="space-y-6">
+      {showItemModal ? (
+        /* ── Add / Edit Item Dedicated Page ────────────────────────── */
+        <div
+          className="admin-page-view"
+          style={{
+            maxWidth: 820,
+            margin: "0 auto",
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowItemModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to {activeSubTab === "store" ? "Store Inventory" : "Rental Fleet"}
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {editingItem ? "Edit Item" : "Add New Item"}
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                {editingItem
+                  ? `Edit ${activeSubTab === "store" ? "Store Product" : "Rental Gear"}`
+                  : `Add ${activeSubTab === "store" ? "New Product" : "New Rental Gear"}`}
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--muted)" }}>
+                Enter details for the public showcase. No prices will be displayed publicly.
+              </p>
+            </div>
+
+            <form onSubmit={handleSave}>
+              <div style={{ padding: "28px 32px" }} className="space-y-5">
+                <Field
+                  label="Item Name"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="e.g. Yamaha F310 Natural Dreadnought Acoustic Guitar"
+                  required
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
+                      Category
+                    </label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
+                    >
+                      {activeCategories
+                        .filter((c) => c !== "all")
+                        .map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {activeSubTab === "store" ? (
+                    <Field
+                      label="Brand / Manufacturer"
+                      value={formBrand}
+                      onChange={(e) => setFormBrand(e.target.value)}
+                      placeholder="e.g. Yamaha, Fender, D'Addario"
+                    />
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
+                        Rental Fleet Type
+                      </label>
+                      <select
+                        value={formRentalType}
+                        onChange={(e) =>
+                          setFormRentalType(e.target.value as "student" | "event")
+                        }
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
+                      >
+                        <option value="student">Student Home Practice</option>
+                        <option value="event">Stage &amp; Event Backline</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {activeSubTab === "store" && (
+                  <Field
+                    label="Badge Label (Optional)"
+                    value={formBadge}
+                    onChange={(e) => setFormBadge(e.target.value)}
+                    placeholder="e.g. Bestseller, Faculty Choice, French Import"
+                  />
+                )}
+
+                {activeSubTab === "rentals" && (
+                  <Field
+                    label="Recommended For / Ideal Usage"
+                    value={formRecommendedFor}
+                    onChange={(e) => setFormRecommendedFor(e.target.value)}
+                    placeholder="e.g. Beginner violin scholars, Sunday service recitals"
+                  />
+                )}
+
+                {/* Image URL & quick presets */}
+                <div>
+                  <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
+                    Image Path / URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formImage}
+                    onChange={(e) => setFormImage(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
+                    placeholder="/media/programs/guitar-acoustic-recital.jpeg"
+                    required
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1.5 text-[10px] text-slate-500">
+                    <span>Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormImage("/media/programs/guitar-acoustic-recital.jpeg")
+                      }
+                      className="underline hover:text-[var(--gold)]"
+                    >
+                      Guitar
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormImage("/media/programs/violin-solo-rainbow.jpeg")
+                      }
+                      className="underline hover:text-[var(--gold)]"
+                    >
+                      Violin
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormImage("/media/programs/piano-syllabus.jpeg")
+                      }
+                      className="underline hover:text-[var(--gold)]"
+                    >
+                      Piano
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormImage("/media/programs/sax-solo-grey.jpeg")
+                      }
+                      className="underline hover:text-[var(--gold)]"
+                    >
+                      Sax
+                    </button>
+                    <span>·</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormImage("/media/programs/drums-tama-red.jpeg")
+                      }
+                      className="underline hover:text-[var(--gold)]"
+                    >
+                      Drums
+                    </button>
+                  </div>
+                  {/* 4:3 image preview matching catalog showcase cards */}
+                  <div className="mt-3 w-48 aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)]">
+                    <img
+                      src={formImage}
+                      alt="Image preview"
+                      className="w-full h-full object-cover"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e) => {
+                        ;(e.target as HTMLImageElement).style.opacity = "0.2"
+                      }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">4:3 preview — as it appears on showcase cards</p>
+                </div>
+
+                {activeSubTab === "store" ? (
+                  <Field
+                    label="Clinic Setup Guarantee Note"
+                    value={formSetupNote}
+                    onChange={(e) => setFormSetupNote(e.target.value)}
+                    placeholder="e.g. Fret leveling, low-action string tension adjustment completed"
+                  />
+                ) : null}
+
+                <Textarea
+                  label={
+                    activeSubTab === "store"
+                      ? "Specifications (One per line)"
+                      : "Included Accessories / Features (One per line)"
+                  }
+                  value={formSpecs}
+                  onChange={(e) => setFormSpecs(e.target.value)}
+                  placeholder={"Spruce top with rosewood fretboard\nDie-cast chrome tuners\nIncludes padded gig bag"}
+                  rows={4}
+                />
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="formInStockCheck"
+                    checked={formInStock}
+                    onChange={(e) => setFormInStock(e.target.checked)}
+                    className="rounded text-[var(--gold)] focus:ring-[var(--gold)]"
+                  />
+                  <label
+                    htmlFor="formInStockCheck"
+                    className="text-xs font-semibold text-[var(--navy)] cursor-pointer"
+                  >
+                    Mark as Available / In Stock for immediate handover
+                  </label>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div
+                style={{
+                  padding: "16px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowItemModal(false)}
+                >
+                  ← Back to Showcase
+                </Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowItemModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving ? "Saving..." : editingItem ? "Update Item" : "Add to Showcase"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* ── SubTab Bar ─────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-[var(--line)] shadow-xs">
         <div className="flex items-center gap-2">
@@ -519,237 +828,7 @@ export function ShopAndRentalsView({
         </div>
       )}
 
-      {/* ── Add / Edit Modal ───────────────────────────────────────── */}
-      {showItemModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[var(--line)] relative max-h-[90vh] overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setShowItemModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-[var(--navy)] p-1.5 rounded-lg hover:bg-slate-100"
-              aria-label="Close"
-            >
-              <Icon name="close" size={18} />
-            </button>
-
-            <h3 className="font-bold text-base sm:text-lg text-[var(--navy)] mb-1">
-              {editingItem
-                ? `Edit ${activeSubTab === "store" ? "Store Product" : "Rental Gear"}`
-                : `Add ${activeSubTab === "store" ? "New Product" : "New Rental Gear"}`}
-            </h3>
-            <p className="text-xs text-[var(--muted)] mb-5">
-              Enter details for the public showcase. No prices will be displayed publicly.
-            </p>
-
-            <form onSubmit={handleSave} className="space-y-4">
-              <Field
-                label="Item Name"
-                value={formName}
-                onChange={(e) => setFormName(e.target.value)}
-                placeholder="e.g. Yamaha F310 Natural Dreadnought Acoustic Guitar"
-                required
-              />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
-                    Category
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
-                  >
-                    {activeCategories
-                      .filter((c) => c !== "all")
-                      .map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                {activeSubTab === "store" ? (
-                  <Field
-                    label="Brand / Manufacturer"
-                    value={formBrand}
-                    onChange={(e) => setFormBrand(e.target.value)}
-                    placeholder="e.g. Yamaha, Fender, D'Addario"
-                  />
-                ) : (
-                  <div>
-                    <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
-                      Rental Fleet Type
-                    </label>
-                    <select
-                      value={formRentalType}
-                      onChange={(e) =>
-                        setFormRentalType(e.target.value as "student" | "event")
-                      }
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
-                    >
-                      <option value="student">Student Home Practice</option>
-                      <option value="event">Stage &amp; Event Backline</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              {activeSubTab === "store" && (
-                <Field
-                  label="Badge Label (Optional)"
-                  value={formBadge}
-                  onChange={(e) => setFormBadge(e.target.value)}
-                  placeholder="e.g. Bestseller, Faculty Choice, French Import"
-                />
-              )}
-
-              {activeSubTab === "rentals" && (
-                <Field
-                  label="Recommended For / Ideal Usage"
-                  value={formRecommendedFor}
-                  onChange={(e) => setFormRecommendedFor(e.target.value)}
-                  placeholder="e.g. Beginner violin scholars, Sunday service recitals"
-                />
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
-                  Image Path / URL
-                </label>
-                <input
-                    type="text"
-                    value={formImage}
-                    onChange={(e) => setFormImage(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
-                    placeholder="/media/programs/guitar-acoustic-recital.jpeg"
-                    required
-                  />
-                <div className="flex flex-wrap gap-1 mt-1.5 text-[10px] text-slate-500">
-                  <span>Presets:</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormImage("/media/programs/guitar-acoustic-recital.jpeg")
-                    }
-                    className="underline hover:text-[var(--gold)]"
-                  >
-                    Guitar
-                  </button>
-                  <span>·</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormImage("/media/programs/violin-solo-rainbow.jpeg")
-                    }
-                    className="underline hover:text-[var(--gold)]"
-                  >
-                    Violin
-                  </button>
-                  <span>·</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormImage("/media/programs/piano-syllabus.jpeg")
-                    }
-                    className="underline hover:text-[var(--gold)]"
-                  >
-                    Piano
-                  </button>
-                  <span>·</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormImage("/media/programs/sax-solo-grey.jpeg")
-                    }
-                    className="underline hover:text-[var(--gold)]"
-                  >
-                    Sax
-                  </button>
-                  <span>·</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormImage("/media/programs/drums-tama-red.jpeg")
-                    }
-                    className="underline hover:text-[var(--gold)]"
-                  >
-                    Drums
-                  </button>
-                </div>
-                {/* 4:3 image preview matching catalog showcase cards */}
-                <div className="mt-2 w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)]">
-                  <img
-                    src={formImage}
-                    alt="Image preview"
-                    className="w-full h-full object-cover"
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={(e) => {
-                      ;(e.target as HTMLImageElement).style.opacity = "0.2"
-                    }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400 mt-1">4:3 preview — as it appears on showcase cards</p>
-              </div>
-
-              {activeSubTab === "store" ? (
-                <Field
-                  label="Clinic Setup Guarantee Note"
-                  value={formSetupNote}
-                  onChange={(e) => setFormSetupNote(e.target.value)}
-                  placeholder="e.g. Fret leveling, low-action string tension adjustment completed"
-                />
-              ) : null}
-
-              <Textarea
-                label={
-                  activeSubTab === "store"
-                    ? "Specifications (One per line)"
-                    : "Included Accessories / Features (One per line)"
-                }
-                value={formSpecs}
-                onChange={(e) => setFormSpecs(e.target.value)}
-                placeholder={"Spruce top with rosewood fretboard\nDie-cast chrome tuners\nIncludes padded gig bag"}
-                rows={3}
-              />
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="formInStockCheck"
-                  checked={formInStock}
-                  onChange={(e) => setFormInStock(e.target.checked)}
-                  className="rounded text-[var(--gold)] focus:ring-[var(--gold)]"
-                />
-                <label
-                  htmlFor="formInStockCheck"
-                  className="text-xs font-semibold text-[var(--navy)] cursor-pointer"
-                >
-                  Mark as Available / In Stock for immediate handover
-                </label>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--line)]">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowItemModal(false)}
-                  className="!text-xs"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving} className="!text-xs">
-                  {saving ? "Saving..." : editingItem ? "Update Item" : "Add to Showcase"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )

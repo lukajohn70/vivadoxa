@@ -278,6 +278,290 @@ export function AdminGalleryView({
 
   return (
     <div className="space-y-6">
+      {showModal ? (
+        /* ── Add / Edit Photo Dedicated Page ────────────────────────── */
+        <div
+          className="admin-page-view"
+          style={{
+            maxWidth: 860,
+            margin: "0 auto",
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Gallery
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {editingItem ? "Edit Photo" : "Add New Photo"}
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                {editingItem ? "Edit Gallery Photo" : "Add New Gallery Photo"}
+              </h2>
+            </div>
+
+            <form onSubmit={handleSave}>
+              <div style={{ padding: "28px 32px" }} className="space-y-5">
+                {/* Photo Upload & Preview */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Photo Asset *
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-5 items-start">
+                    <div
+                      className="rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative shrink-0"
+                      style={{
+                        width: "160px",
+                        height: "124px",
+                        minWidth: "160px",
+                        maxWidth: "160px",
+                      }}
+                    >
+                      {formImage ? (
+                        <img
+                          src={formImage}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <Icon
+                          name="image"
+                          size={36}
+                          className="text-slate-300"
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex-1 space-y-2.5 w-full">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="w-full sm:w-auto text-xs flex items-center gap-2 justify-center"
+                      >
+                        <Icon name="upload" size={14} />
+                        <span>{uploading ? "Uploading…" : "Upload from Computer"}</span>
+                      </Button>
+                      <p className="text-[11px] text-slate-400">
+                        Supports high-res JPG, PNG, or WebP.
+                      </p>
+
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Or enter image URL path (e.g. /media/gallery/...)"
+                          value={formImage}
+                          onChange={(e) => setFormImage(e.target.value)}
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--gold)]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Title / Subject *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Youth Alto Saxophone Soloist"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
+                  />
+                </div>
+
+                {/* Category & Date in grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Category *
+                    </label>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
+                    >
+                      {DEFAULT_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                      <option value="Custom">+ Custom Category</option>
+                    </select>
+                    {formCategory === "Custom" && (
+                      <input
+                        type="text"
+                        placeholder="Type category name"
+                        value={formCustomCategory}
+                        onChange={(e) => setFormCustomCategory(e.target.value)}
+                        className="mt-2 w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Date / Session Tag
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. October 2026"
+                      value={formDate}
+                      onChange={(e) => setFormDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
+                    />
+                  </div>
+                </div>
+
+                {/* Caption */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Story Caption / Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Describe the moment, musical technique, instrument model, or student achievement..."
+                    value={formCaption}
+                    onChange={(e) => setFormCaption(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
+                  />
+                </div>
+
+                {/* Featured toggle */}
+                <div
+                  className="flex items-center gap-3 p-3.5 rounded-xl border"
+                  style={{
+                    background: "rgba(201,107,50,0.08)",
+                    borderColor: "rgba(201,107,50,0.25)",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    id="featured-toggle"
+                    checked={formFeatured}
+                    onChange={(e) => setFormFeatured(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300"
+                    style={{ accentColor: "var(--gold)" }}
+                  />
+                  <label
+                    htmlFor="featured-toggle"
+                    className="text-xs font-semibold text-slate-800 cursor-pointer"
+                  >
+                    Mark as Featured Highlight
+                    <span className="block text-[11px] font-normal text-slate-500">
+                      Featured photos get highlighted status and priority placement on the academy website.
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div
+                style={{
+                  padding: "16px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowModal(false)}
+                >
+                  ← Back to Gallery
+                </Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={saving}>
+                    {saving ? "Saving…" : editingItem ? "Update Photo" : "Add to Gallery"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* ── Summary & Actions Bar ────────────────────────────────────────── */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -529,199 +813,8 @@ export function AdminGalleryView({
         </div>
       )}
 
-      {/* ── Add / Edit Photo Modal ────────────────────────────────────────── */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-fadeIn">
-          <div
-            className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
-              <h3 className="text-lg font-bold font-serif text-slate-900">
-                {editingItem ? "Edit Gallery Photo" : "Add New Gallery Photo"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <Icon name="close" size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-4">
-              {/* Photo Upload & Preview */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Photo Asset
-                </label>
-                <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  <div
-                    className="w-36 h-28 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center relative shrink-0"
-                    style={{ width: "144px", height: "112px", minWidth: "144px", maxWidth: "144px" }}
-                  >
-                    {formImage ? (
-                      <img
-                        src={formImage}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <Icon name="image" size={32} className="text-slate-300" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 space-y-2 w-full">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="w-full sm:w-auto text-xs flex items-center gap-2 justify-center"
-                    >
-                      <Icon name="upload" size={14} />
-                      <span>{uploading ? "Uploading…" : "Upload from Computer"}</span>
-                    </Button>
-                    <p className="text-[11px] text-slate-400">
-                      Supports high-res JPG, PNG, or WebP.
-                    </p>
-
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Or enter image URL path (e.g. /media/gallery/...)"
-                        value={formImage}
-                        onChange={(e) => setFormImage(e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--gold)]"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Title */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Title / Subject *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Youth Alto Saxophone Soloist"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
-                />
-              </div>
-
-              {/* Category & Date in grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Category *
-                  </label>
-                  <select
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
-                  >
-                    {DEFAULT_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                    <option value="Custom">+ Custom Category</option>
-                  </select>
-                  {formCategory === "Custom" && (
-                    <input
-                      type="text"
-                      placeholder="Type category name"
-                      value={formCustomCategory}
-                      onChange={(e) => setFormCustomCategory(e.target.value)}
-                      className="mt-2 w-full px-3 py-1.5 text-xs border border-slate-200 rounded-md"
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Date / Session Tag
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. October 2026"
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
-                  />
-                </div>
-              </div>
-
-              {/* Caption */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Story Caption / Description
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Describe the moment, musical technique, instrument model, or student achievement..."
-                  value={formCaption}
-                  onChange={(e) => setFormCaption(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--gold)]"
-                />
-              </div>
-
-              {/* Featured toggle */}
-              <div
-                className="flex items-center gap-3 p-3 rounded-xl border"
-                style={{
-                  background: "rgba(201,107,50,0.08)",
-                  borderColor: "rgba(201,107,50,0.25)",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  id="featured-toggle"
-                  checked={formFeatured}
-                  onChange={(e) => setFormFeatured(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300"
-                  style={{ accentColor: "var(--gold)" }}
-                />
-                <label
-                  htmlFor="featured-toggle"
-                  className="text-xs font-semibold text-slate-800 cursor-pointer"
-                >
-                  Mark as Featured Highlight
-                  <span className="block text-[11px] font-normal text-slate-500">
-                    Featured photos get highlighted status and priority placement.
-                  </span>
-                </label>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" disabled={saving}>
-                  {saving ? "Saving…" : editingItem ? "Update Photo" : "Add to Gallery"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* ── End Gallery Table/Grid View ── */}
+        </>
       )}
 
       {/* ── Delete Confirmation Modal ────────────────────────────────────── */}

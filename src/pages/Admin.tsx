@@ -4670,55 +4670,38 @@ function AdminManager({ title }: { title: string }) {
                         <small>Phone Number</small>
                         <strong>{selectedRecord.phone}</strong>
                       </div>
-                      <div
-                        style={{
-                          gridColumn: "1 / -1",
-                          display: "flex",
-                          gap: 10,
-                          padding: "6px 0 2px",
-                        }}
-                      >
-                        <a
-                          href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.first_name || "")},%20this%20is%20Vivadoxa%20Music%20Academy%20regarding%20your%20application%20(${selectedRecord.application_no}).`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {selectedRecord.phone && (
+                        <div
                           style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: "rgba(37, 211, 102, 0.15)",
-                            color: "#075e54",
-                            border: "1px solid rgba(37, 211, 102, 0.35)",
-                            textDecoration: "none",
+                            gridColumn: "1 / -1",
+                            display: "flex",
+                            gap: 10,
+                            padding: "6px 0 2px",
                           }}
                         >
-                          <WhatsAppIcon size={14} fill="#075e54" />
-                          Chat on WhatsApp
-                        </a>
-                        <a
-                          href={`mailto:${selectedRecord.email}?subject=Vivadoxa%20Music%20Academy%20Admission%20Application%20${selectedRecord.application_no}`}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: "rgba(201, 107, 50, 0.12)",
-                            color: "#a24a18",
-                            border: "1px solid rgba(201, 107, 50, 0.3)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <Icon name="mail" size={14} />
-                          Email Candidate
-                        </a>
-                      </div>
+                          <a
+                            href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.first_name || "")},%20this%20is%20Vivadoxa%20Music%20Academy%20regarding%20your%20application%20(${selectedRecord.application_no}).`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              padding: "6px 12px",
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: "rgba(37, 211, 102, 0.15)",
+                              color: "#075e54",
+                              border: "1px solid rgba(37, 211, 102, 0.35)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <WhatsAppIcon size={14} fill="#075e54" />
+                            Chat on WhatsApp
+                          </a>
+                        </div>
+                      )}
                       <div>
                         <small>Home Address</small>
                         <strong>{selectedRecord.address || "Kaduna"}</strong>
@@ -4969,15 +4952,15 @@ function AdminManager({ title }: { title: string }) {
                     <small>Bank Narration / Notes</small>
                     <strong>{selectedRecord.notes || "—"}</strong>
                   </div>
-                  <div
-                    style={{
-                      gridColumn: "1/-1",
-                      display: "flex",
-                      gap: 10,
-                      paddingTop: 8,
-                    }}
-                  >
-                    {selectedRecord.payer_phone && (
+                  {selectedRecord.payer_phone && (
+                    <div
+                      style={{
+                        gridColumn: "1/-1",
+                        display: "flex",
+                        gap: 10,
+                        paddingTop: 8,
+                      }}
+                    >
                       <a
                         href={`https://wa.me/${(selectedRecord.payer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.payer_name || "")},%20this%20is%20Vivadoxa%20Accounts%20regarding%20your%20payment%20(Ref:%20${selectedRecord.reference}).`}
                         target="_blank"
@@ -4999,27 +4982,8 @@ function AdminManager({ title }: { title: string }) {
                         <WhatsAppIcon size={14} fill="#075e54" />
                         WhatsApp Payer
                       </a>
-                    )}
-                    <a
-                      href={`mailto:${selectedRecord.payer_email}?subject=Vivadoxa%20Music%20Academy%20Payment%20Receipt%20${selectedRecord.reference}`}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "6px 12px",
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        background: "rgba(201, 107, 50, 0.12)",
-                        color: "#a24a18",
-                        border: "1px solid rgba(201, 107, 50, 0.3)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Icon name="mail" size={14} />
-                      Email Receipt
-                    </a>
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -5103,35 +5067,16 @@ function AdminManager({ title }: { title: string }) {
                         <strong>{selectedRecord.customer_email || "—"}</strong>
                       </div>
                     </div>
-                    <div style={{ marginTop: 14 }}>
-                      <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8, fontWeight: 600 }}>
-                        Optional Direct Follow-ups (Customer is auto-notified by email upon stage updates):
-                      </div>
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                        <a
-                          href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "7px 14px",
-                            borderRadius: 6,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: "rgba(37, 211, 102, 0.15)",
-                            color: "#075e54",
-                            border: "1px solid rgba(37, 211, 102, 0.35)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <WhatsAppIcon size={14} fill="#075e54" />
-                          WhatsApp Customer
-                        </a>
-                        {selectedRecord.customer_email && (
+                    {selectedRecord.customer_phone && (
+                      <div style={{ marginTop: 14 }}>
+                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8, fontWeight: 600 }}>
+                          Optional Direct Follow-ups (Customer is auto-notified by email upon stage updates):
+                        </div>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                           <a
-                            href={`mailto:${selectedRecord.customer_email}?subject=Vivadoxa%20Workshop%20Repair%20Ticket%20${selectedRecord.tracking_code}`}
+                            href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
@@ -5140,18 +5085,18 @@ function AdminManager({ title }: { title: string }) {
                               borderRadius: 6,
                               fontSize: 12,
                               fontWeight: 700,
-                              background: "rgba(201, 107, 50, 0.12)",
-                              color: "#a24a18",
-                              border: "1px solid rgba(201, 107, 50, 0.3)",
+                              background: "rgba(37, 211, 102, 0.15)",
+                              color: "#075e54",
+                              border: "1px solid rgba(37, 211, 102, 0.35)",
                               textDecoration: "none",
                             }}
                           >
-                            <Icon name="mail" size={14} />
-                            Email Customer
+                            <WhatsAppIcon size={14} fill="#075e54" />
+                            WhatsApp Customer
                           </a>
-                        )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Section C — Instrument Details */}
@@ -5850,28 +5795,6 @@ function AdminManager({ title }: { title: string }) {
                         </span>
                       </button>
                     )}
-
-                    {selectedRecord.phone && (
-                      <a
-                        href={`https://wa.me/${selectedRecord.phone.replace(
-                          /[^0-9]/g,
-                          "",
-                        )}?text=${encodeURIComponent(
-                          `Hello ${selectedRecord.name}, thank you for reaching out to Vivadoxa regarding ${selectedRecord.subject}.`,
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn btn-secondary"
-                        style={{
-                          fontSize: 12,
-                          padding: "8px 16px",
-                          minHeight: 38,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <WhatsAppIcon size={14} /> Message on WhatsApp
-                      </a>
-                    )}
                   </div>
                 </div>
               )}
@@ -5908,15 +5831,15 @@ function AdminManager({ title }: { title: string }) {
                       <small>Primary Email</small>
                       <strong>{selectedRecord.email || "—"}</strong>
                     </div>
-                    <div
-                      style={{
-                        gridColumn: "1/-1",
-                        display: "flex",
-                        gap: 10,
-                        paddingTop: 4,
-                      }}
-                    >
-                      {selectedRecord.phone && (
+                    {selectedRecord.phone && (
+                      <div
+                        style={{
+                          gridColumn: "1/-1",
+                          display: "flex",
+                          gap: 10,
+                          paddingTop: 4,
+                        }}
+                      >
                         <a
                           href={`https://wa.me/${(selectedRecord.phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.full_name)},%20this%20is%20Vivadoxa%20Academy%20Academic%20Desk.`}
                           target="_blank"
@@ -5938,29 +5861,8 @@ function AdminManager({ title }: { title: string }) {
                           <WhatsAppIcon size={14} fill="#075e54" />
                           WhatsApp Student
                         </a>
-                      )}
-                      {selectedRecord.email && (
-                        <a
-                          href={`mailto:${selectedRecord.email}?subject=Vivadoxa%20Academy%20Student%20Notice%20(${selectedRecord.student_no})`}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 12px",
-                            borderRadius: 6,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: "rgba(201, 107, 50, 0.12)",
-                            color: "#a24a18",
-                            border: "1px solid rgba(201, 107, 50, 0.3)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <Icon name="mail" size={14} />
-                          Email Student
-                        </a>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   <div
@@ -6613,10 +6515,11 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {/* ── Document Modals ──────────────────────────────────────────────────── */}
+      {/* ── Document Dedicated Pages ────────────────────────────────────────── */}
       {showLetterModal && selectedRecord && (
         <AdmissionLetterModal
           data={selectedRecord}
+          isPage
           onClose={() => {
             setShowLetterModal(false)
             if (openedLetterFromTable) {
@@ -6630,6 +6533,7 @@ function AdminManager({ title }: { title: string }) {
       {showReceiptModal && selectedRecord && (
         <PaymentReceiptModal
           data={selectedRecord}
+          isPage
           onClose={() => setShowReceiptModal(false)}
         />
       )}

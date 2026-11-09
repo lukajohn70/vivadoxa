@@ -308,6 +308,231 @@ export function StaffAndRolesView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {showAddModal ? (
+        /* ── Add / Edit Staff Dedicated Page ────────────────────────── */
+        <div
+          className="admin-page-view"
+          style={{
+            maxWidth: 720,
+            margin: "0 auto",
+            width: "100%",
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Accounts
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  {editingAdmin ? "Edit Staff Account" : "Add Staff Administrator"}
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                {editingAdmin ? "Edit Staff Account" : "Add Staff Administrator"}
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--muted)" }}>
+                Configure administrative credentials, departmental role, and access scope.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveStaff}>
+              <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 18 }}>
+                {formError && (
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      background: "#fee2e2",
+                      border: "1px solid #f87171",
+                      borderRadius: 6,
+                      color: "#991b1b",
+                      fontSize: 12,
+                    }}
+                  >
+                    {formError}
+                  </div>
+                )}
+
+                <Field
+                  id="staff-name"
+                  label="Staff Full Name"
+                  value={name}
+                  onChange={setName}
+                  placeholder="e.g. Grace Danladi"
+                  required
+                />
+
+                <Field
+                  id="staff-email"
+                  label="Official Email or Username"
+                  value={email}
+                  onChange={setEmail}
+                  placeholder="e.g. grace@vivadoxa.ng"
+                  required
+                />
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      marginBottom: 5,
+                    }}
+                  >
+                    Assigned Administrative Role
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: 40,
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      padding: "0 10px",
+                      background: "white",
+                      fontSize: 13,
+                    }}
+                  >
+                    <option value="admissions">Admissions Officer</option>
+                    <option value="finance">Financial Officer</option>
+                    <option value="workshop">Workshop Lead</option>
+                    <option value="staff">General Academy Staff</option>
+                    <option value="superadmin">
+                      Super Administrator (Full Privileges)
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      marginBottom: 5,
+                    }}
+                  >
+                    {editingAdmin
+                      ? "Reset Password (leave blank to keep current)"
+                      : "Temporary Password"}
+                  </label>
+                  <input
+                    type="text"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={
+                      editingAdmin
+                        ? "Leave blank to keep unchanged"
+                        : "Create password"
+                    }
+                    style={{
+                      width: "100%",
+                      minHeight: 40,
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      padding: "0 10px",
+                      background: "white",
+                      fontSize: 13,
+                    }}
+                    required={!editingAdmin}
+                  />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div
+                style={{
+                  padding: "16px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  ← Back to Accounts
+                </Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowAddModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={saving}>
+                    {saving
+                      ? "Saving…"
+                      : editingAdmin
+                        ? "Update Account"
+                        : "Create Staff Account"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Top Banner & Sub-Tabs */}
       <div
         className="editor-head standalone"
@@ -1752,156 +1977,7 @@ export function StaffAndRolesView({
         </>
       )}
 
-      {/* ────────────────────────────────────────────────────────────────────── */}
-      {/* ADD / EDIT STAFF MODAL                                                */}
-      {/* ────────────────────────────────────────────────────────────────────── */}
-      {showAddModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card" style={{ maxWidth: 480 }}>
-            <div className="modal-head">
-              <h3>
-                {editingAdmin
-                  ? "Edit Staff Account"
-                  : "Add Staff Administrator"}
-              </h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowAddModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <form
-              onSubmit={handleSaveStaff}
-              className="modal-body"
-              style={{ display: "flex", flexDirection: "column", gap: 14 }}
-            >
-              {formError && (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    background: "#fee2e2",
-                    border: "1px solid #f87171",
-                    borderRadius: 6,
-                    color: "#991b1b",
-                    fontSize: 12,
-                  }}
-                >
-                  {formError}
-                </div>
-              )}
-
-              <Field
-                id="staff-name"
-                label="Staff Full Name"
-                value={name}
-                onChange={setName}
-                placeholder="e.g. Grace Danladi"
-                required
-              />
-
-              <Field
-                id="staff-email"
-                label="Official Email or Username"
-                value={email}
-                onChange={setEmail}
-                placeholder="e.g. grace@vivadoxa.ng"
-                required
-              />
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    marginBottom: 5,
-                  }}
-                >
-                  Assigned Administrative Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  style={{
-                    width: "100%",
-                    minHeight: 40,
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    padding: "0 10px",
-                    background: "white",
-                    fontSize: 13,
-                  }}
-                >
-                  <option value="admissions">Admissions Officer</option>
-                  <option value="finance">Financial Officer</option>
-                  <option value="workshop">Workshop Lead</option>
-                  <option value="staff">General Academy Staff</option>
-                  <option value="superadmin">
-                    Super Administrator (Full Privileges)
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    marginBottom: 5,
-                  }}
-                >
-                  {editingAdmin
-                    ? "Reset Password (leave blank to keep current)"
-                    : "Temporary Password"}
-                </label>
-                <input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    editingAdmin
-                      ? "Leave blank to keep unchanged"
-                      : "Create password"
-                  }
-                  style={{
-                    width: "100%",
-                    minHeight: 40,
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    padding: "0 10px",
-                    background: "white",
-                    fontSize: 13,
-                  }}
-                  required={!editingAdmin}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                  marginTop: 12,
-                  paddingTop: 12,
-                  borderTop: "1px solid var(--line)",
-                }}
-              >
-                <Button variant="ghost" onClick={() => setShowAddModal(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving
-                    ? "Saving…"
-                    : editingAdmin
-                      ? "Update Account"
-                      : "Create Staff Account"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        </>
       )}
 
       {/* ────────────────────────────────────────────────────────────────────── */}

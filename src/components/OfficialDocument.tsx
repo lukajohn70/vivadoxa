@@ -15,7 +15,7 @@ import {
   BANK_ACCOUNT_NAME,
 } from "@/lib/utils"
 
-interface AdmissionLetterProps {
+export interface AdmissionLetterProps {
   data: {
     first_name?: string
     last_name?: string
@@ -43,9 +43,10 @@ interface AdmissionLetterProps {
     phone?: string
   }
   onClose: () => void
+  isPage?: boolean
 }
 
-interface PaymentReceiptProps {
+export interface PaymentReceiptProps {
   data: {
     reference?: string
     payment_reference?: string
@@ -64,6 +65,7 @@ interface PaymentReceiptProps {
     status?: string
   }
   onClose: () => void
+  isPage?: boolean
 }
 
 // ── Official Conservatory Academic Seal ──────────────────────────────────────
@@ -836,7 +838,7 @@ function formatAdmissionNo(
 }
 
 // ── Official Admission Letter ────────────────────────────────────────────────
-export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
+export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterProps) {
   const studentName =
     data.fullName ||
     `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
@@ -900,22 +902,15 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
     }
   }
 
-  return (
+  const docSheet = (
     <div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Official Admission Letter"
+      id="admission-letter-doc"
+      className="doc-sheet"
+      role="region"
+      aria-label="Printed Admission Letter"
+      style={{ padding: "40px 48px", width: "min(780px, 100%)" }}
     >
-      <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
-        <div
-          id="admission-letter-doc"
-          className="doc-sheet"
-          role="region"
-          aria-label="Printed Admission Letter"
-          style={{ padding: "40px 48px" }}
-        >
-          {/* Subtle Watermark */}
+      {/* Subtle Watermark */}
           <div className="doc-watermark" aria-hidden="true">
             VIVADOXA
           </div>
@@ -1328,8 +1323,124 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
             <SecurityBarcode code={admissionNo} />
           </div>
         </div>
+  )
 
-        {/* Modal Action Bar (Hidden when printed) */}
+  if (isPage) {
+    return (
+      <div
+        className="admin-page-view"
+        style={{
+          maxWidth: 960,
+          margin: "0 auto 40px",
+          animation: "fadeIn 0.15s ease-out",
+        }}
+      >
+        <div
+          className="no-print"
+          style={{
+            background: "white",
+            border: "1px solid var(--line)",
+            borderRadius: 12,
+            padding: "16px 24px",
+            marginBottom: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                padding: "7px 16px",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--navy)",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              ← Back to Details
+            </button>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
+              Official Admission Letter
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 999,
+                background: "rgba(201,107,50,0.12)",
+                color: "var(--gold-text)",
+              }}
+            >
+              {admissionNo}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Button
+              variant="primary"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              style={{ fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <Icon name="copy" size={14} />
+              {isDownloading ? "Generating PDF..." : "Download Letter (PDF)"}
+            </Button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {docSheet}
+        </div>
+
+        <div
+          className="no-print"
+          style={{
+            marginTop: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Button variant="ghost" onClick={onClose} style={{ fontSize: 13 }}>
+            ← Back to Details
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            style={{ fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon name="copy" size={14} />
+            {isDownloading ? "Generating PDF..." : "Download Official Letter (PDF)"}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Official Admission Letter"
+    >
+      <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
+        {docSheet}
         <div className="no-print flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mt-3.5 bg-[rgba(11,26,41,0.95)] backdrop-blur-md p-2.5 sm:p-3 rounded-lg shadow-xl">
           <Button
             variant="ghost"
@@ -1356,7 +1467,7 @@ export function AdmissionLetterModal({ data, onClose }: AdmissionLetterProps) {
 }
 
 // ── Official Payment Receipt & Settlement Clearance ─────────────────────────
-export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
+export function PaymentReceiptModal({ data, onClose, isPage }: PaymentReceiptProps) {
   const refNo = data.reference || data.payment_reference || "REF-VDX-PAYMENT"
   const appNo = data.application_no || "VDX-STUDENT"
   const payer = data.payer_name || data.fullName || "Applicant / Sponsor"
@@ -1405,28 +1516,22 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
     }
   }
 
-  return (
+  const docSheet = (
     <div
-      className="modal-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Official Payment Receipt"
+      id="payment-receipt-doc"
+      className="doc-sheet"
+      role="region"
+      aria-label="Printed Payment Receipt"
+      style={{ width: "min(780px, 100%)" }}
     >
-      <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
-        <div
-          id="payment-receipt-doc"
-          className="doc-sheet"
-          role="region"
-          aria-label="Printed Payment Receipt"
-        >
-          {/* Subtle Watermark */}
-          <div
-            className="doc-watermark"
-            aria-hidden="true"
-            style={{ color: "rgba(21, 112, 84, 0.04)" }}
-          >
-            PAID
-          </div>
+      {/* Subtle Watermark */}
+      <div
+        className="doc-watermark"
+        aria-hidden="true"
+        style={{ color: "rgba(21, 112, 84, 0.04)" }}
+      >
+        PAID
+      </div>
 
           {/* Header */}
           <div className="doc-header" style={{ borderBottomColor: "#157054" }}>
@@ -1788,8 +1893,124 @@ export function PaymentReceiptModal({ data, onClose }: PaymentReceiptProps) {
             <SecurityBarcode code={refNo} />
           </div>
         </div>
+  )
 
-        {/* Modal Action Bar (Hidden when printed) */}
+  if (isPage) {
+    return (
+      <div
+        className="admin-page-view"
+        style={{
+          maxWidth: 960,
+          margin: "0 auto 40px",
+          animation: "fadeIn 0.15s ease-out",
+        }}
+      >
+        <div
+          className="no-print"
+          style={{
+            background: "white",
+            border: "1px solid var(--line)",
+            borderRadius: 12,
+            padding: "16px 24px",
+            marginBottom: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: "white",
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                padding: "7px 16px",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--navy)",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              ← Back to Details
+            </button>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+            <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
+              Official Payment Receipt
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 999,
+                background: "rgba(21,112,84,0.12)",
+                color: "#166534",
+              }}
+            >
+              {refNo}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Button
+              variant="primary"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              style={{ fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <Icon name="check" size={14} />
+              {isDownloading ? "Generating PDF..." : "Download Receipt (PDF)"}
+            </Button>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {docSheet}
+        </div>
+
+        <div
+          className="no-print"
+          style={{
+            marginTop: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Button variant="ghost" onClick={onClose} style={{ fontSize: 13 }}>
+            ← Back to Details
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            style={{ fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon name="check" size={14} />
+            {isDownloading ? "Generating PDF..." : "Download Official Receipt (PDF)"}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Official Payment Receipt"
+    >
+      <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
+        {docSheet}
         <div className="no-print flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mt-3.5 bg-[rgba(11,26,41,0.95)] backdrop-blur-md p-2.5 sm:p-3 rounded-lg shadow-xl">
           <Button
             variant="ghost"
@@ -1859,6 +2080,7 @@ export interface ApplicationSlipProps {
     signature?: string
   }
   onClose: () => void
+  isPage?: boolean
 }
 
 export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {

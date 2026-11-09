@@ -238,6 +238,443 @@ export function ClassScheduleManagerView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {showAddCohortModal ? (
+        /* ── Add Cohort Dedicated Page ────────────────────────── */
+        <div
+          className="admin-page-view"
+          style={{
+            maxWidth: 680,
+            margin: "0 auto",
+            width: "100%",
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowAddCohortModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Timetable Schedule
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  New Cohort Slot
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                Add Cohort Timetable Slot
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--muted)" }}>
+                Configure academic slot timing, assigned studio room, and cohort roster.
+              </p>
+            </div>
+
+            <form onSubmit={handleAddCohort}>
+              <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Cohort Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Wednesday Evening Masterclass"
+                    value={newCohortName}
+                    onChange={(e) => setNewCohortName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Time Schedule *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Wednesdays 5:00 PM – 7:00 PM"
+                    value={newCohortTime}
+                    onChange={(e) => setNewCohortTime(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Studio Room / Location
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Studio Room A (Acoustic Hall)"
+                    value={newCohortRoom}
+                    onChange={(e) => setNewCohortRoom(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div
+                style={{
+                  padding: "16px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowAddCohortModal(false)}
+                >
+                  ← Back to Schedule
+                </Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowAddCohortModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary">
+                    Create Cohort Slot
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : showEditCohortModal && editingCohort ? (
+        /* ── Edit Cohort Dedicated Page ────────────────────────── */
+        <div
+          className="admin-page-view"
+          style={{
+            maxWidth: 680,
+            margin: "0 auto",
+            width: "100%",
+            animation: "fadeIn 0.15s ease-out",
+          }}
+        >
+          <div
+            style={{
+              background: "white",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              overflow: "hidden",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 28px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf8f5",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowEditCohortModal(false)}
+                  style={{
+                    background: "white",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: "6px 14px",
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--navy)",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  ← Back to Timetable Schedule
+                </button>
+                <span style={{ fontSize: 12, color: "var(--muted)" }}>/</span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    fontWeight: 600,
+                  }}
+                >
+                  Edit Cohort Slot
+                </span>
+              </div>
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "var(--navy)",
+                }}
+              >
+                Edit Timetable Cohort Slot
+              </h2>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--muted)" }}>
+                Update session scheduling, room assignment, or slot enrollment status.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveEditCohort}>
+              <div style={{ padding: "28px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Cohort Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editCohortName}
+                    onChange={(e) => setEditCohortName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Time Schedule *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editCohortTime}
+                    onChange={(e) => setEditCohortTime(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Studio Room / Location
+                  </label>
+                  <input
+                    type="text"
+                    value={editCohortRoom}
+                    onChange={(e) => setEditCohortRoom(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "var(--navy)",
+                      marginBottom: 5,
+                    }}
+                  >
+                    Status
+                  </label>
+                  <select
+                    value={editCohortStatus}
+                    onChange={(e) => setEditCohortStatus(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      background: "white",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Upcoming">Upcoming</option>
+                    <option value="Full">Full / Closed</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div
+                style={{
+                  padding: "16px 32px",
+                  borderTop: "1px solid var(--line)",
+                  background: "#faf8f5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowEditCohortModal(false)}
+                >
+                  ← Back to Schedule
+                </Button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowEditCohortModal(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="primary">
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* View Switcher Tabs */}
       <div
         style={{
@@ -1679,347 +2116,7 @@ export function ClassScheduleManagerView({
         </div>
       )}
 
-      {/* ── Modal: Add New Cohort Slot ─────────────────────────────────────────── */}
-      {showAddCohortModal && (
-        <div
-          className="modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowAddCohortModal(false)
-          }}
-        >
-          <div className="modal-card" style={{ maxWidth: 480 }}>
-            <div className="modal-head">
-              <h3 style={{ margin: 0, fontSize: 17 }}>Add Cohort Slot</h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowAddCohortModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <form
-              onSubmit={handleAddCohort}
-              className="modal-body"
-              style={{
-                padding: 22,
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-              }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Cohort Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Wednesday Evening Masterclass"
-                  value={newCohortName}
-                  onChange={(e) => setNewCohortName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Time Schedule *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Wednesdays 5:00 PM – 7:00 PM"
-                  value={newCohortTime}
-                  onChange={(e) => setNewCohortTime(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Studio Room
-                </label>
-                <input
-                  type="text"
-                  value={newCohortRoom}
-                  onChange={(e) => setNewCohortRoom(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                  borderTop: "1px solid var(--line)",
-                  paddingTop: 14,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowAddCohortModal(false)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    background: "white",
-                    cursor: "pointer",
-                    fontSize: 13,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "8px 18px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: "var(--navy)",
-                    color: "white",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Create Cohort Slot
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* EDIT COHORT / TIMETABLE MODAL */}
-      {showEditCohortModal && editingCohort && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setShowEditCohortModal(false)}
-        >
-          <div
-            className="modal"
-            style={{ maxWidth: 480, width: "95%" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-head">
-              <h3 style={{ margin: 0, fontSize: 17, color: "var(--navy)" }}>
-                Edit Timetable Cohort Slot
-              </h3>
-              <button
-                className="modal-close"
-                onClick={() => setShowEditCohortModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <form
-              onSubmit={handleSaveEditCohort}
-              className="modal-body"
-              style={{
-                padding: 22,
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-              }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Cohort Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editCohortName}
-                  onChange={(e) => setEditCohortName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Time Schedule *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editCohortTime}
-                  onChange={(e) => setEditCohortTime(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Studio Room / Location
-                </label>
-                <input
-                  type="text"
-                  value={editCohortRoom}
-                  onChange={(e) => setEditCohortRoom(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "var(--navy)",
-                    marginBottom: 4,
-                  }}
-                >
-                  Status
-                </label>
-                <select
-                  value={editCohortStatus}
-                  onChange={(e) => setEditCohortStatus(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    fontSize: 13,
-                    background: "white",
-                  }}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Upcoming">Upcoming</option>
-                  <option value="Full">Full / Closed</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 10,
-                  borderTop: "1px solid var(--line)",
-                  paddingTop: 14,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowEditCohortModal(false)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid var(--line)",
-                    background: "white",
-                    cursor: "pointer",
-                    fontSize: 13,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    padding: "8px 18px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: "var(--navy)",
-                    color: "white",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
