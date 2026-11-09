@@ -1,7 +1,7 @@
 // ─── Student & Client Portal Authentication ──────────────────────────────────
 import React, { useState } from "react"
 import { Logo, Button, Field, Icon, WhatsAppIcon } from "@/components/ui"
-import { loginUser, registerUser, type PortalUser } from "@/lib/api"
+import { loginUser, registerUser, verifyUser2FA, resendUser2FA, type PortalUser } from "@/lib/api"
 import type { Page } from "@/types"
 
 export function PortalAuth({
@@ -19,6 +19,18 @@ export function PortalAuth({
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState("")
 
+  // 2FA Security states
+  const [pending2FA, setPending2FA] = useState<{
+    userId: number
+    tempToken?: string
+    emailMasked: string
+    deviceName?: string
+  } | null>(null)
+  const [otpCode, setOtpCode] = useState("")
+  const [otpNotice, setOtpNotice] = useState("")
+  const [otpResending, setOtpResending] = useState(false)
+  const [otpVerifying, setOtpVerifying] = useState(false)
+
   // Register form states
   const [regName, setRegName] = useState("")
   const [regEmail, setRegEmail] = useState("")
@@ -31,6 +43,7 @@ export function PortalAuth({
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoginError("")
+    setOtpNotice("")
     if (!loginId.trim() || !loginPass.trim()) {
       setLoginError("Please enter your email/phone and password.")
       return
@@ -39,6 +52,16 @@ export function PortalAuth({
     setLoginLoading(true)
     try {
       const res = await loginUser(loginId.trim(), loginPass.trim())
+      if (res.requires_2fa && res.user_id) {
+        setPending2FA({
+          userId: res.user_id,
+          tempToken: res.temp_token,
+          emailMasked: res.email_masked || "your registered email",
+          deviceName: res.device_name || "Current Browser",
+        })
+        return
+      }
+
       if (res.success && res.user) {
         if (onLoginSuccess) onLoginSuccess(res.user)
         go("portal")
@@ -50,6 +73,54 @@ export function PortalAuth({
     } finally {
       setLoginLoading(false)
     }
+  }
+
+  async function handleVerify2FA(e: React.FormEvent) {
+    e.preventDefault()
+    if (!pending2FA || !otpCode.trim() || otpCode.trim().length < 6) return
+    setOtpVerifying(true)
+    setLoginError("")
+    try {
+      const res = await verifyUser2FA(
+        pending2FA.userId,
+        otpCode.trim(),
+        pending2FA.tempToken,
+        pending2FA.deviceName,
+      )
+      if (res.success && res.user) {
+        if (onLoginSuccess) onLoginSuccess(res.user)
+        go("portal")
+      } else {
+        setLoginError(res.error || "Invalid or expired verification code.")
+      }
+    } catch (err: any) {
+      setLoginError(err.message || "Failed to verify security code.")
+    } finally {
+      setOtpVerifying(false)
+    }
+  }
+
+  async function handleResendOTP() {
+    if (!pending2FA || otpResending) return
+    setOtpResending(true)
+    setOtpNotice("")
+    try {
+      const res = await resendUser2FA(pending2FA.userId)
+      if (res.success) {
+        setOtpNotice("A fresh 6-digit code has been dispatched to your email.")
+      } else {
+        setOtpNotice(res.error || "Unable to resend code.")
+      }
+    } finally {
+      setOtpResending(false)
+    }
+  }
+
+  function handleCancel2FA() {
+    setPending2FA(null)
+    setOtpCode("")
+    setOtpNotice("")
+    setLoginError("")
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -131,51 +202,241 @@ export function PortalAuth({
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            borderBottom: "1px solid var(--line)",
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setTab("login")}
-            style={{
-              padding: "14px",
-              fontSize: 13,
-              fontWeight: 700,
-              background: tab === "login" ? "white" : "#fcfbf9",
-              border: "none",
-              borderBottom: tab === "login" ? "2px solid var(--gold)" : "none",
-              color: tab === "login" ? "var(--gold-text)" : "var(--muted)",
-              cursor: "pointer",
-            }}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("register")}
-            style={{
-              padding: "14px",
-              fontSize: 13,
-              fontWeight: 700,
-              background: tab === "register" ? "white" : "#fcfbf9",
-              border: "none",
-              borderBottom:
-                tab === "register" ? "2px solid var(--gold)" : "none",
-              color: tab === "register" ? "var(--gold-text)" : "var(--muted)",
-              cursor: "pointer",
-            }}
-          >
-            Create Account
-          </button>
-        </div>
+        {/* 2FA Verification Card or Standard Tabs */}
+        {pending2FA ? (
+          <div style={{ padding: 28 }}>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 52,
+                  height: 52,
+                  borderRadius: "50%",
+                  background: "rgba(201, 107, 50, 0.12)",
+                  color: "#c96b32",
+                  marginBottom: 12,
+                }}
+              >
+                <Icon name="lock" size={24} />
+              </div>
+              <h2
+                style={{
+                  fontSize: 18,
+                  margin: "0 0 6px",
+                  color: "var(--navy)",
+                }}
+              >
+                Two-Factor Security Verification
+              </h2>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+                First-time login or unrecognized device authorization (
+                <strong>{pending2FA.deviceName || "Current Browser"}</strong>).
+              </p>
+            </div>
 
-        {/* Forms */}
-        <div style={{ padding: 24 }}>
+            <div
+              style={{
+                background: "#fbfaf8",
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                padding: "12px 14px",
+                marginBottom: 16,
+                fontSize: 13,
+                color: "var(--navy)",
+              }}
+            >
+              A 6-digit verification code has been dispatched to:
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 14,
+                  marginTop: 4,
+                  letterSpacing: "0.02em",
+                  color: "#157054",
+                }}
+              >
+                {pending2FA.emailMasked}
+              </div>
+            </div>
+
+            {loginError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "#fee2e2",
+                  border: "1px solid #f87171",
+                  borderRadius: 6,
+                  color: "#991b1b",
+                  fontSize: 12,
+                  marginBottom: 14,
+                }}
+              >
+                {loginError}
+              </div>
+            )}
+
+            {otpNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "#dcfce7",
+                  border: "1px solid #86efac",
+                  borderRadius: 6,
+                  color: "#166534",
+                  fontSize: 12,
+                  marginBottom: 14,
+                }}
+              >
+                {otpNotice}
+              </div>
+            )}
+
+            <form
+              onSubmit={handleVerify2FA}
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
+              <div>
+                <label
+                  htmlFor="portal-otp-input"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: "var(--navy)",
+                  }}
+                >
+                  Enter 6-Digit Verification Code:
+                </label>
+                <input
+                  id="portal-otp-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) =>
+                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="••••••"
+                  autoFocus
+                  required
+                  style={{
+                    width: "100%",
+                    fontSize: 28,
+                    fontWeight: 800,
+                    letterSpacing: "12px",
+                    textAlign: "center",
+                    padding: "12px 14px",
+                    borderRadius: 8,
+                    border: "2px solid var(--gold)",
+                    background: "white",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                fullWidth
+                disabled={otpVerifying || otpCode.length < 6}
+                style={{ marginTop: 6 }}
+              >
+                {otpVerifying ? "Authorizing device…" : "Verify & Access Portal"}
+              </Button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={otpResending}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--gold)",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {otpResending ? "Dispatching code…" : "Resend code to email"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCancel2FA}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--muted)",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Cancel / Return
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <>
+            {/* Tab Switcher */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setTab("login")}
+                style={{
+                  padding: "14px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  background: tab === "login" ? "white" : "#fcfbf9",
+                  border: "none",
+                  borderBottom: tab === "login" ? "2px solid var(--gold)" : "none",
+                  color: tab === "login" ? "var(--gold-text)" : "var(--muted)",
+                  cursor: "pointer",
+                }}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab("register")}
+                style={{
+                  padding: "14px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  background: tab === "register" ? "white" : "#fcfbf9",
+                  border: "none",
+                  borderBottom:
+                    tab === "register" ? "2px solid var(--gold)" : "none",
+                  color: tab === "register" ? "var(--gold-text)" : "var(--muted)",
+                  cursor: "pointer",
+                }}
+              >
+                Create Account
+              </button>
+            </div>
+
+            {/* Forms */}
+            <div style={{ padding: 24 }}>
           {tab === "login" ? (
             <form
               onSubmit={handleLogin}
@@ -367,6 +628,8 @@ export function PortalAuth({
             </button>
           </div>
         </div>
+      </>
+    )}
       </div>
     </main>
   )

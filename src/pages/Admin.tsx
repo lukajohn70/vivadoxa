@@ -43,6 +43,7 @@ import {
 } from "@/components/AdminSystemViews"
 import { ShopAndRentalsView } from "@/components/AdminCatalogView"
 import { AdminGalleryView } from "@/components/AdminGalleryView"
+import { AdminBulletinView } from "@/components/AdminBulletinView"
 import { ClassScheduleManagerView } from "@/components/AdminScheduleViews"
 import {
   AdmissionLetterModal,
@@ -64,10 +65,24 @@ function extractYouTubeId(urlOrId: string): string {
 
 // ─── Admin Login page ─────────────────────────────────────────────────────────
 export function AdminLogin({ go }: { go: (p: Page) => void }) {
-  const { session, login, logout, loginError, loginLoading } = useAdminAuth()
+  const {
+    session,
+    login,
+    logout,
+    loginError,
+    loginLoading,
+    pending2FA,
+    verify2FA,
+    resend2FA,
+    cancel2FA,
+  } = useAdminAuth()
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [otpCode, setOtpCode] = useState("")
+  const [resendNotice, setResendNotice] = useState("")
+  const [resending, setResending] = useState(false)
 
   if (session) {
     return (
@@ -97,9 +112,35 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setResendNotice("")
     const success = await login(email, password)
     if (success) {
       go("admin")
+    }
+  }
+
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!otpCode.trim() || otpCode.trim().length < 6) return
+    const success = await verify2FA(otpCode.trim())
+    if (success) {
+      go("admin")
+    }
+  }
+
+  const handleResend = async () => {
+    if (resending) return
+    setResending(true)
+    setResendNotice("")
+    try {
+      const res = await resend2FA()
+      if (res.success) {
+        setResendNotice("A fresh 6-digit verification code has been dispatched.")
+      } else {
+        setResendNotice(res.message || "Failed to resend code.")
+      }
+    } finally {
+      setResending(false)
     }
   }
 
@@ -109,76 +150,259 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
         <div className="admin-login-brand">
           <Logo />
         </div>
-        <div className="admin-login-head">
-          <span className="eyebrow">Staff access</span>
-          <h1>Sign in to management</h1>
-          <p>Admissions, payment verification &amp; studio operations.</p>
-        </div>
 
-        {loginError && (
-          <div
-            role="alert"
-            style={{
-              padding: "10px 14px",
-              background: "rgba(220, 38, 38, 0.1)",
-              border: "1px solid rgba(220, 38, 38, 0.3)",
-              borderRadius: "6px",
-              color: "#dc2626",
-              fontSize: "13px",
-              marginBottom: "16px",
-            }}
-          >
-            {loginError}
-          </div>
-        )}
+        {pending2FA ? (
+          <>
+            <div className="admin-login-head">
+              <span
+                className="eyebrow"
+                style={{
+                  color: "#c96b32",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "#c96b32",
+                  }}
+                />
+                Two-Factor Security Verification
+              </span>
+              <h1>Verify Your Device</h1>
+              <p>
+                First-time login or unrecognized device authorization (
+                <strong>{pending2FA.deviceName || "Current Browser"}</strong>).
+              </p>
+            </div>
 
-        <form onSubmit={handleSubmit} className="admin-login-form">
-          <Field
-            id="admin-email"
-            label="Staff email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="admin@vivadoxa.ng"
-            required
-            autoComplete="username"
-          />
-
-          <div style={{ position: "relative" }}>
-            <Field
-              id="admin-pass"
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={setPassword}
-              placeholder="••••••••••••"
-              required
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+            <div
               style={{
-                position: "absolute",
-                right: "12px",
-                top: "36px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--muted)",
-                fontSize: "12px",
-                padding: "4px",
+                background: "#fbfaf8",
+                border: "1px solid var(--line)",
+                borderRadius: 8,
+                padding: "12px 14px",
+                marginBottom: 16,
+                fontSize: 13,
+                color: "var(--navy)",
               }}
             >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
+              We dispatched a 6-digit authorization code to:
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 14,
+                  marginTop: 4,
+                  letterSpacing: "0.02em",
+                  color: "#157054",
+                }}
+              >
+                {pending2FA.emailMasked}
+              </div>
+            </div>
 
-          <Button type="submit" disabled={loginLoading}>
-            {loginLoading ? "Signing in…" : "Sign in to Dashboard"}
-          </Button>
-        </form>
+            {loginError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  border: "1px solid rgba(220, 38, 38, 0.3)",
+                  borderRadius: "6px",
+                  color: "#dc2626",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {loginError}
+              </div>
+            )}
+
+            {resendNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(21, 112, 84, 0.1)",
+                  border: "1px solid rgba(21, 112, 84, 0.3)",
+                  borderRadius: "6px",
+                  color: "#157054",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resendNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleVerify2FA} className="admin-login-form">
+              <div>
+                <label
+                  htmlFor="admin-otp-input"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: "var(--navy)",
+                  }}
+                >
+                  Enter 6-Digit Verification Code:
+                </label>
+                <input
+                  id="admin-otp-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) =>
+                    setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="••••••"
+                  autoFocus
+                  required
+                  style={{
+                    width: "100%",
+                    fontSize: 28,
+                    fontWeight: 800,
+                    letterSpacing: "12px",
+                    textAlign: "center",
+                    padding: "12px 14px",
+                    borderRadius: 8,
+                    border: "2px solid var(--gold)",
+                    background: "white",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loginLoading || otpCode.length < 6}
+              >
+                {loginLoading ? "Authorizing device…" : "Verify & Sign In"}
+              </Button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--gold)",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {resending ? "Sending fresh code…" : "Resend email code"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cancel2FA}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--muted)",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          </>
+        ) : (
+          <>
+            <div className="admin-login-head">
+              <span className="eyebrow">Staff access</span>
+              <h1>Sign in to management</h1>
+              <p>Admissions, payment verification &amp; studio operations.</p>
+            </div>
+
+            {loginError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  border: "1px solid rgba(220, 38, 38, 0.3)",
+                  borderRadius: "6px",
+                  color: "#dc2626",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {loginError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="admin-login-form">
+              <Field
+                id="admin-email"
+                label="Staff email"
+                type="email"
+                value={email}
+                onChange={setEmail}
+                placeholder="admin@vivadoxa.ng"
+                required
+                autoComplete="username"
+              />
+
+              <div style={{ position: "relative" }}>
+                <Field
+                  id="admin-pass"
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="••••••••••••"
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "36px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--muted)",
+                    fontSize: "12px",
+                    padding: "4px",
+                  }}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              <Button type="submit" disabled={loginLoading}>
+                {loginLoading ? "Signing in…" : "Sign in to Dashboard"}
+              </Button>
+            </form>
+          </>
+        )}
       </div>
     </main>
   )
@@ -247,6 +471,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         "Shop & Rentals",
         "Enquiries",
       ],
+    ],
+    [
+      "Communications",
+      ["Weekly Bulletin"],
     ],
     [
       "Academics",
@@ -1250,6 +1478,7 @@ function AdminManager({ title }: { title: string }) {
     phone: "",
     email: "",
     program: "",
+    password: "",
   })
 
   // In-app Email Reply states for Enquiries inspector
@@ -1375,6 +1604,7 @@ function AdminManager({ title }: { title: string }) {
         phone: selectedRecord.phone || "",
         email: selectedRecord.email || "",
         program: selectedRecord.program || "",
+        password: "",
       })
     } else if (selectedRecord && (title === "Repairs" || title.includes("Repairs"))) {
       setRepairStatusInput(selectedRecord.status || "received")
@@ -1623,6 +1853,7 @@ function AdminManager({ title }: { title: string }) {
       phone: studentForm.phone,
       email: studentForm.email,
       program: studentForm.program,
+      ...(studentForm.password.trim() ? { password: studentForm.password.trim() } : {}),
     })
     if (res && res.success) {
       setActionNotice(`Student record for ${selectedRecord.full_name} updated.`)
@@ -1850,7 +2081,9 @@ function AdminManager({ title }: { title: string }) {
         </div>
       )}
 
-      {title === "Photo Gallery" ? (
+      {title === "Weekly Bulletin" ? (
+        <AdminBulletinView setActionNotice={setActionNotice} />
+      ) : title === "Photo Gallery" ? (
         <AdminGalleryView setActionNotice={setActionNotice} />
       ) : title === "Shop & Rentals" ? (
         <ShopAndRentalsView setActionNotice={setActionNotice} />
@@ -5524,6 +5757,88 @@ function AdminManager({ title }: { title: string }) {
                             Suspended / On Leave
                           </option>
                         </select>
+                      </div>
+
+                      {/* Student Portal Account Security */}
+                      <div
+                        style={{
+                          gridColumn: "1 / -1",
+                          marginTop: 8,
+                          padding: 12,
+                          background: "#fbfaf8",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom: 8,
+                          }}
+                        >
+                          <label
+                            style={{
+                              display: "block",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "var(--navy)",
+                            }}
+                          >
+                            Student Portal Login &amp; Password
+                          </label>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                              background:
+                                studentForm.status === "suspended"
+                                  ? "#fee2e2"
+                                  : "#dcfce7",
+                              color:
+                                studentForm.status === "suspended"
+                                  ? "#991b1b"
+                                  : "#166534",
+                            }}
+                          >
+                            Portal Access:{" "}
+                            {studentForm.status === "suspended"
+                              ? "Disabled"
+                              : "Active"}
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={studentForm.password}
+                          onChange={(e) =>
+                            setStudentForm({
+                              ...studentForm,
+                              password: e.target.value,
+                            })
+                          }
+                          placeholder="Type new password to reset portal login (or leave blank)"
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            background: "white",
+                            fontSize: 13,
+                          }}
+                        />
+                        <small
+                          style={{
+                            display: "block",
+                            color: "var(--muted)",
+                            fontSize: 11,
+                            marginTop: 4,
+                          }}
+                        >
+                          Setting status to &ldquo;Suspended&rdquo; disables portal login. Entering a password here updates credentials on save.
+                        </small>
                       </div>
                     </div>
                   </div>

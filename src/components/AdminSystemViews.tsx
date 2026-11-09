@@ -17,6 +17,11 @@ import {
   fetchNotificationLogs,
   purgeMockData,
   verifyBankAccount,
+  fetchPortalUsers,
+  togglePortalUserActive,
+  changePortalUserPassword,
+  changeStaffPassword,
+  type PortalAccountUser,
 } from "@/lib/api"
 
 // ═════════════════════════════════════════════════════════════════════════════════
@@ -27,12 +32,35 @@ export function StaffAndRolesView({
 }: {
   setActionNotice: (msg: string) => void
 }) {
+  const [activeAccountTab, setActiveAccountTab] = useState<"staff" | "portal">("staff")
+
+  // Staff States
   const [admins, setAdmins] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingAdmin, setEditingAdmin] = useState<any | null>(null)
 
-  // Form states
+  // Portal Users States
+  const [portalUsers, setPortalUsers] = useState<PortalAccountUser[]>([])
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalSearch, setPortalSearch] = useState("")
+  const [portalStatusFilter, setPortalStatusFilter] = useState<"all" | "active" | "disabled">("all")
+
+  // Shared Password Reset Modal State
+  const [passwordModal, setPasswordModal] = useState<{
+    isOpen: boolean
+    type: "staff" | "portal"
+    target: { id: number; name: string; email: string } | null
+  }>({
+    isOpen: false,
+    type: "staff",
+    target: null,
+  })
+  const [newPasswordValue, setNewPasswordValue] = useState("")
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
+
+  // Staff Form states
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("admissions")
@@ -52,8 +80,21 @@ export function StaffAndRolesView({
     }
   }
 
+  const loadPortalUsers = async () => {
+    setPortalLoading(true)
+    try {
+      const data = await fetchPortalUsers()
+      setPortalUsers(data || [])
+    } catch {
+      setPortalUsers([])
+    } finally {
+      setPortalLoading(false)
+    }
+  }
+
   useEffect(() => {
     loadStaff()
+    loadPortalUsers()
   }, [])
 
   function openAddModal() {
@@ -164,6 +205,79 @@ export function StaffAndRolesView({
     }
   }
 
+  // ── Portal User Actions ────────────────────────────────────────────────────
+  async function handleTogglePortalUser(user: PortalAccountUser) {
+    const res = await togglePortalUserActive(user.id)
+    if (res.success) {
+      setActionNotice(res.message || "Account status updated.")
+      loadPortalUsers()
+    } else {
+      setActionNotice(res.error || "Failed to update account access.")
+    }
+  }
+
+  function openPasswordModal(type: "staff" | "portal", target: { id: number; name: string; email: string }) {
+    setPasswordModal({
+      isOpen: true,
+      type,
+      target,
+    })
+    setNewPasswordValue("VdxPass" + Math.floor(100 + Math.random() * 900) + "!")
+    setPasswordError("")
+  }
+
+  async function handleSaveNewPassword(e: React.FormEvent) {
+    e.preventDefault()
+    if (!passwordModal.target) return
+    if (!newPasswordValue.trim() || newPasswordValue.trim().length < 6) {
+      setPasswordError("Password must be at least 6 characters.")
+      return
+    }
+
+    setPasswordSaving(true)
+    setPasswordError("")
+    try {
+      if (passwordModal.type === "staff") {
+        const res = await changeStaffPassword(passwordModal.target.id, newPasswordValue.trim())
+        if (res.success) {
+          setActionNotice(`Password updated successfully for staff "${passwordModal.target.name}".`)
+          setPasswordModal({ isOpen: false, type: "staff", target: null })
+        } else {
+          setPasswordError(res.error || "Failed to update staff password.")
+        }
+      } else {
+        const res = await changePortalUserPassword(passwordModal.target.id, newPasswordValue.trim())
+        if (res.success) {
+          setActionNotice(`Password updated successfully for portal account "${passwordModal.target.name}".`)
+          setPasswordModal({ isOpen: false, type: "portal", target: null })
+        } else {
+          setPasswordError(res.error || "Failed to update portal user password.")
+        }
+      }
+    } catch (err: any) {
+      setPasswordError(err.message || "An error occurred while resetting password.")
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
+  const filteredPortalUsers = portalUsers.filter((u) => {
+    const q = portalSearch.toLowerCase()
+    const matchesSearch =
+      !portalSearch ||
+      (u.full_name && u.full_name.toLowerCase().includes(q)) ||
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.phone && u.phone.includes(q))
+
+    const isUserActive = Boolean(u.is_active)
+    const matchesStatus =
+      portalStatusFilter === "all" ||
+      (portalStatusFilter === "active" && isUserActive) ||
+      (portalStatusFilter === "disabled" && !isUserActive)
+
+    return matchesSearch && matchesStatus
+  })
+
   interface RoleBadge {
     label: string
     bg: string
@@ -196,815 +310,1453 @@ export function StaffAndRolesView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Top Banner */}
+      {/* Top Banner & Sub-Tabs */}
       <div
         className="editor-head standalone"
         style={{
           background: "white",
-          padding: 24,
+          padding: "20px 24px",
           borderRadius: 10,
           border: "1px solid var(--line)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
         <div>
           <h2 style={{ fontSize: 20, margin: 0 }}>
-            Staff &amp; Role Access Control
+            User Accounts &amp; Access Control
           </h2>
           <p style={{ color: "var(--muted)", margin: "4px 0 0", fontSize: 13 }}>
-            Manage authorized academy staff accounts, assigned privileges, and
-            login credentials.
+            Manage staff credentials, permissions, and student/client portal account logins.
           </p>
         </div>
-        <Button onClick={openAddModal} variant="primary">
-          + Add Staff Administrator
-        </Button>
-      </div>
 
-      {/* Metrics Row */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: 14,
-        }}
-      >
-        <div
-          style={{
-            background: "white",
-            padding: 18,
-            borderRadius: 8,
-            border: "1px solid var(--line)",
-          }}
-        >
-          <small
+        {/* Tab switch pills */}
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => setActiveAccountTab("staff")}
             style={{
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              fontSize: 10,
+              padding: "8px 16px",
+              borderRadius: 6,
+              fontSize: 13,
               fontWeight: 700,
-              letterSpacing: "0.05em",
+              cursor: "pointer",
+              border: "1px solid var(--line)",
+              background: activeAccountTab === "staff" ? "var(--navy)" : "#fbfaf8",
+              color: activeAccountTab === "staff" ? "white" : "var(--navy)",
             }}
           >
-            Total Staff Accounts
-          </small>
-          <strong
+            Staff Administrators ({admins.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveAccountTab("portal")}
             style={{
-              display: "block",
-              fontSize: 26,
-              color: "var(--navy)",
-              marginTop: 4,
-            }}
-          >
-            {admins.length}
-          </strong>
-        </div>
-        <div
-          style={{
-            background: "white",
-            padding: 18,
-            borderRadius: 8,
-            border: "1px solid var(--line)",
-          }}
-        >
-          <small
-            style={{
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              fontSize: 10,
+              padding: "8px 16px",
+              borderRadius: 6,
+              fontSize: 13,
               fontWeight: 700,
-              letterSpacing: "0.05em",
+              cursor: "pointer",
+              border: "1px solid var(--line)",
+              background: activeAccountTab === "portal" ? "var(--navy)" : "#fbfaf8",
+              color: activeAccountTab === "portal" ? "white" : "var(--navy)",
             }}
           >
-            Active Accounts
-          </small>
-          <strong
-            style={{
-              display: "block",
-              fontSize: 26,
-              color: "#157054",
-              marginTop: 4,
-            }}
-          >
-            {admins.filter((a) => a.is_active).length}
-          </strong>
-        </div>
-        <div
-          style={{
-            background: "white",
-            padding: 18,
-            borderRadius: 8,
-            border: "1px solid var(--line)",
-          }}
-        >
-          <small
-            style={{
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-            }}
-          >
-            Super Administrators
-          </small>
-          <strong
-            style={{
-              display: "block",
-              fontSize: 26,
-              color: "#702064",
-              marginTop: 4,
-            }}
-          >
-            {admins.filter((a) => a.role === "superadmin").length}
-          </strong>
-        </div>
-        <div
-          style={{
-            background: "white",
-            padding: 18,
-            borderRadius: 8,
-            border: "1px solid var(--line)",
-          }}
-        >
-          <small
-            style={{
-              color: "var(--muted)",
-              textTransform: "uppercase",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.05em",
-            }}
-          >
-            Admissions &amp; Operations
-          </small>
-          <strong
-            style={{
-              display: "block",
-              fontSize: 26,
-              color: "#c96b32",
-              marginTop: 4,
-            }}
-          >
-            {admins.filter((a) => a.role !== "superadmin").length}
-          </strong>
+            Portal Students &amp; Clients ({portalUsers.length})
+          </button>
         </div>
       </div>
 
-      {/* Staff Table Panel */}
-      <div
-        style={{
-          background: "white",
-          borderRadius: 8,
-          border: "1px solid var(--line)",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--line)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <h3 style={{ margin: 0, fontSize: 15 }}>Authorized Personnel</h3>
-            <small style={{ color: "var(--muted)" }}>
-              Click any account to edit role or update login access.
-            </small>
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {/* 1. STAFF ADMINISTRATORS TAB                                             */}
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {activeAccountTab === "staff" && (
+        <>
+          {/* Header Action Button */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button onClick={openAddModal} variant="primary">
+              + Add Staff Administrator
+            </Button>
           </div>
-          <Button variant="ghost" onClick={loadStaff}>
-            Refresh
-          </Button>
-        </div>
 
-        {/* Desktop Table View */}
-        <div className="hidden md:block table-wrap">
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr
+          {/* Metrics Row */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
                 style={{
-                  background: "#fbfaf8",
-                  borderBottom: "1px solid var(--line)",
-                  textAlign: "left",
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
                 }}
               >
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Staff Member
-                </th>
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Email / Login Alias
-                </th>
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  System Role
-                </th>
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Status
-                </th>
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Last Login
-                </th>
-                <th
-                  style={{
-                    padding: "12px 18px",
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    textTransform: "uppercase",
-                    textAlign: "right",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={6}
+                Total Staff Accounts
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "var(--navy)",
+                  marginTop: 4,
+                }}
+              >
+                {admins.length}
+              </strong>
+            </div>
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Active Accounts
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "#157054",
+                  marginTop: 4,
+                }}
+              >
+                {admins.filter((a) => a.is_active).length}
+              </strong>
+            </div>
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Super Administrators
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "#702064",
+                  marginTop: 4,
+                }}
+              >
+                {admins.filter((a) => a.role === "superadmin").length}
+              </strong>
+            </div>
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Admissions &amp; Operations
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "#c96b32",
+                  marginTop: 4,
+                }}
+              >
+                {admins.filter((a) => a.role !== "superadmin").length}
+              </strong>
+            </div>
+          </div>
+
+          {/* Staff Table Panel */}
+          <div
+            style={{
+              background: "white",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--line)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: 15 }}>Authorized Personnel</h3>
+                <small style={{ color: "var(--muted)" }}>
+                  Manage login privileges, role assignments, or reset passwords.
+                </small>
+              </div>
+              <Button variant="ghost" onClick={loadStaff}>
+                Refresh
+              </Button>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block table-wrap">
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr
                     style={{
-                      padding: 30,
-                      textAlign: "center",
-                      color: "var(--muted)",
+                      background: "#fbfaf8",
+                      borderBottom: "1px solid var(--line)",
+                      textAlign: "left",
                     }}
                   >
-                    Loading staff records…
-                  </td>
-                </tr>
-              ) : admins.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    style={{
-                      padding: 30,
-                      textAlign: "center",
-                      color: "var(--muted)",
-                    }}
-                  >
-                    No staff records found.
-                  </td>
-                </tr>
-              ) : (
-                admins.map((staff) => {
-                  const roleInfo = roleBadges[staff.role] || roleBadges.staff
-                  return (
-                    <tr
-                      key={staff.id}
+                    <th
                       style={{
-                        borderBottom: "1px solid var(--line)",
-                        fontSize: 13,
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
                       }}
                     >
-                      <td style={{ padding: "14px 18px" }}>
+                      Staff Member
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Email / Login Alias
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      System Role
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Last Login
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                        textAlign: "right",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        style={{
+                          padding: 30,
+                          textAlign: "center",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Loading staff records…
+                      </td>
+                    </tr>
+                  ) : admins.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        style={{
+                          padding: 30,
+                          textAlign: "center",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        No staff records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    admins.map((staff) => {
+                      const roleInfo = roleBadges[staff.role] || roleBadges.staff
+                      return (
+                        <tr
+                          key={staff.id}
+                          style={{
+                            borderBottom: "1px solid var(--line)",
+                            fontSize: 13,
+                          }}
+                        >
+                          <td style={{ padding: "14px 18px" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 10,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: "50%",
+                                  background:
+                                    staff.role === "superadmin"
+                                      ? "#0b0b0b"
+                                      : "var(--gold)",
+                                  color: "white",
+                                  display: "grid",
+                                  placeItems: "center",
+                                  fontWeight: 700,
+                                  fontSize: 12,
+                                }}
+                              >
+                                {staff.name
+                                  ? staff.name.slice(0, 2).toUpperCase()
+                                  : "AD"}
+                              </span>
+                              <div>
+                                <strong>{staff.name}</strong>
+                                {staff.id === 1 && (
+                                  <span
+                                    style={{
+                                      marginLeft: 6,
+                                      fontSize: 10,
+                                      background: "#ffd700",
+                                      color: "#000",
+                                      padding: "1px 6px",
+                                      borderRadius: 4,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td
+                            style={{ padding: "14px 18px", color: "var(--navy)" }}
+                          >
+                            <code>{staff.email}</code>
+                          </td>
+                          <td
+                            style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
+                          >
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "4px 10px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                background: roleInfo.bg,
+                                color: roleInfo.color,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {roleInfo.label}
+                            </span>
+                          </td>
+                          <td
+                            style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
+                          >
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: staff.is_active ? "#157054" : "#b84646",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  background: staff.is_active
+                                    ? "#157054"
+                                    : "#b84646",
+                                }}
+                              />
+                              {staff.is_active ? "Active" : "Deactivated"}
+                            </span>
+                          </td>
+                          <td
+                            style={{
+                              padding: "14px 18px",
+                              color: "var(--muted)",
+                              fontSize: 12,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {staff.last_login
+                              ? new Date(staff.last_login).toLocaleString()
+                              : "Never"}
+                          </td>
+                          <td style={{ padding: "14px 18px", textAlign: "right" }}>
+                            <div style={{ display: "inline-flex", gap: 6 }}>
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(staff)}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background: "#f4f2ec",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openPasswordModal("staff", { id: staff.id, name: staff.name, email: staff.email })}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background: "#f4f2ec",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Password
+                              </button>
+                              {staff.id !== 1 && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleActive(staff)}
+                                    style={{
+                                      padding: "4px 8px",
+                                      fontSize: 11,
+                                      background: staff.is_active
+                                        ? "rgba(184, 70, 70, 0.1)"
+                                        : "rgba(21, 112, 84, 0.1)",
+                                      color: staff.is_active
+                                        ? "#b84646"
+                                        : "#157054",
+                                      border: "none",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {staff.is_active ? "Deactivate" : "Activate"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteStaff(staff)}
+                                    style={{
+                                      padding: "4px 8px",
+                                      fontSize: 11,
+                                      background: "transparent",
+                                      color: "#b84646",
+                                      border: "none",
+                                      borderRadius: 4,
+                                      cursor: "pointer",
+                                      fontWeight: 600,
+                                    }}
+                                    title="Delete account"
+                                  >
+                                    ✕
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Responsive Stacked Cards View */}
+            <div className="block md:hidden" style={{ padding: 14 }}>
+              {loading ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: 24,
+                    color: "var(--muted)",
+                    fontSize: 13,
+                  }}
+                >
+                  Loading staff records…
+                </div>
+              ) : admins.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: 24,
+                    color: "var(--muted)",
+                    fontSize: 13,
+                  }}
+                >
+                  No staff records found.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {admins.map((staff) => {
+                    const roleInfo = roleBadges[staff.role] || roleBadges.staff
+                    return (
+                      <div
+                        key={staff.id}
+                        style={{
+                          background: "#fbfaf8",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                          padding: 14,
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 10,
+                        }}
+                      >
                         <div
                           style={{
                             display: "flex",
-                            alignItems: "center",
-                            gap: 10,
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 8,
                           }}
                         >
-                          <span
+                          <div
                             style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: "50%",
-                              background:
-                                staff.role === "superadmin"
-                                  ? "#0b0b0b"
-                                  : "var(--gold)",
-                              color: "white",
-                              display: "grid",
-                              placeItems: "center",
-                              fontWeight: 700,
-                              fontSize: 12,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
                             }}
                           >
-                            {staff.name
-                              ? staff.name.slice(0, 2).toUpperCase()
-                              : "AD"}
-                          </span>
-                          <div>
-                            <strong>{staff.name}</strong>
-                            {staff.id === 1 && (
-                              <span
+                            <span
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: "50%",
+                                background:
+                                  staff.role === "superadmin"
+                                    ? "#0b0b0b"
+                                    : "var(--gold)",
+                                color: "white",
+                                display: "grid",
+                                placeItems: "center",
+                                fontWeight: 700,
+                                fontSize: 12,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {staff.name
+                                ? staff.name.slice(0, 2).toUpperCase()
+                                : "AD"}
+                            </span>
+                            <div>
+                              <strong
                                 style={{
-                                  marginLeft: 6,
-                                  fontSize: 10,
-                                  background: "#ffd700",
-                                  color: "#000",
-                                  padding: "1px 6px",
-                                  borderRadius: 4,
-                                  fontWeight: 700,
+                                  fontSize: 14,
+                                  color: "var(--navy)",
+                                  display: "block",
                                 }}
                               >
-                                Primary
-                              </span>
-                            )}
+                                {staff.name}
+                              </strong>
+                              {staff.id === 1 && (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    background: "#ffd700",
+                                    color: "#000",
+                                    padding: "1px 5px",
+                                    borderRadius: 4,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  Primary Admin
+                                </span>
+                              )}
+                            </div>
                           </div>
+                          <span
+                            style={{
+                              padding: "3px 8px",
+                              borderRadius: 999,
+                              fontSize: 10,
+                              fontWeight: 700,
+                              background: roleInfo.bg,
+                              color: roleInfo.color,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {roleInfo.label}
+                          </span>
                         </div>
-                      </td>
-                      <td
-                        style={{ padding: "14px 18px", color: "var(--navy)" }}
-                      >
-                        <code>{staff.email}</code>
-                      </td>
-                      <td
-                        style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
-                      >
-                        <span
+
+                        <div
                           style={{
-                            display: "inline-block",
-                            padding: "4px 10px",
-                            borderRadius: 999,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            background: roleInfo.bg,
-                            color: roleInfo.color,
-                            whiteSpace: "nowrap",
+                            fontSize: 12,
+                            color: "var(--navy)",
+                            background: "white",
+                            padding: "8px 10px",
+                            borderRadius: 6,
+                            border: "1px solid #ede8de",
                           }}
                         >
-                          {roleInfo.label}
-                        </span>
-                      </td>
-                      <td
-                        style={{ padding: "14px 18px", whiteSpace: "nowrap" }}
-                      >
-                        <span
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "var(--muted)",
+                              marginBottom: 2,
+                            }}
+                          >
+                            LOGIN EMAIL
+                          </div>
+                          <code style={{ fontSize: 12, wordBreak: "break-all" }}>
+                            {staff.email}
+                          </code>
+                        </div>
+
+                        <div
                           style={{
-                            display: "inline-flex",
+                            display: "flex",
+                            justifyContent: "space-between",
                             alignItems: "center",
-                            gap: 6,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: staff.is_active ? "#157054" : "#b84646",
+                            fontSize: 11,
+                            color: "var(--muted)",
                           }}
                         >
                           <span
                             style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: "50%",
-                              background: staff.is_active
-                                ? "#157054"
-                                : "#b84646",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              color: staff.is_active ? "#157054" : "#b84646",
+                              fontWeight: 600,
                             }}
-                          />
-                          {staff.is_active ? "Active" : "Deactivated"}
-                        </span>
-                      </td>
-                      <td
-                        style={{
-                          padding: "14px 18px",
-                          color: "var(--muted)",
-                          fontSize: 12,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {staff.last_login
-                          ? new Date(staff.last_login).toLocaleString()
-                          : "Never"}
-                      </td>
-                      <td style={{ padding: "14px 18px", textAlign: "right" }}>
-                        <div style={{ display: "inline-flex", gap: 6 }}>
+                          >
+                            <span
+                              style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                background: staff.is_active ? "#157054" : "#b84646",
+                              }}
+                            />
+                            {staff.is_active ? "Active" : "Deactivated"}
+                          </span>
+                          <span>
+                            Last login:{" "}
+                            {staff.last_login
+                              ? new Date(staff.last_login).toLocaleDateString()
+                              : "Never"}
+                          </span>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            borderTop: "1px solid var(--line)",
+                            paddingTop: 10,
+                            marginTop: 2,
+                          }}
+                        >
                           <button
                             type="button"
                             onClick={() => openEditModal(staff)}
                             style={{
-                              padding: "4px 8px",
-                              fontSize: 11,
-                              background: "#f4f2ec",
-                              border: "1px solid var(--line)",
-                              borderRadius: 4,
-                              cursor: "pointer",
+                              flex: 1,
+                              padding: "8px 10px",
+                              fontSize: 12,
                               fontWeight: 600,
+                              background: "var(--navy)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 6,
+                              cursor: "pointer",
+                              textAlign: "center",
                             }}
                           >
                             Edit
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => openPasswordModal("staff", { id: staff.id, name: staff.name, email: staff.email })}
+                            style={{
+                              padding: "8px 10px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: "#f4f2ec",
+                              border: "1px solid var(--line)",
+                              borderRadius: 6,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Password
+                          </button>
                           {staff.id !== 1 && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleActive(staff)}
-                                style={{
-                                  padding: "4px 8px",
-                                  fontSize: 11,
-                                  background: staff.is_active
-                                    ? "rgba(184, 70, 70, 0.1)"
-                                    : "rgba(21, 112, 84, 0.1)",
-                                  color: staff.is_active
-                                    ? "#b84646"
-                                    : "#157054",
-                                  border: "none",
-                                  borderRadius: 4,
-                                  cursor: "pointer",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {staff.is_active ? "Deactivate" : "Activate"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteStaff(staff)}
-                                style={{
-                                  padding: "4px 8px",
-                                  fontSize: 11,
-                                  background: "transparent",
-                                  color: "#b84646",
-                                  border: "none",
-                                  borderRadius: 4,
-                                  cursor: "pointer",
-                                  fontWeight: 600,
-                                }}
-                                title="Delete account"
-                              >
-                                ✕
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleActive(staff)}
+                              style={{
+                                padding: "8px 12px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                background: staff.is_active
+                                  ? "rgba(184, 70, 70, 0.1)"
+                                  : "rgba(21, 112, 84, 0.1)",
+                                color: staff.is_active ? "#b84646" : "#157054",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                              }}
+                            >
+                              {staff.is_active ? "Deactivate" : "Activate"}
+                            </button>
                           )}
                         </div>
-                      </td>
-                    </tr>
-                  )
-                })
+                      </div>
+                    )
+                  })}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
 
-        {/* Mobile Responsive Stacked Cards View (No sideways scrolling) */}
-        <div className="block md:hidden" style={{ padding: 14 }}>
-          {loading ? (
+          {/* Role Permissions Reference Card */}
+          <div
+            style={{
+              background: "white",
+              padding: 22,
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+            }}
+          >
+            <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--navy)" }}>
+              Role &amp; Permissions Matrix
+            </h4>
             <div
               style={{
-                textAlign: "center",
-                padding: 24,
-                color: "var(--muted)",
-                fontSize: 13,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: 14,
               }}
             >
-              Loading staff records…
+              <div
+                style={{
+                  padding: 14,
+                  background: "#fcfbf9",
+                  borderRadius: 6,
+                  border: "1px solid #ebe7df",
+                }}
+              >
+                <strong
+                  style={{ color: "#702064", display: "block", fontSize: 13 }}
+                >
+                  Super Administrator
+                </strong>
+                <p
+                  style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+                >
+                  Full system control: Operations, Academics, Staff management,
+                  Payment configurations, and Notification dispatch channels.
+                </p>
+              </div>
+              <div
+                style={{
+                  padding: 14,
+                  background: "#fcfbf9",
+                  borderRadius: 6,
+                  border: "1px solid #ebe7df",
+                }}
+              >
+                <strong
+                  style={{ color: "#157054", display: "block", fontSize: 13 }}
+                >
+                  Admissions Officer
+                </strong>
+                <p
+                  style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+                >
+                  Review student applications, approve/reject candidates, generate
+                  admission offer letters, and enroll students into cohorts.
+                </p>
+              </div>
+              <div
+                style={{
+                  padding: 14,
+                  background: "#fcfbf9",
+                  borderRadius: 6,
+                  border: "1px solid #ebe7df",
+                }}
+              >
+                <strong
+                  style={{ color: "#a24a18", display: "block", fontSize: 13 }}
+                >
+                  Financial Officer
+                </strong>
+                <p
+                  style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+                >
+                  Verify bank transfers and card payments, monitor revenue logs,
+                  generate official payment receipts, and reconcile accounts.
+                </p>
+              </div>
+              <div
+                style={{
+                  padding: 14,
+                  background: "#fcfbf9",
+                  borderRadius: 6,
+                  border: "1px solid #ebe7df",
+                }}
+              >
+                <strong
+                  style={{ color: "#1f6ea5", display: "block", fontSize: 13 }}
+                >
+                  Workshop Lead
+                </strong>
+                <p
+                  style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
+                >
+                  Manage instrument repair requests, update repair diagnostic
+                  stages, quote repair estimates, and notify customers.
+                </p>
+              </div>
             </div>
-          ) : admins.length === 0 ? (
+          </div>
+        </>
+      )}
+
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {/* 2. PORTAL STUDENTS & CLIENTS TAB                                      */}
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {activeAccountTab === "portal" && (
+        <>
+          {/* Metrics Row */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 14,
+            }}
+          >
             <div
               style={{
-                textAlign: "center",
-                padding: 24,
-                color: "var(--muted)",
-                fontSize: 13,
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
               }}
             >
-              No staff records found.
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Total Portal Accounts
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "var(--navy)",
+                  marginTop: 4,
+                }}
+              >
+                {portalUsers.length}
+              </strong>
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {admins.map((staff) => {
-                const roleInfo = roleBadges[staff.role] || roleBadges.staff
-                return (
-                  <div
-                    key={staff.id}
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Active Logins
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "#157054",
+                  marginTop: 4,
+                }}
+              >
+                {portalUsers.filter((u) => Boolean(u.is_active)).length}
+              </strong>
+            </div>
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Disabled Accounts
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "#b84646",
+                  marginTop: 4,
+                }}
+              >
+                {portalUsers.filter((u) => !Boolean(u.is_active)).length}
+              </strong>
+            </div>
+            <div
+              style={{
+                background: "white",
+                padding: 18,
+                borderRadius: 8,
+                border: "1px solid var(--line)",
+              }}
+            >
+              <small
+                style={{
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Enrolled Students
+              </small>
+              <strong
+                style={{
+                  display: "block",
+                  fontSize: 26,
+                  color: "var(--gold)",
+                  marginTop: 4,
+                }}
+              >
+                {portalUsers.filter((u) => u.role === "student").length}
+              </strong>
+            </div>
+          </div>
+
+          {/* Filter & Search Bar */}
+          <div
+            style={{
+              background: "white",
+              padding: "16px 20px",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", gap: 10, flex: 1, minWidth: 260 }}>
+              <input
+                type="text"
+                placeholder="Search by student name, email, phone…"
+                value={portalSearch}
+                onChange={(e) => setPortalSearch(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                  background: "#fbfaf8",
+                  fontSize: 13,
+                }}
+              />
+              <select
+                value={portalStatusFilter}
+                onChange={(e: any) => setPortalStatusFilter(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                  background: "white",
+                  fontSize: 13,
+                }}
+              >
+                <option value="all">All Accounts ({portalUsers.length})</option>
+                <option value="active">Active Only ({portalUsers.filter((u) => Boolean(u.is_active)).length})</option>
+                <option value="disabled">Disabled Only ({portalUsers.filter((u) => !Boolean(u.is_active)).length})</option>
+              </select>
+            </div>
+            <Button variant="ghost" onClick={loadPortalUsers}>
+              Refresh
+            </Button>
+          </div>
+
+          {/* Portal Users Table */}
+          <div
+            style={{
+              background: "white",
+              borderRadius: 8,
+              border: "1px solid var(--line)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Desktop Table View */}
+            <div className="hidden md:block table-wrap">
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr
                     style={{
                       background: "#fbfaf8",
-                      borderRadius: 8,
-                      border: "1px solid var(--line)",
-                      padding: 14,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
+                      borderBottom: "1px solid var(--line)",
+                      textAlign: "left",
                     }}
                   >
-                    <div
+                    <th
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        gap: 8,
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
                       }}
                     >
-                      <div
+                      User Account
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Phone Number
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Login Status
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Account Type
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Registered
+                    </th>
+                    <th
+                      style={{
+                        padding: "12px 18px",
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        textTransform: "uppercase",
+                        textAlign: "right",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {portalLoading ? (
+                    <tr>
+                      <td
+                        colSpan={6}
                         style={{
+                          padding: 30,
+                          textAlign: "center",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Loading portal user accounts…
+                      </td>
+                    </tr>
+                  ) : filteredPortalUsers.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        style={{
+                          padding: 30,
+                          textAlign: "center",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        No user accounts match the current filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredPortalUsers.map((user) => {
+                      const isActive = Boolean(user.is_active)
+                      const displayName = user.full_name || user.email
+                      return (
+                        <tr
+                          key={user.id}
+                          style={{
+                            borderBottom: "1px solid var(--line)",
+                            fontSize: 13,
+                          }}
+                        >
+                          <td style={{ padding: "14px 18px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <span
+                                style={{
+                                  width: 32,
+                                  height: 32,
+                                  borderRadius: "50%",
+                                  background: "#157054",
+                                  color: "white",
+                                  display: "grid",
+                                  placeItems: "center",
+                                  fontWeight: 700,
+                                  fontSize: 12,
+                                }}
+                              >
+                                {displayName ? displayName.slice(0, 2).toUpperCase() : "US"}
+                              </span>
+                              <div>
+                                <strong style={{ display: "block" }}>{displayName}</strong>
+                                <code style={{ fontSize: 11, color: "var(--muted)" }}>
+                                  {user.email}
+                                </code>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: "14px 18px" }}>
+                            <span style={{ fontSize: 12, color: "var(--navy)" }}>
+                              {user.phone || "—"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: isActive ? "#157054" : "#b84646",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  background: isActive ? "#157054" : "#b84646",
+                                }}
+                              />
+                              {isActive ? "Active Access" : "Disabled (Blocked)"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "14px 18px", whiteSpace: "nowrap" }}>
+                            <span
+                              style={{
+                                display: "inline-block",
+                                padding: "3px 8px",
+                                borderRadius: 4,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                background: "#eef1f4",
+                                color: "#475569",
+                                textTransform: "capitalize",
+                              }}
+                            >
+                              {user.role || "student"}
+                            </span>
+                          </td>
+                          <td
+                            style={{
+                              padding: "14px 18px",
+                              color: "var(--muted)",
+                              fontSize: 12,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {user.created_at
+                              ? new Date(user.created_at).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td style={{ padding: "14px 18px", textAlign: "right" }}>
+                            <div style={{ display: "inline-flex", gap: 6 }}>
+                              <button
+                                type="button"
+                                onClick={() => openPasswordModal("portal", { id: user.id, name: displayName, email: user.email })}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background: "#f4f2ec",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Change Password
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleTogglePortalUser(user)}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontSize: 11,
+                                  background:
+                                    isActive
+                                      ? "rgba(184, 70, 70, 0.1)"
+                                      : "rgba(21, 112, 84, 0.1)",
+                                  color: isActive ? "#b84646" : "#157054",
+                                  border: "none",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {isActive ? "Disable Account" : "Enable Account"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Stacked Card View */}
+            <div className="block md:hidden" style={{ padding: 14 }}>
+              {portalLoading ? (
+                <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                  Loading portal accounts…
+                </div>
+              ) : filteredPortalUsers.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 24, color: "var(--muted)", fontSize: 13 }}>
+                  No user accounts match current search.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {filteredPortalUsers.map((user) => {
+                    const isActive = Boolean(user.is_active)
+                    const displayName = user.full_name || user.email
+                    return (
+                      <div
+                        key={user.id}
+                        style={{
+                          background: "#fbfaf8",
+                          borderRadius: 8,
+                          border: "1px solid var(--line)",
+                          padding: 14,
                           display: "flex",
-                          alignItems: "center",
+                          flexDirection: "column",
                           gap: 10,
                         }}
                       >
-                        <span
+                        <div
                           style={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: "50%",
-                            background:
-                              staff.role === "superadmin"
-                                ? "#0b0b0b"
-                                : "var(--gold)",
-                            color: "white",
-                            display: "grid",
-                            placeItems: "center",
-                            fontWeight: 700,
-                            fontSize: 12,
-                            flexShrink: 0,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
                           }}
                         >
-                          {staff.name
-                            ? staff.name.slice(0, 2).toUpperCase()
-                            : "AD"}
-                        </span>
-                        <div>
-                          <strong
+                          <div>
+                            <strong style={{ fontSize: 14, color: "var(--navy)" }}>
+                              {displayName}
+                            </strong>
+                            <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                              <code>{user.email}</code>
+                              {user.phone ? ` · ${user.phone}` : ""}
+                            </div>
+                          </div>
+                          <span
                             style={{
-                              fontSize: 14,
-                              color: "var(--navy)",
-                              display: "block",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 5,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: isActive ? "#157054" : "#b84646",
                             }}
                           >
-                            {staff.name}
-                          </strong>
-                          {staff.id === 1 && (
                             <span
                               style={{
-                                fontSize: 9,
-                                background: "#ffd700",
-                                color: "#000",
-                                padding: "1px 5px",
-                                borderRadius: 4,
-                                fontWeight: 700,
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                background: isActive ? "#157054" : "#b84646",
                               }}
-                            >
-                              Primary Admin
-                            </span>
-                          )}
+                            />
+                            {isActive ? "Active" : "Disabled"}
+                          </span>
                         </div>
-                      </div>
-                      <span
-                        style={{
-                          padding: "3px 8px",
-                          borderRadius: 999,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          background: roleInfo.bg,
-                          color: roleInfo.color,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {roleInfo.label}
-                      </span>
-                    </div>
 
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--navy)",
-                        background: "white",
-                        padding: "8px 10px",
-                        borderRadius: 6,
-                        border: "1px solid #ede8de",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 11,
-                          color: "var(--muted)",
-                          marginBottom: 2,
-                        }}
-                      >
-                        LOGIN EMAIL
-                      </div>
-                      <code style={{ fontSize: 12, wordBreak: "break-all" }}>
-                        {staff.email}
-                      </code>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        fontSize: 11,
-                        color: "var(--muted)",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 5,
-                          color: staff.is_active ? "#157054" : "#b84646",
-                          fontWeight: 600,
-                        }}
-                      >
-                        <span
+                        <div
                           style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: "50%",
-                            background: staff.is_active ? "#157054" : "#b84646",
-                          }}
-                        />
-                        {staff.is_active ? "Active" : "Deactivated"}
-                      </span>
-                      <span>
-                        Last login:{" "}
-                        {staff.last_login
-                          ? new Date(staff.last_login).toLocaleDateString()
-                          : "Never"}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        borderTop: "1px solid var(--line)",
-                        paddingTop: 10,
-                        marginTop: 2,
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(staff)}
-                        style={{
-                          flex: 1,
-                          padding: "8px 12px",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          background: "var(--navy)",
-                          color: "white",
-                          border: "none",
-                          borderRadius: 6,
-                          cursor: "pointer",
-                          textAlign: "center",
-                        }}
-                      >
-                        Edit Account
-                      </button>
-                      {staff.id !== 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleActive(staff)}
-                          style={{
-                            padding: "8px 12px",
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: staff.is_active
-                              ? "rgba(184, 70, 70, 0.1)"
-                              : "rgba(21, 112, 84, 0.1)",
-                            color: staff.is_active ? "#b84646" : "#157054",
-                            border: "none",
-                            borderRadius: 6,
-                            cursor: "pointer",
+                            display: "flex",
+                            gap: 8,
+                            borderTop: "1px solid var(--line)",
+                            paddingTop: 10,
+                            marginTop: 2,
                           }}
                         >
-                          {staff.is_active ? "Deactivate" : "Activate"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+                          <button
+                            type="button"
+                            onClick={() => openPasswordModal("portal", { id: user.id, name: displayName, email: user.email })}
+                            style={{
+                              flex: 1,
+                              padding: "8px 10px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: "var(--navy)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 6,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Change Password
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePortalUser(user)}
+                            style={{
+                              padding: "8px 12px",
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background:
+                                isActive
+                                  ? "rgba(184, 70, 70, 0.1)"
+                                  : "rgba(21, 112, 84, 0.1)",
+                              color: isActive ? "#b84646" : "#157054",
+                              border: "none",
+                              borderRadius: 6,
+                              cursor: "pointer",
+                            }}
+                          >
+                            {isActive ? "Disable" : "Enable"}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
 
-      {/* Role Permissions Reference Card */}
-      <div
-        style={{
-          background: "white",
-          padding: 22,
-          borderRadius: 8,
-          border: "1px solid var(--line)",
-        }}
-      >
-        <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--navy)" }}>
-          Role &amp; Permissions Matrix
-        </h4>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 14,
-          }}
-        >
-          <div
-            style={{
-              padding: 14,
-              background: "#fcfbf9",
-              borderRadius: 6,
-              border: "1px solid #ebe7df",
-            }}
-          >
-            <strong
-              style={{ color: "#702064", display: "block", fontSize: 13 }}
-            >
-              Super Administrator
-            </strong>
-            <p
-              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
-            >
-              Full system control: Operations, Academics, Staff management,
-              Payment configurations, and Notification dispatch channels.
-            </p>
-          </div>
-          <div
-            style={{
-              padding: 14,
-              background: "#fcfbf9",
-              borderRadius: 6,
-              border: "1px solid #ebe7df",
-            }}
-          >
-            <strong
-              style={{ color: "#157054", display: "block", fontSize: 13 }}
-            >
-              Admissions Officer
-            </strong>
-            <p
-              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
-            >
-              Review student applications, approve/reject candidates, generate
-              admission offer letters, and enroll students into cohorts.
-            </p>
-          </div>
-          <div
-            style={{
-              padding: 14,
-              background: "#fcfbf9",
-              borderRadius: 6,
-              border: "1px solid #ebe7df",
-            }}
-          >
-            <strong
-              style={{ color: "#a24a18", display: "block", fontSize: 13 }}
-            >
-              Financial Officer
-            </strong>
-            <p
-              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
-            >
-              Verify bank transfers and card payments, monitor revenue logs,
-              generate official payment receipts, and reconcile accounts.
-            </p>
-          </div>
-          <div
-            style={{
-              padding: 14,
-              background: "#fcfbf9",
-              borderRadius: 6,
-              border: "1px solid #ebe7df",
-            }}
-          >
-            <strong
-              style={{ color: "#1f6ea5", display: "block", fontSize: 13 }}
-            >
-              Workshop Lead
-            </strong>
-            <p
-              style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}
-            >
-              Manage instrument repair requests, update repair diagnostic
-              stages, quote repair estimates, and notify customers.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Add / Edit Staff Modal */}
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {/* ADD / EDIT STAFF MODAL                                                */}
+      {/* ────────────────────────────────────────────────────────────────────── */}
       {showAddModal && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
           <div className="modal-card" style={{ maxWidth: 480 }}>
@@ -1147,6 +1899,143 @@ export function StaffAndRolesView({
                     : editingAdmin
                       ? "Update Account"
                       : "Create Staff Account"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {/* QUICK PASSWORD RESET MODAL (STAFF & PORTAL USERS)                      */}
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {passwordModal.isOpen && passwordModal.target && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card" style={{ maxWidth: 440 }}>
+            <div className="modal-head">
+              <h3>
+                Change Password: {passwordModal.target.name}
+              </h3>
+              <button
+                className="modal-close"
+                onClick={() => setPasswordModal({ isOpen: false, type: "staff", target: null })}
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={handleSaveNewPassword}
+              className="modal-body"
+              style={{ display: "flex", flexDirection: "column", gap: 14 }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--muted)",
+                  background: "#fbfaf8",
+                  padding: "10px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                }}
+              >
+                Account: <strong>{passwordModal.target.name}</strong> (
+                <code>{passwordModal.target.email}</code>)
+                <div style={{ marginTop: 2, fontSize: 11 }}>
+                  Type: {passwordModal.type === "staff" ? "Staff Administrator" : "Student / Portal User"}
+                </div>
+              </div>
+
+              {passwordError && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    background: "#fee2e2",
+                    border: "1px solid #f87171",
+                    borderRadius: 6,
+                    color: "#991b1b",
+                    fontSize: 12,
+                  }}
+                >
+                  {passwordError}
+                </div>
+              )}
+
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 5,
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}
+                  >
+                    New Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setNewPasswordValue(
+                        "VdxPass" + Math.floor(100 + Math.random() * 900) + "!",
+                      )
+                    }
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--gold)",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    🎲 Generate Random
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={newPasswordValue}
+                  onChange={(e) => setNewPasswordValue(e.target.value)}
+                  placeholder="Enter minimum 6 characters"
+                  required
+                  style={{
+                    width: "100%",
+                    minHeight: 40,
+                    borderRadius: 6,
+                    border: "1px solid var(--line)",
+                    padding: "0 10px",
+                    background: "white",
+                    fontSize: 14,
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 10,
+                  marginTop: 12,
+                  paddingTop: 12,
+                  borderTop: "1px solid var(--line)",
+                }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    setPasswordModal({ isOpen: false, type: "staff", target: null })
+                  }
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={passwordSaving}>
+                  {passwordSaving ? "Updating Password…" : "Save New Password"}
                 </Button>
               </div>
             </form>

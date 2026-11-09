@@ -434,6 +434,24 @@ if ($method === 'GET') {
                 ':sno' => $studentNo,
             ]);
 
+            // Sync with users table (enable/disable user portal login and optional password reset)
+            if (!empty($email)) {
+                if ($status === 'suspended') {
+                    $pdo->prepare("UPDATE `users` SET is_active = 0 WHERE LOWER(email) = LOWER(:em)")->execute([':em' => $email]);
+                } elseif ($status === 'active') {
+                    $pdo->prepare("UPDATE `users` SET is_active = 1 WHERE LOWER(email) = LOWER(:em)")->execute([':em' => $email]);
+                }
+
+                $newPass = trim($input['password'] ?? '');
+                if (!empty($newPass) && strlen($newPass) >= 6) {
+                    $hash = password_hash($newPass, PASSWORD_BCRYPT);
+                    $pdo->prepare("UPDATE `users` SET password_hash = :hash WHERE LOWER(email) = LOWER(:em)")->execute([
+                        ':hash' => $hash,
+                        ':em' => $email,
+                    ]);
+                }
+            }
+
             jsonResponse(['success' => true, 'message' => 'Student record updated successfully.']);
         } elseif ($action === 'delete') {
             $id = (int)($input['id'] ?? 0);

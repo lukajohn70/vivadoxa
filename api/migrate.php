@@ -73,6 +73,10 @@ foreach ($enquiryCols as $col => $def) {
 $label = "enquiries.email → allow empty string (NOT NULL DEFAULT '')";
 migrate($pdo, "ALTER TABLE `enquiries` MODIFY COLUMN `email` VARCHAR(191) NOT NULL DEFAULT ''", $label, $log, $errors);
 
+// ── 3b. payments — currency column ──────────────────────────────────────────
+$label = "payments.currency";
+migrate($pdo, "ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`", $label, $log, $errors);
+
 // ── 4. applications — passport_photo & letter_released ───────────────────────
 $label = "applications.passport_photo";
 migrate($pdo, "ALTER TABLE `applications` ADD COLUMN `passport_photo` LONGTEXT NULL", $label, $log, $errors);
@@ -221,6 +225,78 @@ migrate($pdo,
         `whatsapp_sent`    TINYINT(1)   NOT NULL DEFAULT 0,
         `created_at`       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
         `updated_at`       TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    $label, $log, $errors
+);
+
+// ── 13. user_devices & login_otp_codes (2FA Security) ─────────────────────────
+$label = "CREATE user_devices";
+migrate($pdo,
+    "CREATE TABLE IF NOT EXISTS `user_devices` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_type` ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+        `user_id` INT NOT NULL,
+        `device_id` VARCHAR(100) NOT NULL,
+        `device_name` VARCHAR(255) NULL,
+        `ip_address` VARCHAR(50) NULL,
+        `user_agent` TEXT NULL,
+        `verified_at` DATETIME NOT NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY `uniq_user_device` (`user_type`, `user_id`, `device_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    $label, $log, $errors
+);
+
+$label = "CREATE login_otp_codes";
+migrate($pdo,
+    "CREATE TABLE IF NOT EXISTS `login_otp_codes` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `user_type` ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+        `user_id` INT NOT NULL,
+        `email` VARCHAR(191) NOT NULL,
+        `code` VARCHAR(10) NOT NULL,
+        `device_id` VARCHAR(100) NOT NULL,
+        `device_name` VARCHAR(255) NULL,
+        `ip_address` VARCHAR(50) NULL,
+        `expires_at` DATETIME NOT NULL,
+        `is_used` TINYINT(1) NOT NULL DEFAULT 0,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_verify` (`user_type`, `user_id`, `code`, `is_used`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    $label, $log, $errors
+);
+
+// ── 14. bulletins & newsletter_subscribers (Weekly Bulletin) ──────────────────
+$label = "CREATE bulletins";
+migrate($pdo,
+    "CREATE TABLE IF NOT EXISTS `bulletins` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `title` VARCHAR(255) NOT NULL,
+        `edition` VARCHAR(100) NOT NULL,
+        `category` VARCHAR(100) NOT NULL DEFAULT 'Weekly Bulletin',
+        `summary` TEXT NULL,
+        `content_html` LONGTEXT NOT NULL,
+        `cover_image` VARCHAR(500) NULL,
+        `target_audience` VARCHAR(100) NOT NULL DEFAULT 'all',
+        `status` ENUM('draft', 'published', 'sent') NOT NULL DEFAULT 'draft',
+        `recipients_count` INT NOT NULL DEFAULT 0,
+        `sent_at` DATETIME NULL,
+        `created_by` VARCHAR(150) NULL,
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    $label, $log, $errors
+);
+
+$label = "CREATE newsletter_subscribers";
+migrate($pdo,
+    "CREATE TABLE IF NOT EXISTS `newsletter_subscribers` (
+        `id` INT AUTO_INCREMENT PRIMARY KEY,
+        `email` VARCHAR(191) NOT NULL UNIQUE,
+        `full_name` VARCHAR(150) NULL,
+        `status` ENUM('active', 'unsubscribed') NOT NULL DEFAULT 'active',
+        `source` VARCHAR(100) NOT NULL DEFAULT 'website',
+        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     $label, $log, $errors
 );

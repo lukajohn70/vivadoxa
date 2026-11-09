@@ -8,11 +8,18 @@ import React, {
   useCallback,
   useMemo,
 } from "react"
-import { loginAdmin, getApiUrl } from "@/lib/api"
+import { loginAdmin, verifyAdmin2FA, resendAdmin2FA, getApiUrl } from "@/lib/api"
 
 export interface AdminSession {
   email: string
   name: string
+}
+
+export interface AdminPending2FA {
+  userId: number
+  tempToken?: string
+  emailMasked: string
+  deviceName?: string
 }
 
 export interface AdminAuthContextType {
@@ -22,6 +29,10 @@ export interface AdminAuthContextType {
   loginError: string
   loginLoading: boolean
   clearError: () => void
+  pending2FA: AdminPending2FA | null
+  verify2FA: (code: string) => Promise<boolean>
+  resend2FA: () => Promise<{ success: boolean; message?: string }>
+  cancel2FA: () => void
 }
 
 const SESSION_KEY = "vdx_admin_session"
@@ -56,8 +67,14 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AdminSession | null>(getInitialSession)
   const [loginError, setLoginError] = useState<string>("")
   const [loginLoading, setLoginLoading] = useState(false)
+  const [pending2FA, setPending2FA] = useState<AdminPending2FA | null>(null)
 
   const clearError = useCallback(() => {
+    setLoginError("")
+  }, [])
+
+  const cancel2FA = useCallback(() => {
+    setPending2FA(null)
     setLoginError("")
   }, [])
 
@@ -77,6 +94,17 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const dbResult = await loginAdmin(cleanInput, cleanPassword)
+        if (dbResult.requires_2fa && dbResult.user_id) {
+          setPending2FA({
+            userId: dbResult.user_id,
+            tempToken: dbResult.temp_token,
+            emailMasked: dbResult.email_masked || "registered email",
+            deviceName: dbResult.device_name || "Current Browser",
+          })
+          setLoginLoading(false)
+          return false
+        }
+
         if (dbResult.success && dbResult.user) {
           const newSession: AdminSession = {
             email: dbResult.user.email,
@@ -84,6 +112,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
           }
           persistSession(newSession)
           setSession(newSession)
+          setPending2FA(null)
           setLoginLoading(false)
           return true
         } else {
@@ -104,6 +133,54 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     [],
   )
 
+  const verify2FA = useCallback(
+    async (code: string) => {
+      if (!pending2FA) return false
+      setLoginLoading(true)
+      setLoginError("")
+
+      try {
+        const res = await verifyAdmin2FA(
+          pending2FA.userId,
+          code.trim(),
+          pending2FA.tempToken,
+          pending2FA.deviceName,
+        )
+
+        if (res.success && res.user) {
+          const newSession: AdminSession = {
+            email: res.user.email,
+            name: res.user.name,
+          }
+          persistSession(newSession)
+          setSession(newSession)
+          setPending2FA(null)
+          setLoginLoading(false)
+          return true
+        } else {
+          setLoginError(res.error || "Invalid or expired verification code.")
+          setLoginLoading(false)
+          return false
+        }
+      } catch (err: any) {
+        setLoginError(err.message || "Failed to verify security code.")
+        setLoginLoading(false)
+        return false
+      }
+    },
+    [pending2FA],
+  )
+
+  const resend2FA = useCallback(async () => {
+    if (!pending2FA) return { success: false, message: "No pending verification session." }
+    try {
+      const res = await resendAdmin2FA(pending2FA.userId)
+      return res
+    } catch (err: any) {
+      return { success: false, message: err.message || "Failed to resend code." }
+    }
+  }, [pending2FA])
+
   const logout = useCallback(() => {
     try {
       fetch(getApiUrl("logout.php"), {
@@ -115,6 +192,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     }
     persistSession(null)
     setSession(null)
+    setPending2FA(null)
     setLoginError("")
   }, [])
 
@@ -126,8 +204,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       loginError,
       loginLoading,
       clearError,
+      pending2FA,
+      verify2FA,
+      resend2FA,
+      cancel2FA,
     }),
-    [session, login, logout, loginError, loginLoading, clearError],
+    [session, login, logout, loginError, loginLoading, clearError, pending2FA, verify2FA, resend2FA, cancel2FA],
   )
 
   return (

@@ -4,7 +4,20 @@ require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+// Ensure payments table has required columns (self-healing migration)
+function ensurePaymentsSchema(PDO $pdo): void {
+    static $checked = false;
+    if ($checked) return;
+    try {
+        $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
+    } catch (Exception $e) {
+        // Column already exists or table not ready
+    }
+    $checked = true;
+}
+
 $pdo = getDb();
+ensurePaymentsSchema($pdo);
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -135,10 +148,49 @@ if ($method === 'GET') {
                 $upApp->execute([':no' => $appNo]);
             }
         } catch (Exception $gwEx) {
-            jsonResponse([
-                'success' => false,
-                'error' => 'Unable to record online settlement: ' . $gwEx->getMessage(),
-            ], 500);
+            // Fallback in case table lacks currency column and ALTER was blocked
+            if (stripos($gwEx->getMessage(), 'currency') !== false) {
+                try {
+                    $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
+                    $stmt->execute([
+                        ':ref' => $reference,
+                        ':app_no' => !empty($appNo) ? $appNo : null,
+                        ':name' => $payerName,
+                        ':email' => !empty($payerEmail) ? $payerEmail : '',
+                        ':amt' => $amount,
+                        ':curr' => $currency,
+                        ':method' => $methodType,
+                        ':notes' => $notes,
+                    ]);
+                } catch (Exception $fallbackEx) {
+                    // Fall back to query without currency column
+                    $stmtNoCurr = $pdo->prepare("
+                        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `method`, `status`, `notes`, `verified_at`)
+                        VALUES (:ref, :app_no, :name, :email, :amt, :method, 'verified', :notes, NOW())
+                        ON DUPLICATE KEY UPDATE
+                            `payer_name` = VALUES(`payer_name`),
+                            `amount` = VALUES(`amount`),
+                            `method` = VALUES(`method`),
+                            `status` = 'verified',
+                            `notes` = VALUES(`notes`),
+                            `verified_at` = NOW()
+                    ");
+                    $stmtNoCurr->execute([
+                        ':ref' => $reference,
+                        ':app_no' => !empty($appNo) ? $appNo : null,
+                        ':name' => $payerName,
+                        ':email' => !empty($payerEmail) ? $payerEmail : '',
+                        ':amt' => $amount,
+                        ':method' => $methodType,
+                        ':notes' => "[Currency: $currency] " . $notes,
+                    ]);
+                }
+            } else {
+                jsonResponse([
+                    'success' => false,
+                    'error' => 'Unable to record online settlement: ' . $gwEx->getMessage(),
+                ], 500);
+            }
         }
 
         // Notify Admissions & Student
@@ -228,10 +280,52 @@ if ($method === 'GET') {
             ':notes' => $notes,
         ]);
     } catch (Exception $dbEx) {
-        jsonResponse([
-            'success' => false,
-            'error' => 'Unable to record payment: ' . $dbEx->getMessage(),
-        ], 500);
+        if (stripos($dbEx->getMessage(), 'currency') !== false) {
+            try {
+                $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
+                $stmt->execute([
+                    ':ref' => $reference,
+                    ':app_no' => !empty($appNo) ? $appNo : null,
+                    ':name' => $payerName,
+                    ':email' => !empty($payerEmail) ? $payerEmail : '',
+                    ':amt' => $amount,
+                    ':curr' => $currency,
+                    ':method' => $methodType,
+                    ':notes' => $notes,
+                ]);
+            } catch (Exception $fallbackEx) {
+                // Fall back to query without currency column
+                try {
+                    $stmtNoCurr = $pdo->prepare("
+                        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `method`, `status`, `notes`)
+                        VALUES (:ref, :app_no, :name, :email, :amt, :method, 'pending', :notes)
+                        ON DUPLICATE KEY UPDATE
+                            `payer_name` = VALUES(`payer_name`),
+                            `amount` = VALUES(`amount`),
+                            `notes` = VALUES(`notes`)
+                    ");
+                    $stmtNoCurr->execute([
+                        ':ref' => $reference,
+                        ':app_no' => !empty($appNo) ? $appNo : null,
+                        ':name' => $payerName,
+                        ':email' => !empty($payerEmail) ? $payerEmail : '',
+                        ':amt' => $amount,
+                        ':method' => $methodType,
+                        ':notes' => "[Currency: $currency] " . $notes,
+                    ]);
+                } catch (Exception $finalEx) {
+                    jsonResponse([
+                        'success' => false,
+                        'error' => 'Unable to record payment: ' . $finalEx->getMessage(),
+                    ], 500);
+                }
+            }
+        } else {
+            jsonResponse([
+                'success' => false,
+                'error' => 'Unable to record payment: ' . $dbEx->getMessage(),
+            ], 500);
+        }
     }
 
     // Automated Notifications Pipeline

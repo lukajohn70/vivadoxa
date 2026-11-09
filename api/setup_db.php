@@ -99,6 +99,10 @@ try {
         ) ENGINE=InnoDB;
     ");
 
+    try {
+        $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
+    } catch (Exception $e) {}
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `repairs` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,

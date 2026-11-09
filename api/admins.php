@@ -107,6 +107,32 @@ if ($method === 'GET') {
             }
 
             jsonResponse(['success' => true, 'message' => "Staff member details updated."]);
+        } elseif ($action === 'change_password') {
+            $id = (int)($input['id'] ?? 0);
+            $newPass = trim($input['password'] ?? $input['new_password'] ?? '');
+
+            if ($id <= 0) {
+                jsonResponse(['success' => false, 'error' => 'Valid staff ID is required.'], 400);
+            }
+
+            if (strlen($newPass) < 6) {
+                jsonResponse(['success' => false, 'error' => 'Password must be at least 6 characters.'], 400);
+            }
+
+            $stmt = $pdo->prepare("SELECT id, name FROM `admins` WHERE id = :id LIMIT 1");
+            $stmt->execute([':id' => $id]);
+            $staff = $stmt->fetch();
+            if (!$staff) {
+                jsonResponse(['success' => false, 'error' => 'Staff record not found.'], 404);
+            }
+
+            $hash = password_hash($newPass, PASSWORD_BCRYPT);
+            $pdo->prepare("UPDATE `admins` SET `password_hash` = :hash WHERE id = :id")->execute([
+                ':hash' => $hash,
+                ':id' => $id,
+            ]);
+
+            jsonResponse(['success' => true, 'message' => "Password for {$staff['name']} updated successfully."]);
         } elseif ($action === 'toggle_active') {
             $id = (int)($input['id'] ?? 0);
             if ($id === 1) {

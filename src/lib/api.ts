@@ -550,13 +550,28 @@ export const DEFAULT_PERFORMANCES = [
   },
 ]
 
+// ── Device ID for 2FA Device Verification ────────────────────────────────────
+export function getDeviceId(): string {
+  try {
+    let id = localStorage.getItem("vdx_device_id")
+    if (!id) {
+      id = "dev_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now().toString(36)
+      localStorage.setItem("vdx_device_id", id)
+    }
+    return id
+  } catch {
+    return "dev_fallback_" + Date.now()
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export async function loginAdmin(
   email: string,
   password: string,
-): Promise<ApiResponse> {
+): Promise<ApiResponse & { requires_2fa?: boolean; temp_token?: string; email_masked?: string; user_id?: number; device_name?: string }> {
   const cleanEmail = email.trim().toLowerCase()
   const cleanPassword = password.trim()
+  const deviceId = getDeviceId()
 
   // If there is an unsynced local staff account created offline, commit it to MySQL first
   try {
@@ -594,7 +609,7 @@ export async function loginAdmin(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+      body: JSON.stringify({ email: cleanEmail, password: cleanPassword, device_id: deviceId }),
     })
 
     const data = await res.json().catch(() => null)
@@ -2088,13 +2103,13 @@ export interface PortalData {
 export async function loginUser(
   identifier: string,
   password: string,
-): Promise<ApiResponse & { user?: PortalUser }> {
+): Promise<ApiResponse & { user?: PortalUser; requires_2fa?: boolean; temp_token?: string; email_masked?: string; user_id?: number; device_name?: string }> {
   try {
     const res = await fetch(getApiUrl("user_auth.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ action: "login", identifier, password }),
+      body: JSON.stringify({ action: "login", identifier, password, device_id: getDeviceId() }),
     })
     const data = await res.json()
     if (data.success && data.user) {
@@ -2592,4 +2607,295 @@ export async function uploadGalleryPhoto(file: File): Promise<ApiResponse> {
     return { success: false, error: err.message || "Failed to upload photo." }
   }
 }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ── 2FA Device Verification (Staff & Portal Users) ───────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+export async function verifyAdmin2FA(
+  userId: number,
+  code: string,
+  tempToken?: string,
+  deviceName?: string,
+): Promise<ApiResponse & { user?: any }> {
+  try {
+    const res = await fetch(getApiUrl("login.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "verify_2fa",
+        user_id: userId,
+        code,
+        temp_token: tempToken,
+        device_id: getDeviceId(),
+        device_name: deviceName,
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Verification request failed." }
+  }
+}
+
+export async function resendAdmin2FA(userId: number): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("login.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "resend_2fa",
+        user_id: userId,
+        device_id: getDeviceId(),
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to resend verification code." }
+  }
+}
+
+export async function verifyUser2FA(
+  userId: number,
+  code: string,
+  tempToken?: string,
+  deviceName?: string,
+): Promise<ApiResponse & { user?: PortalUser }> {
+  try {
+    const res = await fetch(getApiUrl("user_auth.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "verify_2fa",
+        user_id: userId,
+        code,
+        temp_token: tempToken,
+        device_id: getDeviceId(),
+        device_name: deviceName,
+      }),
+    })
+    const data = await res.json()
+    if (data.success && data.user) {
+      localStorage.setItem("vdx_portal_user", JSON.stringify(data.user))
+    }
+    return data
+  } catch (err: any) {
+    return { success: false, error: err.message || "Verification request failed." }
+  }
+}
+
+export async function resendUser2FA(userId: number): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("user_auth.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "resend_2fa",
+        user_id: userId,
+        device_id: getDeviceId(),
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to resend code." }
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ── User Management (Disable Users & Change Passwords) ───────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+export interface PortalAccountUser {
+  id: number
+  email: string
+  phone: string
+  full_name: string
+  role: "student" | "client" | "all"
+  is_active: number | boolean
+  last_login?: string
+  created_at: string
+  address?: string
+  guardian_name?: string
+  guardian_phone?: string
+}
+
+export async function fetchPortalUsers(): Promise<PortalAccountUser[]> {
+  try {
+    const res = await fetch(getApiUrl("users.php"), {
+      credentials: "include",
+    })
+    const data = await res.json()
+    return data.users || []
+  } catch {
+    return []
+  }
+}
+
+export async function togglePortalUserActive(id: number): Promise<ApiResponse & { is_active?: number }> {
+  try {
+    const res = await fetch(getApiUrl("users.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_active", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update user status." }
+  }
+}
+
+export async function changePortalUserPassword(id: number, newPassword: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("users.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "change_password", id, password: newPassword }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to change user password." }
+  }
+}
+
+export async function changeStaffPassword(id: number, newPassword: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("admins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "change_password", id, password: newPassword }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update staff password." }
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ── Weekly Bulletin & Newsletter Broadcasts ──────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+export interface BulletinItem {
+  id?: number
+  title: string
+  edition: string
+  category: string
+  summary?: string
+  content_html: string
+  cover_image?: string
+  target_audience?: "all" | "students" | "subscribers" | "test"
+  status?: "draft" | "published" | "sent"
+  recipients_count?: number
+  sent_at?: string
+  created_by?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export async function fetchBulletins(): Promise<BulletinItem[]> {
+  try {
+    const res = await fetch(`${getApiUrl("bulletins.php")}?action=list`, {
+      credentials: "include",
+    })
+    const data = await res.json()
+    return data.bulletins || []
+  } catch {
+    return []
+  }
+}
+
+export async function getBulletin(id: number): Promise<BulletinItem | null> {
+  try {
+    const res = await fetch(`${getApiUrl("bulletins.php")}?action=get&id=${id}`, {
+      credentials: "include",
+    })
+    const data = await res.json()
+    return data.bulletin || null
+  } catch {
+    return null
+  }
+}
+
+export async function saveBulletin(bulletin: Partial<BulletinItem>): Promise<ApiResponse & { id?: number }> {
+  try {
+    const res = await fetch(getApiUrl("bulletins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save", ...bulletin }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save weekly bulletin." }
+  }
+}
+
+export async function sendBulletin(
+  id: number,
+  targetAudience: string = "all",
+  testEmail?: string,
+): Promise<ApiResponse & { sent_count?: number }> {
+  try {
+    const res = await fetch(getApiUrl("bulletins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "send",
+        id,
+        target_audience: targetAudience,
+        test_email: testEmail,
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to dispatch bulletin." }
+  }
+}
+
+export async function deleteBulletin(id: number): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("bulletins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete bulletin." }
+  }
+}
+
+export async function subscribeNewsletter(
+  email: string,
+  name?: string,
+  source: string = "website",
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("bulletins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "subscribe", email, name, source }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to subscribe." }
+  }
+}
+
+export async function fetchNewsletterSubscribers(): Promise<any[]> {
+  try {
+    const res = await fetch(`${getApiUrl("bulletins.php")}?action=subscribers`, {
+      credentials: "include",
+    })
+    const data = await res.json()
+    return data.subscribers || []
+  } catch {
+    return []
+  }
+}
+
 

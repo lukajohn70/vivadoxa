@@ -19,11 +19,11 @@ const STATS_DATA: StatItem[] = [
     sublabel: "Studio & private home coaching in Kaduna",
   },
   {
-    id: "disciplines",
-    targetValue: 13,
+    id: "cohorts",
+    targetValue: 17,
     suffix: "",
-    label: "Core Disciplines",
-    sublabel: "Woodwinds, keys, strings, brass & voice",
+    label: "Academic Cohorts & Disciplines",
+    sublabel: "17 certified cohorts across keys, strings, brass, winds & audio",
   },
   {
     id: "success",
