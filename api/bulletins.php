@@ -115,6 +115,23 @@ if ($method === 'GET') {
                 'subscribers' => $subscribers,
                 'count' => count($subscribers),
             ]);
+        } elseif ($action === 'logs' || $action === 'dispatch_logs') {
+            $limit = min(100, max(10, (int)($_GET['limit'] ?? 50)));
+            $stmt = $pdo->prepare("
+                SELECT id, channel, recipient, subject, status, error_message, created_at
+                FROM `system_notifications`
+                WHERE `channel` = 'email'
+                ORDER BY id DESC
+                LIMIT :lim
+            ");
+            $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            $logs = $stmt->fetchAll();
+            jsonResponse([
+                'success' => true,
+                'logs' => $logs,
+                'count' => count($logs),
+            ]);
         } else {
             jsonResponse(['success' => false, 'error' => 'Unknown GET action.'], 400);
         }
@@ -288,6 +305,7 @@ if ($method === 'GET') {
             $sentCount = 0;
             $failedCount = 0;
             $lastError = null;
+            $deliveredRecipients = [];
 
             $serviceCtasHtml = "
                 <div style='margin-top: 26px; padding-top: 18px; border-top: 1px solid #e7e2d9;'>
@@ -378,6 +396,11 @@ if ($method === 'GET') {
 
                 if ($res['success']) {
                     $sentCount++;
+                    $deliveredRecipients[] = [
+                        'email' => $toEmail,
+                        'name' => $name,
+                        'status' => 'delivered',
+                    ];
                 } else {
                     $failedCount++;
                     $lastError = $res['error'] ?? 'Delivery failed.';
@@ -413,9 +436,15 @@ if ($method === 'GET') {
                 'success' => true,
                 'sent_count' => $sentCount,
                 'failed_count' => $failedCount,
+                'sender' => 'info@vivadoxamusic.com',
+                'sender_name' => 'Vivadoxa Music Weekly Bulletin',
+                'target' => !empty($testEmail) ? $testEmail : $targetAudience,
+                'recipients' => $deliveredRecipients,
+                'dispatched_at' => date('Y-m-d H:i:s'),
+                'is_test' => !empty($testEmail),
                 'message' => !empty($testEmail)
-                    ? "Test bulletin delivered to $testEmail."
-                    : "Weekly Bulletin broadcast to $sentCount recipients successfully.",
+                    ? "Test bulletin dispatched successfully to {$testEmail} from info@vivadoxamusic.com."
+                    : "Weekly Bulletin successfully broadcast to {$sentCount} recipient(s) from info@vivadoxamusic.com.",
             ]);
         }
 

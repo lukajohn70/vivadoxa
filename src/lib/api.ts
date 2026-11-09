@@ -2832,11 +2832,32 @@ export async function saveBulletin(bulletin: Partial<BulletinItem>): Promise<Api
   }
 }
 
+export interface BulletinSendResponse extends ApiResponse {
+  sent_count?: number
+  failed_count?: number
+  sender?: string
+  sender_name?: string
+  target?: string
+  recipients?: Array<{ email: string; name?: string; status?: string }>
+  dispatched_at?: string
+  is_test?: boolean
+}
+
+export interface BulletinDispatchLog {
+  id: number
+  channel: string
+  recipient: string
+  subject: string
+  status: "sent" | "failed" | "logged" | "warning" | string
+  error_message: string | null
+  created_at: string
+}
+
 export async function sendBulletin(
   id: number,
   targetAudience: string = "all",
   testEmail?: string,
-): Promise<ApiResponse & { sent_count?: number }> {
+): Promise<BulletinSendResponse> {
   try {
     const res = await fetch(getApiUrl("bulletins.php"), {
       method: "POST",
@@ -2893,6 +2914,18 @@ export async function fetchNewsletterSubscribers(): Promise<any[]> {
     })
     const data = await res.json()
     return data.subscribers || []
+  } catch {
+    return []
+  }
+}
+
+export async function fetchBulletinDispatchLogs(limit: number = 50): Promise<BulletinDispatchLog[]> {
+  try {
+    const res = await fetch(`${getApiUrl("bulletins.php")}?action=dispatch_logs&limit=${limit}`, {
+      credentials: "include",
+    })
+    const data = await res.json()
+    return data.success ? data.logs || [] : []
   } catch {
     return []
   }
