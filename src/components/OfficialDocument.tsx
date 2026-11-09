@@ -1,3 +1,6 @@
+import { useState } from "react"
+import html2canvas from "html2canvas"
+import { jsPDF } from "jspdf"
 import brandLogo from "@/assets/vivadoxa-logo.png"
 import ceoSignature from "@/assets/ceo-signature.png"
 import { Button, Icon } from "@/components/ui"
@@ -298,6 +301,79 @@ export function printDocumentElement(elementId: string) {
       style.remove()
     }, 1000)
   }, 80)
+}
+
+/**
+ * Downloads a DOM document element directly as a high-resolution A4 PDF.
+ */
+export async function downloadDocumentPdf(
+  elementId: string,
+  filename: string,
+) {
+  const target = document.getElementById(elementId)
+  if (!target) return
+
+  // Render element to high-res canvas (scale: 2 for sharp print output)
+  const canvas = await html2canvas(target, {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    backgroundColor: "#ffffff",
+    onclone: (clonedDoc) => {
+      const clonedElement = clonedDoc.getElementById(elementId)
+      if (clonedElement) {
+        clonedElement.style.width = "780px"
+        clonedElement.style.maxWidth = "780px"
+        clonedElement.style.padding = "36px 42px"
+        clonedElement.style.boxShadow = "none"
+        clonedElement.style.border = "none"
+        clonedElement.style.borderRadius = "0"
+        clonedElement.style.margin = "0 auto"
+      }
+    },
+  })
+
+  // A4 dimensions in mm: 210 x 297
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  })
+
+  const pageWidth = 210
+  const pageHeight = 297
+  const margin = 10 // 10mm margins on all sides
+  const printableWidth = pageWidth - margin * 2 // 190mm
+  const printableHeight = pageHeight - margin * 2 // 277mm
+
+  const imgWidth = printableWidth
+  const imgHeight = (canvas.height * printableWidth) / canvas.width
+  const imgData = canvas.toDataURL("image/jpeg", 0.98)
+
+  if (imgHeight <= printableHeight) {
+    // Fits cleanly on 1 page: place with standard margin
+    pdf.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight)
+  } else {
+    // Multi-page handling
+    let heightLeft = imgHeight
+    let position = margin
+
+    pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight)
+    heightLeft -= printableHeight
+
+    while (heightLeft > 0) {
+      position = margin - (imgHeight - heightLeft)
+      pdf.addPage()
+      pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight)
+      heightLeft -= printableHeight
+    }
+  }
+
+  const cleanFilename = (filename || "Vivadoxa-Admission-Letter").replace(
+    /[^a-zA-Z0-9_-]/g,
+    "_",
+  )
+  pdf.save(cleanFilename.endsWith(".pdf") ? cleanFilename : `${cleanFilename}.pdf`)
 }
 
 export function downloadDocumentHtml(
