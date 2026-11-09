@@ -196,14 +196,14 @@ function generateAndSend2FACode(
         </p>
     ";
 
-    $emailTemplate = buildOfficialEmailTemplate([
+    $emailTemplate = buildBrandedEmailTemplate([
         'title' => 'Sign-In Verification Code',
         'badge' => 'Account Security',
         'headline' => 'Sign-In Security Verification',
         'clientName' => $fullName,
         'bodyHtml' => $htmlBody,
         'deptName' => 'Vivadoxa Security Desk',
-        'deptEmail' => 'security@vivadoxamusic.com',
+        'deptEmail' => 'info@vivadoxamusic.com',
     ]);
 
     // Send the email (do not BCC official gmail to preserve privacy of OTP codes)
@@ -212,7 +212,7 @@ function generateAndSend2FACode(
         "🔐 {$code} is your Vivadoxa sign-in code",
         $emailTemplate,
         null,
-        'academy',
+        'security',
         false
     );
 

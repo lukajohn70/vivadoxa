@@ -134,6 +134,21 @@ function getDepartmentSender(string $dept = 'academy', ?array $settings = null):
             'name'  => 'Vivadoxa Music Desk',
             'badge' => 'Client Desk',
         ],
+        'newsletter' => [
+            'email' => 'info@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Weekly Bulletin',
+            'badge' => 'Weekly Bulletin',
+        ],
+        'bulletin' => [
+            'email' => 'info@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Music Weekly Bulletin',
+            'badge' => 'Weekly Bulletin',
+        ],
+        'security' => [
+            'email' => 'info@vivadoxamusic.com',
+            'name'  => 'Vivadoxa Security Desk',
+            'badge' => 'Security Desk',
+        ],
         'general' => [
             'email' => 'info@vivadoxamusic.com',
             'name'  => 'Vivadoxa Music Academy & Studio',
@@ -264,6 +279,13 @@ function buildBrandedEmailTemplate(array $params): string {
     </body>
     </html>
     ";
+}
+
+/**
+ * Backward compatibility alias for buildBrandedEmailTemplate.
+ */
+function buildOfficialEmailTemplate(array $params): string {
+    return buildBrandedEmailTemplate($params);
 }
 
 function sendSmtpEmail(array $smtp, string $to, string $subject, string $htmlBody, string $fromEmail, string $fromName, ?string $replyTo = null, ?string $bcc = null): array {
@@ -403,7 +425,9 @@ function sendSystemEmail(
 ): array {
     $settings = $overrideSettings ?: getGeneralSettingsConfig();
 
-    if (empty($settings['emailAlerts'])) {
+    // Do not block newsletters, bulletins, or 2FA/security verification even if transactional alerts are toggled off
+    $isMandatory = in_array(strtolower(trim($department)), ['newsletter', 'bulletin', 'security', '2fa']);
+    if (empty($settings['emailAlerts']) && !$isMandatory) {
         logNotification('email', $to, $subject, $htmlBody, 'logged', 'Email alerts currently toggled off');
         return ['success' => false, 'error' => 'Email alerts are disabled in System Settings.'];
     }
@@ -413,14 +437,14 @@ function sendSystemEmail(
     $fromName  = $deptInfo['name'];
     $replyTo   = $deptInfo['email'];
 
-    // Official Gmail account: every notification/form is duplicated/BCC'd here
+    // Official Gmail account: every notification/form is duplicated/BCC'd here (except newsletters/security)
     $officialGmail = trim($settings['officialGmail'] ?? 'vivadoxa@gmail.com');
     if (empty($officialGmail)) {
         $officialGmail = 'vivadoxa@gmail.com';
     }
     $bcc = ($bccOfficialGmail && strcasecmp(trim($to), $officialGmail) !== 0) ? $officialGmail : null;
 
-    // 1. If SMTP is configured, attempt SMTP
+    // 1. If SMTP is configured, attempt SMTP first
     if (!empty($settings['smtpHost']) && !empty($settings['smtpUser'])) {
         $smtpConfig = [
             'host' => $settings['smtpHost'],
@@ -436,25 +460,35 @@ function sendSystemEmail(
             logNotification('email', $to, $subject, $htmlBody, 'sent', $note);
             return $res;
         }
-        // Fallback or log error
-        $errorMsg = $res['error'] ?? 'SMTP Error';
-        logNotification('email', $to, $subject, $htmlBody, 'failed', $errorMsg);
-        return $res;
+        // If SMTP failed, log warning and fall back to PHP mail()
+        $smtpError = $res['error'] ?? 'SMTP Error';
+        logNotification('email', $to, $subject, $htmlBody, 'warning', "SMTP failed ($smtpError); falling back to PHP mail()");
     }
 
-    // 2. Try PHP mail()
+    // 2. Try PHP mail() with envelope sender (-f)
     $headers = [
         'MIME-Version: 1.0',
         'Content-type: text/html; charset=UTF-8',
         "From: =?UTF-8?B?" . base64_encode($fromName) . "?= <$fromEmail>",
         "Reply-To: <$replyTo>",
+        "Return-Path: <$fromEmail>",
         'X-Mailer: PHP/' . phpversion(),
     ];
     if (!empty($bcc) && strcasecmp(trim($bcc), trim($to)) !== 0) {
         $headers[] = "Bcc: <" . trim($bcc) . ">";
     }
 
-    $mailSent = @mail($to, $subject, $htmlBody, implode("\r\n", $headers));
+    $headerStr = implode("\r\n", $headers);
+    // Envelope sender -f is crucial for SPF/DKIM verification and prevent bounce rejection
+    $mailSent = false;
+    try {
+        $mailSent = @mail($to, $subject, $htmlBody, $headerStr, "-f" . $fromEmail);
+    } catch (Exception $e) {}
+
+    if (!$mailSent) {
+        // Fallback without 5th param if restricted by server safe_mode
+        $mailSent = @mail($to, $subject, $htmlBody, $headerStr);
+    }
 
     if ($mailSent) {
         $note = "Sent via server mail() from $fromEmail";

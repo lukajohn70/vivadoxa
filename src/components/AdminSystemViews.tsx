@@ -3016,10 +3016,9 @@ export function GeneralSettingsView({
               id="cfg-school-email"
               label="Primary Operations Email"
               value={generalSettings.schoolEmail}
-              onChange={(v) => {
+              onChange={(v) =>
                 setGeneralSettings({ ...generalSettings, schoolEmail: v })
-                if (!testEmailRecipient) setTestEmailRecipient(v)
-              }}
+              }
               type="email"
               required
             />

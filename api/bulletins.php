@@ -287,6 +287,74 @@ if ($method === 'GET') {
             // Send to each recipient
             $sentCount = 0;
             $failedCount = 0;
+            $lastError = null;
+
+            $serviceCtasHtml = "
+                <div style='margin-top: 36px; padding-top: 24px; border-top: 2px solid #ede8e0;'>
+                    <div style='text-align: center; margin-bottom: 20px;'>
+                        <span style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #c96b32; background: #fff5ee; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffd8c0; display: inline-block;'>
+                            Vivadoxa Creative Ecosystem
+                        </span>
+                        <h3 style='margin: 8px 0 4px; font-size: 18px; font-weight: 700; color: #0b0b0b;'>
+                            Programs &amp; Professional Services
+                        </h3>
+                        <p style='margin: 0; font-size: 13px; color: #78716c;'>
+                            Instruction, luthier clinic, concert sound fleet, and studio recording
+                        </p>
+                    </div>
+
+                    <!-- Service Cards Table Grid (Universal Email Friendly) -->
+                    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' border='0' style='margin-bottom: 12px;'>
+                        <tr>
+                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🎓 Music Academy</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>17 Instrument Cohorts</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Graded tuition across piano, violin, guitar, saxophone, drums, voice & theory. Onsite, home or online.</p>
+                                <a href='https://www.vivadoxamusic.com/apply' target='_blank' style='display: inline-block; background-color: #c96b32; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Apply / Enroll &rarr;</a>
+                            </td>
+                            <td width='4%'>&nbsp;</td>
+                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🔧 Instrument Clinic</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Luthier &amp; Repair Care</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Precision setups, fret leveling, electronics, piano tuning, brass overhaul & diagnostics.</p>
+                                <a href='https://www.vivadoxamusic.com/repairs' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Book Repair &rarr;</a>
+                            </td>
+                        </tr>
+                        <tr><td height='12' colspan='3'></td></tr>
+                        <tr>
+                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🔊 Sound &amp; Gear Rentals</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Concert Fleet &amp; Backline</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Stage pianos, acoustic/electronic drum kits, powered PA line arrays, and wireless microphones.</p>
+                                <a href='https://www.vivadoxamusic.com/rentals' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Browse Rentals &rarr;</a>
+                            </td>
+                            <td width='4%'>&nbsp;</td>
+                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🛍️ Music Store</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Instruments &amp; Accessories</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Guitars, violins, keyboards, strings, reeds, audio cables, and musician gear.</p>
+                                <a href='https://www.vivadoxamusic.com/store' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Shop Store &rarr;</a>
+                            </td>
+                        </tr>
+                        <tr><td height='12' colspan='3'></td></tr>
+                        <tr>
+                            <td width='48%' style='background-color: #faf8f5; border: 1px solid #ede8e0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #c96b32; margin-bottom: 4px;'>🎙️ Recording &amp; Rehearsal</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Acoustic Live Studio</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Sound-isolated band rehearsal hall, vocal booth, multi-track recording & mixing suite.</p>
+                                <a href='https://www.vivadoxamusic.com/studio' target='_blank' style='display: inline-block; background-color: #0b0b0b; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Book Studio &rarr;</a>
+                            </td>
+                            <td width='4%'>&nbsp;</td>
+                            <td width='48%' style='background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 16px; vertical-align: top;'>
+                                <div style='font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #16a34a; margin-bottom: 4px;'>💬 WhatsApp Concierge</div>
+                                <div style='font-size: 14px; font-weight: 700; color: #0b0b0b; margin-bottom: 6px;'>Direct Support Desk</div>
+                                <p style='margin: 0 0 12px; font-size: 12px; color: #5c5954; line-height: 1.45;'>Chat directly with our instructors, sound engineers, or repair techs in real time.</p>
+                                <a href='https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Music%2C%20I%20am%20enquiring%20about%20your%20services' target='_blank' style='display: inline-block; background-color: #16a34a; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 700; padding: 7px 14px; border-radius: 6px;'>Chat on WhatsApp &rarr;</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            ";
 
             foreach ($recipients as $rec) {
                 $name = $rec['name'];
@@ -303,13 +371,15 @@ if ($method === 'GET') {
                         {$bulletin['content_html']}
                     </div>
 
+                    {$serviceCtasHtml}
+
                     <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 30px; font-size: 12px; color: #78716c;'>
                         <p style='margin: 0;'><strong>Vivadoxa Community Bulletin Desk</strong></p>
                         <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you are an active student, applicant, or subscribed patron of Vivadoxa Music.</p>
                     </div>
                 ";
 
-                $emailHtml = buildOfficialEmailTemplate([
+                $emailHtml = buildBrandedEmailTemplate([
                     'title' => $bulletin['title'],
                     'badge' => $bulletin['edition'],
                     'headline' => $bulletin['title'],
@@ -317,8 +387,8 @@ if ($method === 'GET') {
                     'bodyHtml' => $bodyHtml,
                     'ctaText' => 'Visit Vivadoxa Portal',
                     'ctaUrl' => 'https://www.vivadoxamusic.com/portal',
-                    'deptName' => 'Vivadoxa Editorial & Community Desk',
-                    'deptEmail' => 'academy@vivadoxamusic.com',
+                    'deptName' => 'Vivadoxa Music Weekly Bulletin',
+                    'deptEmail' => 'info@vivadoxamusic.com',
                 ]);
 
                 $res = sendSystemEmail(
@@ -326,7 +396,7 @@ if ($method === 'GET') {
                     $bulletin['title'],
                     $emailHtml,
                     null,
-                    'academy',
+                    'newsletter',
                     false
                 );
 
@@ -334,7 +404,18 @@ if ($method === 'GET') {
                     $sentCount++;
                 } else {
                     $failedCount++;
+                    $lastError = $res['error'] ?? 'Delivery failed.';
                 }
+            }
+
+            // If test send or real broadcast completely failed
+            if ($sentCount === 0) {
+                jsonResponse([
+                    'success' => false,
+                    'sent_count' => 0,
+                    'failed_count' => $failedCount,
+                    'error' => !empty($lastError) ? $lastError : 'Failed to deliver bulletin to recipient.',
+                ], 500);
             }
 
             // Update bulletin status
