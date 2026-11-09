@@ -4046,6 +4046,10 @@ function AdminManager({ title }: { title: string }) {
               <h3>
                 {(title === "Enquiries"
                   ? "Enquiry"
+                  : title === "Programs & Courses"
+                  ? "Course Program"
+                  : title === "Performances & Recitals"
+                  ? "Recital Showcase"
                   : title.endsWith("ies")
                   ? title.slice(0, -3) + "y"
                   : title.endsWith("s")
@@ -4057,6 +4061,7 @@ function AdminManager({ title }: { title: string }) {
                   selectedRecord.reference ||
                   selectedRecord.tracking_code ||
                   selectedRecord.student_no ||
+                  selectedRecord.title ||
                   selectedRecord.name}
               </h3>
               <button
@@ -5844,6 +5849,435 @@ function AdminManager({ title }: { title: string }) {
                   </div>
                 </div>
               )}
+
+              {/* Programs & Courses Details */}
+              {title === "Programs & Courses" && (
+                <div>
+                  <div
+                    style={{
+                      background: "#faf9f7",
+                      border: "1px solid var(--line)",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                      marginBottom: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            background: "rgba(201, 107, 50, 0.15)",
+                            color: "#a24a18",
+                          }}
+                        >
+                          {selectedRecord.category || "Instrument Tuition"}
+                        </span>
+                        {selectedRecord.tag && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "2px 8px",
+                              borderRadius: 4,
+                              background: "#f1f5f9",
+                              color: "#475569",
+                            }}
+                          >
+                            {selectedRecord.tag}
+                          </span>
+                        )}
+                      </div>
+                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--navy)" }}>
+                        {selectedRecord.name}
+                      </h3>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background:
+                            selectedRecord.is_active !== 0
+                              ? "rgba(21, 112, 84, 0.12)"
+                              : "rgba(220, 38, 38, 0.1)",
+                          color:
+                            selectedRecord.is_active !== 0
+                              ? "var(--green)"
+                              : "#dc2626",
+                        }}
+                      >
+                        {selectedRecord.is_active !== 0
+                          ? "Active Program"
+                          : "Inactive / Archived"}
+                      </span>
+                      <div style={{ marginTop: 4, fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>
+                        {selectedRecord.fee || "₦20,000 / month"}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
+                    <div>
+                      <small>Curriculum Category</small>
+                      <strong>{selectedRecord.category || "Instruments"}</strong>
+                    </div>
+                    <div>
+                      <small>Tuition Fee Schedule</small>
+                      <strong style={{ color: "var(--navy)" }}>
+                        {selectedRecord.fee || "₦20,000 / month"}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Term Duration</small>
+                      <strong>{selectedRecord.duration || "1–12 Months (Modular)"}</strong>
+                    </div>
+                    <div>
+                      <small>Available Delivery Modes</small>
+                      <strong>{selectedRecord.modes || "Studio · Home Lessons · Online"}</strong>
+                    </div>
+                    <div>
+                      <small>Target Age Group</small>
+                      <strong>{selectedRecord.age_group || "All Ages"}</strong>
+                    </div>
+                    <div>
+                      <small>Entry Skill Level</small>
+                      <strong>{selectedRecord.level || "Beginner to Advanced"}</strong>
+                    </div>
+                  </div>
+
+                  {/* Course Description & Syllabus Highlights */}
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--line)",
+                      paddingTop: 16,
+                      marginTop: 8,
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: "0 0 8px",
+                        fontSize: 12,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "var(--muted)",
+                      }}
+                    >
+                      Syllabus &amp; Course Highlights
+                    </h4>
+                    <div
+                      style={{
+                        background: "#faf9f7",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        padding: "14px 18px",
+                        fontSize: 13.5,
+                        lineHeight: 1.6,
+                        color: "#374151",
+                      }}
+                    >
+                      {selectedRecord.desc || (
+                        <span style={{ color: "var(--muted)", fontStyle: "italic" }}>
+                          No extended syllabus description provided for this course. Click &ldquo;Edit Course Details&rdquo; below to update learning objectives, repertoire notes, and exam accreditation details.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Instructors Details */}
+              {title === "Instructors" && (
+                <div>
+                  <div
+                    style={{
+                      background: "#faf9f7",
+                      border: "1px solid var(--line)",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                      marginBottom: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          background: selectedRecord.is_director ? "rgba(201, 107, 50, 0.15)" : "#f1f5f9",
+                          color: selectedRecord.is_director ? "#a24a18" : "#475569",
+                          display: "inline-block",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {selectedRecord.is_director ? "Artistic Director & Faculty Lead" : "Faculty Instructor"}
+                      </span>
+                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--navy)" }}>
+                        {selectedRecord.name}
+                      </h3>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+                        {selectedRecord.title}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background:
+                            selectedRecord.is_active !== 0
+                              ? "rgba(21, 112, 84, 0.12)"
+                              : "rgba(220, 38, 38, 0.1)",
+                          color:
+                            selectedRecord.is_active !== 0
+                              ? "var(--green)"
+                              : "#dc2626",
+                        }}
+                      >
+                        {selectedRecord.is_active !== 0 ? "Active Faculty" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
+                    <div>
+                      <small>Academic Designation</small>
+                      <strong>{selectedRecord.title}</strong>
+                    </div>
+                    <div>
+                      <small>Teaching Specialization</small>
+                      <strong style={{ color: "var(--navy)" }}>
+                        {selectedRecord.specialization}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Studio Campus</small>
+                      <strong>{selectedRecord.location || "Kaduna Studio"}</strong>
+                    </div>
+                    <div>
+                      <small>Leadership Status</small>
+                      <strong>{selectedRecord.is_director ? "Director / Principal" : "Faculty Member"}</strong>
+                    </div>
+                  </div>
+
+                  {selectedRecord.bio && (
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--line)",
+                        paddingTop: 16,
+                        marginTop: 8,
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: "0 0 8px",
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Instructor Biography &amp; Professional Background
+                      </h4>
+                      <div
+                        style={{
+                          background: "#faf9f7",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          padding: "14px 18px",
+                          fontSize: 13.5,
+                          lineHeight: 1.6,
+                          color: "#374151",
+                        }}
+                      >
+                        {selectedRecord.bio}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Performances & Recitals Details */}
+              {title === "Performances & Recitals" && (
+                <div>
+                  <div
+                    style={{
+                      background: "#faf9f7",
+                      border: "1px solid var(--line)",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                      marginBottom: 18,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          background: "rgba(201, 107, 50, 0.15)",
+                          color: "#a24a18",
+                          display: "inline-block",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {selectedRecord.category || "Student Recital"}
+                      </span>
+                      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--navy)" }}>
+                        {selectedRecord.title}
+                      </h3>
+                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+                        {selectedRecord.performers}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: selectedRecord.is_featured ? "rgba(201, 107, 50, 0.15)" : "#f1f5f9",
+                          color: selectedRecord.is_featured ? "var(--gold)" : "var(--muted)",
+                        }}
+                      >
+                        {selectedRecord.is_featured ? "Featured Showcase" : "Archive"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="doc-grid" style={{ margin: "0 0 16px" }}>
+                    <div>
+                      <small>Featured Performers</small>
+                      <strong>{selectedRecord.performers}</strong>
+                    </div>
+                    <div>
+                      <small>Genre / Category</small>
+                      <strong>{selectedRecord.category}</strong>
+                    </div>
+                    <div>
+                      <small>Event Showcase Type</small>
+                      <strong>{selectedRecord.event_type}</strong>
+                    </div>
+                    <div>
+                      <small>YouTube Video ID</small>
+                      <strong style={{ fontFamily: "monospace", color: "var(--navy)" }}>
+                        {selectedRecord.youtube_id || "—"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {selectedRecord.youtube_id && (
+                    <div style={{ marginBottom: 16 }}>
+                      <a
+                        href={`https://www.youtube.com/watch?v=${selectedRecord.youtube_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "block",
+                          position: "relative",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                          maxHeight: 220,
+                          border: "1px solid var(--line)",
+                        }}
+                      >
+                        <img
+                          src={`https://img.youtube.com/vi/${selectedRecord.youtube_id}/hqdefault.jpg`}
+                          alt={selectedRecord.title}
+                          style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            background: "rgba(0,0,0,0.3)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            fontWeight: 700,
+                            fontSize: 14,
+                            gap: 8,
+                          }}
+                        >
+                          ▶ Play Video on YouTube
+                        </div>
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedRecord.description && (
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--line)",
+                        paddingTop: 16,
+                      }}
+                    >
+                      <h4
+                        style={{
+                          margin: "0 0 8px",
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Recital Notes &amp; Performance Highlights
+                      </h4>
+                      <div
+                        style={{
+                          background: "#faf9f7",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          padding: "14px 18px",
+                          fontSize: 13.5,
+                          lineHeight: 1.6,
+                          color: "#374151",
+                        }}
+                      >
+                        {selectedRecord.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="modal-foot">
@@ -5945,6 +6379,97 @@ function AdminManager({ title }: { title: string }) {
                     </a>
                   )}
                 </>
+              )}
+
+              {title === "Programs & Courses" && (
+                <>
+                  <Button
+                    variant="ghost"
+                    style={{ color: "#dc2626" }}
+                    onClick={async () => {
+                      if (
+                        confirm(`Deactivate course "${selectedRecord.name}"?`)
+                      ) {
+                        await deleteProgram(selectedRecord.id)
+                        setActionNotice(
+                          `Course "${selectedRecord.name}" deactivated.`
+                        )
+                        setSelectedRecord(null)
+                        loadData()
+                      }
+                    }}
+                  >
+                    Deactivate Course
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const rec = selectedRecord
+                      setSelectedRecord(null)
+                      setEditCourse(rec)
+                      setShowEditModal(true)
+                    }}
+                  >
+                    Edit Course Details
+                  </Button>
+                </>
+              )}
+
+              {title === "Instructors" && (
+                <>
+                  <Button
+                    variant="ghost"
+                    style={{ color: "#dc2626" }}
+                    onClick={async () => {
+                      if (
+                        confirm(
+                          `Deactivate instructor "${selectedRecord.name}"?`
+                        )
+                      ) {
+                        await deleteInstructor(selectedRecord.id)
+                        setActionNotice(
+                          `Instructor "${selectedRecord.name}" deactivated.`
+                        )
+                        setSelectedRecord(null)
+                        loadData()
+                      }
+                    }}
+                  >
+                    Deactivate Instructor
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const rec = selectedRecord
+                      setSelectedRecord(null)
+                      setEditInstructor(rec)
+                      setShowEditModal(true)
+                    }}
+                  >
+                    Edit Instructor Details
+                  </Button>
+                </>
+              )}
+
+              {title === "Performances & Recitals" && selectedRecord.youtube_id && (
+                <a
+                  href={`https://www.youtube.com/watch?v=${selectedRecord.youtube_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    background: "#dc2626",
+                    color: "white",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Icon name="youtube" size={14} />
+                  Watch on YouTube
+                </a>
               )}
 
               <Button variant="ghost" onClick={() => setSelectedRecord(null)}>
