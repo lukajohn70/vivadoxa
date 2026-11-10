@@ -377,7 +377,7 @@ if ($method === 'GET') {
 
             jsonResponse([
                 'success' => true,
-                'message' => 'Thank you for subscribing! A welcome email has been sent to your inbox.',
+                'message' => 'Thank you for subscribing to Vivadoxa Dispatches.',
                 'email_dispatched' => !empty($mailResult['success']),
                 'delivery_status' => $mailResult['message'] ?? 'Dispatched',
             ]);

@@ -370,7 +370,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
       const res = await subscribeNewsletter(bulletinEmail.trim(), "", "footer")
       if (res.success) {
         setBulletinSubscribed(true)
-        setBulletinMsg("Thank you for subscribing to our Weekly Bulletin!")
+        setBulletinMsg("Thank you for subscribing to Vivadoxa Dispatches.")
       } else {
         setBulletinMsg(res.error || "Unable to subscribe. Please try again.")
       }
@@ -403,7 +403,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
             {bulletinSubscribed ? (
               <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
                 <span>✓</span>
-                <span>Subscribed! A welcome email with full bulletin info and unsubscribe options has been sent to your inbox.</span>
+                <span>Thank you for subscribing to Vivadoxa Dispatches.</span>
               </div>
             ) : (
               <>
