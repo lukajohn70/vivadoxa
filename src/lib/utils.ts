@@ -46,7 +46,7 @@ export const WHATSAPP_URL =
 // ─── School constants ─────────────────────────────────────────────────────────
 export const BANK_NAME = "Guaranty Trust Bank (GTBank)"
 export const BANK_ACCOUNT_NO = "0236649229"
-export const BANK_ACCOUNT_NAME = "Fredrerick Chysantus"
+export const BANK_ACCOUNT_NAME = "Frederick Chrysantius"
 export const SCHOOL_PHONE = "09075330330"
 export const SCHOOL_PHONE_2 = "09010267234"
 export const SCHOOL_WHATSAPP = "08031308881"

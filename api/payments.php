@@ -279,6 +279,12 @@ if ($method === 'GET') {
             ':method' => $methodType,
             ':notes' => $notes,
         ]);
+
+        if (!empty($appNo)) {
+            try {
+                $pdo->prepare("UPDATE `applications` SET `updated_at` = NOW() WHERE `application_no` = :no")->execute([':no' => $appNo]);
+            } catch (Exception $appUpEx) {}
+        }
     } catch (Exception $dbEx) {
         if (stripos($dbEx->getMessage(), 'currency') !== false) {
             try {

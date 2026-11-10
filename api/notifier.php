@@ -3,7 +3,10 @@ require_once __DIR__ . '/db.php';
 
 function getSystemSetting(string $key, $default = null) {
     try {
-        $pdo = getDb();
+        $pdo = function_exists('tryGetDb') ? tryGetDb() : null;
+        if (!$pdo) {
+            return $default;
+        }
         $stmt = $pdo->prepare("SELECT `setting_value` FROM `system_settings` WHERE `setting_key` = :k LIMIT 1");
         $stmt->execute([':k' => $key]);
         $val = $stmt->fetchColumn();

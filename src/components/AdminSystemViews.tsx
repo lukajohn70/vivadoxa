@@ -2170,6 +2170,7 @@ export function PaymentSettingsView({
     accountName?: string
     error?: string
     method?: string
+    isLive?: boolean
   } | null>(null)
 
   async function handleVerifyAccount() {
@@ -2190,24 +2191,42 @@ export function PaymentSettingsView({
         account_number: rawNo,
         bank_code: selectedBankCode,
         bank_name: bankSettings.bankName,
+        account_name: bankSettings.accountName,
         paystackSecretKey: bankSettings.paystackSecretKey,
+        flutterwaveSecretKey: bankSettings.flutterwaveSecretKey,
       })
 
       if (res.success && res.verified) {
-        setAuthStatus({
-          verified: true,
-          accountName: res.account_name,
-          method: res.method,
-        })
-        if (res.account_name) {
+        const isLive =
+          res.method === "live_gateway" ||
+          res.method === "live_paystack" ||
+          res.method === "live_flutterwave"
+
+        if (isLive && res.account_name) {
+          setAuthStatus({
+            verified: true,
+            accountName: res.account_name,
+            method: res.method,
+            isLive: true,
+          })
           setBankSettings((prev) => ({
             ...prev,
             accountName: res.account_name || prev.accountName,
           }))
+          setActionNotice(
+            `✓ Account verified live via NIBSS network: ${res.account_name}`,
+          )
+        } else {
+          setAuthStatus({
+            verified: true,
+            accountName: bankSettings.accountName || "",
+            method: "cbn_nuban",
+            isLive: false,
+          })
+          setActionNotice(
+            `✓ Valid ${bankSettings.bankName} account number (CBN checksum verified).`,
+          )
         }
-        setActionNotice(
-          `✓ Account successfully authenticated: ${res.account_name}`,
-        )
       } else {
         setAuthStatus({
           verified: false,
@@ -2451,11 +2470,21 @@ export function PaymentSettingsView({
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
-                      background: authStatus.verified ? "#f0fdf4" : "#fef2f2",
-                      border: authStatus.verified
-                        ? "1px solid #86efac"
-                        : "1px solid #fecaca",
-                      color: authStatus.verified ? "#166534" : "#991b1b",
+                      background: !authStatus.verified
+                        ? "#fef2f2"
+                        : authStatus.isLive
+                          ? "#f0fdf4"
+                          : "#eff6ff",
+                      border: !authStatus.verified
+                        ? "1px solid #fecaca"
+                        : authStatus.isLive
+                          ? "1px solid #86efac"
+                          : "1px solid #bfdbfe",
+                      color: !authStatus.verified
+                        ? "#991b1b"
+                        : authStatus.isLive
+                          ? "#166534"
+                          : "#1e40af",
                     }}
                   >
                     <Icon
@@ -2464,10 +2493,16 @@ export function PaymentSettingsView({
                     />
                     <span>
                       {authStatus.verified ? (
-                        <>
-                          <strong>Authenticated Account:</strong>{" "}
-                          {authStatus.accountName} (CBN NUBAN Verified)
-                        </>
+                        authStatus.isLive ? (
+                          <>
+                            <strong>Authenticated Account:</strong>{" "}
+                            {authStatus.accountName} ({bankSettings.bankName} Live Verified)
+                          </>
+                        ) : (
+                          <span>
+                            <strong>CBN Checksum Verified:</strong> Valid {bankSettings.bankName} account format. To resolve the registered holder name live from NIBSS, enter your Paystack Secret Key below.
+                          </span>
+                        )
                       ) : (
                         authStatus.error
                       )}

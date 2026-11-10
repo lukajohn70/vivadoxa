@@ -290,12 +290,16 @@ export function Status() {
 
                   <Button
                     variant={
-                      application.status === "approved" && application.letter_released
+                      application.status === "approved" &&
+                      application.letter_released
                         ? "primary"
                         : "secondary"
                     }
                     onClick={() => {
-                      if (application.status === "approved" && application.letter_released) {
+                      if (
+                        application.status === "approved" &&
+                        application.letter_released
+                      ) {
                         setShowLetter(true)
                       }
                     }}
@@ -304,11 +308,15 @@ export function Status() {
                       fontSize: 12,
                       minHeight: 40,
                       opacity: application.letter_released ? 1 : 0.5,
-                      cursor: application.letter_released ? "pointer" : "default",
+                      cursor: application.letter_released
+                        ? "pointer"
+                        : "default",
                     }}
                   >
                     <Icon name="copy" size={14} />{" "}
-                    {application.letter_released ? "Admission Letter (PDF)" : "Letter Not Yet Released"}
+                    {application.letter_released
+                      ? "Admission Letter (PDF)"
+                      : "Letter Not Yet Released"}
                   </Button>
                 </div>
               </div>
@@ -362,8 +370,15 @@ export function Status() {
                         <Icon name="copy" /> Download admission letter (PDF)
                       </Button>
                     ) : (
-                      <p style={{ fontSize: 13, color: "var(--muted)", margin: 0 }}>
-                        Your official admission letter will be made available once the admissions office completes verification.
+                      <p
+                        style={{
+                          fontSize: 13,
+                          color: "var(--muted)",
+                          margin: 0,
+                        }}
+                      >
+                        Your official admission letter will be made available
+                        once the admissions office completes verification.
                       </p>
                     )}
                     {payment && payment.status === "verified" && (

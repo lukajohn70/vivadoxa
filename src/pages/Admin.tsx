@@ -135,7 +135,9 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
     try {
       const res = await resend2FA()
       if (res.success) {
-        setResendNotice("A fresh 6-digit verification code has been dispatched.")
+        setResendNotice(
+          "A fresh 6-digit verification code has been dispatched.",
+        )
       } else {
         setResendNotice(res.message || "Failed to resend code.")
       }
@@ -472,10 +474,7 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         "Enquiries",
       ],
     ],
-    [
-      "Communications",
-      ["Weekly Bulletin"],
-    ],
+    ["Communications", ["Weekly Bulletin"]],
     [
       "Academics",
       [
@@ -1097,7 +1096,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               )}
             </div>
             <strong>{card.count}</strong>
-            {card.sub ? <small className={`tone-${card.tone}`}>{card.sub}</small> : null}
+            {card.sub ? (
+              <small className={`tone-${card.tone}`}>{card.sub}</small>
+            ) : null}
           </article>
         ))}
       </div>
@@ -1552,7 +1553,8 @@ function AdminManager({ title }: { title: string }) {
         const res = await deletePerformancesBatch(selectedRecitalIds)
         if (res && res.success) {
           setActionNotice(
-            res.message || `${selectedRecitalIds.length} recital videos removed.`,
+            res.message ||
+              `${selectedRecitalIds.length} recital videos removed.`,
           )
           setSelectedRecitalIds([])
           loadData()
@@ -1617,9 +1619,16 @@ function AdminManager({ title }: { title: string }) {
         program: selectedRecord.program || "",
         password: "",
       })
-    } else if (selectedRecord && (title === "Repairs" || title.includes("Repairs"))) {
+    } else if (
+      selectedRecord &&
+      (title === "Repairs" || title.includes("Repairs"))
+    ) {
       setRepairStatusInput(selectedRecord.status || "received")
-      setRepairCostInput(selectedRecord.estimated_cost ? String(selectedRecord.estimated_cost) : "")
+      setRepairCostInput(
+        selectedRecord.estimated_cost
+          ? String(selectedRecord.estimated_cost)
+          : "",
+      )
       setRepairAdminNote("")
     }
   }, [selectedRecord, title])
@@ -1696,7 +1705,9 @@ function AdminManager({ title }: { title: string }) {
         setSelectedRecord({ ...selectedRecord, letter_released: 1 })
       }
     } else {
-      setActionNotice(`Failed to release letter: ${res?.error || "Unknown error"}`)
+      setActionNotice(
+        `Failed to release letter: ${res?.error || "Unknown error"}`,
+      )
     }
   }
 
@@ -1734,8 +1745,16 @@ function AdminManager({ title }: { title: string }) {
     if (res && res.success) {
       setActionNotice(`Payment ${ref} verified successfully.`)
       loadData()
-      if (selectedRecord && selectedRecord.reference === ref) {
-        setSelectedRecord({ ...selectedRecord, status: "verified" })
+      if (
+        selectedRecord &&
+        (selectedRecord.reference === ref ||
+          selectedRecord.payment_reference === ref)
+      ) {
+        setSelectedRecord({
+          ...selectedRecord,
+          status: "approved",
+          payment_status: "verified",
+        })
       }
     }
   }
@@ -1748,7 +1767,9 @@ function AdminManager({ title }: { title: string }) {
   ) {
     const res = await updateRepairStatus(code, newStatus, cost, adminNote)
     if (res && res.success) {
-      setActionNotice(`Repair ${code} updated to ${newStatus}. Customer auto-notified via branded email.`)
+      setActionNotice(
+        `Repair ${code} updated to ${newStatus}. Customer auto-notified via branded email.`,
+      )
       loadData()
       if (selectedRecord && selectedRecord.tracking_code === code) {
         setSelectedRecord({
@@ -1806,19 +1827,24 @@ function AdminManager({ title }: { title: string }) {
         }
         setSelectedRecord(updated)
         setRecords((prev) =>
-          prev.map((r) => (r.id === selectedRecord.id ? { ...r, ...updated } : r)),
+          prev.map((r) =>
+            r.id === selectedRecord.id ? { ...r, ...updated } : r,
+          ),
         )
         setShowReplyForm(false)
         setReplyMessage("")
         alert(`Email reply successfully sent to ${clientEmail}!`)
       } else {
-        const errorMsg = res?.error || "Failed to send email reply. Please check your system email settings."
+        const errorMsg =
+          res?.error ||
+          "Failed to send email reply. Please check your system email settings."
         setActionNotice(errorMsg)
         alert(errorMsg)
       }
     } catch (err: any) {
       console.error("handleSendEnquiryReply error:", err)
-      const errorMsg = err?.message || "An unexpected error occurred while sending the email."
+      const errorMsg =
+        err?.message || "An unexpected error occurred while sending the email."
       setActionNotice(errorMsg)
       alert(errorMsg)
     } finally {
@@ -1864,7 +1890,9 @@ function AdminManager({ title }: { title: string }) {
       phone: studentForm.phone,
       email: studentForm.email,
       program: studentForm.program,
-      ...(studentForm.password.trim() ? { password: studentForm.password.trim() } : {}),
+      ...(studentForm.password.trim()
+        ? { password: studentForm.password.trim() }
+        : {}),
     })
     if (res && res.success) {
       setActionNotice(`Student record for ${selectedRecord.full_name} updated.`)
@@ -2021,7 +2049,10 @@ function AdminManager({ title }: { title: string }) {
                   confirmLabel: "Reject Application",
                   confirmTone: "danger",
                   onConfirm: async () => {
-                    await handleAppStatus(selectedRecord.application_no, "rejected")
+                    await handleAppStatus(
+                      selectedRecord.application_no,
+                      "rejected",
+                    )
                   },
                 })
               }}
@@ -2101,10 +2132,7 @@ function AdminManager({ title }: { title: string }) {
             <Button
               variant="secondary"
               onClick={() =>
-                handleEnquiryToggle(
-                  selectedRecord.id,
-                  selectedRecord.is_read,
-                )
+                handleEnquiryToggle(selectedRecord.id, selectedRecord.is_read)
               }
             >
               {selectedRecord.is_read ? "Mark as Unread" : "Mark as Read"}
@@ -2147,7 +2175,9 @@ function AdminManager({ title }: { title: string }) {
                   confirmTone: "danger",
                   onConfirm: async () => {
                     await deleteProgram(selectedRecord.id)
-                    setActionNotice(`Course "${selectedRecord.name}" deactivated.`)
+                    setActionNotice(
+                      `Course "${selectedRecord.name}" deactivated.`,
+                    )
                     setSelectedRecord(null)
                     loadData()
                   },
@@ -2346,31 +2376,60 @@ function AdminManager({ title }: { title: string }) {
         // Operational Data Tables
         <section className="table-panel manager-table">
           {/* Repairs: Custom Filter Bar + Pipeline */}
-          {(title === "Repairs" || title.includes("Repairs")) ? (
+          {title === "Repairs" || title.includes("Repairs") ? (
             <>
               {/* Pipeline header */}
               <div style={{ marginBottom: 16 }}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0,
-                  overflowX: "auto",
-                  padding: "12px 0 4px",
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0,
+                    overflowX: "auto",
+                    padding: "12px 0 4px",
+                  }}
+                >
                   {[
-                    { key: "received", label: "Intake Received", color: "#0b0b0b" },
-                    { key: "assessing", label: "Under Assessment", color: "#c96b32" },
-                    { key: "in_progress", label: "Repair In Progress", color: "#2563eb" },
-                    { key: "ready", label: "Ready for Pickup", color: "#15803d" },
-                    { key: "collected", label: "Collected ✓", color: "#5c5954" },
+                    {
+                      key: "received",
+                      label: "Intake Received",
+                      color: "#0b0b0b",
+                    },
+                    {
+                      key: "assessing",
+                      label: "Under Assessment",
+                      color: "#c96b32",
+                    },
+                    {
+                      key: "in_progress",
+                      label: "Repair In Progress",
+                      color: "#2563eb",
+                    },
+                    {
+                      key: "ready",
+                      label: "Ready for Pickup",
+                      color: "#15803d",
+                    },
+                    {
+                      key: "collected",
+                      label: "Collected ✓",
+                      color: "#5c5954",
+                    },
                   ].map((stage, i, arr) => {
-                    const count = records.filter(r => r.status === stage.key).length
+                    const count = records.filter(
+                      (r) => r.status === stage.key,
+                    ).length
                     const isActive = statusFilter === stage.key
                     return (
-                      <div key={stage.key} style={{ display: "flex", alignItems: "center" }}>
+                      <div
+                        key={stage.key}
+                        style={{ display: "flex", alignItems: "center" }}
+                      >
                         <button
                           type="button"
-                          onClick={() => setStatusFilter(isActive ? "all" : stage.key)}
+                          onClick={() =>
+                            setStatusFilter(isActive ? "all" : stage.key)
+                          }
                           style={{
                             display: "flex",
                             flexDirection: "column",
@@ -2378,29 +2437,48 @@ function AdminManager({ title }: { title: string }) {
                             gap: 4,
                             padding: "8px 14px",
                             borderRadius: 8,
-                            border: isActive ? `2px solid ${stage.color}` : "2px solid var(--line)",
+                            border: isActive
+                              ? `2px solid ${stage.color}`
+                              : "2px solid var(--line)",
                             background: isActive ? `${stage.color}12` : "white",
                             cursor: "pointer",
                             minWidth: 110,
                             transition: "all 0.15s",
                           }}
                         >
-                          <span style={{
-                            fontSize: 20,
-                            fontWeight: 800,
-                            color: stage.color,
-                            lineHeight: 1,
-                          }}>{count}</span>
-                          <span style={{
-                            fontSize: 10,
-                            fontWeight: isActive ? 700 : 500,
-                            color: isActive ? stage.color : "var(--muted)",
-                            textAlign: "center",
-                            lineHeight: 1.3,
-                          }}>{stage.label}</span>
+                          <span
+                            style={{
+                              fontSize: 20,
+                              fontWeight: 800,
+                              color: stage.color,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {count}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: isActive ? 700 : 500,
+                              color: isActive ? stage.color : "var(--muted)",
+                              textAlign: "center",
+                              lineHeight: 1.3,
+                            }}
+                          >
+                            {stage.label}
+                          </span>
                         </button>
                         {i < arr.length - 1 && (
-                          <span style={{ color: "var(--muted)", fontSize: 16, margin: "0 2px", userSelect: "none" }}>›</span>
+                          <span
+                            style={{
+                              color: "var(--muted)",
+                              fontSize: 16,
+                              margin: "0 2px",
+                              userSelect: "none",
+                            }}
+                          >
+                            ›
+                          </span>
                         )}
                       </div>
                     )
@@ -2424,43 +2502,62 @@ function AdminManager({ title }: { title: string }) {
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="all">All Tickets ({records.length})</option>
-                  <option value="received">Received ({records.filter(r => r.status === "received").length})</option>
-                  <option value="assessing">Under Assessment ({records.filter(r => r.status === "assessing").length})</option>
-                  <option value="in_progress">In Progress ({records.filter(r => r.status === "in_progress").length})</option>
-                  <option value="ready">Ready for Pickup ({records.filter(r => r.status === "ready").length})</option>
-                  <option value="collected">Collected ({records.filter(r => r.status === "collected").length})</option>
+                  <option value="received">
+                    Received (
+                    {records.filter((r) => r.status === "received").length})
+                  </option>
+                  <option value="assessing">
+                    Under Assessment (
+                    {records.filter((r) => r.status === "assessing").length})
+                  </option>
+                  <option value="in_progress">
+                    In Progress (
+                    {records.filter((r) => r.status === "in_progress").length})
+                  </option>
+                  <option value="ready">
+                    Ready for Pickup (
+                    {records.filter((r) => r.status === "ready").length})
+                  </option>
+                  <option value="collected">
+                    Collected (
+                    {records.filter((r) => r.status === "collected").length})
+                  </option>
                 </select>
-                <Button variant="ghost" onClick={loadData}>Refresh</Button>
-                <Button variant="ghost" onClick={exportCsv}>Export CSV</Button>
+                <Button variant="ghost" onClick={loadData}>
+                  Refresh
+                </Button>
+                <Button variant="ghost" onClick={exportCsv}>
+                  Export CSV
+                </Button>
               </div>
             </>
           ) : (
-          <div className="manager-filters">
-            <div className="search-field">
-              <Icon name="search" />
-              <input
-                placeholder={`Search ${title.toLowerCase()}…`}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label={`Search ${title}`}
-              />
+            <div className="manager-filters">
+              <div className="search-field">
+                <Icon name="search" />
+                <input
+                  placeholder={`Search ${title.toLowerCase()}…`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  aria-label={`Search ${title}`}
+                />
+              </div>
+              <select
+                aria-label="Filter by status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All statuses</option>
+                <option value="confirmed">Confirmed / Active / Ready</option>
+                <option value="pending">Pending / In Review</option>
+              </select>
+              <Button variant="ghost" onClick={loadData}>
+                Refresh
+              </Button>
+              <Button variant="ghost" onClick={exportCsv}>
+                Export CSV
+              </Button>
             </div>
-            <select
-              aria-label="Filter by status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All statuses</option>
-              <option value="confirmed">Confirmed / Active / Ready</option>
-              <option value="pending">Pending / In Review</option>
-            </select>
-            <Button variant="ghost" onClick={loadData}>
-              Refresh
-            </Button>
-            <Button variant="ghost" onClick={exportCsv}>
-              Export CSV
-            </Button>
-          </div>
           )}
 
           <div className="hidden md:block table-wrap">
@@ -2471,8 +2568,8 @@ function AdminManager({ title }: { title: string }) {
                     <th scope="col">Application Ref</th>
                     <th scope="col">Applicant Name</th>
                     <th scope="col">Program &amp; Mode</th>
-                    <th scope="col">Tuition Fee</th>
-                    <th scope="col">Status</th>
+                    <th scope="col">Tuition &amp; Payment</th>
+                    <th scope="col">Admission Status</th>
                     <th scope="col">Actions</th>
                   </tr>
                 )}
@@ -2622,7 +2719,46 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            ₦{Number(row.tuition_fee || 20000).toLocaleString()}
+                            <div style={{ fontWeight: 600 }}>
+                              ₦
+                              {Number(
+                                row.tuition_fee || 20000,
+                              ).toLocaleString()}
+                            </div>
+                            {row.payment_status === "verified" ? (
+                              <Badge
+                                tone="green"
+                                style={{
+                                  fontSize: 9.5,
+                                  marginTop: 4,
+                                  display: "inline-flex",
+                                }}
+                              >
+                                ✓ Paid
+                              </Badge>
+                            ) : row.payment_status === "pending" ? (
+                              <Badge
+                                tone="gold"
+                                style={{
+                                  fontSize: 9.5,
+                                  marginTop: 4,
+                                  display: "inline-flex",
+                                }}
+                              >
+                                ⏳ Proof Submitted
+                              </Badge>
+                            ) : (
+                              <small
+                                style={{
+                                  color: "var(--muted)",
+                                  display: "block",
+                                  fontSize: 10,
+                                  marginTop: 2,
+                                }}
+                              >
+                                Unpaid
+                              </small>
+                            )}
                           </td>
                           <td>
                             <Badge
@@ -2687,7 +2823,8 @@ function AdminManager({ title }: { title: string }) {
                                       padding: "3px 8px",
                                       background: "rgba(201, 107, 50, 0.12)",
                                       color: "var(--gold-text)",
-                                      border: "1px solid rgba(201, 107, 50, 0.3)",
+                                      border:
+                                        "1px solid rgba(201, 107, 50, 0.3)",
                                       borderRadius: 5,
                                       cursor: "pointer",
                                       display: "inline-flex",
@@ -2698,7 +2835,9 @@ function AdminManager({ title }: { title: string }) {
                                     👁 Preview
                                   </button>
                                   <button
-                                    className={`action-btn ${row.letter_released ? "decline" : "accept"}`}
+                                    className={`action-btn ${
+                                      row.letter_released ? "decline" : "accept"
+                                    }`}
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       if (row.letter_released) {
@@ -2790,19 +2929,36 @@ function AdminManager({ title }: { title: string }) {
                       {(title === "Repairs" || title.includes("Repairs")) && (
                         <>
                           <td>
-                            <code style={{ fontWeight: 700, color: "var(--navy)" }}>{row.tracking_code}</code>
-                            <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
-                              {row.created_at ? new Date(row.created_at).toLocaleDateString() : ""}
+                            <code
+                              style={{ fontWeight: 700, color: "var(--navy)" }}
+                            >
+                              {row.tracking_code}
+                            </code>
+                            <div
+                              style={{
+                                fontSize: 10,
+                                color: "var(--muted)",
+                                marginTop: 2,
+                              }}
+                            >
+                              {row.created_at
+                                ? new Date(row.created_at).toLocaleDateString()
+                                : ""}
                             </div>
                           </td>
                           <td>
-                            <div style={{ fontWeight: 600 }}>{row.customer_name}</div>
+                            <div style={{ fontWeight: 600 }}>
+                              {row.customer_name}
+                            </div>
                             <small style={{ color: "var(--muted)" }}>
                               {row.customer_phone}
                             </small>
                           </td>
                           <td>
-                            <div style={{ fontWeight: 600 }}>{row.instrument}{row.brand_model ? ` — ${row.brand_model}` : ""}</div>
+                            <div style={{ fontWeight: 600 }}>
+                              {row.instrument}
+                              {row.brand_model ? ` — ${row.brand_model}` : ""}
+                            </div>
                             <small
                               style={{
                                 color: "var(--muted)",
@@ -2835,20 +2991,25 @@ function AdminManager({ title }: { title: string }) {
                                 row.status === "collected"
                                   ? "navy"
                                   : row.status === "ready"
-                                  ? "green"
-                                  : row.status === "in_progress"
-                                  ? "navy"
-                                  : row.status === "assessing"
-                                  ? "gold"
-                                  : "navy"
+                                    ? "green"
+                                    : row.status === "in_progress"
+                                      ? "navy"
+                                      : row.status === "assessing"
+                                        ? "gold"
+                                        : "navy"
                               }
                             >
-                              {row.status === "received" ? "Received"
-                                : row.status === "assessing" ? "Assessing"
-                                : row.status === "in_progress" ? "In Progress"
-                                : row.status === "ready" ? "Ready ✓"
-                                : row.status === "collected" ? "Collected"
-                                : row.status}
+                              {row.status === "received"
+                                ? "Received"
+                                : row.status === "assessing"
+                                  ? "Assessing"
+                                  : row.status === "in_progress"
+                                    ? "In Progress"
+                                    : row.status === "ready"
+                                      ? "Ready ✓"
+                                      : row.status === "collected"
+                                        ? "Collected"
+                                        : row.status}
                             </Badge>
                           </td>
                           <td>
@@ -2891,7 +3052,14 @@ function AdminManager({ title }: { title: string }) {
                             </div>
                           </td>
                           <td>
-                            <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 4,
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
                               <Badge tone={row.is_read ? "navy" : "green"}>
                                 {row.is_read ? "Read" : "New"}
                               </Badge>
@@ -3140,7 +3308,9 @@ function AdminManager({ title }: { title: string }) {
                                   confirmTone: "danger",
                                   onConfirm: async () => {
                                     await deletePerformance(row.id)
-                                    setActionNotice("Performance recital removed.")
+                                    setActionNotice(
+                                      "Performance recital removed.",
+                                    )
                                     loadData()
                                   },
                                 })
@@ -3335,6 +3505,25 @@ function AdminManager({ title }: { title: string }) {
                                   row.tuition_fee || 20000,
                                 ).toLocaleString()}
                               </strong>
+                              {row.payment_status === "verified" ? (
+                                <div>
+                                  <Badge
+                                    tone="green"
+                                    style={{ fontSize: 9, marginTop: 3 }}
+                                  >
+                                    ✓ Paid
+                                  </Badge>
+                                </div>
+                              ) : row.payment_status === "pending" ? (
+                                <div>
+                                  <Badge
+                                    tone="gold"
+                                    style={{ fontSize: 9, marginTop: 3 }}
+                                  >
+                                    ⏳ Proof Submitted
+                                  </Badge>
+                                </div>
+                              ) : null}
                             </div>
                           </div>
                           <div
@@ -3426,15 +3615,27 @@ function AdminManager({ title }: { title: string }) {
                                     padding: "8px 12px",
                                     fontSize: 12,
                                     fontWeight: 600,
-                                    background: row.letter_released ? "#fef3c7" : "#0b1a29",
-                                    color: row.letter_released ? "#92400e" : "white",
-                                    border: row.letter_released ? "1px solid #fcd34d" : "none",
+                                    background: row.letter_released
+                                      ? "#fef3c7"
+                                      : "#0b1a29",
+                                    color: row.letter_released
+                                      ? "#92400e"
+                                      : "white",
+                                    border: row.letter_released
+                                      ? "1px solid #fcd34d"
+                                      : "none",
                                     borderRadius: 6,
                                     cursor: "pointer",
                                   }}
-                                  title={row.letter_released ? "Revoke letter access" : "Release admission letter to student"}
+                                  title={
+                                    row.letter_released
+                                      ? "Revoke letter access"
+                                      : "Release admission letter to student"
+                                  }
                                 >
-                                  {row.letter_released ? "Revoke Letter" : "Release Letter"}
+                                  {row.letter_released
+                                    ? "Revoke Letter"
+                                    : "Release Letter"}
                                 </button>
                               </>
                             )}
@@ -3631,7 +3832,13 @@ function AdminManager({ title }: { title: string }) {
                               >
                                 {row.customer_name}
                               </div>
-                              <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 1 }}>
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--muted)",
+                                  marginTop: 1,
+                                }}
+                              >
                                 {row.customer_phone}
                               </div>
                             </div>
@@ -3641,20 +3848,25 @@ function AdminManager({ title }: { title: string }) {
                                   row.status === "collected"
                                     ? "navy"
                                     : row.status === "ready"
-                                    ? "green"
-                                    : row.status === "in_progress"
-                                    ? "navy"
-                                    : row.status === "assessing"
-                                    ? "gold"
-                                    : "navy"
+                                      ? "green"
+                                      : row.status === "in_progress"
+                                        ? "navy"
+                                        : row.status === "assessing"
+                                          ? "gold"
+                                          : "navy"
                                 }
                               >
-                                {row.status === "received" ? "Received"
-                                  : row.status === "assessing" ? "Assessing"
-                                  : row.status === "in_progress" ? "In Progress"
-                                  : row.status === "ready" ? "Ready ✓"
-                                  : row.status === "collected" ? "Collected"
-                                  : row.status}
+                                {row.status === "received"
+                                  ? "Received"
+                                  : row.status === "assessing"
+                                    ? "Assessing"
+                                    : row.status === "in_progress"
+                                      ? "In Progress"
+                                      : row.status === "ready"
+                                        ? "Ready ✓"
+                                        : row.status === "collected"
+                                          ? "Collected"
+                                          : row.status}
                               </Badge>
                             </span>
                           </div>
@@ -3669,7 +3881,8 @@ function AdminManager({ title }: { title: string }) {
                             <div
                               style={{ fontWeight: 600, color: "var(--navy)" }}
                             >
-                              {row.instrument}{row.brand_model ? ` — ${row.brand_model}` : ""}
+                              {row.instrument}
+                              {row.brand_model ? ` — ${row.brand_model}` : ""}
                             </div>
                             <div
                               style={{ color: "var(--muted)", marginTop: 2 }}
@@ -3730,7 +3943,14 @@ function AdminManager({ title }: { title: string }) {
                                 {row.email} · {row.phone}
                               </div>
                             </div>
-                            <span style={{ display: "flex", gap: 4, alignItems: "center", whiteSpace: "nowrap" }}>
+                            <span
+                              style={{
+                                display: "flex",
+                                gap: 4,
+                                alignItems: "center",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
                               <Badge tone={row.is_read ? "navy" : "green"}>
                                 {row.is_read ? "Read" : "New"}
                               </Badge>
@@ -4157,7 +4377,9 @@ function AdminManager({ title }: { title: string }) {
                                   confirmTone: "danger",
                                   onConfirm: async () => {
                                     await deletePerformance(row.id)
-                                    setActionNotice("Performance recital removed.")
+                                    setActionNotice(
+                                      "Performance recital removed.",
+                                    )
                                     loadData()
                                   },
                                 })
@@ -4356,17 +4578,17 @@ function AdminManager({ title }: { title: string }) {
                     color: "var(--navy)",
                   }}
                 >
-                  {(title === "Enquiries"
+                  {title === "Enquiries"
                     ? "Enquiry"
                     : title === "Programs & Courses"
-                    ? "Course Program"
-                    : title === "Performances & Recitals"
-                    ? "Recital Showcase"
-                    : title.endsWith("ies")
-                    ? title.slice(0, -3) + "y"
-                    : title.endsWith("s")
-                    ? title.slice(0, -1)
-                    : title)}{" "}
+                      ? "Course Program"
+                      : title === "Performances & Recitals"
+                        ? "Recital Showcase"
+                        : title.endsWith("ies")
+                          ? title.slice(0, -3) + "y"
+                          : title.endsWith("s")
+                            ? title.slice(0, -1)
+                            : title}{" "}
                   Details:{" "}
                   <span style={{ color: "var(--gold)" }}>
                     {selectedRecord.order_ref ||
@@ -4743,6 +4965,174 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                   )}
 
+                  {/* Bursary & Payment Proof Section */}
+                  <div
+                    style={{
+                      background:
+                        selectedRecord.payment_status === "verified"
+                          ? "#f0fdf4"
+                          : selectedRecord.payment_status === "pending"
+                            ? "#fffbeb"
+                            : "#f8fafc",
+                      border: `1px solid ${
+                        selectedRecord.payment_status === "verified"
+                          ? "#bbf7d0"
+                          : selectedRecord.payment_status === "pending"
+                            ? "#fde68a"
+                            : "#e2e8f0"
+                      }`,
+                      borderRadius: 8,
+                      padding: 16,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 10,
+                        flexWrap: "wrap",
+                        gap: 8,
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: 13, color: "var(--navy)" }}>
+                          Bursary Payment Reconciliation
+                        </strong>
+                        <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                          Tuition Fee: ₦
+                          {Number(
+                            selectedRecord.tuition_fee || 20000,
+                          ).toLocaleString()}
+                        </div>
+                      </div>
+                      <Badge
+                        tone={
+                          selectedRecord.payment_status === "verified"
+                            ? "green"
+                            : selectedRecord.payment_status === "pending"
+                              ? "gold"
+                              : "neutral"
+                        }
+                      >
+                        {selectedRecord.payment_status === "verified"
+                          ? "✓ Payment Cleared & Verified"
+                          : selectedRecord.payment_status === "pending"
+                            ? "⏳ Bank Transfer Proof Submitted (Pending Admin Verification)"
+                            : "No Payment Submitted"}
+                      </Badge>
+                    </div>
+
+                    {selectedRecord.payment_reference ? (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(180px, 1fr))",
+                          gap: 12,
+                          fontSize: 12,
+                          paddingTop: 10,
+                          borderTop: "1px dashed rgba(0,0,0,0.1)",
+                        }}
+                      >
+                        <div>
+                          <small
+                            style={{ color: "var(--muted)", display: "block" }}
+                          >
+                            Transaction Reference
+                          </small>
+                          <code>{selectedRecord.payment_reference}</code>
+                        </div>
+                        <div>
+                          <small
+                            style={{ color: "var(--muted)", display: "block" }}
+                          >
+                            Amount Logged
+                          </small>
+                          <strong>
+                            ₦
+                            {Number(
+                              selectedRecord.payment_amount ||
+                                selectedRecord.tuition_fee ||
+                                20000,
+                            ).toLocaleString()}{" "}
+                            {selectedRecord.payment_currency || "NGN"}
+                          </strong>
+                        </div>
+                        <div>
+                          <small
+                            style={{ color: "var(--muted)", display: "block" }}
+                          >
+                            Payment Method
+                          </small>
+                          <span>
+                            {selectedRecord.payment_method || "Bank Transfer"}
+                          </span>
+                        </div>
+                        <div>
+                          <small
+                            style={{ color: "var(--muted)", display: "block" }}
+                          >
+                            Payment Date
+                          </small>
+                          <span>
+                            {selectedRecord.payment_date
+                              ? new Date(
+                                  selectedRecord.payment_date,
+                                ).toLocaleDateString()
+                              : "Recently"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p
+                        style={{
+                          margin: "6px 0 0",
+                          fontSize: 12,
+                          color: "var(--muted)",
+                        }}
+                      >
+                        No bank transfer evidence or online gateway payment has
+                        been recorded for this application yet.
+                      </p>
+                    )}
+
+                    {selectedRecord.payment_status === "pending" &&
+                      selectedRecord.payment_reference && (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <Button
+                            variant="primary"
+                            onClick={() =>
+                              handlePaymentVerify(
+                                selectedRecord.payment_reference,
+                              )
+                            }
+                            style={{
+                              background: "#15803d",
+                              color: "white",
+                              fontSize: 12,
+                              padding: "6px 14px",
+                            }}
+                          >
+                            ✓ Confirm &amp; Verify Bank Transfer
+                          </Button>
+                          <span style={{ fontSize: 11, color: "#854d0e" }}>
+                            Confirming clears the student's admission and
+                            unlocks their official digital payment receipt.
+                          </span>
+                        </div>
+                      )}
+                  </div>
+
                   {selectedRecord.guardian_name && (
                     <div
                       style={{
@@ -4850,20 +5240,43 @@ function AdminManager({ title }: { title: string }) {
                             padding: "2px 8px",
                             borderRadius: 4,
                             fontWeight: 700,
-                            background: selectedRecord.letter_released ? "#ecfdf5" : "#fef3c7",
-                            color: selectedRecord.letter_released ? "#047857" : "#92400e",
-                            border: `1px solid ${selectedRecord.letter_released ? "#a7f3d0" : "#fde68a"}`,
+                            background: selectedRecord.letter_released
+                              ? "#ecfdf5"
+                              : "#fef3c7",
+                            color: selectedRecord.letter_released
+                              ? "#047857"
+                              : "#92400e",
+                            border: `1px solid ${
+                              selectedRecord.letter_released
+                                ? "#a7f3d0"
+                                : "#fde68a"
+                            }`,
                           }}
                         >
-                          {selectedRecord.letter_released ? "● Released to Student" : "○ Draft (Not Released)"}
+                          {selectedRecord.letter_released
+                            ? "● Released to Student"
+                            : "○ Draft (Not Released)"}
                         </span>
                       </div>
-                      <p style={{ fontSize: 12, color: "var(--muted)", margin: "0 0 12px" }}>
+                      <p
+                        style={{
+                          fontSize: 12,
+                          color: "var(--muted)",
+                          margin: "0 0 12px",
+                        }}
+                      >
                         {selectedRecord.letter_released
                           ? "Letter is active. The candidate was emailed their official notification and can view, print, or download it."
                           : "Preview the official signed letter below before releasing. Releasing will publish the letter and dispatch an official notification email to the student."}
                       </p>
-                      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => {
@@ -4884,7 +5297,8 @@ function AdminManager({ title }: { title: string }) {
                             boxShadow: "0 2px 8px rgba(201,107,50,0.25)",
                           }}
                         >
-                          <Icon name="copy" size={14} /> Preview Admission Letter (PDF)
+                          <Icon name="copy" size={14} /> Preview Admission
+                          Letter (PDF)
                         </button>
                         <button
                           type="button"
@@ -4899,9 +5313,15 @@ function AdminManager({ title }: { title: string }) {
                             padding: "9px 18px",
                             fontSize: 13,
                             fontWeight: 700,
-                            background: selectedRecord.letter_released ? "#fef3c7" : "#0b1a29",
-                            color: selectedRecord.letter_released ? "#92400e" : "white",
-                            border: selectedRecord.letter_released ? "1px solid #fcd34d" : "none",
+                            background: selectedRecord.letter_released
+                              ? "#fef3c7"
+                              : "#0b1a29",
+                            color: selectedRecord.letter_released
+                              ? "#92400e"
+                              : "white",
+                            border: selectedRecord.letter_released
+                              ? "1px solid #fcd34d"
+                              : "none",
                             borderRadius: 6,
                             cursor: "pointer",
                             display: "inline-flex",
@@ -4989,68 +5409,147 @@ function AdminManager({ title }: { title: string }) {
 
               {/* Repair Details */}
               {(title === "Repairs" || title.includes("Repairs")) && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                >
                   {/* Section A — Ticket Overview */}
-                  <div style={{
-                    background: "var(--navy)",
-                    color: "white",
-                    borderRadius: 10,
-                    padding: "16px 20px",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    alignItems: "center",
-                    gap: 12,
-                  }}>
+                  <div
+                    style={{
+                      background: "var(--navy)",
+                      color: "white",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: 12,
+                    }}
+                  >
                     <div style={{ flex: 1, minWidth: 160 }}>
-                      <div style={{ fontSize: 10, opacity: 0.6, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 4 }}>Ticket</div>
-                      <code style={{ fontSize: 18, fontWeight: 800, color: "#e9a16f", letterSpacing: "0.5px" }}>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          opacity: 0.6,
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          marginBottom: 4,
+                        }}
+                      >
+                        Ticket
+                      </div>
+                      <code
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 800,
+                          color: "#e9a16f",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
                         {selectedRecord.tracking_code}
                       </code>
-                      <div style={{ fontSize: 11, opacity: 0.65, marginTop: 4 }}>
-                        Received: {selectedRecord.created_at ? new Date(selectedRecord.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      <div
+                        style={{ fontSize: 11, opacity: 0.65, marginTop: 4 }}
+                      >
+                        Received:{" "}
+                        {selectedRecord.created_at
+                          ? new Date(
+                              selectedRecord.created_at,
+                            ).toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "—"}
                       </div>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-end",
+                        gap: 6,
+                      }}
+                    >
                       <Badge
                         tone={
-                          selectedRecord.status === "collected" ? "navy"
-                          : selectedRecord.status === "ready" ? "green"
-                          : selectedRecord.status === "in_progress" ? "navy"
-                          : selectedRecord.status === "assessing" ? "gold"
-                          : "navy"
+                          selectedRecord.status === "collected"
+                            ? "navy"
+                            : selectedRecord.status === "ready"
+                              ? "green"
+                              : selectedRecord.status === "in_progress"
+                                ? "navy"
+                                : selectedRecord.status === "assessing"
+                                  ? "gold"
+                                  : "navy"
                         }
                       >
-                        {selectedRecord.status === "received" ? "Intake Received"
-                          : selectedRecord.status === "assessing" ? "Under Assessment"
-                          : selectedRecord.status === "in_progress" ? "Repair In Progress"
-                          : selectedRecord.status === "ready" ? "Ready for Pickup ✓"
-                          : selectedRecord.status === "collected" ? "Collected / Delivered"
-                          : selectedRecord.status}
+                        {selectedRecord.status === "received"
+                          ? "Intake Received"
+                          : selectedRecord.status === "assessing"
+                            ? "Under Assessment"
+                            : selectedRecord.status === "in_progress"
+                              ? "Repair In Progress"
+                              : selectedRecord.status === "ready"
+                                ? "Ready for Pickup ✓"
+                                : selectedRecord.status === "collected"
+                                  ? "Collected / Delivered"
+                                  : selectedRecord.status}
                       </Badge>
-                      <Badge tone={selectedRecord.intake_method === "pickup" ? "gold" : "navy"}>
-                        {selectedRecord.intake_method === "pickup" ? "🚗 Logistics Pickup" : "📥 Studio Drop-off"}
+                      <Badge
+                        tone={
+                          selectedRecord.intake_method === "pickup"
+                            ? "gold"
+                            : "navy"
+                        }
+                      >
+                        {selectedRecord.intake_method === "pickup"
+                          ? "🚗 Logistics Pickup"
+                          : "📥 Studio Drop-off"}
                       </Badge>
                     </div>
                     {selectedRecord.pickup_address && (
-                      <div style={{ width: "100%", fontSize: 12, borderTop: "1px solid rgba(255,255,255,0.15)", paddingTop: 8, marginTop: 4 }}>
+                      <div
+                        style={{
+                          width: "100%",
+                          fontSize: 12,
+                          borderTop: "1px solid rgba(255,255,255,0.15)",
+                          paddingTop: 8,
+                          marginTop: 4,
+                        }}
+                      >
                         <span style={{ opacity: 0.6 }}>Pickup address: </span>
-                        <strong style={{ color: "#e9a16f" }}>{selectedRecord.pickup_address}</strong>
+                        <strong style={{ color: "#e9a16f" }}>
+                          {selectedRecord.pickup_address}
+                        </strong>
                         {selectedRecord.collection_arrangement && (
-                          <span style={{ opacity: 0.7 }}> · {selectedRecord.collection_arrangement}</span>
+                          <span style={{ opacity: 0.7 }}>
+                            {" "}
+                            · {selectedRecord.collection_arrangement}
+                          </span>
                         )}
                       </div>
                     )}
                   </div>
 
                   {/* Section B — Customer */}
-                  <div style={{
-                    background: "#faf9f6",
-                    border: "1px solid var(--line)",
-                    borderRadius: 10,
-                    padding: "16px 20px",
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--muted)", marginBottom: 12 }}>
+                  <div
+                    style={{
+                      background: "#faf9f6",
+                      border: "1px solid var(--line)",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "1.2px",
+                        color: "var(--muted)",
+                        marginBottom: 12,
+                      }}
+                    >
                       Customer
                     </div>
                     <div className="doc-grid" style={{ margin: 0 }}>
@@ -5069,10 +5568,20 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     {selectedRecord.customer_phone && (
                       <div style={{ marginTop: 14 }}>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 8, fontWeight: 600 }}>
-                          Optional Direct Follow-ups (Customer is auto-notified by email upon stage updates):
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "var(--muted)",
+                            marginBottom: 8,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Optional Direct Follow-ups (Customer is auto-notified
+                          by email upon stage updates):
                         </div>
-                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                        <div
+                          style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
+                        >
                           <a
                             href={`https://wa.me/${(selectedRecord.customer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.customer_name || "")},%20this%20is%20Vivadoxa%20Instrument%20Workshop%20regarding%20your%20repair%20ticket%20(${selectedRecord.tracking_code}).%20Current%20Status:%20${selectedRecord.status}.`}
                             target="_blank"
@@ -5100,13 +5609,24 @@ function AdminManager({ title }: { title: string }) {
                   </div>
 
                   {/* Section C — Instrument Details */}
-                  <div style={{
-                    background: "#faf9f6",
-                    border: "1px solid var(--line)",
-                    borderRadius: 10,
-                    padding: "16px 20px",
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--muted)", marginBottom: 12 }}>
+                  <div
+                    style={{
+                      background: "#faf9f6",
+                      border: "1px solid var(--line)",
+                      borderRadius: 10,
+                      padding: "16px 20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "1.2px",
+                        color: "var(--muted)",
+                        marginBottom: 12,
+                      }}
+                    >
                       Instrument Details
                     </div>
                     <div className="doc-grid" style={{ margin: 0 }}>
@@ -5138,7 +5658,9 @@ function AdminManager({ title }: { title: string }) {
                       )}
                       <div style={{ gridColumn: "1/-1" }}>
                         <small>Service Requested</small>
-                        <strong>{selectedRecord.service_requested || "—"}</strong>
+                        <strong>
+                          {selectedRecord.service_requested || "—"}
+                        </strong>
                       </div>
                       <div style={{ gridColumn: "1/-1" }}>
                         <small>Reported Issue</small>
@@ -5152,7 +5674,13 @@ function AdminManager({ title }: { title: string }) {
                       )}
                       <div>
                         <small>Previously Repaired?</small>
-                        <strong>{selectedRecord.previously_repaired === "yes" || selectedRecord.previously_repaired === true || selectedRecord.previously_repaired === 1 ? "Yes" : "No"}</strong>
+                        <strong>
+                          {selectedRecord.previously_repaired === "yes" ||
+                          selectedRecord.previously_repaired === true ||
+                          selectedRecord.previously_repaired === 1
+                            ? "Yes"
+                            : "No"}
+                        </strong>
                       </div>
                       {selectedRecord.visible_damage && (
                         <div>
@@ -5170,25 +5698,38 @@ function AdminManager({ title }: { title: string }) {
                   </div>
 
                   {/* Section D — Workflow Actions */}
-                  <div style={{
-                    background: "rgba(201,107,50,0.05)",
-                    border: "2px solid var(--gold)",
-                    borderRadius: 10,
-                    padding: "18px 20px",
-                  }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: "var(--gold)", marginBottom: 14 }}>
+                  <div
+                    style={{
+                      background: "rgba(201,107,50,0.05)",
+                      border: "2px solid var(--gold)",
+                      borderRadius: 10,
+                      padding: "18px 20px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "1.2px",
+                        color: "var(--gold)",
+                        marginBottom: 14,
+                      }}
+                    >
                       Update Repair Stage
                     </div>
 
                     {/* Visual stepper */}
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0,
-                      marginBottom: 18,
-                      overflowX: "auto",
-                      paddingBottom: 4,
-                    }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0,
+                        marginBottom: 18,
+                        overflowX: "auto",
+                        paddingBottom: 4,
+                      }}
+                    >
                       {[
                         { key: "received", label: "Received" },
                         { key: "assessing", label: "Assessing" },
@@ -5196,53 +5737,90 @@ function AdminManager({ title }: { title: string }) {
                         { key: "ready", label: "Ready ✓" },
                         { key: "collected", label: "Collected" },
                       ].map((s, i, arr) => {
-                        const stageOrder = ["received", "assessing", "in_progress", "ready", "collected"]
-                        const currentIdx = stageOrder.indexOf(selectedRecord.status)
+                        const stageOrder = [
+                          "received",
+                          "assessing",
+                          "in_progress",
+                          "ready",
+                          "collected",
+                        ]
+                        const currentIdx = stageOrder.indexOf(
+                          selectedRecord.status,
+                        )
                         const thisIdx = stageOrder.indexOf(s.key)
                         const isCurrent = s.key === selectedRecord.status
                         const isPast = thisIdx < currentIdx
                         return (
-                          <div key={s.key} style={{ display: "flex", alignItems: "center" }}>
-                            <div style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              gap: 4,
-                              minWidth: 60,
-                            }}>
-                              <div style={{
-                                width: 28,
-                                height: 28,
-                                borderRadius: "50%",
+                          <div
+                            key={s.key}
+                            style={{ display: "flex", alignItems: "center" }}
+                          >
+                            <div
+                              style={{
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
-                                justifyContent: "center",
-                                fontSize: 11,
-                                fontWeight: 800,
-                                background: isCurrent ? "var(--gold)" : isPast ? "#15803d" : "var(--line)",
-                                color: isCurrent || isPast ? "white" : "var(--muted)",
-                                border: isCurrent ? "2px solid var(--gold)" : "2px solid transparent",
-                                boxShadow: isCurrent ? "0 0 0 3px rgba(201,107,50,0.2)" : "none",
-                              }}>
+                                gap: 4,
+                                minWidth: 60,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 28,
+                                  height: 28,
+                                  borderRadius: "50%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  background: isCurrent
+                                    ? "var(--gold)"
+                                    : isPast
+                                      ? "#15803d"
+                                      : "var(--line)",
+                                  color:
+                                    isCurrent || isPast
+                                      ? "white"
+                                      : "var(--muted)",
+                                  border: isCurrent
+                                    ? "2px solid var(--gold)"
+                                    : "2px solid transparent",
+                                  boxShadow: isCurrent
+                                    ? "0 0 0 3px rgba(201,107,50,0.2)"
+                                    : "none",
+                                }}
+                              >
                                 {isPast ? "✓" : i + 1}
                               </div>
-                              <span style={{
-                                fontSize: 9,
-                                fontWeight: isCurrent ? 700 : 500,
-                                color: isCurrent ? "var(--gold)" : isPast ? "#15803d" : "var(--muted)",
-                                textAlign: "center",
-                                lineHeight: 1.2,
-                              }}>
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  fontWeight: isCurrent ? 700 : 500,
+                                  color: isCurrent
+                                    ? "var(--gold)"
+                                    : isPast
+                                      ? "#15803d"
+                                      : "var(--muted)",
+                                  textAlign: "center",
+                                  lineHeight: 1.2,
+                                }}
+                              >
                                 {s.label}
                               </span>
                             </div>
                             {i < arr.length - 1 && (
-                              <div style={{
-                                height: 2,
-                                width: 24,
-                                background: stageOrder.indexOf(s.key) < currentIdx ? "#15803d" : "var(--line)",
-                                marginBottom: 16,
-                              }} />
+                              <div
+                                style={{
+                                  height: 2,
+                                  width: 24,
+                                  background:
+                                    stageOrder.indexOf(s.key) < currentIdx
+                                      ? "#15803d"
+                                      : "var(--line)",
+                                  marginBottom: 16,
+                                }}
+                              />
                             )}
                           </div>
                         )
@@ -5251,7 +5829,14 @@ function AdminManager({ title }: { title: string }) {
 
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                       <div style={{ flex: 1, minWidth: 160 }}>
-                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginBottom: 6,
+                          }}
+                        >
                           Change Stage:
                         </label>
                         <select
@@ -5269,14 +5854,27 @@ function AdminManager({ title }: { title: string }) {
                         >
                           <option value="received">Intake Received</option>
                           <option value="assessing">Under Assessment</option>
-                          <option value="in_progress">Repair In Progress</option>
-                          <option value="ready">Ready for Pickup / Delivery</option>
-                          <option value="collected">Collected / Delivered</option>
+                          <option value="in_progress">
+                            Repair In Progress
+                          </option>
+                          <option value="ready">
+                            Ready for Pickup / Delivery
+                          </option>
+                          <option value="collected">
+                            Collected / Delivered
+                          </option>
                         </select>
                       </div>
 
                       <div style={{ flex: 1, minWidth: 160 }}>
-                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 6 }}>
+                        <label
+                          style={{
+                            display: "block",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginBottom: 6,
+                          }}
+                        >
                           Set / Update Quoted Cost (₦):
                         </label>
                         <input
@@ -5294,8 +5892,17 @@ function AdminManager({ title }: { title: string }) {
                           }}
                         />
                         {selectedRecord.estimated_cost && (
-                          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
-                            Current: ₦{Number(selectedRecord.estimated_cost).toLocaleString()}
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "var(--muted)",
+                              marginTop: 4,
+                            }}
+                          >
+                            Current: ₦
+                            {Number(
+                              selectedRecord.estimated_cost,
+                            ).toLocaleString()}
                           </div>
                         )}
                       </div>
@@ -5303,8 +5910,16 @@ function AdminManager({ title }: { title: string }) {
 
                     {/* Optional Workshop Note to include in the email */}
                     <div style={{ marginTop: 14 }}>
-                      <label style={{ display: "block", fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                        Optional Custom Note (included in customer&apos;s email notification):
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          marginBottom: 5,
+                        }}
+                      >
+                        Optional Custom Note (included in customer&apos;s email
+                        notification):
                       </label>
                       <textarea
                         rows={2}
@@ -5324,15 +5939,27 @@ function AdminManager({ title }: { title: string }) {
                       />
                     </div>
 
-                    <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                    <div
+                      style={{
+                        marginTop: 16,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <button
                         type="button"
-                        onClick={() => handleRepairStatus(
-                          selectedRecord.tracking_code,
-                          repairStatusInput,
-                          repairCostInput ? Number(repairCostInput) : undefined,
-                          repairAdminNote.trim() || undefined,
-                        )}
+                        onClick={() =>
+                          handleRepairStatus(
+                            selectedRecord.tracking_code,
+                            repairStatusInput,
+                            repairCostInput
+                              ? Number(repairCostInput)
+                              : undefined,
+                            repairAdminNote.trim() || undefined,
+                          )
+                        }
                         style={{
                           padding: "10px 24px",
                           borderRadius: 7,
@@ -5366,7 +5993,9 @@ function AdminManager({ title }: { title: string }) {
                       >
                         <span style={{ fontSize: 14 }}>✉️</span>
                         <span>
-                          Customer is <strong>automatically notified via email</strong> with updated stage, quotation &amp; live tracking.
+                          Customer is{" "}
+                          <strong>automatically notified via email</strong> with
+                          updated stage, quotation &amp; live tracking.
                         </span>
                       </div>
                     </div>
@@ -5435,14 +6064,14 @@ function AdminManager({ title }: { title: string }) {
                               selectedRecord.source === "rentals"
                                 ? "rgba(201,107,50,0.12)"
                                 : selectedRecord.source === "store"
-                                ? "rgba(21,112,84,0.1)"
-                                : "rgba(11,11,11,0.06)",
+                                  ? "rgba(21,112,84,0.1)"
+                                  : "rgba(11,11,11,0.06)",
                             color:
                               selectedRecord.source === "rentals"
                                 ? "var(--gold-text)"
                                 : selectedRecord.source === "store"
-                                ? "var(--green)"
-                                : "var(--navy)",
+                                  ? "var(--green)"
+                                  : "var(--navy)",
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.5px",
@@ -5451,8 +6080,8 @@ function AdminManager({ title }: { title: string }) {
                           {selectedRecord.source === "rentals"
                             ? "Rental Fleet"
                             : selectedRecord.source === "store"
-                            ? "Music Store"
-                            : selectedRecord.source}
+                              ? "Music Store"
+                              : selectedRecord.source}
                         </span>
                       )}
                     </div>
@@ -5494,7 +6123,13 @@ function AdminManager({ title }: { title: string }) {
                           gap: 6,
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
                           <span
                             style={{
                               display: "inline-block",
@@ -5517,9 +6152,13 @@ function AdminManager({ title }: { title: string }) {
                         </div>
                         <span style={{ fontSize: 11, color: "var(--muted)" }}>
                           {selectedRecord.replied_at
-                            ? new Date(selectedRecord.replied_at).toLocaleString()
+                            ? new Date(
+                                selectedRecord.replied_at,
+                              ).toLocaleString()
                             : "Recently"}{" "}
-                          {selectedRecord.replied_by ? `· by ${selectedRecord.replied_by}` : ""}
+                          {selectedRecord.replied_by
+                            ? `· by ${selectedRecord.replied_by}`
+                            : ""}
                         </span>
                       </div>
                       <div
@@ -5565,9 +6204,11 @@ function AdminManager({ title }: { title: string }) {
                           >
                             ✉️ Compose In-App Email Reply
                           </strong>
-                          <small style={{ color: "var(--muted)", fontSize: 11 }}>
-                            Sent directly from Vivadoxa&apos;s verified mailer to{" "}
-                            <strong>{selectedRecord.email}</strong>
+                          <small
+                            style={{ color: "var(--muted)", fontSize: 11 }}
+                          >
+                            Sent directly from Vivadoxa&apos;s verified mailer
+                            to <strong>{selectedRecord.email}</strong>
                           </small>
                         </div>
                         <button
@@ -5600,7 +6241,9 @@ function AdminManager({ title }: { title: string }) {
                         >
                           Quick Templates:
                         </div>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        <div
+                          style={{ display: "flex", gap: 6, flexWrap: "wrap" }}
+                        >
                           <button
                             type="button"
                             onClick={() => applyReplyTemplate("general")}
@@ -5733,17 +6376,26 @@ function AdminManager({ title }: { title: string }) {
                           lineHeight: 1.5,
                         }}
                       >
-                        Client will receive a branded Vivadoxa HTML email including their original inquiry for context.
+                        Client will receive a branded Vivadoxa HTML email
+                        including their original inquiry for context.
                       </div>
 
                       {/* Action buttons */}
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "center",
+                        }}
+                      >
                         <Button
                           variant="primary"
                           onClick={handleSendEnquiryReply}
                           disabled={sendingReply || !replyMessage.trim()}
                         >
-                          {sendingReply ? "Sending Email..." : "Send Email to Client"}
+                          {sendingReply
+                            ? "Sending Email..."
+                            : "Send Email to Client"}
                         </Button>
                         <Button
                           variant="secondary"
@@ -5773,8 +6425,11 @@ function AdminManager({ title }: { title: string }) {
                           const willShow = !showReplyForm
                           setShowReplyForm(willShow)
                           if (willShow && !replySubject) {
-                            const subj = selectedRecord.subject || "Vivadoxa Inquiry"
-                            setReplySubject(subj.startsWith("Re:") ? subj : `Re: ${subj}`)
+                            const subj =
+                              selectedRecord.subject || "Vivadoxa Inquiry"
+                            setReplySubject(
+                              subj.startsWith("Re:") ? subj : `Re: ${subj}`,
+                            )
                           }
                         }}
                         className="btn btn-primary"
@@ -5790,8 +6445,8 @@ function AdminManager({ title }: { title: string }) {
                           {showReplyForm
                             ? "Close Email Composer"
                             : selectedRecord.reply_message
-                            ? "Send Another Email Reply"
-                            : "Reply via In-App Email"}
+                              ? "Send Another Email Reply"
+                              : "Reply via In-App Email"}
                         </span>
                       </button>
                     )}
@@ -6046,7 +6701,9 @@ function AdminManager({ title }: { title: string }) {
                             marginTop: 4,
                           }}
                         >
-                          Setting status to &ldquo;Suspended&rdquo; disables portal login. Entering a password here updates credentials on save.
+                          Setting status to &ldquo;Suspended&rdquo; disables
+                          portal login. Entering a password here updates
+                          credentials on save.
                         </small>
                       </div>
                     </div>
@@ -6072,7 +6729,14 @@ function AdminManager({ title }: { title: string }) {
                     }}
                   >
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 4,
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: 11,
@@ -6102,7 +6766,14 @@ function AdminManager({ title }: { title: string }) {
                           </span>
                         )}
                       </div>
-                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--navy)" }}>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                        }}
+                      >
                         {selectedRecord.name}
                       </h3>
                     </div>
@@ -6129,7 +6800,14 @@ function AdminManager({ title }: { title: string }) {
                           ? "Active Program"
                           : "Inactive / Archived"}
                       </span>
-                      <div style={{ marginTop: 4, fontSize: 16, fontWeight: 700, color: "var(--gold)" }}>
+                      <div
+                        style={{
+                          marginTop: 4,
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: "var(--gold)",
+                        }}
+                      >
                         {selectedRecord.fee || "₦20,000 / month"}
                       </div>
                     </div>
@@ -6138,7 +6816,9 @@ function AdminManager({ title }: { title: string }) {
                   <div className="doc-grid" style={{ margin: "0 0 16px" }}>
                     <div>
                       <small>Curriculum Category</small>
-                      <strong>{selectedRecord.category || "Instruments"}</strong>
+                      <strong>
+                        {selectedRecord.category || "Instruments"}
+                      </strong>
                     </div>
                     <div>
                       <small>Tuition Fee Schedule</small>
@@ -6148,11 +6828,16 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     <div>
                       <small>Term Duration</small>
-                      <strong>{selectedRecord.duration || "1–12 Months (Modular)"}</strong>
+                      <strong>
+                        {selectedRecord.duration || "1–12 Months (Modular)"}
+                      </strong>
                     </div>
                     <div>
                       <small>Available Delivery Modes</small>
-                      <strong>{selectedRecord.modes || "Studio · Home Lessons · Online"}</strong>
+                      <strong>
+                        {selectedRecord.modes ||
+                          "Studio · Home Lessons · Online"}
+                      </strong>
                     </div>
                     <div>
                       <small>Target Age Group</small>
@@ -6160,7 +6845,9 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     <div>
                       <small>Entry Skill Level</small>
-                      <strong>{selectedRecord.level || "Beginner to Advanced"}</strong>
+                      <strong>
+                        {selectedRecord.level || "Beginner to Advanced"}
+                      </strong>
                     </div>
                   </div>
 
@@ -6195,8 +6882,13 @@ function AdminManager({ title }: { title: string }) {
                       }}
                     >
                       {selectedRecord.desc || (
-                        <span style={{ color: "var(--muted)", fontStyle: "italic" }}>
-                          No extended syllabus description provided for this course. Click &ldquo;Edit Course Details&rdquo; below to update learning objectives, repertoire notes, and exam accreditation details.
+                        <span
+                          style={{ color: "var(--muted)", fontStyle: "italic" }}
+                        >
+                          No extended syllabus description provided for this
+                          course. Click &ldquo;Edit Course Details&rdquo; below
+                          to update learning objectives, repertoire notes, and
+                          exam accreditation details.
                         </span>
                       )}
                     </div>
@@ -6230,18 +6922,37 @@ function AdminManager({ title }: { title: string }) {
                           letterSpacing: "0.05em",
                           padding: "3px 8px",
                           borderRadius: 4,
-                          background: selectedRecord.is_director ? "rgba(201, 107, 50, 0.15)" : "#f1f5f9",
-                          color: selectedRecord.is_director ? "#a24a18" : "#475569",
+                          background: selectedRecord.is_director
+                            ? "rgba(201, 107, 50, 0.15)"
+                            : "#f1f5f9",
+                          color: selectedRecord.is_director
+                            ? "#a24a18"
+                            : "#475569",
                           display: "inline-block",
                           marginBottom: 4,
                         }}
                       >
-                        {selectedRecord.is_director ? "Artistic Director & Faculty Lead" : "Faculty Instructor"}
+                        {selectedRecord.is_director
+                          ? "Artistic Director & Faculty Lead"
+                          : "Faculty Instructor"}
                       </span>
-                      <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "var(--navy)" }}>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                        }}
+                      >
                         {selectedRecord.name}
                       </h3>
-                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "var(--muted)",
+                          marginTop: 2,
+                        }}
+                      >
                         {selectedRecord.title}
                       </div>
                     </div>
@@ -6264,7 +6975,9 @@ function AdminManager({ title }: { title: string }) {
                               : "#dc2626",
                         }}
                       >
-                        {selectedRecord.is_active !== 0 ? "Active Faculty" : "Inactive"}
+                        {selectedRecord.is_active !== 0
+                          ? "Active Faculty"
+                          : "Inactive"}
                       </span>
                     </div>
                   </div>
@@ -6282,11 +6995,17 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     <div>
                       <small>Studio Campus</small>
-                      <strong>{selectedRecord.location || "Kaduna Studio"}</strong>
+                      <strong>
+                        {selectedRecord.location || "Kaduna Studio"}
+                      </strong>
                     </div>
                     <div>
                       <small>Leadership Status</small>
-                      <strong>{selectedRecord.is_director ? "Director / Principal" : "Faculty Member"}</strong>
+                      <strong>
+                        {selectedRecord.is_director
+                          ? "Director / Principal"
+                          : "Faculty Member"}
+                      </strong>
                     </div>
                   </div>
 
@@ -6361,10 +7080,23 @@ function AdminManager({ title }: { title: string }) {
                       >
                         {selectedRecord.category || "Student Recital"}
                       </span>
-                      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "var(--navy)" }}>
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: 17,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                        }}
+                      >
                         {selectedRecord.title}
                       </h3>
-                      <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "var(--muted)",
+                          marginTop: 2,
+                        }}
+                      >
                         {selectedRecord.performers}
                       </div>
                     </div>
@@ -6377,11 +7109,17 @@ function AdminManager({ title }: { title: string }) {
                           borderRadius: 999,
                           fontSize: 12,
                           fontWeight: 700,
-                          background: selectedRecord.is_featured ? "rgba(201, 107, 50, 0.15)" : "#f1f5f9",
-                          color: selectedRecord.is_featured ? "var(--gold)" : "var(--muted)",
+                          background: selectedRecord.is_featured
+                            ? "rgba(201, 107, 50, 0.15)"
+                            : "#f1f5f9",
+                          color: selectedRecord.is_featured
+                            ? "var(--gold)"
+                            : "var(--muted)",
                         }}
                       >
-                        {selectedRecord.is_featured ? "Featured Showcase" : "Archive"}
+                        {selectedRecord.is_featured
+                          ? "Featured Showcase"
+                          : "Archive"}
                       </span>
                     </div>
                   </div>
@@ -6401,7 +7139,12 @@ function AdminManager({ title }: { title: string }) {
                     </div>
                     <div>
                       <small>YouTube Video ID</small>
-                      <strong style={{ fontFamily: "monospace", color: "var(--navy)" }}>
+                      <strong
+                        style={{
+                          fontFamily: "monospace",
+                          color: "var(--navy)",
+                        }}
+                      >
                         {selectedRecord.youtube_id || "—"}
                       </strong>
                     </div>
@@ -6425,7 +7168,12 @@ function AdminManager({ title }: { title: string }) {
                         <img
                           src={`https://img.youtube.com/vi/${selectedRecord.youtube_id}/hqdefault.jpg`}
                           alt={selectedRecord.title}
-                          style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }}
+                          style={{
+                            width: "100%",
+                            height: 220,
+                            objectFit: "cover",
+                            display: "block",
+                          }}
                         />
                         <div
                           style={{
@@ -7322,14 +8070,14 @@ function AdminManager({ title }: { title: string }) {
                     approvalModal.confirmTone === "danger"
                       ? "rgba(220, 38, 38, 0.12)"
                       : approvalModal.confirmTone === "success"
-                      ? "rgba(21, 112, 84, 0.12)"
-                      : "rgba(201, 107, 50, 0.12)",
+                        ? "rgba(21, 112, 84, 0.12)"
+                        : "rgba(201, 107, 50, 0.12)",
                   color:
                     approvalModal.confirmTone === "danger"
                       ? "#dc2626"
                       : approvalModal.confirmTone === "success"
-                      ? "#15803d"
-                      : "var(--gold)",
+                        ? "#15803d"
+                        : "var(--gold)",
                   display: "grid",
                   placeItems: "center",
                   flexShrink: 0,
@@ -7340,8 +8088,8 @@ function AdminManager({ title }: { title: string }) {
                 {approvalModal.confirmTone === "danger"
                   ? "✕"
                   : approvalModal.confirmTone === "success"
-                  ? "✓"
-                  : "ℹ"}
+                    ? "✓"
+                    : "ℹ"}
               </div>
               <div style={{ flex: 1 }}>
                 <h3
@@ -7385,8 +8133,8 @@ function AdminManager({ title }: { title: string }) {
                     approvalModal.confirmTone === "danger"
                       ? "#dc2626"
                       : approvalModal.confirmTone === "success"
-                      ? "#15803d"
-                      : "var(--gold)",
+                        ? "#15803d"
+                        : "var(--gold)",
                   color: "white",
                   borderColor: "transparent",
                 }}

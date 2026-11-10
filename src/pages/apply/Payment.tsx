@@ -147,8 +147,12 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         branch: "",
         paystackPublicKey: cached.paystackPublicKey || "",
         flutterwavePublicKey: cached.flutterwavePublicKey || "",
-        enablePaystack: Boolean(cached.enablePaystack && cached.paystackPublicKey?.trim()),
-        enableFlutterwave: Boolean(cached.enableFlutterwave && cached.flutterwavePublicKey?.trim()),
+        enablePaystack: Boolean(
+          cached.enablePaystack && cached.paystackPublicKey?.trim(),
+        ),
+        enableFlutterwave: Boolean(
+          cached.enableFlutterwave && cached.flutterwavePublicKey?.trim(),
+        ),
       }))
     }
     fetchSettings()
@@ -162,8 +166,14 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
             branch: "",
             paystackPublicKey: res.payment.paystackPublicKey || "",
             flutterwavePublicKey: res.payment.flutterwavePublicKey || "",
-            enablePaystack: Boolean(res.payment.enablePaystack && res.payment.paystackPublicKey?.trim()),
-            enableFlutterwave: Boolean(res.payment.enableFlutterwave && res.payment.flutterwavePublicKey?.trim()),
+            enablePaystack: Boolean(
+              res.payment.enablePaystack &&
+                res.payment.paystackPublicKey?.trim(),
+            ),
+            enableFlutterwave: Boolean(
+              res.payment.enableFlutterwave &&
+                res.payment.flutterwavePublicKey?.trim(),
+            ),
           }))
         }
       })
@@ -438,7 +448,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
   const hasPaystackKeys = Boolean(bankInfo.paystackPublicKey?.trim())
   const hasFlutterwaveKeys = Boolean(bankInfo.flutterwavePublicKey?.trim())
   const isPaystackActive = Boolean(bankInfo.enablePaystack && hasPaystackKeys)
-  const isFlutterwaveActive = Boolean(isUSD && bankInfo.enableFlutterwave && hasFlutterwaveKeys)
+  const isFlutterwaveActive = Boolean(
+    isUSD && bankInfo.enableFlutterwave && hasFlutterwaveKeys,
+  )
   const isOnlineAvailable = isUSD ? isFlutterwaveActive : isPaystackActive
 
   if (sent) {
@@ -587,13 +599,19 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                     marginTop: 2,
                   }}
                 >
-                  Download Your Official Admission &amp; Payment Credentials
+                  {isInstantGateway
+                    ? "Download Your Official Admission & Payment Credentials"
+                    : "Download Your Official Application Slip"}
                 </strong>
               </div>
-              <Badge tone="green">Generated &amp; Signed</Badge>
+              <Badge tone={isInstantGateway ? "green" : "gold"}>
+                {isInstantGateway
+                  ? "Cleared & Verified"
+                  : "Pending Admin Verification"}
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 variant="secondary"
                 onClick={() => setShowSlip(true)}
@@ -607,19 +625,73 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 <Icon name="copy" size={14} /> Application Slip (PDF)
               </Button>
 
-              <Button
-                variant="secondary"
-                onClick={() => setShowReceipt(true)}
+              {isInstantGateway ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowReceipt(true)}
+                  style={{
+                    justifyContent: "center",
+                    fontSize: 12.5,
+                    minHeight: 44,
+                    fontWeight: 600,
+                  }}
+                >
+                  <Icon name="check" size={14} /> Payment Receipt (PDF)
+                </Button>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    padding: "0 14px",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "var(--muted)",
+                    background: "#f1f5f9",
+                    borderRadius: 6,
+                    border: "1px dashed #cbd5e1",
+                    minHeight: 44,
+                  }}
+                  title="Payment receipt will be unlocked once finance verifies your transfer"
+                >
+                  <Icon name="lock" size={13} />
+                  <span>Receipt Pending Verification</span>
+                </div>
+              )}
+            </div>
+
+            {!isInstantGateway && (
+              <div
                 style={{
-                  justifyContent: "center",
-                  fontSize: 12.5,
-                  minHeight: 44,
-                  fontWeight: 600,
+                  marginTop: 14,
+                  padding: "10px 14px",
+                  background: "#fffbeb",
+                  border: "1px solid #fef3c7",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: "#92400e",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 10,
                 }}
               >
-                <Icon name="check" size={14} /> Payment Receipt (PDF)
-              </Button>
-            </div>
+                <Icon
+                  name="clock"
+                  size={15}
+                  style={{ flexShrink: 0, marginTop: 2 }}
+                />
+                <div>
+                  <strong>Official Receipt Under Review:</strong> Your bank
+                  transfer proof has been routed to the bursary finance desk.
+                  Once reconciled against our bank statement, your official
+                  digital payment receipt and admission letter will be issued
+                  automatically.
+                </div>
+              </div>
+            )}
+
             <p
               style={{
                 fontSize: 11.5,
@@ -628,7 +700,9 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                 textAlign: "center",
               }}
             >
-              Your official admission letter will be issued separately once the admissions office verifies your payment.
+              {isInstantGateway
+                ? "Your official admission letter and payment receipt are signed and ready."
+                : "Track the verification status of your payment anytime using the status tracker below."}
             </p>
           </div>
 
@@ -1028,7 +1102,8 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
                         fontWeight: 700,
                       }}
                     >
-                      Official Tuition Account · {bankInfo.bankName || "Guaranty Trust Bank (GTBank)"}
+                      Official Tuition Account ·{" "}
+                      {bankInfo.bankName || "Guaranty Trust Bank (GTBank)"}
                     </small>
                     <strong
                       style={{

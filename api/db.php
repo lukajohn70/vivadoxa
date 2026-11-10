@@ -36,6 +36,39 @@ function getEnvVar(string $key, string $default = ''): string {
     return getenv($key) ?: ($env[$key] ?? $default);
 }
 
+function tryGetDb(): ?PDO {
+    static $pdo = null;
+    if ($pdo !== null) {
+        return $pdo;
+    }
+
+    $host = getEnvVar('DB_HOST', '127.0.0.1');
+    $port = (int)getEnvVar('DB_PORT', '3306');
+    $dbname = getEnvVar('DB_NAME', 'vivadoxa');
+    $user = getEnvVar('DB_USER', 'root');
+    $pass = getEnvVar('DB_PASS', 'root');
+    $socket = getEnvVar('DB_SOCKET', '/Applications/MAMP/tmp/mysql/mysql.sock');
+
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => true,
+    ];
+
+    try {
+        $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $user, $pass, $options);
+        return $pdo;
+    } catch (PDOException $tcpEx) {
+        if (file_exists($socket)) {
+            try {
+                $pdo = new PDO("mysql:unix_socket=$socket;dbname=$dbname;charset=utf8mb4", $user, $pass, $options);
+                return $pdo;
+            } catch (PDOException $sockEx) {}
+        }
+        return null;
+    }
+}
+
 function getDb(): PDO {
     static $pdo = null;
     if ($pdo !== null) {

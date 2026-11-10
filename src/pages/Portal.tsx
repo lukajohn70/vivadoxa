@@ -1338,21 +1338,33 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           <td
                             style={{ padding: "14px 18px", textAlign: "right" }}
                           >
-                            <button
-                              type="button"
-                              onClick={() => setReceiptData(pay)}
-                              style={{
-                                padding: "4px 10px",
-                                fontSize: 11,
-                                fontWeight: 600,
-                                background: "#f4f2ec",
-                                border: "1px solid var(--line)",
-                                borderRadius: 4,
-                                cursor: "pointer",
-                              }}
-                            >
-                              View Official Receipt
-                            </button>
+                            {pay.status === "verified" ? (
+                              <button
+                                type="button"
+                                onClick={() => setReceiptData(pay)}
+                                style={{
+                                  padding: "4px 10px",
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  background: "#f4f2ec",
+                                  border: "1px solid var(--line)",
+                                  borderRadius: 4,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                View Official Receipt
+                              </button>
+                            ) : (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  color: "var(--muted)",
+                                  fontStyle: "italic",
+                                }}
+                              >
+                                Pending Verification
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -1508,22 +1520,34 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           <span style={{ fontSize: 11, color: "var(--muted)" }}>
                             {new Date(pay.created_at).toLocaleDateString()}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => setReceiptData(pay)}
-                            style={{
-                              padding: "5px 12px",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              background: "var(--navy)",
-                              color: "white",
-                              border: "none",
-                              borderRadius: 4,
-                              cursor: "pointer",
-                            }}
-                          >
-                            Official Receipt
-                          </button>
+                          {pay.status === "verified" ? (
+                            <button
+                              type="button"
+                              onClick={() => setReceiptData(pay)}
+                              style={{
+                                padding: "5px 12px",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                background: "var(--navy)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 4,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Official Receipt
+                            </button>
+                          ) : (
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "var(--muted)",
+                                fontStyle: "italic",
+                              }}
+                            >
+                              Pending Verification
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}

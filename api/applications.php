@@ -43,24 +43,39 @@ if ($method === 'GET') {
     $search = trim($_GET['search'] ?? '');
     $status = trim($_GET['status'] ?? '');
 
-    $sql = "SELECT * FROM `applications` WHERE 1=1";
+    $sql = "SELECT a.*, 
+                   p.reference AS payment_reference,
+                   p.status AS payment_status,
+                   p.amount AS payment_amount,
+                   p.currency AS payment_currency,
+                   p.method AS payment_method,
+                   p.created_at AS payment_date
+            FROM `applications` a
+            LEFT JOIN (
+                SELECT p1.* FROM `payments` p1
+                INNER JOIN (
+                    SELECT MAX(id) AS max_id FROM `payments` GROUP BY application_no
+                ) p2 ON p1.id = p2.max_id
+            ) p ON p.application_no = a.application_no
+            WHERE 1=1";
     $params = [];
 
     if (!empty($search)) {
-        $sql .= " AND (first_name LIKE :s1 OR last_name LIKE :s2 OR email LIKE :s3 OR application_no LIKE :s4)";
+        $sql .= " AND (a.first_name LIKE :s1 OR a.last_name LIKE :s2 OR a.email LIKE :s3 OR a.application_no LIKE :s4 OR p.reference LIKE :s5)";
         $term = "%$search%";
         $params[':s1'] = $term;
         $params[':s2'] = $term;
         $params[':s3'] = $term;
         $params[':s4'] = $term;
+        $params[':s5'] = $term;
     }
 
     if (!empty($status)) {
-        $sql .= " AND status = :st";
+        $sql .= " AND a.status = :st";
         $params[':st'] = $status;
     }
 
-    $sql .= " ORDER BY created_at DESC LIMIT 100";
+    $sql .= " ORDER BY a.created_at DESC LIMIT 100";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $rows = $stmt->fetchAll();

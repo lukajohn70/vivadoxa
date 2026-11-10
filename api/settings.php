@@ -4,7 +4,6 @@ require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$pdo = getDb();
 $method = $_SERVER['REQUEST_METHOD'];
 
 $defaultGeneral = [
@@ -57,6 +56,7 @@ if ($method === 'GET') {
     $type = trim($_GET['type'] ?? 'all');
 
     if ($type === 'logs') {
+        $pdo = getDb();
         $stmt = $pdo->query("SELECT * FROM `system_notifications` ORDER BY `created_at` DESC LIMIT 30");
         jsonResponse([
             'success' => true,
@@ -159,9 +159,10 @@ if ($method === 'GET') {
             ], 422);
         }
 
-        // Check if Paystack secret key exists in saved bank settings or input
-        $savedBank = getSystemSetting('bank_settings', []);
-        $sk = trim($input['paystackSecretKey'] ?? $savedBank['paystackSecretKey'] ?? '');
+        // Check if Paystack or Flutterwave secret key exists in input, saved settings, or .env
+        $savedBank = function_exists('getSystemSetting') ? getSystemSetting('bank_settings', []) : [];
+        $sk = trim($input['paystackSecretKey'] ?? ($savedBank['paystackSecretKey'] ?? getEnvVar('PAYSTACK_SECRET_KEY', '')));
+        $flwSk = trim($input['flutterwaveSecretKey'] ?? ($savedBank['flutterwaveSecretKey'] ?? getEnvVar('FLUTTERWAVE_SECRET_KEY', '')));
 
         $resolvedName = null;
         $isLiveVerified = false;
@@ -185,7 +186,37 @@ if ($method === 'GET') {
             if (!$err && $response) {
                 $resData = json_decode($response, true);
                 if (!empty($resData['status']) && !empty($resData['data']['account_name'])) {
-                    $resolvedName = $resData['data']['account_name'];
+                    $resolvedName = strtoupper(trim($resData['data']['account_name']));
+                    $isLiveVerified = true;
+                }
+            }
+        }
+
+        // If not resolved via Paystack, try Flutterwave
+        if (!$isLiveVerified && !empty($flwSk) && strpos($flwSk, 'FLWSECK') === 0 && !empty($bankCode)) {
+            $url = "https://api.flutterwave.com/v3/accounts/resolve";
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'account_number' => $accNo,
+                'account_bank' => $bankCode,
+            ]));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer " . $flwSk,
+                "Content-Type: application/json",
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            $response = curl_exec($ch);
+            $err = curl_error($ch);
+            curl_close($ch);
+
+            if (!$err && $response) {
+                $resData = json_decode($response, true);
+                if (!empty($resData['data']['account_name'])) {
+                    $resolvedName = strtoupper(trim($resData['data']['account_name']));
                     $isLiveVerified = true;
                 }
             }
@@ -206,37 +237,54 @@ if ($method === 'GET') {
         $calculatedCheck = (10 - ($sum % 10)) % 10;
         $nubanValid = ($calculatedCheck === $checkDigit);
 
-        // Account is authentic if verified via Paystack API or passes CBN NUBAN checksum
+        // Account is authentic if verified via Paystack/Flutterwave API or passes CBN NUBAN checksum
         if ($isLiveVerified && $resolvedName) {
             jsonResponse([
                 'success' => true,
                 'verified' => true,
-                'method' => 'live_paystack',
+                'method' => 'live_gateway',
                 'account_name' => $resolvedName,
                 'account_number' => $accNo,
                 'bank_name' => $bankName,
-                'message' => "Bank account verified successfully on NIBSS network: {$resolvedName}",
+                'message' => "Bank account verified live on NIBSS network: {$resolvedName}",
             ]);
         } elseif ($nubanValid) {
-            // Algorithmic CBN check passed
-            $defaultAccountName = trim($input['account_name'] ?? $savedBank['accountName'] ?? 'Vivadoxa Music School');
+            // Algorithmic CBN check passed for selected bank (format valid)
+            $existingName = trim($input['account_name'] ?? '');
             jsonResponse([
                 'success' => true,
                 'verified' => true,
-                'method' => 'nuban_algorithm',
-                'account_name' => $defaultAccountName,
+                'method' => 'cbn_nuban',
+                'account_name' => $existingName,
+                'requires_gateway' => true,
                 'account_number' => $accNo,
                 'bank_name' => $bankName,
-                'message' => "Valid NUBAN format verified for {$bankName}.",
+                'message' => "Account number format verified for {$bankName} (CBN checksum passed). Real-time account holder name enquiry requires an active Paystack or Flutterwave Secret Key.",
             ]);
         } else {
-            jsonResponse([
-                'success' => false,
-                'verified' => false,
-                'error' => "Account number {$accNo} failed CBN NUBAN check digit validation for {$bankName}. Please check and correct the digits.",
-            ], 422);
+            // Check if it is an OFI/fintech with >3 digit routing code
+            if (strlen($bankCode) > 3) {
+                $existingName = trim($input['account_name'] ?? '');
+                jsonResponse([
+                    'success' => true,
+                    'verified' => true,
+                    'method' => 'nuban_format',
+                    'account_name' => $existingName,
+                    'requires_gateway' => true,
+                    'account_number' => $accNo,
+                    'bank_name' => $bankName,
+                    'message' => "Account number format validated for {$bankName}.",
+                ]);
+            } else {
+                jsonResponse([
+                    'success' => false,
+                    'verified' => false,
+                    'error' => "Account number {$accNo} does not belong to {$bankName}. Check digit validation failed for bank code {$bankCode}. Please select the matching bank institution or check the digits.",
+                ], 422);
+            }
         }
     } elseif ($action === 'clear_logs') {
+        $pdo = getDb();
         $pdo->exec("TRUNCATE TABLE `system_notifications`");
         jsonResponse(['success' => true, 'message' => 'Notification audit log cleared.']);
     } else {
