@@ -368,14 +368,6 @@ if ($method === 'GET') {
                         </td>
                     </tr>
                 </table>
-
-                <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 26px; font-size: 12px; color: #78716c;'>
-                    <p style='margin: 0;'><strong>Vivadoxa Community Newsletter Desk</strong></p>
-                    <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you subscribed at vivadoxamusic.com.</p>
-                    <p style='margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #ede8e0; font-size: 11px; color: #a8a29e;'>
-                        Don't want to receive these emails? <a href='{$unsubUrl}' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.
-                    </p>
-                </div>
             ";
 
             $emailHtml = buildBrandedEmailTemplate([
@@ -605,14 +597,6 @@ if ($method === 'GET') {
                     </div>
 
                     {$serviceCtasHtml}
-
-                    <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 30px; font-size: 12px; color: #78716c;'>
-                        <p style='margin: 0;'><strong>Vivadoxa Community Bulletin Desk</strong></p>
-                        <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you are an active student, applicant, or subscribed patron of Vivadoxa Music.</p>
-                        <p style='margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #ede8e0; font-size: 11px; color: #a8a29e;'>
-                            Don't want to receive these emails? <a href='{$subscriberUnsubUrl}' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.
-                        </p>
-                    </div>
                 ";
 
                 $emailHtml = buildBrandedEmailTemplate([

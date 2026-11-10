@@ -281,8 +281,12 @@ function buildBrandedEmailTemplate(array $params): string {
                             <td style='background-color: #faf8f5; padding: 22px 32px; border-top: 1px solid #ede8e0; text-align: center; font-size: 11px; color: #8a857e;'>
                                 <p style='margin: 0 0 6px; font-weight: 600; color: #5c5954;'>Vivadoxa Music Academy & Studio · Instrument Clinic · Audio Hub</p>
                                 <p style='margin: 0 0 6px;'>Kaduna Studio, Kaduna State, Nigeria · Phone: +234 907 533 0330 · WhatsApp: +234 803 130 8881</p>
-                                <p style='margin: 0;'>You received this email because you submitted a request or transaction on <a href='https://www.vivadoxamusic.com' style='color: #c96b32; text-decoration: none;'>vivadoxamusic.com</a>.</p>" . 
-                                (!empty($params['unsubscribeUrl']) ? "<p style='margin: 8px 0 0; padding-top: 6px; border-top: 1px dashed #e2ded5; font-size: 11px; color: #a8a29e;'>Don't want to receive these emails? <a href='" . htmlspecialchars($params['unsubscribeUrl']) . "' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.</p>" : "") . "
+                                <p style='margin: 0;'>You received this email because you submitted a request or subscribed on <a href='https://www.vivadoxamusic.com' style='color: #8c8275; text-decoration: none;'>vivadoxamusic.com</a>.</p>" . 
+                                (!empty($params['unsubscribeUrl']) 
+                                    ? "<p style='margin: 8px 0 0; font-size: 10.5px; color: #a8a29e;'>
+                                        Want to stop receiving newsletter emails? <a href='" . htmlspecialchars($params['unsubscribeUrl']) . "' style='color: #8c8275; text-decoration: underline;'>Unsubscribe</a>
+                                       </p>" 
+                                    : "") . "
                             </td>
                         </tr>
                     </table>
