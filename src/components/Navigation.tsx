@@ -384,22 +384,22 @@ export function Footer({ go }: { go: (p: Page) => void }) {
 
   return (
     <footer>
-      {/* Weekly Bulletin Subscription Banner */}
-      <div className="container mb-8">
-        <div className="rounded-xl p-5 md:p-6 bg-gradient-to-r from-amber-950/40 via-stone-900 to-amber-950/40 border border-amber-500/20 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="max-w-xl text-center md:text-left">
+      {/* Weekly Bulletin Subscription Section — Seamlessly Integrated */}
+      <div className="container pb-10 mb-12 md:pb-12 md:mb-14 border-b border-white/10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[var(--gold)]/15 border border-[var(--gold)]/30 text-[var(--gold2)] font-bold text-[10px] uppercase tracking-wider mb-2">
               <span>Weekly Academy Bulletin</span>
             </div>
-            <h3 className="text-white text-base md:text-lg font-bold m-0">
+            <h3 className="text-white text-lg md:text-xl font-bold tracking-tight m-0">
               Stay in Tune with Vivadoxa Dispatches
             </h3>
-            <p className="text-xs text-slate-300 mt-1 mb-0 leading-relaxed">
+            <p className="text-xs text-slate-300 mt-1.5 mb-0 leading-relaxed">
               Join students, musicians, and parents for weekly practice guides, recital broadcasts, workshop repair clinic spotlights, and admission announcements.
             </p>
           </div>
 
-          <form onSubmit={handleBulletinSubmit} className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2">
+          <form onSubmit={handleBulletinSubmit} className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
             {bulletinSubscribed ? (
               <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
                 <span>✓</span>
@@ -413,12 +413,12 @@ export function Footer({ go }: { go: (p: Page) => void }) {
                   onChange={(e) => setBulletinEmail(e.target.value)}
                   placeholder="Enter your email address…"
                   required
-                  className="w-full sm:w-64 px-3.5 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)]"
+                  className="w-full sm:w-72 px-4 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={bulletinSubmitting}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold2)] text-black text-xs font-bold transition-all cursor-pointer whitespace-nowrap disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold2)] text-white text-xs font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap shadow-sm disabled:opacity-50"
                 >
                   {bulletinSubmitting ? "Subscribing…" : "Subscribe Free"}
                 </button>
