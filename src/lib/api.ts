@@ -3285,14 +3285,21 @@ export async function subscribeNewsletter(
   email: string,
   name?: string,
   source: string = "website",
-): Promise<ApiResponse> {
+): Promise<ApiResponse & { already_subscribed?: boolean }> {
   try {
     const res = await fetch(getApiUrl("bulletins.php"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "subscribe", email, name, source }),
     })
-    return await res.json()
+    const text = await res.text()
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return {
+      success: false,
+      error: "Unable to process subscription at this time.",
+    }
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to subscribe." }
   }

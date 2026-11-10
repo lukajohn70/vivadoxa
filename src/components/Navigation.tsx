@@ -370,13 +370,12 @@ export function Footer({ go }: { go: (p: Page) => void }) {
       const res = await subscribeNewsletter(bulletinEmail.trim(), "", "footer")
       if (res.success) {
         setBulletinSubscribed(true)
-        setBulletinMsg("Thank you for subscribing to Vivadoxa Dispatches.")
+        setBulletinMsg("Thank you for subscribing to Vivadoxa Newsletter")
       } else {
         setBulletinMsg(res.error || "Unable to subscribe. Please try again.")
       }
-    } catch {
-      setBulletinMsg("Subscription registered.")
-      setBulletinSubscribed(true)
+    } catch (err: any) {
+      setBulletinMsg(err?.message || "Unable to process subscription. Please try again.")
     } finally {
       setBulletinSubmitting(false)
     }
@@ -399,35 +398,42 @@ export function Footer({ go }: { go: (p: Page) => void }) {
             </p>
           </div>
 
-          <form onSubmit={handleBulletinSubmit} className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-            {bulletinSubscribed ? (
-              <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
-                <span>✓</span>
-                <span>Thank you for subscribing to Vivadoxa Dispatches.</span>
-              </div>
-            ) : (
-              <>
-                <input
-                  type="email"
-                  value={bulletinEmail}
-                  onChange={(e) => setBulletinEmail(e.target.value)}
-                  placeholder="Enter your email address…"
-                  required
-                  className="w-full sm:w-72 px-4 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] transition-colors"
-                />
-                <button
-                  type="submit"
-                  disabled={bulletinSubmitting}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold2)] text-white text-xs font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap shadow-sm disabled:opacity-50"
-                >
-                  {bulletinSubmitting ? "Subscribing…" : "Subscribe Free"}
-                </button>
-              </>
-            )}
+          <div className="w-full lg:w-auto flex flex-col items-stretch lg:items-end">
+            <form onSubmit={handleBulletinSubmit} className="w-full flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              {bulletinSubscribed ? (
+                <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
+                  <span>✓</span>
+                  <span>Thank you for subscribing to Vivadoxa Newsletter</span>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    value={bulletinEmail}
+                    onChange={(e) => {
+                      setBulletinEmail(e.target.value)
+                      if (bulletinMsg) setBulletinMsg("")
+                    }}
+                    placeholder="Enter your email address…"
+                    required
+                    className="w-full sm:w-72 px-4 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[var(--gold)] focus:ring-1 focus:ring-[var(--gold)] transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={bulletinSubmitting}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[var(--gold)] hover:bg-[var(--gold2)] text-white text-xs font-semibold tracking-wide transition-all cursor-pointer whitespace-nowrap shadow-sm disabled:opacity-50"
+                  >
+                    {bulletinSubmitting ? "Subscribing…" : "Subscribe Free"}
+                  </button>
+                </>
+              )}
+            </form>
             {bulletinMsg && !bulletinSubscribed && (
-              <span className="text-rose-400 text-[11px] block sm:hidden">{bulletinMsg}</span>
+              <span className="text-amber-400 text-[11px] mt-2 block font-medium">
+                {bulletinMsg}
+              </span>
             )}
-          </form>
+          </div>
         </div>
       </div>
 

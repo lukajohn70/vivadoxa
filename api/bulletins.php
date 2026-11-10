@@ -296,25 +296,52 @@ if ($method === 'GET') {
                 jsonResponse(['success' => false, 'error' => 'Please provide a valid email address.'], 400);
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO `newsletter_subscribers` (`email`, `full_name`, `status`, `source`)
-                VALUES (:em, :fn, 'active', :src)
-                ON DUPLICATE KEY UPDATE `status` = 'active', `full_name` = COALESCE(NULLIF(VALUES(`full_name`), ''), `full_name`)
-            ");
-            $stmt->execute([
-                ':em' => $email,
-                ':fn' => $name,
-                ':src' => $source,
-            ]);
+            // Check if email is already subscribed
+            $checkStmt = $pdo->prepare("SELECT id, email, full_name, status FROM `newsletter_subscribers` WHERE `email` = :em LIMIT 1");
+            $checkStmt->execute([':em' => $email]);
+            $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($existing && $existing['status'] === 'active') {
+                jsonResponse([
+                    'success' => false,
+                    'already_subscribed' => true,
+                    'error' => 'This email address is already subscribed to Vivadoxa Newsletter.',
+                ], 409);
+            }
+
+            if ($existing) {
+                // Reactivate previously unsubscribed subscriber
+                $updStmt = $pdo->prepare("
+                    UPDATE `newsletter_subscribers`
+                    SET `status` = 'active',
+                        `full_name` = COALESCE(NULLIF(:fn, ''), `full_name`)
+                    WHERE `id` = :id
+                ");
+                $updStmt->execute([
+                    ':fn' => $name,
+                    ':id' => $existing['id'],
+                ]);
+            } else {
+                // Insert new subscriber
+                $insStmt = $pdo->prepare("
+                    INSERT INTO `newsletter_subscribers` (`email`, `full_name`, `status`, `source`)
+                    VALUES (:em, :fn, 'active', :src)
+                ");
+                $insStmt->execute([
+                    ':em' => $email,
+                    ':fn' => $name,
+                    ':src' => $source,
+                ]);
+            }
 
             // Build personalized unsubscribe link
             $unsubUrl = getUnsubscribeUrl($email);
-            $subscriberName = !empty($name) ? $name : 'Music Lover';
-            $subject = "🎼 Welcome to Vivadoxa Academy Dispatches — You're Subscribed!";
+            $subscriberName = !empty($name) ? $name : (!empty($existing['full_name']) ? $existing['full_name'] : 'Music Lover');
+            $subject = "🎼 Welcome to Vivadoxa Newsletter — You're Subscribed!";
 
             $welcomeBodyHtml = "
                 <p style='font-size: 15px; color: #191715; line-height: 1.7;'>
-                    Thank you for subscribing to the official <strong>Vivadoxa Music Weekly Bulletin</strong>! You have been successfully added to our community dispatch list.
+                    Thank you for subscribing to the official <strong>Vivadoxa Newsletter</strong>! You have been successfully added to our subscriber list.
                 </p>
 
                 <p style='font-size: 14px; color: #444; line-height: 1.7;'>
@@ -343,7 +370,7 @@ if ($method === 'GET') {
                 </table>
 
                 <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 26px; font-size: 12px; color: #78716c;'>
-                    <p style='margin: 0;'><strong>Vivadoxa Community Bulletin Desk</strong></p>
+                    <p style='margin: 0;'><strong>Vivadoxa Community Newsletter Desk</strong></p>
                     <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you subscribed at vivadoxamusic.com.</p>
                     <p style='margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #ede8e0; font-size: 11px; color: #a8a29e;'>
                         Don't want to receive these emails? <a href='{$unsubUrl}' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.
@@ -352,16 +379,16 @@ if ($method === 'GET') {
             ";
 
             $emailHtml = buildBrandedEmailTemplate([
-                'title'          => "Welcome to Vivadoxa Academy Dispatches",
-                'badge'          => "Weekly Bulletin",
-                'headerBadge'    => "Weekly Academy Bulletin",
-                'category'       => "Weekly Bulletin",
-                'headline'       => "You're in Tune with Vivadoxa!",
+                'title'          => "Welcome to Vivadoxa Newsletter",
+                'badge'          => "Newsletter",
+                'headerBadge'    => "Weekly Vivadoxa Newsletter",
+                'category'       => "Newsletter",
+                'headline'       => "Thank you for subscribing to Vivadoxa Newsletter",
                 'clientName'     => $subscriberName,
                 'bodyHtml'       => $welcomeBodyHtml,
                 'ctaText'        => "Visit Vivadoxa Website",
                 'ctaUrl'         => "https://www.vivadoxamusic.com/",
-                'deptName'       => "Vivadoxa Music Weekly Bulletin",
+                'deptName'       => "Vivadoxa Newsletter",
                 'deptEmail'      => "info@vivadoxamusic.com",
                 'unsubscribeUrl' => $unsubUrl,
             ]);
@@ -377,7 +404,7 @@ if ($method === 'GET') {
 
             jsonResponse([
                 'success' => true,
-                'message' => 'Thank you for subscribing to Vivadoxa Dispatches.',
+                'message' => 'Thank you for subscribing to Vivadoxa Newsletter',
                 'email_dispatched' => !empty($mailResult['success']),
                 'delivery_status' => $mailResult['message'] ?? 'Dispatched',
             ]);
