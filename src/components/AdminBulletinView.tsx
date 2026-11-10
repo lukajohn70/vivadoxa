@@ -1350,7 +1350,7 @@ export function AdminBulletinView({
       {/* Real-time Delivery Receipt Banner */}
       {renderDeliveryReceipt()}
 
-      {/* Sub Tabs: Bulletins vs Subscribers vs Delivery Proof Logs */}
+      {/* Sub Tabs: Bulletins vs Subscribers vs Email Dispatch History */}
       <div
         style={{
           display: "flex",
@@ -1373,7 +1373,7 @@ export function AdminBulletinView({
             cursor: "pointer",
           }}
         >
-          Dispatched &amp; Draft Bulletins ({bulletins.length})
+          Bulletins ({bulletins.length})
         </button>
 
         <button
@@ -1389,7 +1389,7 @@ export function AdminBulletinView({
             cursor: "pointer",
           }}
         >
-          Newsletter Subscribers ({subscribers.length})
+          Subscribers ({subscribers.length})
         </button>
 
         <button
@@ -1408,7 +1408,7 @@ export function AdminBulletinView({
             cursor: "pointer",
           }}
         >
-          Email Dispatch &amp; Delivery Proof ({dispatchLogs.length})
+          Email Dispatch History ({dispatchLogs.length})
         </button>
       </div>
 
