@@ -8,6 +8,7 @@ import {
   deleteBulletin,
   fetchNewsletterSubscribers,
   fetchBulletinDispatchLogs,
+  resendWelcomeEmail,
   type BulletinDispatchLog,
   type BulletinSendResponse,
 } from "@/lib/api"
@@ -29,6 +30,7 @@ export function AdminBulletinView({
   const [dispatchLogs, setDispatchLogs] = useState<BulletinDispatchLog[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingLogs, setLoadingLogs] = useState(false)
+  const [resendingEmail, setResendingEmail] = useState<string | null>(null)
 
   // Real-time delivery receipt confirmation
   const [lastDispatchResult, setLastDispatchResult] = useState<BulletinSendResponse | null>(null)
@@ -1636,6 +1638,7 @@ export function AdminBulletinView({
                     <th style={{ padding: "12px 16px" }}>Status</th>
                     <th style={{ padding: "12px 16px" }}>Acquisition Source</th>
                     <th style={{ padding: "12px 16px" }}>Subscribed On</th>
+                    <th style={{ padding: "12px 16px", textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1671,6 +1674,39 @@ export function AdminBulletinView({
                           month: "short",
                           year: "numeric",
                         })}
+                      </td>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                        <Button
+                          variant="secondary"
+                          style={{ padding: "4px 10px", fontSize: 11 }}
+                          disabled={resendingEmail === s.email}
+                          onClick={async () => {
+                            setResendingEmail(s.email)
+                            try {
+                              const res = await resendWelcomeEmail(s.email)
+                              if (res.success) {
+                                setActionNotice(
+                                  `✓ Welcome email dispatched to ${s.email} (${res.delivery_status || "Delivered"})`,
+                                )
+                                refreshLogsOnly()
+                              } else {
+                                setActionNotice(
+                                  `⚠️ Delivery failed: ${res.error || "Could not dispatch email."}`,
+                                )
+                              }
+                            } catch (err: any) {
+                              setActionNotice(
+                                `⚠️ Error: ${err.message || "Failed to resend."}`,
+                              )
+                            } finally {
+                              setResendingEmail(null)
+                            }
+                          }}
+                        >
+                          {resendingEmail === s.email
+                            ? "Sending…"
+                            : "Resend Welcome Email"}
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -1799,7 +1835,15 @@ export function AdminBulletinView({
                                       : "#f59e0b",
                               }}
                             />
-                            {isSent ? "Delivered" : isLogged ? "MTA Logged" : log.status}
+                            {isSent
+                              ? log.error_message?.toLowerCase().includes("smtp")
+                                ? "SMTP Delivered"
+                                : "MTA Spooled"
+                              : isLogged
+                                ? "MTA Logged"
+                                : isFailed
+                                  ? "Delivery Failed"
+                                  : log.status}
                           </span>
                         </td>
                         <td style={{ padding: "12px 16px", fontWeight: 600, color: "var(--navy)" }}>

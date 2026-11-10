@@ -508,20 +508,29 @@ function sendSystemEmail(
     }
 
     if ($mailSent) {
-        $note = "Sent via server mail() from $fromEmail";
+        $note = "Queued via server mail() from $fromEmail";
         if ($bcc) $note .= " (BCC: $bcc)";
         logNotification('email', $to, $subject, $htmlBody, 'sent', $note);
-        return ['success' => true, 'message' => 'Email delivered via PHP mail().'];
+        return [
+            'success' => true,
+            'sent' => true,
+            'method' => 'mail',
+            'message' => 'Email queued via server mail() spool.',
+        ];
     }
 
-    // 3. If local environment (e.g., MAMP without configured MTA), record in notification log
-    $note = "Server MTA not active on localhost. Logged to system records (from $fromEmail)";
-    if ($bcc) $note .= " [Official copy: $bcc]";
-    logNotification('email', $to, $subject, $htmlBody, 'logged', $note);
+    // 3. Both SMTP (if configured) and server mail() transport failed
+    $lastErr = error_get_last();
+    $errDetail = !empty($lastErr['message']) ? $lastErr['message'] : 'Local mail transport (sendmail) returned false.';
+    $failNote = "Server mail transport failed to dispatch to $to ($errDetail). For guaranteed inbox delivery, configure SMTP credentials in General Settings.";
+    logNotification('email', $to, $subject, $htmlBody, 'failed', $failNote);
+
     return [
-        'success' => true,
-        'simulated' => true,
-        'message' => 'Notification recorded in System Log. Configure SMTP credentials for live external inbox delivery.',
+        'success' => false,
+        'sent' => false,
+        'method' => 'failed',
+        'error' => "Server mail transport failed: {$errDetail}. Please configure SMTP in General Settings.",
+        'message' => "Delivery failed: {$errDetail}",
     ];
 }
 

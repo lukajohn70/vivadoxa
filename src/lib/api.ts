@@ -3482,6 +3482,29 @@ export async function fetchNewsletterSubscribers(): Promise<any[]> {
   }
 }
 
+export async function resendWelcomeEmail(
+  email: string,
+): Promise<ApiResponse & { delivery_status?: string }> {
+  try {
+    const res = await fetch(getApiUrl("bulletins.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "resend_welcome", email }),
+    })
+    const text = await res.text()
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return { success: false, error: "Failed to parse response." }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to resend welcome email.",
+    }
+  }
+}
+
 export async function fetchBulletinDispatchLogs(
   limit: number = 50,
 ): Promise<BulletinDispatchLog[]> {

@@ -296,21 +296,13 @@ if ($method === 'GET') {
                 jsonResponse(['success' => false, 'error' => 'Please provide a valid email address.'], 400);
             }
 
-            // Check if email is already subscribed
+            // Check if email already exists in subscribers (enforce single unique subscriber record)
             $checkStmt = $pdo->prepare("SELECT id, email, full_name, status FROM `newsletter_subscribers` WHERE `email` = :em LIMIT 1");
             $checkStmt->execute([':em' => $email]);
             $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($existing && $existing['status'] === 'active') {
-                jsonResponse([
-                    'success' => false,
-                    'already_subscribed' => true,
-                    'error' => 'This email address is already subscribed to Vivadoxa Newsletter.',
-                ], 409);
-            }
-
             if ($existing) {
-                // Reactivate previously unsubscribed subscriber
+                // Keep record unique - activate existing subscriber and update name if provided
                 $updStmt = $pdo->prepare("
                     UPDATE `newsletter_subscribers`
                     SET `status` = 'active',
@@ -322,7 +314,7 @@ if ($method === 'GET') {
                     ':id' => $existing['id'],
                 ]);
             } else {
-                // Insert new subscriber
+                // Insert new subscriber (unique row)
                 $insStmt = $pdo->prepare("
                     INSERT INTO `newsletter_subscribers` (`email`, `full_name`, `status`, `source`)
                     VALUES (:em, :fn, 'active', :src)
@@ -398,8 +390,97 @@ if ($method === 'GET') {
                 'success' => true,
                 'message' => 'Thank you for subscribing to Vivadoxa Newsletter',
                 'email_dispatched' => !empty($mailResult['success']),
-                'delivery_status' => $mailResult['message'] ?? 'Dispatched',
+                'delivery_status' => $mailResult['message'] ?? ($mailResult['error'] ?? 'Dispatched'),
+                'transport' => $mailResult['method'] ?? 'unknown',
             ]);
+        }
+
+        // Resend welcome email from Admin Subscribers view
+        if ($action === 'resend_welcome') {
+            $email = strtolower(trim($input['email'] ?? ''));
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                jsonResponse(['success' => false, 'error' => 'Valid email address required.'], 400);
+            }
+
+            $stmt = $pdo->prepare("SELECT * FROM `newsletter_subscribers` WHERE `email` = :em LIMIT 1");
+            $stmt->execute([':em' => $email]);
+            $sub = $stmt->fetch();
+            if (!$sub) {
+                jsonResponse(['success' => false, 'error' => 'Subscriber not found in database.'], 404);
+            }
+
+            $unsubUrl = getUnsubscribeUrl($email);
+            $subscriberName = !empty($sub['full_name']) ? $sub['full_name'] : 'Music Lover';
+            $subject = "🎼 Welcome to Vivadoxa Newsletter — You're Subscribed!";
+
+            $welcomeBodyHtml = "
+                <p style='font-size: 15px; color: #191715; line-height: 1.7;'>
+                    Thank you for subscribing to the official <strong>Vivadoxa Newsletter</strong>! You are an active subscriber on our list.
+                </p>
+
+                <p style='font-size: 14px; color: #444; line-height: 1.7;'>
+                    Every week, our editorial desk and academy faculty curate practical resources to elevate your musical journey:
+                </p>
+
+                <table style='width: 100%; border-collapse: collapse; margin: 18px 0;'>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🎵 Rehearsal Guides & Repertoire Notes:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Sight-reading tips, dynamic articulation exercises, and faculty coaching notes.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🛠️ Instrument Clinic & Care Spotlights:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Seasonal wood humidity preservation, string setup guides, and luthier workshop updates.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🎹 Recitals, Masterclasses & Early Admissions:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Student recital premieres, masterclass dates, and priority registration notices.</p>
+                        </td>
+                    </tr>
+                </table>
+            ";
+
+            $emailHtml = buildBrandedEmailTemplate([
+                'title'          => "Welcome to Vivadoxa Newsletter",
+                'badge'          => "Newsletter",
+                'headerBadge'    => "Weekly Vivadoxa Newsletter",
+                'category'       => "Newsletter",
+                'headline'       => "Thank you for subscribing to Vivadoxa Newsletter",
+                'clientName'     => $subscriberName,
+                'bodyHtml'       => $welcomeBodyHtml,
+                'ctaText'        => "Visit Vivadoxa Website",
+                'ctaUrl'         => "https://www.vivadoxamusic.com/",
+                'deptName'       => "Vivadoxa Newsletter",
+                'deptEmail'      => "info@vivadoxamusic.com",
+                'unsubscribeUrl' => $unsubUrl,
+            ]);
+
+            $mailResult = sendSystemEmail(
+                $email,
+                $subject,
+                $emailHtml,
+                null,
+                'newsletter',
+                false
+            );
+
+            if (!empty($mailResult['success'])) {
+                jsonResponse([
+                    'success' => true,
+                    'message' => "Welcome email dispatched to {$email} successfully.",
+                    'delivery_status' => $mailResult['message'] ?? 'Dispatched',
+                ]);
+            } else {
+                jsonResponse([
+                    'success' => false,
+                    'error' => $mailResult['error'] ?? 'Delivery failed.',
+                    'delivery_status' => $mailResult['message'] ?? 'Delivery failed',
+                ], 500);
+            }
         }
 
         // Save / Update Bulletin Draft
