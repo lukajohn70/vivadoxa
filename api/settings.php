@@ -64,8 +64,17 @@ if ($method === 'GET') {
         ]);
     }
 
+    if ($type === 'hero_slides') {
+        $savedHeroSlides = getSystemSetting('homepage_hero_slides', null);
+        jsonResponse([
+            'success' => true,
+            'slides' => $savedHeroSlides,
+        ]);
+    }
+
     $savedGeneral = getSystemSetting('general_settings', []);
     $savedBank = getSystemSetting('bank_settings', []);
+    $savedHeroSlides = getSystemSetting('homepage_hero_slides', null);
 
     $general = array_merge($defaultGeneral, is_array($savedGeneral) ? $savedGeneral : []);
     $bank = array_merge($defaultBank, is_array($savedBank) ? $savedBank : []);
@@ -79,9 +88,49 @@ if ($method === 'GET') {
             'success' => true,
             'general' => $general,
             'payment' => $bank,
+            'hero_slides' => $savedHeroSlides,
         ]);
     }
 } elseif ($method === 'POST') {
+    // Check if multipart/form-data upload for hero images
+    if (isset($_FILES['hero_image']) && $_FILES['hero_image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = dirname(__DIR__) . '/public/media/hero';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+        $distUploadDir = dirname(__DIR__) . '/dist/media/hero';
+        if (is_dir(dirname(__DIR__) . '/dist') && !is_dir($distUploadDir)) {
+            @mkdir($distUploadDir, 0755, true);
+        }
+
+        $fileTmp = $_FILES['hero_image']['tmp_name'];
+        $origName = basename($_FILES['hero_image']['name']);
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (!in_array($ext, $allowedExts)) {
+            jsonResponse(['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, WEBP and GIF are allowed.'], 400);
+        }
+
+        $safeName = 'hero-' . time() . '-' . rand(100, 999) . '.' . $ext;
+        $destPath = $uploadDir . '/' . $safeName;
+
+        if (move_uploaded_file($fileTmp, $destPath)) {
+            if (is_dir($distUploadDir)) {
+                @copy($destPath, $distUploadDir . '/' . $safeName);
+            }
+            $webUrl = '/media/hero/' . $safeName;
+            jsonResponse([
+                'success' => true,
+                'message' => 'Hero image uploaded successfully.',
+                'image_url' => $webUrl,
+                'filename' => $safeName,
+            ]);
+        } else {
+            jsonResponse(['success' => false, 'error' => 'Failed to save uploaded file.'], 500);
+        }
+    }
+
     $input = getJsonInput();
     $action = trim($input['action'] ?? $_GET['action'] ?? 'save_general');
 
@@ -102,6 +151,23 @@ if ($method === 'GET') {
             'success' => true,
             'message' => 'Bank account & payment gateway settings saved successfully.',
             'settings' => $settings,
+        ]);
+    } elseif ($action === 'save_hero_slides') {
+        $slides = $input['slides'] ?? [];
+        if (!is_array($slides)) {
+            jsonResponse(['success' => false, 'error' => 'Slides data must be an array.'], 400);
+        }
+        saveSystemSetting('homepage_hero_slides', $slides);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Homepage hero slideshow updated successfully.',
+            'slides' => $slides,
+        ]);
+    } elseif ($action === 'reset_hero_slides') {
+        saveSystemSetting('homepage_hero_slides', null);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Homepage hero slideshow reset to default academy slides.',
         ]);
     } elseif ($action === 'test_email') {
         $recipient = trim($input['recipient'] ?? $input['schoolEmail'] ?? 'vivadoxa@gmail.com');

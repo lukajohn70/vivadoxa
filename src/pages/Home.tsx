@@ -23,7 +23,13 @@ import {
   repairSaxImg,
   repairElectronicsImg,
 } from "@/lib/data"
-import { fetchAcademics } from "@/lib/api"
+import {
+  fetchAcademics,
+  fetchHeroSlides,
+  getCachedHeroSlides,
+  DEFAULT_HERO_SLIDES,
+  type HeroSlideItem,
+} from "@/lib/api"
 import {
   WHATSAPP_URL,
   SCHOOL_PHONE,
@@ -35,50 +41,8 @@ import {
 } from "@/lib/utils"
 import type { Page } from "@/types"
 
-const HERO_SLIDES = [
-  {
-    id: "sax-ensemble",
-    src: "/media/programs/sax-ensemble.jpeg",
-    alt: "Young African musicians performing saxophone ensemble at Vivadoxa",
-    title: "Youth Saxophone Ensemble",
-    subtitle: "Harmonies, stage dynamics & group masterclasses",
-    category: "Woodwinds & Brass",
-  },
-  {
-    id: "piano-recital",
-    src: "/media/programs/piano-recital-braids.jpeg",
-    alt: "Student performing live concert on grand piano at Vivadoxa",
-    title: "Concert Grand Piano",
-    subtitle: "Classical repertoire, posture & sight-reading",
-    category: "Keys & Piano",
-  },
-  {
-    id: "violin-solo",
-    src: "/media/programs/violin-solo-rainbow.jpeg",
-    alt: "Youth violinist performing solo recital at Vivadoxa academy",
-    title: "Violin Masterclass",
-    subtitle: "Bowing technique, pitch control & graded syllabus",
-    category: "Strings",
-  },
-  {
-    id: "drums-lab",
-    src: "/media/programs/drums-group-lab.jpeg",
-    alt: "Drumming students at Vivadoxa rhythm lab",
-    title: "Rhythm & Drumming Lab",
-    subtitle: "Groove stability, polyrhythms & time-keeping",
-    category: "Percussion",
-  },
-  {
-    id: "band-rehearsal",
-    src: "/media/studio/classroom-band-rehearsal.jpeg",
-    alt: "Students rehearsing in ensemble band at Vivadoxa music school",
-    title: "Live Band Rehearsal",
-    subtitle: "African groove, stage confidence & collaboration",
-    category: "Live Performance",
-  },
-]
-
 export function Home({ go }: { go: (p: Page) => void }) {
+  const [slides, setSlides] = useState<HeroSlideItem[]>(getCachedHeroSlides)
   const [recitals, setRecitals] = useState(staticPerformances)
   const [soundCategory, setSoundCategory] = useState<string>("All")
   const [showAllInstruments, setShowAllInstruments] = useState(false)
@@ -86,6 +50,18 @@ export function Home({ go }: { go: (p: Page) => void }) {
   const [prevHeroSlide, setPrevHeroSlide] = useState<number | null>(null)
   const [isHeroPaused, setIsHeroPaused] = useState(false)
   const [isCategoryFading, setIsCategoryFading] = useState(false)
+
+  // Fetch live hero slides from backend database
+  useEffect(() => {
+    fetchHeroSlides().then((dbSlides) => {
+      if (Array.isArray(dbSlides) && dbSlides.length > 0) {
+        const activeOnly = dbSlides.filter((s) => s.active !== false)
+        if (activeOnly.length > 0) {
+          setSlides(activeOnly)
+        }
+      }
+    })
+  }, [])
 
   const handleSlideChange = (
     nextIndex: number | ((curr: number) => number),
@@ -101,12 +77,12 @@ export function Home({ go }: { go: (p: Page) => void }) {
 
   // Auto-advance hero slides every 6 seconds unless user is hovering
   useEffect(() => {
-    if (isHeroPaused) return
+    if (isHeroPaused || slides.length <= 1) return
     const timer = setInterval(() => {
-      handleSlideChange((prev) => (prev + 1) % HERO_SLIDES.length)
+      handleSlideChange((prev) => (prev + 1) % slides.length)
     }, 6000)
     return () => clearInterval(timer)
-  }, [isHeroPaused])
+  }, [isHeroPaused, slides.length])
 
   const handleCategorySelect = (cat: string) => {
     if (cat === soundCategory) return
@@ -255,12 +231,12 @@ export function Home({ go }: { go: (p: Page) => void }) {
             >
               {/* ── Living Hero Photography Carousel with Subtle Merge ── */}
               <div className="hero-slides-track">
-                {HERO_SLIDES.map((slide, idx) => {
+                {slides.map((slide, idx) => {
                   const isActive = idx === heroSlide
                   const isPrevious = idx === prevHeroSlide
                   return (
                     <div
-                      key={slide.id}
+                      key={slide.id || idx}
                       className={`hero-slide ${
                         isActive ? "is-active" : isPrevious ? "is-previous" : ""
                       }`}
@@ -268,7 +244,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     >
                       <img
                         src={slide.src}
-                        alt={slide.alt}
+                        alt={slide.alt || slide.title}
                         fetchPriority={idx === 0 ? "high" : "low"}
                         loading={idx === 0 ? "eager" : "lazy"}
                       />
@@ -280,9 +256,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 {/* Minimalist Slide Progress Controls */}
                 <div className="hero-slider-nav">
                   <div className="hero-slider-dots">
-                    {HERO_SLIDES.map((slide, idx) => (
+                    {slides.map((slide, idx) => (
                       <button
-                        key={slide.id}
+                        key={slide.id || idx}
                         type="button"
                         onClick={() => handleSlideChange(idx)}
                         className={`hero-dot-btn ${
@@ -295,67 +271,71 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     ))}
                   </div>
 
-                  <div className="hero-slider-arrows">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleSlideChange(
-                          (prev) =>
-                            (prev - 1 + HERO_SLIDES.length) %
-                            HERO_SLIDES.length,
-                        )
-                      }
-                      className="hero-arrow-btn"
-                      aria-label="Previous photo"
-                      title="Previous"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleSlideChange(
-                          (prev) => (prev + 1) % HERO_SLIDES.length,
-                        )
-                      }
-                      className="hero-arrow-btn"
-                      aria-label="Next photo"
-                      title="Next"
-                    >
-                      ›
-                    </button>
-                  </div>
+                  {slides.length > 1 && (
+                    <div className="hero-slider-arrows">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSlideChange(
+                            (prev) => (prev - 1 + slides.length) % slides.length,
+                          )
+                        }
+                        className="hero-arrow-btn"
+                        aria-label="Previous photo"
+                        title="Previous"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSlideChange((prev) => (prev + 1) % slides.length)
+                        }
+                        className="hero-arrow-btn"
+                        aria-label="Next photo"
+                        title="Next"
+                      >
+                        ›
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Integrated Architectural Discipline Banner */}
-                <div
-                  className="hero-recital-banner"
-                  onClick={() => go("programs")}
-                  role="button"
-                  tabIndex={0}
-                  title={`Explore ${HERO_SLIDES[heroSlide].title} curriculum`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      go("programs")
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="play-circle">
-                      <Icon name="music" size={13} />
-                    </span>
-                    <div className="min-w-0">
-                      <small>
-                        Discipline · {HERO_SLIDES[heroSlide].category}
-                      </small>
-                      <strong className="truncate">
-                        {HERO_SLIDES[heroSlide].title}
-                      </strong>
+                {(() => {
+                  const currentSlide = slides[heroSlide] || slides[0] || DEFAULT_HERO_SLIDES[0]
+                  if (!currentSlide) return null
+                  return (
+                    <div
+                      className="hero-recital-banner"
+                      onClick={() => go("programs")}
+                      role="button"
+                      tabIndex={0}
+                      title={`Explore ${currentSlide.title} curriculum`}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          go("programs")
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="play-circle">
+                          <Icon name="music" size={13} />
+                        </span>
+                        <div className="min-w-0">
+                          <small>
+                            Discipline · {currentSlide.category}
+                          </small>
+                          <strong className="truncate">
+                            {currentSlide.title}
+                          </strong>
+                        </div>
+                      </div>
+                      <span className="hero-recital-cta">Explore Course ↗</span>
                     </div>
-                  </div>
-                  <span className="hero-recital-cta">Explore Course ↗</span>
-                </div>
+                  )
+                })()}
               </div>
             </div>
           </ScrollReveal>

@@ -43,6 +43,7 @@ import {
 } from "@/components/AdminSystemViews"
 import { ShopAndRentalsView } from "@/components/AdminCatalogView"
 import { AdminGalleryView } from "@/components/AdminGalleryView"
+import { AdminHeroSlidesView } from "@/components/AdminHeroSlidesView"
 import { AdminBulletinView } from "@/components/AdminBulletinView"
 import { ClassScheduleManagerView } from "@/components/AdminScheduleViews"
 import {
@@ -486,7 +487,15 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         "Class Schedule",
       ],
     ],
-    ["System", ["Staff & Roles", "Payment Settings", "General Settings"]],
+    [
+      "System",
+      [
+        "Hero Slideshow",
+        "Staff & Roles",
+        "Payment Settings",
+        "General Settings",
+      ],
+    ],
   ]
 
   function closeNav(item: string) {
@@ -2354,6 +2363,8 @@ function AdminManager({ title }: { title: string }) {
         <AdminBulletinView setActionNotice={setActionNotice} />
       ) : title === "Photo Gallery" ? (
         <AdminGalleryView setActionNotice={setActionNotice} />
+      ) : title === "Hero Slideshow" ? (
+        <AdminHeroSlidesView setActionNotice={setActionNotice} />
       ) : title === "Shop & Rentals" ? (
         <ShopAndRentalsView setActionNotice={setActionNotice} />
       ) : title === "Staff & Roles" ? (

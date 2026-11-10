@@ -2201,6 +2201,168 @@ export async function fetchNotificationLogs(): Promise<any[]> {
   return []
 }
 
+// ── Homepage Hero Slideshow Settings ──────────────────────────────────────────
+export interface HeroSlideItem {
+  id: string
+  src: string
+  alt: string
+  title: string
+  subtitle: string
+  category: string
+  active?: boolean
+}
+
+export const DEFAULT_HERO_SLIDES: HeroSlideItem[] = [
+  {
+    id: "sax-ensemble",
+    src: "/media/programs/sax-ensemble.jpeg",
+    alt: "Young African musicians performing saxophone ensemble at Vivadoxa",
+    title: "Youth Saxophone Ensemble",
+    subtitle: "Harmonies, stage dynamics & group masterclasses",
+    category: "Woodwinds & Brass",
+    active: true,
+  },
+  {
+    id: "piano-recital",
+    src: "/media/programs/piano-recital-braids.jpeg",
+    alt: "Student performing live concert on grand piano at Vivadoxa",
+    title: "Concert Grand Piano",
+    subtitle: "Classical repertoire, posture & sight-reading",
+    category: "Keys & Piano",
+    active: true,
+  },
+  {
+    id: "violin-solo",
+    src: "/media/programs/violin-solo-rainbow.jpeg",
+    alt: "Youth violinist performing solo recital at Vivadoxa academy",
+    title: "Violin Masterclass",
+    subtitle: "Bowing technique, pitch control & graded syllabus",
+    category: "Strings",
+    active: true,
+  },
+  {
+    id: "drums-lab",
+    src: "/media/programs/drums-group-lab.jpeg",
+    alt: "Drumming students at Vivadoxa rhythm lab",
+    title: "Rhythm & Drumming Lab",
+    subtitle: "Groove stability, polyrhythms & time-keeping",
+    category: "Percussion",
+    active: true,
+  },
+  {
+    id: "band-rehearsal",
+    src: "/media/studio/classroom-band-rehearsal.jpeg",
+    alt: "Students rehearsing in ensemble band at Vivadoxa music school",
+    title: "Live Band Rehearsal",
+    subtitle: "African groove, stage confidence & collaboration",
+    category: "Live Performance",
+    active: true,
+  },
+]
+
+export function getCachedHeroSlides(): HeroSlideItem[] {
+  if (typeof window === "undefined") return DEFAULT_HERO_SLIDES
+  try {
+    const raw = localStorage.getItem("vdx_homepage_hero_slides")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+  return DEFAULT_HERO_SLIDES
+}
+
+export async function fetchHeroSlides(): Promise<HeroSlideItem[]> {
+  try {
+    const res = await fetch(getApiUrl("settings.php?type=hero_slides"))
+    if (res.ok) {
+      const text = await res.text().catch(() => "")
+      if (text && text.trim().startsWith("{")) {
+        const data = JSON.parse(text)
+        if (Array.isArray(data.slides) && data.slides.length > 0) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem(
+              "vdx_homepage_hero_slides",
+              JSON.stringify(data.slides),
+            )
+          }
+          return data.slides
+        }
+      }
+    }
+  } catch {}
+  return getCachedHeroSlides()
+}
+
+export async function saveHeroSlides(
+  slides: HeroSlideItem[],
+): Promise<ApiResponse> {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("vdx_homepage_hero_slides", JSON.stringify(slides))
+    } catch {}
+  }
+  try {
+    const res = await fetch(getApiUrl("settings.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save_hero_slides", slides }),
+    })
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+  } catch {}
+  return {
+    success: true,
+    message: "Hero slideshow settings updated successfully.",
+  }
+}
+
+export async function resetHeroSlides(): Promise<ApiResponse> {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem("vdx_homepage_hero_slides")
+    } catch {}
+  }
+  try {
+    const res = await fetch(getApiUrl("settings.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reset_hero_slides" }),
+    })
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+  } catch {}
+  return {
+    success: true,
+    message: "Hero slideshow reset to default academy slides.",
+  }
+}
+
+export async function uploadHeroImage(
+  file: File,
+): Promise<ApiResponse & { image_url?: string }> {
+  try {
+    const formData = new FormData()
+    formData.append("hero_image", file)
+    const res = await fetch(getApiUrl("settings.php"), {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    })
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return { success: false, error: "Failed to parse upload response." }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to upload image." }
+  }
+}
+
 // ── Staff & Administrator Management ──────────────────────────────────────────
 export async function fetchAdmins(): Promise<any[]> {
   try {
