@@ -86,11 +86,143 @@ function ensureBulletinTables(PDO $pdo): void {
 
 ensureBulletinTables($pdo);
 
+// Unsubscribe signature generator & URL helpers
+function getUnsubscribeToken(string $email): string {
+    return hash_hmac('sha256', strtolower(trim($email)), 'vdx_bulletin_salt_2026');
+}
+
+function getBaseSiteUrl(): string {
+    $host = $_SERVER['HTTP_HOST'] ?? 'www.vivadoxamusic.com';
+    $isLocal = strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false;
+    if ($isLocal) {
+        $port = $_SERVER['SERVER_PORT'] ?? '80';
+        $portPart = ($port && $port != '80' && $port != '443') ? ":{$port}" : '';
+        return "http://localhost{$portPart}/Vivadoxa";
+    }
+    $proto = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'https://';
+    return "{$proto}{$host}";
+}
+
+function getUnsubscribeUrl(string $email): string {
+    $token = getUnsubscribeToken($email);
+    $base = getBaseSiteUrl();
+    return "{$base}/api/bulletins.php?action=unsubscribe&email=" . urlencode(strtolower(trim($email))) . "&token=" . $token;
+}
+
+function getResubscribeUrl(string $email): string {
+    $token = getUnsubscribeToken($email);
+    $base = getBaseSiteUrl();
+    return "{$base}/api/bulletins.php?action=resubscribe&email=" . urlencode(strtolower(trim($email))) . "&token=" . $token;
+}
+
+function renderUnsubscribeHtml(string $title, string $message, bool $isSuccess = true, ?string $resubUrl = null, string $email = '', bool $isResubscribed = false): void {
+    header('Content-Type: text/html; charset=utf-8');
+    $siteUrl = getBaseSiteUrl();
+    $accentColor = $isSuccess ? '#c96b32' : '#dc2626';
+    $icon = $isSuccess ? '✓' : '⚠️';
+    $resubButtonHtml = '';
+    if ($resubUrl && !$isResubscribed) {
+        $resubButtonHtml = "
+            <a href='" . htmlspecialchars($resubUrl) . "' style='display: inline-block; background: #c96b32; color: #ffffff; text-decoration: none; padding: 12px 22px; border-radius: 6px; font-weight: 700; font-size: 13px; margin: 10px 6px;'>
+                Resubscribe to Bulletin
+            </a>
+        ";
+    }
+    echo "<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>{$title} — Vivadoxa Music</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background-color: #0b1a2c; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f8fafc; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: #ffffff; color: #1e293b; max-width: 540px; width: 92%; margin: 30px auto; padding: 40px 32px; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center; }
+        .logo { max-height: 48px; margin-bottom: 24px; }
+        .icon-circle { width: 56px; height: 56px; border-radius: 50%; background: #fef3c7; color: {$accentColor}; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; margin-bottom: 16px; }
+        h1 { margin: 0 0 12px; font-size: 22px; color: #0b1a2c; }
+        p { margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #475569; }
+        .actions { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; }
+        .btn-home { display: inline-block; background: #f1f5f9; color: #0b1a2c; text-decoration: none; padding: 12px 22px; border-radius: 6px; font-weight: 600; font-size: 13px; margin: 10px 6px; }
+        .btn-home:hover { background: #e2e8f0; }
+        .footer-note { font-size: 11px; color: #94a3b8; margin-top: 28px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class='card'>
+        <a href='{$siteUrl}'>
+            <img src='https://www.vivadoxamusic.com/vivadoxa-logo.png' alt='Vivadoxa Music Academy' class='logo' onerror=\"this.style.display='none'\">
+        </a>
+        <div class='icon-circle'>{$icon}</div>
+        <h1>{$title}</h1>
+        <p>{$message}</p>
+        <div class='actions'>
+            {$resubButtonHtml}
+            <a href='{$siteUrl}' class='btn-home'>Return to Vivadoxa Website</a>
+        </div>
+        <div class='footer-note'>
+            Vivadoxa Music Academy &middot; 49B Umaru Ibrahim Street, Kaduna, Nigeria
+        </div>
+    </div>
+</body>
+</html>";
+    exit;
+}
+
 if ($method === 'GET') {
     $action = trim($_GET['action'] ?? 'list');
 
     try {
-        if ($action === 'list') {
+        if ($action === 'unsubscribe') {
+            $email = strtolower(trim($_GET['email'] ?? ''));
+            $token = trim($_GET['token'] ?? '');
+            $expectedToken = getUnsubscribeToken($email);
+
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                renderUnsubscribeHtml('Invalid Request', 'Please provide a valid subscriber email address to unsubscribe.', false);
+                exit;
+            }
+
+            if (!empty($token) && !hash_equals($expectedToken, $token)) {
+                renderUnsubscribeHtml('Security Verification Failed', 'The unsubscribe link signature is invalid or expired. Please click the link directly from your latest Vivadoxa email.', false);
+                exit;
+            }
+
+            // Update subscriber status
+            $stmt = $pdo->prepare("UPDATE `newsletter_subscribers` SET `status` = 'unsubscribed' WHERE `email` = :em");
+            $stmt->execute([':em' => $email]);
+
+            $resubUrl = getResubscribeUrl($email);
+            renderUnsubscribeHtml(
+                'Unsubscribed Successfully',
+                "You have been successfully unsubscribed from the <strong>Vivadoxa Weekly Bulletin</strong>. You will no longer receive weekly dispatches at <strong>" . htmlspecialchars($email) . "</strong>.",
+                true,
+                $resubUrl,
+                $email
+            );
+            exit;
+        } elseif ($action === 'resubscribe') {
+            $email = strtolower(trim($_GET['email'] ?? ''));
+            $token = trim($_GET['token'] ?? '');
+            $expectedToken = getUnsubscribeToken($email);
+
+            if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL) && hash_equals($expectedToken, $token)) {
+                $stmt = $pdo->prepare("UPDATE `newsletter_subscribers` SET `status` = 'active' WHERE `email` = :em");
+                $stmt->execute([':em' => $email]);
+                renderUnsubscribeHtml(
+                    'Welcome Back!',
+                    "Your subscription has been successfully reactivated for <strong>" . htmlspecialchars($email) . "</strong>. You will continue to receive our weekly dispatches.",
+                    true,
+                    null,
+                    $email,
+                    true
+                );
+                exit;
+            } else {
+                renderUnsubscribeHtml('Invalid Link', 'The reactivation link was invalid. You can subscribe again directly on the Vivadoxa homepage.', false);
+                exit;
+            }
+        } elseif ($action === 'list') {
             $stmt = $pdo->query("
                 SELECT id, title, edition, category, summary, target_audience, status, recipients_count, sent_at, created_by, created_at, updated_at
                 FROM `bulletins`
@@ -143,7 +275,18 @@ if ($method === 'GET') {
     $action = trim($input['action'] ?? '');
 
     try {
-        // Public subscription
+        // Unsubscribe API
+        if ($action === 'unsubscribe') {
+            $email = strtolower(trim($input['email'] ?? ''));
+            if (!empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $stmt = $pdo->prepare("UPDATE `newsletter_subscribers` SET `status` = 'unsubscribed' WHERE `email` = :em");
+                $stmt->execute([':em' => $email]);
+                jsonResponse(['success' => true, 'message' => "Successfully unsubscribed {$email}."]);
+            }
+            jsonResponse(['success' => false, 'error' => 'Valid email address required.'], 400);
+        }
+
+        // Public subscription + Welcome Email
         if ($action === 'subscribe') {
             $email = strtolower(trim($input['email'] ?? ''));
             $name = trim($input['name'] ?? $input['full_name'] ?? '');
@@ -164,9 +307,79 @@ if ($method === 'GET') {
                 ':src' => $source,
             ]);
 
+            // Build personalized unsubscribe link
+            $unsubUrl = getUnsubscribeUrl($email);
+            $subscriberName = !empty($name) ? $name : 'Music Lover';
+            $subject = "🎼 Welcome to Vivadoxa Academy Dispatches — You're Subscribed!";
+
+            $welcomeBodyHtml = "
+                <p style='font-size: 15px; color: #191715; line-height: 1.7;'>
+                    Thank you for subscribing to the official <strong>Vivadoxa Music Weekly Bulletin</strong>! You have been successfully added to our community dispatch list.
+                </p>
+
+                <p style='font-size: 14px; color: #444; line-height: 1.7;'>
+                    Every week, our editorial desk and academy faculty curate practical resources to elevate your musical journey:
+                </p>
+
+                <table style='width: 100%; border-collapse: collapse; margin: 18px 0;'>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🎵 Rehearsal Guides & Repertoire Notes:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Sight-reading tips, dynamic articulation exercises, and faculty coaching notes.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🛠️ Instrument Clinic & Care Spotlights:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Seasonal wood humidity preservation, string setup guides, and luthier workshop updates.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 12px 14px; background: #faf8f5; border-left: 3px solid #c96b32; border-bottom: 4px solid #fff;'>
+                            <strong style='color: #0b1a2c; font-size: 13.5px;'>🎹 Recitals, Masterclasses & Early Admissions:</strong>
+                            <p style='margin: 4px 0 0; font-size: 12.5px; color: #5c5954;'>Student recital premieres, masterclass dates, and priority registration notices.</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 26px; font-size: 12px; color: #78716c;'>
+                    <p style='margin: 0;'><strong>Vivadoxa Community Bulletin Desk</strong></p>
+                    <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you subscribed at vivadoxamusic.com.</p>
+                    <p style='margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #ede8e0; font-size: 11px; color: #a8a29e;'>
+                        Don't want to receive these emails? <a href='{$unsubUrl}' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.
+                    </p>
+                </div>
+            ";
+
+            $emailHtml = buildBrandedEmailTemplate([
+                'title'          => "Welcome to Vivadoxa Academy Dispatches",
+                'badge'          => "Weekly Bulletin",
+                'headerBadge'    => "Weekly Academy Bulletin",
+                'category'       => "Weekly Bulletin",
+                'headline'       => "You're in Tune with Vivadoxa!",
+                'clientName'     => $subscriberName,
+                'bodyHtml'       => $welcomeBodyHtml,
+                'ctaText'        => "Visit Vivadoxa Website",
+                'ctaUrl'         => "https://www.vivadoxamusic.com/",
+                'deptName'       => "Vivadoxa Music Weekly Bulletin",
+                'deptEmail'      => "info@vivadoxamusic.com",
+                'unsubscribeUrl' => $unsubUrl,
+            ]);
+
+            $mailResult = sendSystemEmail(
+                $email,
+                $subject,
+                $emailHtml,
+                null,
+                'newsletter',
+                false
+            );
+
             jsonResponse([
                 'success' => true,
-                'message' => 'Thank you for subscribing to the Vivadoxa Weekly Bulletin!',
+                'message' => 'Thank you for subscribing! A welcome email has been sent to your inbox.',
+                'email_dispatched' => !empty($mailResult['success']),
+                'delivery_status' => $mailResult['message'] ?? 'Dispatched',
             ]);
         }
 
@@ -351,6 +564,7 @@ if ($method === 'GET') {
             foreach ($recipients as $rec) {
                 $name = $rec['name'];
                 $toEmail = $rec['email'];
+                $subscriberUnsubUrl = getUnsubscribeUrl($toEmail);
 
                 $bodyHtml = "
                     <div style='background: #f7f5f0; border: 1px solid #dfdad0; border-radius: 8px; padding: 12px 18px; margin-bottom: 22px; display: inline-block;'>
@@ -368,21 +582,25 @@ if ($method === 'GET') {
                     <div style='background: #faf8f5; border: 1px dashed #dfdad0; border-radius: 8px; padding: 14px 18px; margin-top: 30px; font-size: 12px; color: #78716c;'>
                         <p style='margin: 0;'><strong>Vivadoxa Community Bulletin Desk</strong></p>
                         <p style='margin: 4px 0 0;'>You are receiving this official academy newsletter because you are an active student, applicant, or subscribed patron of Vivadoxa Music.</p>
+                        <p style='margin: 10px 0 0; padding-top: 8px; border-top: 1px solid #ede8e0; font-size: 11px; color: #a8a29e;'>
+                            Don't want to receive these emails? <a href='{$subscriberUnsubUrl}' style='color: #c96b32; font-weight: 600; text-decoration: underline;'>Unsubscribe from this list</a> at any time.
+                        </p>
                     </div>
                 ";
 
                 $emailHtml = buildBrandedEmailTemplate([
-                    'title' => $bulletin['title'],
-                    'badge' => $bulletin['edition'],
-                    'headerBadge' => $bulletin['category'] ?: 'Weekly Bulletin',
-                    'category' => $bulletin['category'] ?: 'Weekly Bulletin',
-                    'headline' => $bulletin['title'],
-                    'clientName' => $name,
-                    'bodyHtml' => $bodyHtml,
-                    'ctaText' => 'Visit Vivadoxa Portal',
-                    'ctaUrl' => 'https://www.vivadoxamusic.com/portal',
-                    'deptName' => 'Vivadoxa Music Weekly Bulletin',
-                    'deptEmail' => 'info@vivadoxamusic.com',
+                    'title'          => $bulletin['title'],
+                    'badge'          => $bulletin['edition'],
+                    'headerBadge'    => $bulletin['category'] ?: 'Weekly Bulletin',
+                    'category'       => $bulletin['category'] ?: 'Weekly Bulletin',
+                    'headline'       => $bulletin['title'],
+                    'clientName'     => $name,
+                    'bodyHtml'       => $bodyHtml,
+                    'ctaText'        => 'Visit Vivadoxa Portal',
+                    'ctaUrl'         => 'https://www.vivadoxamusic.com/portal',
+                    'deptName'       => 'Vivadoxa Music Weekly Bulletin',
+                    'deptEmail'      => 'info@vivadoxamusic.com',
+                    'unsubscribeUrl' => $subscriberUnsubUrl,
                 ]);
 
                 $res = sendSystemEmail(

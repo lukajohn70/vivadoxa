@@ -403,7 +403,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
             {bulletinSubscribed ? (
               <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-semibold">
                 <span>✓</span>
-                <span>Subscribed! Check your inbox for our weekly bulletin.</span>
+                <span>Subscribed! A welcome email with full bulletin info and unsubscribe options has been sent to your inbox.</span>
               </div>
             ) : (
               <>
