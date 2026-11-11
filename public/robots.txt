@@ -1,23 +1,36 @@
+# ==============================================================================
 # Vivadoxa Music School, Instrument Repair Clinic & Recording Studio
-# Official Robots.txt for Search Engine Optimization
+# Official Robots.txt — Search Engine & Generative AI Optimization
+# Canonical: https://vivadoxa.ng/robots.txt
+# ==============================================================================
 
+# Global Search Engines (Google, Bing, Yahoo, DuckDuckGo, Yandex)
 User-agent: *
 Allow: /
 Allow: /programs
+Allow: /academy
 Allow: /repairs
 Allow: /studio
+Allow: /rentals
+Allow: /store
 Allow: /about
 Allow: /modes
 Allow: /performances
+Allow: /gallery
 Allow: /reviews
 Allow: /contact
 Allow: /apply
-Allow: /terms
-Allow: /privacy
+Allow: /status
 Allow: /tuition-policy
 Allow: /safeguarding
+Allow: /child-protection
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /llms.txt
+Allow: /llms-full.txt
 
-# Disallow private administrative & student portals
+# Disallow Private Administrative, Student Auth & Database Endpoints
 Disallow: /admin
 Disallow: /admin/
 Disallow: /admin-login
@@ -27,6 +40,70 @@ Disallow: /portal-login
 Disallow: /api/admin/
 Disallow: /api/config.php
 Disallow: /api/db.php
+Disallow: /api/setup_db.php
+Disallow: /api/purge.php
 
-# Sitemap location
+# ------------------------------------------------------------------------------
+# Generative AI & LLM Search Crawlers (Explicit Open Indexing)
+# Perplexity, ChatGPT Search, Anthropic Claude, Google Gemini, Copilot, Apple
+# ------------------------------------------------------------------------------
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: OAI-SearchBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: anthropic-ai
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: cohere-ai
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Bytespider
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# ------------------------------------------------------------------------------
+# Sitemaps & Structured LLM Feeds
+# ------------------------------------------------------------------------------
 Sitemap: https://vivadoxa.ng/sitemap.xml
+# AI Documentation Feed: https://vivadoxa.ng/llms.txt

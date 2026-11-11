@@ -3202,6 +3202,54 @@ export async function resendAdmin2FA(userId: number): Promise<ApiResponse> {
   }
 }
 
+export async function requestAdminPasswordReset(
+  email: string
+): Promise<ApiResponse & { email_masked?: string; email?: string }> {
+  try {
+    const res = await fetch(getApiUrl("login.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "request_password_reset",
+        email: email.trim(),
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to send password reset code. Please check your network.",
+    }
+  }
+}
+
+export async function verifyAdminPasswordReset(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("login.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "verify_password_reset",
+        email: email.trim(),
+        code: code.trim(),
+        new_password: newPassword,
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to reset password. Please check your network.",
+    }
+  }
+}
+
 export async function verifyUser2FA(
   userId: number,
   code: string,

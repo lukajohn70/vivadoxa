@@ -35,6 +35,8 @@ import {
   fetchRemoteSettings,
   releaseAdmissionLetter,
   revokeAdmissionLetter,
+  requestAdminPasswordReset,
+  verifyAdminPasswordReset,
 } from "@/lib/api"
 import {
   StaffAndRolesView,
@@ -78,12 +80,25 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
     cancel2FA,
   } = useAdminAuth()
 
+  const [authMode, setAuthMode] = useState<"login" | "forgot_request" | "forgot_verify">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [otpCode, setOtpCode] = useState("")
   const [resendNotice, setResendNotice] = useState("")
   const [resending, setResending] = useState(false)
+
+  // Password reset state
+  const [resetEmail, setResetEmail] = useState("")
+  const [resetMaskedEmail, setResetMaskedEmail] = useState("")
+  const [resetCode, setResetCode] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState("")
+  const [resetSuccessNotice, setResetSuccessNotice] = useState("")
+  const [resetResending, setResetResending] = useState(false)
 
   if (session) {
     return (
@@ -144,6 +159,90 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
       }
     } finally {
       setResending(false)
+    }
+  }
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail.trim()) return
+    setResetLoading(true)
+    setResetError("")
+    setResetSuccessNotice("")
+    try {
+      const res = await requestAdminPasswordReset(resetEmail.trim())
+      if (res.success) {
+        setResetMaskedEmail(res.email_masked || res.email || resetEmail.trim())
+        setResetSuccessNotice(
+          res.message || "A 6-digit password reset code has been sent to your registered staff email."
+        )
+        setAuthMode("forgot_verify")
+      } else {
+        setResetError(res.error || "Failed to send reset code. Please verify your staff email.")
+      }
+    } catch (err: any) {
+      setResetError(err.message || "Network error. Please try again.")
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  const handleResendResetCode = async () => {
+    if (resetResending || !resetEmail.trim()) return
+    setResetResending(true)
+    setResetError("")
+    try {
+      const res = await requestAdminPasswordReset(resetEmail.trim())
+      if (res.success) {
+        setResetSuccessNotice("A fresh 6-digit reset code has been dispatched to your email.")
+      } else {
+        setResetError(res.error || "Failed to resend code.")
+      }
+    } catch (err: any) {
+      setResetError(err.message || "Network error.")
+    } finally {
+      setResetResending(false)
+    }
+  }
+
+  const handleVerifyReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetCode.trim() || resetCode.trim().length < 6) {
+      setResetError("Please enter the complete 6-digit code.")
+      return
+    }
+    if (newPassword.length < 8) {
+      setResetError("New password must be at least 8 characters long.")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setResetError("Passwords do not match.")
+      return
+    }
+
+    setResetLoading(true)
+    setResetError("")
+    setResetSuccessNotice("")
+    try {
+      const res = await verifyAdminPasswordReset(resetEmail.trim(), resetCode.trim(), newPassword)
+      if (res.success) {
+        setEmail(resetEmail.trim())
+        setPassword(newPassword)
+        setResetSuccessNotice("Password updated successfully! Signing in…")
+        // Attempt immediate login
+        const loginOk = await login(resetEmail.trim(), newPassword)
+        if (loginOk) {
+          go("admin")
+        } else {
+          setAuthMode("login")
+          setResetSuccessNotice("Password updated successfully! Please sign in with your new password.")
+        }
+      } else {
+        setResetError(res.error || "Failed to reset password. Please check your verification code.")
+      }
+    } catch (err: any) {
+      setResetError(err.message || "Network error. Please try again.")
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -332,6 +431,315 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               </div>
             </form>
           </>
+        ) : authMode === "forgot_request" ? (
+          <>
+            <div className="admin-login-head">
+              <span
+                className="eyebrow"
+                style={{
+                  color: "var(--gold)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--gold)",
+                  }}
+                />
+                Staff Account Recovery
+              </span>
+              <h1>Reset Staff Password</h1>
+              <p>Enter your registered staff email or username to receive a secure 6-digit verification code.</p>
+            </div>
+
+            {resetError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  border: "1px solid rgba(220, 38, 38, 0.3)",
+                  borderRadius: "6px",
+                  color: "#dc2626",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetError}
+              </div>
+            )}
+
+            {resetSuccessNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(21, 112, 84, 0.1)",
+                  border: "1px solid rgba(21, 112, 84, 0.3)",
+                  borderRadius: "6px",
+                  color: "#157054",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetSuccessNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleRequestReset} className="admin-login-form">
+              <Field
+                id="reset-staff-email"
+                label="Staff email or username"
+                type="text"
+                value={resetEmail}
+                onChange={setResetEmail}
+                placeholder="admin@vivadoxa.ng or admin"
+                required
+                autoComplete="username"
+              />
+
+              <Button type="submit" disabled={resetLoading || !resetEmail.trim()}>
+                {resetLoading ? "Sending reset code…" : "Send Reset Code"}
+              </Button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login")
+                    setResetError("")
+                    setResetSuccessNotice("")
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--muted)",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: "13px",
+                  }}
+                >
+                  ← Back to Sign In
+                </button>
+              </div>
+            </form>
+          </>
+        ) : authMode === "forgot_verify" ? (
+          <>
+            <div className="admin-login-head">
+              <span
+                className="eyebrow"
+                style={{
+                  color: "#157054",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "#157054",
+                  }}
+                />
+                Reset Code Sent
+              </span>
+              <h1>Set New Password</h1>
+              <p>
+                Enter the 6-digit code dispatched to <strong>{resetMaskedEmail || resetEmail}</strong> and choose your new password.
+              </p>
+            </div>
+
+            {resetError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  border: "1px solid rgba(220, 38, 38, 0.3)",
+                  borderRadius: "6px",
+                  color: "#dc2626",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetError}
+              </div>
+            )}
+
+            {resetSuccessNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(21, 112, 84, 0.1)",
+                  border: "1px solid rgba(21, 112, 84, 0.3)",
+                  borderRadius: "6px",
+                  color: "#157054",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetSuccessNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyReset} className="admin-login-form">
+              <div>
+                <label
+                  htmlFor="admin-reset-code"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: "var(--navy)",
+                  }}
+                >
+                  Enter 6-Digit Reset Code:
+                </label>
+                <input
+                  id="admin-reset-code"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={resetCode}
+                  onChange={(e) =>
+                    setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="••••••"
+                  autoFocus
+                  required
+                  style={{
+                    width: "100%",
+                    fontSize: 28,
+                    fontWeight: 800,
+                    letterSpacing: "12px",
+                    textAlign: "center",
+                    padding: "12px 14px",
+                    borderRadius: 8,
+                    border: "2px solid var(--gold)",
+                    background: "white",
+                    fontFamily: "monospace",
+                  }}
+                />
+              </div>
+
+              <div style={{ position: "relative" }}>
+                <Field
+                  id="admin-new-pass"
+                  label="New Password (min. 8 characters)"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={setNewPassword}
+                  placeholder="••••••••••••"
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "36px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--muted)",
+                    fontSize: "12px",
+                    padding: "4px",
+                  }}
+                >
+                  {showNewPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              <Field
+                id="admin-confirm-pass"
+                label="Confirm New Password"
+                type={showNewPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                placeholder="••••••••••••"
+                required
+                autoComplete="new-password"
+              />
+
+              <Button
+                type="submit"
+                disabled={
+                  resetLoading ||
+                  resetCode.length < 6 ||
+                  !newPassword ||
+                  !confirmPassword
+                }
+              >
+                {resetLoading ? "Updating Password…" : "Update Password & Sign In"}
+              </Button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleResendResetCode}
+                  disabled={resetResending}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--gold)",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {resetResending ? "Resending code…" : "Resend reset code"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login")
+                    setResetError("")
+                    setResetSuccessNotice("")
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--muted)",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          </>
         ) : (
           <>
             <div className="admin-login-head">
@@ -357,14 +765,31 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               </div>
             )}
 
+            {resetSuccessNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(21, 112, 84, 0.1)",
+                  border: "1px solid rgba(21, 112, 84, 0.3)",
+                  borderRadius: "6px",
+                  color: "#157054",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetSuccessNotice}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="admin-login-form">
               <Field
                 id="admin-email"
                 label="Staff email"
-                type="email"
+                type="text"
                 value={email}
                 onChange={setEmail}
-                placeholder="admin@vivadoxa.ng"
+                placeholder="admin@vivadoxa.ng or admin"
                 required
                 autoComplete="username"
               />
@@ -397,6 +822,37 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                   }}
                 >
                   {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "-6px",
+                  marginBottom: "16px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetEmail(email || "")
+                    setResetError("")
+                    setResetSuccessNotice("")
+                    setAuthMode("forgot_request")
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--gold)",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                    textDecoration: "underline",
+                  }}
+                >
+                  Forgot password?
                 </button>
               </div>
 

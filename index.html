@@ -12,12 +12,16 @@
     />
     <meta
       name="keywords"
-      content="music schools, music schools in kaduna, music school kaduna, instrument repair, instrument repair kaduna, musical instrument repair, music studio, music studio kaduna, recording studio kaduna, music lessons, guitar repair, saxophone repair, piano tuning kaduna, voice training, audio mixing studio, rehearsal studio kaduna"
+      content="music schools, music schools in kaduna, music school kaduna, best music academy kaduna, instrument repair, instrument repair kaduna, musical instrument repair, fix saxophone kaduna, guitar repair kaduna, piano tuning kaduna, music studio kaduna, recording studio kaduna, music lessons kaduna, voice training kaduna, audio mixing studio kaduna, instrument rentals kaduna"
     />
     <meta name="author" content="Vivadoxa Music" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="theme-color" content="#c96b32" />
     <link rel="canonical" href="https://vivadoxa.ng/" />
+
+    <!-- AI Search & LLM Discovery Links (OpenAI, Perplexity, Claude, Gemini) -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context Feed" />
+    <link rel="alternate" type="text/plain" href="/llms-full.txt" title="Comprehensive LLM Knowledge Base" />
 
     <!-- Geo-Targeting & Local SEO (Kaduna, Nigeria) -->
     <meta name="geo.region" content="NG-KD" />
@@ -35,7 +39,7 @@
     />
     <meta
       property="og:description"
-      content="Structured music training, precision instrument repairs &amp; modern recording studio in Kaduna. Piano, guitar, drums, saxophone, vocals &amp; audio production. Studio, home &amp; online."
+      content="Structured music training across 17 instruments, precision instrument repairs &amp; modern recording studio in Kaduna. Studio, home &amp; online lessons available."
     />
     <meta property="og:image" content="https://vivadoxa.ng/og-image.jpg" />
     <meta property="og:image:secure_url" content="https://vivadoxa.ng/og-image.jpg" />
@@ -52,7 +56,7 @@
     />
     <meta
       name="twitter:description"
-      content="Learn music, fix your instrument, and record your sound in Kaduna. Onsite, online, and home lessons available."
+      content="Learn music across 17 instruments, fix your instrument, and record your sound in Kaduna. Onsite, online, and home lessons available."
     />
     <meta name="twitter:image" content="https://vivadoxa.ng/og-image.jpg" />
 
@@ -79,7 +83,7 @@
       })();
     </script>
 
-    <!-- Comprehensive Multi-Entity Schema.org Graph for Google Rich Snippets & Local 3-Pack -->
+    <!-- Comprehensive Multi-Entity Schema.org Graph for Google Rich Snippets & Generative AI Citations -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -88,14 +92,16 @@
           "@id": "https://vivadoxa.ng/#music-school",
           "@type": ["MusicSchool", "EducationalOrganization"],
           "name": "Vivadoxa Music School",
-          "alternateName": ["Vivadoxa Music Academy", "Vivadoxa Music Kaduna"],
+          "alternateName": ["Vivadoxa Music Academy", "Vivadoxa Music Kaduna", "Vivadoxa Conservatory"],
           "url": "https://vivadoxa.ng",
           "logo": "https://vivadoxa.ng/assets/vivadoxa-logo.png",
           "image": "https://vivadoxa.ng/og-image.jpg",
           "description": "Premier music school and conservatory preparation in Kaduna, Nigeria. Practical, certified training across 17 musical instruments, vocal performance, and graded examinations (ABRSM & MUSON).",
           "telephone": ["+2349075330330", "+2349010267234", "+2348031308881"],
           "email": "vivadoxa@gmail.com",
-          "priceRange": "₦20,000 - ₦190,000",
+          "priceRange": "₦20,000 - ₦500,000",
+          "currenciesAccepted": "NGN",
+          "paymentAccepted": "Cash, Credit Card, Debit Card, Bank Transfer, Paystack, Flutterwave",
           "address": {
             "@type": "PostalAddress",
             "streetAddress": "No. 49B Umaru Ibrahim Street, off Super Market Street beside Angwan Sunday Market",
@@ -108,6 +114,11 @@
             "latitude": 10.4721,
             "longitude": 7.4304
           },
+          "areaServed": [
+            { "@type": "City", "name": "Kaduna" },
+            { "@type": "AdministrativeArea", "name": "Kaduna State" },
+            { "@type": "Country", "name": "Nigeria" }
+          ],
           "openingHoursSpecification": [
             {
               "@type": "OpeningHoursSpecification",
@@ -122,6 +133,49 @@
               "closes": "17:00"
             }
           ],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Vivadoxa Music Academy Programs",
+            "itemListElement": [
+              {
+                "@type": "Course",
+                "name": "Piano & Digital Keyboard Practical Program",
+                "description": "Comprehensive piano mastery from beginner posture and sight-reading to classical repertoire, contemporary chords, and gospel praise.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" },
+                "educationalCredentialAwarded": "Vivadoxa Certificate / ABRSM & MUSON Graded Exam Preparation"
+              },
+              {
+                "@type": "Course",
+                "name": "Alto & Tenor Saxophone Masterclass",
+                "description": "Tone production, embouchure, breath control, jazz improvisation, blues scales, and gospel saxophone phrasing.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" }
+              },
+              {
+                "@type": "Course",
+                "name": "Acoustic, Electric & Bass Guitar Training",
+                "description": "Chord progressions, fingerstyle, solo scales, walking basslines, and live ensemble stagecraft.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" }
+              },
+              {
+                "@type": "Course",
+                "name": "Full Set Drums & African Talking Drums",
+                "description": "4-limb independence, contemporary pocket grooves, Afrobeat, highlife, and traditional Yoruba talking drum tonal mastery.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" }
+              },
+              {
+                "@type": "Course",
+                "name": "Vocal Coaching & Voice Performance",
+                "description": "Diaphragm breath control, pitch correction, range extension, resonance, vibrato, and confident stage delivery.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" }
+              },
+              {
+                "@type": "Course",
+                "name": "Studio & Live Sound Engineering",
+                "description": "DAW multitrack production, live sound console mixing, acoustics, microphone polar patterns, and mastering.",
+                "provider": { "@id": "https://vivadoxa.ng/#music-school" }
+              }
+            ]
+          },
           "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": "4.9",
@@ -140,7 +194,7 @@
           "@id": "https://vivadoxa.ng/#instrument-repair",
           "@type": ["LocalBusiness", "HomeAndConstructionBusiness"],
           "name": "Vivadoxa Musical Instrument Repair & Servicing Clinic",
-          "alternateName": "Vivadoxa Instrument Hospital",
+          "alternateName": ["Vivadoxa Instrument Hospital", "Kaduna Musical Instrument Workshop"],
           "url": "https://vivadoxa.ng/repairs",
           "telephone": "+2348031308881",
           "description": "Kaduna's dedicated musical instrument repair clinic specializing in saxophone pad overhauls, brass valve alignment, guitar fret dressing, piano key regulation, and synthesizer electronic diagnostic repairs with courier pickup service.",
@@ -181,6 +235,21 @@
           "priceRange": "₦10,000 - ₦150,000"
         },
         {
+          "@id": "https://vivadoxa.ng/#rentals-store",
+          "@type": ["LocalBusiness", "Store"],
+          "name": "Vivadoxa Instrument Rentals & Pro Audio Store",
+          "url": "https://vivadoxa.ng/rentals",
+          "telephone": "+2349075330330",
+          "description": "Quality musical instrument rentals (keyboards, drum kits, guitars, PA sound systems) and authentic musical accessories store in Kaduna.",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "No. 49B Umaru Ibrahim Street, Angwan Sunday",
+            "addressLocality": "Kaduna",
+            "addressRegion": "Kaduna State",
+            "addressCountry": "NG"
+          }
+        },
+        {
           "@id": "https://vivadoxa.ng/#website",
           "@type": "WebSite",
           "url": "https://vivadoxa.ng",
@@ -192,23 +261,59 @@
           }
         },
         {
+          "@id": "https://vivadoxa.ng/#breadcrumbs",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://vivadoxa.ng/" },
+            { "@type": "ListItem", "position": 2, "name": "Programs", "item": "https://vivadoxa.ng/programs" },
+            { "@type": "ListItem", "position": 3, "name": "Repairs", "item": "https://vivadoxa.ng/repairs" },
+            { "@type": "ListItem", "position": 4, "name": "Recording Studio", "item": "https://vivadoxa.ng/studio" },
+            { "@type": "ListItem", "position": 5, "name": "Rentals", "item": "https://vivadoxa.ng/rentals" },
+            { "@type": "ListItem", "position": 6, "name": "Store", "item": "https://vivadoxa.ng/store" }
+          ]
+        },
+        {
           "@id": "https://vivadoxa.ng/#faq",
           "@type": "FAQPage",
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "What music courses and instruments does Vivadoxa Music School offer in Kaduna?",
+              "name": "What is the best music school in Kaduna?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Vivadoxa provides structured training across 17 instruments including Piano, Alto/Tenor Saxophone, Trumpet, Euphonium, Acoustic/Electric/Bass Guitar, Violin, Flute, Clarinet, Full Drums, African Talking Drums, and Voice Training. Formats include Onsite Studio classes in Kaduna, Private Home Lessons, and Online sessions."
+                "text": "Vivadoxa Music School is widely recognized as Kaduna's premier music academy, situated at No. 49B Umaru Ibrahim Street beside Angwan Sunday Market. Vivadoxa provides certified, outcome-driven practical training across 17 instruments, graded examination prep (ABRSM & MUSON), private in-home lessons, and online classes."
               }
             },
             {
               "@type": "Question",
-              "name": "How do I get my musical instrument repaired at Vivadoxa in Kaduna?",
+              "name": "Where can I repair musical instruments in Kaduna?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "You can drop off your instrument at our workshop on No. 49B Umaru Ibrahim St., beside Angwan Sunday Market in Kaduna, or book online for doorstep courier pickup. Every repair receives a transparent diagnostic report and online status tracking."
+                "text": "Vivadoxa operates Kaduna's dedicated Musical Instrument Repair & Servicing Clinic at Angwan Sunday. Their master craftsmen repair saxophones (repadding and dent removal), brass instruments (valves and descaling), guitars (fret dressing and electronics), digital keyboards (motherboard and key contacts), and drum sets, with doorstep courier pickup available."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How much does it cost to study music at Vivadoxa in Kaduna?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Official tuition tiers at Vivadoxa are: ₦20,000 for the 1-Month Foundation; ₦55,000 for the 3-Month Certificate (most popular); ₦100,000 for the 6-Month Performance track; ₦195,000 for the 1-Year Conservatory Masterclass; and ₦70,000/month for Private 1-on-1 Home Tutoring across Kaduna."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does Vivadoxa offer home music lessons in Kaduna?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Vivadoxa provides private 1-on-1 home tutoring where certified instructors travel to students' residences across Kaduna (including Barnawa, Malali, Millennium City, Kaduna South, and Kaduna North) for ₦70,000 per month."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What musical instruments can I learn at Vivadoxa?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Vivadoxa teaches 17 musical disciplines: Piano/Keyboard, Alto Saxophone, Soprano Saxophone, Tenor Saxophone, Trumpet, Euphonium, Flute, Clarinet, Lead Guitar, Acoustic Guitar, Bass Guitar, Violin, Ukulele, Full Drum Set, African Talking Drums, Voice Training, and Sound Engineering."
               }
             },
             {
@@ -216,7 +321,23 @@
               "name": "Can I book the Vivadoxa Music Studio for band rehearsals or audio recording?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes. Our recording and rehearsal suites are available for booking by solo artists, choirs, and live bands. Facilities include an acoustic drum kit, amplifiers, 88-key weighted digital pianos, vocal booths, and multi-track audio engineering."
+                "text": "Yes. Our recording and rehearsal suites in Kaduna are available for solo artists, vocalists, choirs, and live bands. Facilities include an acoustic drum kit, amplifiers, 88-key weighted digital pianos, vocal isolation booths, and multitrack audio mixing/mastering."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I rent musical instruments in Kaduna from Vivadoxa?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Vivadoxa rents professional musical gear including digital stage pianos, acoustic drum kits, electric and bass guitars, and complete PA sound systems for concerts, church conferences, weddings, and recitals in Kaduna."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I apply or register for music classes at Vivadoxa?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can enroll online in under 3 minutes at https://vivadoxa.ng/apply. Tuition payments are securely processed via instant card checkout or direct bank transfer."
               }
             }
           ]
@@ -230,7 +351,103 @@
     <script src="https://checkout.flutterwave.com/v3.js" async></script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      FAST CRAWLER & AI ENGINE PRE-RENDERED SEMANTIC SNAPSHOT
+      Ensures search crawlers and AI bots (Googlebot, Bingbot, GPTBot, PerplexityBot, ClaudeBot)
+      receive instant semantic text without needing to execute JavaScript.
+      React seamlessly replaces this content upon client mount.
+    -->
+    <div id="root">
+      <header style="padding: 20px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+        <h1>Vivadoxa — Premier Music School, Instrument Repair Clinic &amp; Recording Studio</h1>
+        <p><strong>Location:</strong> No. 49B Umaru Ibrahim Street, Angwan Sunday, Kaduna, Nigeria | <strong>Phone:</strong> +234 907 533 0330, +234 803 130 8881</p>
+        <nav aria-label="Main Navigation">
+          <a href="/programs">Academic Programs</a> |
+          <a href="/repairs">Instrument Repairs</a> |
+          <a href="/studio">Recording Studio</a> |
+          <a href="/rentals">Instrument Rentals</a> |
+          <a href="/store">Music Store</a> |
+          <a href="/modes">Study Modes</a> |
+          <a href="/reviews">Student Reviews</a> |
+          <a href="/contact">Contact</a> |
+          <a href="/apply">Apply Online</a>
+        </nav>
+      </header>
+
+      <main style="max-width: 1000px; margin: 20px auto; padding: 0 16px; font-family: system-ui, sans-serif; line-height: 1.6;">
+        <section>
+          <h2>Kaduna's Leading Music Academy, Instrument Hospital &amp; Audio Production Facility</h2>
+          <p>
+            Vivadoxa is the premier music institution in Kaduna, Nigeria, offering structured training across 17 instruments,
+            conservatory preparation for ABRSM &amp; MUSON graded examinations, dedicated musical instrument servicing and repairs,
+            a modern acoustic recording studio, equipment rentals, and an authentic pro audio store.
+          </p>
+        </section>
+
+        <section>
+          <h2>1. Music Academy Programs &amp; Tuition (17 Instruments)</h2>
+          <p>
+            Disciplines taught: Piano/Keyboard, Alto &amp; Tenor Saxophone, Trumpet, Euphonium, Concert Flute, Clarinet,
+            Lead Guitar, Acoustic Guitar, Bass Guitar, Violin, Ukulele, Full Drum Set, African Talking Drums, Voice Training,
+            and Studio Sound Engineering.
+          </p>
+          <ul>
+            <li><strong>1-Month Introductory Foundation:</strong> ₦20,000 (Posture, mechanics, weekly practical sessions).</li>
+            <li><strong>3-Month Certificate (Most Popular):</strong> ₦55,000 (Sight-reading, staff notation, recital prep, Vivadoxa Certificate).</li>
+            <li><strong>6-Month Performance Track:</strong> ₦100,000 (Advanced improvisation, live band ensemble, stagecraft).</li>
+            <li><strong>1-Year Conservatory Masterclass:</strong> ₦195,000 (ABRSM/MUSON exam preparation, studio tracking).</li>
+            <li><strong>2-Year Professional Diploma:</strong> ₦500,000 (Full conservatory pathway, album production project).</li>
+            <li><strong>Private 1-on-1 Home Mentorship:</strong> ₦70,000/month (Tutor visits student residence anywhere in Kaduna).</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>2. Musical Instrument Repair &amp; Servicing Clinic</h2>
+          <p>
+            Our dedicated workshop provides precision diagnostic overhaul, saxophone repadding, brass valve alignment,
+            guitar fret dressing and wiring, piano key regulation and tuning, and digital keyboard motherboard chip diagnostics.
+            Doorstep courier pickup across Kaduna and nationwide delivery available.
+          </p>
+        </section>
+
+        <section>
+          <h2>3. Recording Studio &amp; Rehearsal Suites</h2>
+          <p>
+            Acoustically isolated vocal booths, multitrack audio recording, mixing, mastering, podcast tracking,
+            and live band rehearsal spaces equipped with acoustic drum kit, amplifiers, and weighted stage pianos.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. Instrument Rentals &amp; Pro Audio Store</h2>
+          <p>
+            Rent keyboards, drum sets, guitars, and PA sound systems for concerts, church conferences, and weddings in Kaduna.
+            Purchase genuine strings, reeds, cables, stands, and audio accessories directly at our store.
+          </p>
+        </section>
+
+        <section>
+          <h2>Frequently Asked Questions</h2>
+          <dl>
+            <dt><strong>Where is Vivadoxa located?</strong></dt>
+            <dd>No. 49B Umaru Ibrahim Street, off Super Market Street beside Angwan Sunday Market, Angwan Sunday, Kaduna, Nigeria.</dd>
+            <dt><strong>Can I hire a music tutor to teach at my home in Kaduna?</strong></dt>
+            <dd>Yes, Vivadoxa provides private home lessons across Barnawa, Malali, Millennium City, and Kaduna metropolis for ₦70,000/month.</dd>
+            <dt><strong>How do I book an instrument repair?</strong></dt>
+            <dd>Submit an intake request at https://vivadoxa.ng/repairs or call/WhatsApp +234 803 130 8881.</dd>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <!-- Fallback for JavaScript-disabled crawlers -->
+    <noscript>
+      <div style="padding: 24px; text-align: center; background: #fff8f0; color: #333;">
+        <p><strong>Vivadoxa Music School, Instrument Repair Clinic &amp; Recording Studio</strong></p>
+        <p>Kaduna, Nigeria. Call: <a href="tel:+2349075330330">+234 907 533 0330</a> | <a href="https://vivadoxa.ng/apply">Enroll Online</a></p>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -42,6 +42,22 @@ try {
     ");
 
     $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `password_reset_codes` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_type` ENUM('admin', 'user') NOT NULL DEFAULT 'admin',
+            `user_id` INT NOT NULL,
+            `email` VARCHAR(191) NOT NULL,
+            `code` VARCHAR(10) NOT NULL,
+            `ip_address` VARCHAR(50) NULL,
+            `user_agent` TEXT NULL,
+            `expires_at` DATETIME NOT NULL,
+            `is_used` TINYINT(1) NOT NULL DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_reset_verify` (`user_type`, `user_id`, `code`, `is_used`)
+        ) ENGINE=InnoDB;
+    ");
+
+    $pdo->exec("
         CREATE TABLE IF NOT EXISTS `applications` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `application_no` VARCHAR(50) NOT NULL UNIQUE,
