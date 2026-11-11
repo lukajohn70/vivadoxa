@@ -1,7 +1,7 @@
 # ==============================================================================
 # Vivadoxa Music School, Instrument Repair Clinic & Recording Studio
 # Official Robots.txt — Search Engine & Generative AI Optimization
-# Canonical: https://vivadoxa.ng/robots.txt
+# Canonical: https://vivadoxamusic.com/robots.txt
 # ==============================================================================
 
 # Global Search Engines (Google, Bing, Yahoo, DuckDuckGo, Yandex)
@@ -105,5 +105,5 @@ Allow: /llms-full.txt
 # ------------------------------------------------------------------------------
 # Sitemaps & Structured LLM Feeds
 # ------------------------------------------------------------------------------
-Sitemap: https://vivadoxa.ng/sitemap.xml
-# AI Documentation Feed: https://vivadoxa.ng/llms.txt
+Sitemap: https://vivadoxamusic.com/sitemap.xml
+# AI Documentation Feed: https://vivadoxamusic.com/llms.txt

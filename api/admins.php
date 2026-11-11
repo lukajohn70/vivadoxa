@@ -40,7 +40,7 @@ if ($method === 'GET') {
             }
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL) && strpos($email, '@') === false) {
-                $email = strtolower($email) . '@vivadoxa.ng';
+                $email = strtolower($email) . '@vivadoxamusic.com';
             }
 
             // Check duplicate

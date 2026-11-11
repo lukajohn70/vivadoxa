@@ -105,7 +105,7 @@ if ($action === 'request_password_reset') {
 
     $cleanInput = strtolower($emailOrUsername);
     if (strpos($cleanInput, '@') === false) {
-        $emailCandidate = $cleanInput . '@vivadoxa.ng';
+        $emailCandidate = $cleanInput . '@vivadoxamusic.com';
     } else {
         $emailCandidate = $cleanInput;
     }
@@ -233,7 +233,7 @@ if ($action === 'verify_password_reset') {
 
     $cleanInput = strtolower($email);
     if (strpos($cleanInput, '@') === false) {
-        $emailCandidate = $cleanInput . '@vivadoxa.ng';
+        $emailCandidate = $cleanInput . '@vivadoxamusic.com';
     } else {
         $emailCandidate = $cleanInput;
     }
@@ -335,10 +335,10 @@ if (empty($emailOrUsername) || empty($password)) {
 }
 
 try {
-    // Support full email (e.g. admin@vivadoxa.ng) or username alias (e.g. admin)
+    // Support full email (e.g. admin@vivadoxamusic.com) or username alias (e.g. admin)
     $cleanInput = strtolower($emailOrUsername);
     if (strpos($cleanInput, '@') === false) {
-        $emailCandidate = $cleanInput . '@vivadoxa.ng';
+        $emailCandidate = $cleanInput . '@vivadoxamusic.com';
     } else {
         $emailCandidate = $cleanInput;
     }

@@ -149,7 +149,7 @@ export function Studio({ go }: { go: (p: Page) => void }) {
     alternateName: "Vivadoxa Recording Studio Kaduna",
     description:
       "Professional music recording studio, live band rehearsal space, vocal tracking booth, audio mixing & mastering, and sound engineering academy in Kaduna, Nigeria.",
-    url: "https://vivadoxa.ng/studio",
+    url: "https://vivadoxamusic.com/studio",
     telephone: "+2349075330330",
     address: {
       "@type": "PostalAddress",

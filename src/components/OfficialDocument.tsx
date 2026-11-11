@@ -1317,7 +1317,7 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
               <strong>OFFICIAL ELECTRONIC CREDENTIAL:</strong> Issued under the
               statutory authority of Vivadoxa Music (RC 3184525). Any
               unauthorized alteration invalidates this document. Verification of
-              authenticity can be performed online at <u>vivadoxa.ng/status</u>{" "}
+              authenticity can be performed online at <u>vivadoxamusic.com/status</u>{" "}
               with Reference: <strong>{admissionNo}</strong>.
             </div>
             <SecurityBarcode code={admissionNo} />

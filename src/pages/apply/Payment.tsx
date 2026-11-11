@@ -344,7 +344,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         reference,
         applicationNo: appRef,
         payerName: studentName || "Online Applicant",
-        payerEmail: studentEmail || "student@vivadoxa.ng",
+        payerEmail: studentEmail || "student@vivadoxamusic.com",
         amount: defaultAmount,
         currency,
         gateway,
@@ -391,7 +391,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
       try {
         const handler = (window as any).PaystackPop.setup({
           key: pKey,
-          email: studentEmail || "student@vivadoxa.ng",
+          email: studentEmail || "student@vivadoxamusic.com",
           amount: Math.round(defaultAmount * 100), // Kobo
           currency: "NGN",
           ref: `VDX-PSK-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -453,7 +453,7 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
           currency: "USD",
           payment_options: "card,mobilemoney,ussd",
           customer: {
-            email: studentEmail || "diaspora@vivadoxa.ng",
+            email: studentEmail || "diaspora@vivadoxamusic.com",
             name: studentName || "International Student",
             phone_number: studentPhone || "0000000000",
           },

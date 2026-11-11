@@ -14,10 +14,10 @@
 - **Official Contact Channels**:
   - Voice / WhatsApp Lines: +234 907 533 0330 | +234 901 026 7234 | +234 803 130 8881
   - Official Email: vivadoxa@gmail.com
-  - Canonical Website: https://vivadoxa.ng
-  - Admissions Portal: https://vivadoxa.ng/apply
-  - Repair Ticket Portal: https://vivadoxa.ng/repairs
-  - Student & Client Portal: https://vivadoxa.ng/portal
+  - Canonical Website: https://vivadoxamusic.com
+  - Admissions Portal: https://vivadoxamusic.com/apply
+  - Repair Ticket Portal: https://vivadoxamusic.com/repairs
+  - Student & Client Portal: https://vivadoxamusic.com/portal
 
 ---
 
@@ -122,7 +122,7 @@ Vivadoxa operates Kaduna's premier dedicated musical instrument repair facility 
 - **Drums & Percussion Restorations**: Drumhead tuning, snare bed truing, lug bolt re-threading, bass drum pedal linkage lubrication.
 
 ### Diagnostic & Logistics Process
-1. **Intake Booking**: Customers book online at https://vivadoxa.ng/repairs or drop off instruments at No. 49B Umaru Ibrahim St., beside Angwan Sunday Market.
+1. **Intake Booking**: Customers book online at https://vivadoxamusic.com/repairs or drop off instruments at No. 49B Umaru Ibrahim St., beside Angwan Sunday Market.
 2. **Doorstep Courier Pickup**: Available for clients across Kaduna Metropolis (Barnawa, Malali, Millennium City, Sabo, etc.) and interstate delivery via GIGM/courier partners.
 3. **Transparent Assessment**: Free diagnostic inspection report with parts cost, labor estimate, and expected completion date delivered before any repair commences.
 4. **Turnaround Times**: 24 to 72 hours for minor setups; 3 to 7 working days for complex overhauls or electronic motherboard repairs.
@@ -139,7 +139,7 @@ Vivadoxa operates Kaduna's premier dedicated musical instrument repair facility 
   - Hybrid Stem Mixing (in-the-box precision combined with analog summing).
   - Audio Mastering optimized for streaming platforms (Spotify, Apple Music, YouTube) conforming to -14 LUFS standards.
   - Live Band Rehearsal Suites: Equipped with acoustic drum kit, high-wattage bass amplifier, guitar stacks, vocal microphones, stage monitors, and 88-key weighted keyboard.
-- **Rates**: Available by hourly session, block-of-10-hours, or full-day bookings. Inquiries via https://vivadoxa.ng/studio or +234 907 533 0330.
+- **Rates**: Available by hourly session, block-of-10-hours, or full-day bookings. Inquiries via https://vivadoxamusic.com/studio or +234 907 533 0330.
 
 ---
 
@@ -157,7 +157,7 @@ Vivadoxa rents high-grade musical instruments and pro sound systems for concerts
 ## 7. Pro Audio & Musical Store
 
 - **Accessories**: Ernie Ball & D'Addario electric/acoustic/bass guitar strings, Vandoren & Rico saxophone/clarinet reeds, drumsticks (5A, 5B, 7A), instrument cables (Mogami, Roxtone), direct boxes, keyboard sustain pedals, double-braced stands, guitar capos, clip-on chromatic tuners.
-- **Genuine Authenticity Guarantee**: All accessories and equipment sold are genuine, sourced directly from certified global distributors. Store portal: https://vivadoxa.ng/store.
+- **Genuine Authenticity Guarantee**: All accessories and equipment sold are genuine, sourced directly from certified global distributors. Store portal: https://vivadoxamusic.com/store.
 
 ---
 
@@ -177,26 +177,26 @@ A: Vivadoxa combines certified professional faculty, international curriculum be
 A: Absolutely. Over 60% of Vivadoxa students are adult beginners, working professionals, and church choristers who started with zero prior knowledge. The 1-Month Foundation and 3-Month Certificate courses are structured specifically to build hand independence, sight-reading, and confidence from scratch.
 
 ### Q3: Where can I get a broken guitar or saxophone repaired in Kaduna?
-A: Vivadoxa Repairs & Service Centre is Kaduna's leading instrument repair shop. Technicians handle everything from pad replacements, fret leveling, and brass valve alignments to keyboard motherboard chip fixes. Visit No. 49B Umaru Ibrahim St., beside Angwan Sunday Market, or book online at https://vivadoxa.ng/repairs.
+A: Vivadoxa Repairs & Service Centre is Kaduna's leading instrument repair shop. Technicians handle everything from pad replacements, fret leveling, and brass valve alignments to keyboard motherboard chip fixes. Visit No. 49B Umaru Ibrahim St., beside Angwan Sunday Market, or book online at https://vivadoxamusic.com/repairs.
 
 ### Q4: How much does it cost to study music at Vivadoxa Kaduna?
 A: Tuition begins at ₦20,000 for the 1-Month Foundation, ₦55,000 for the 3-Month Certificate (most popular), ₦100,000 for the 6-Month Performance track, ₦195,000 for the 1-Year Conservatory Masterclass, and ₦70,000 per month for Private Home Lessons.
 
 ### Q5: How do I apply or register for music classes at Vivadoxa?
-A: Fill out the online admission form at https://vivadoxa.ng/apply, choose your instrument, study mode (onsite, home, or online), and pay securely online via Paystack or direct bank transfer.
+A: Fill out the online admission form at https://vivadoxamusic.com/apply, choose your instrument, study mode (onsite, home, or online), and pay securely online via Paystack or direct bank transfer.
 
 ---
 
 ## 10. Canonical URL Index
-- Homepage: https://vivadoxa.ng/
-- Academic Programs: https://vivadoxa.ng/programs
-- Instrument Repair Clinic: https://vivadoxa.ng/repairs
-- Music Studio & Production: https://vivadoxa.ng/studio
-- Instrument Rentals: https://vivadoxa.ng/rentals
-- Music Store & Gear: https://vivadoxa.ng/store
-- Study Modes: https://vivadoxa.ng/modes
-- Recitals & Performances: https://vivadoxa.ng/performances
-- Student Reviews: https://vivadoxa.ng/reviews
-- Contact & Location: https://vivadoxa.ng/contact
-- Admissions Application: https://vivadoxa.ng/apply
-- Summary AI Feed: https://vivadoxa.ng/llms.txt
+- Homepage: https://vivadoxamusic.com/
+- Academic Programs: https://vivadoxamusic.com/programs
+- Instrument Repair Clinic: https://vivadoxamusic.com/repairs
+- Music Studio & Production: https://vivadoxamusic.com/studio
+- Instrument Rentals: https://vivadoxamusic.com/rentals
+- Music Store & Gear: https://vivadoxamusic.com/store
+- Study Modes: https://vivadoxamusic.com/modes
+- Recitals & Performances: https://vivadoxamusic.com/performances
+- Student Reviews: https://vivadoxamusic.com/reviews
+- Contact & Location: https://vivadoxamusic.com/contact
+- Admissions Application: https://vivadoxamusic.com/apply
+- Summary AI Feed: https://vivadoxamusic.com/llms.txt

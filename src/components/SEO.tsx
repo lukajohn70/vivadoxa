@@ -13,7 +13,7 @@ interface SEOProps {
 const DEFAULT_KEYWORDS =
   "music schools, music schools in kaduna, music school kaduna, instrument repair, instrument repair kaduna, musical instrument repair, music studio, music studio kaduna, recording studio kaduna, music lessons, guitar repair, saxophone repair, piano lessons kaduna, voice training, audio mixing studio"
 
-const SITE_URL = "https://vivadoxa.ng"
+const SITE_URL = "https://vivadoxamusic.com"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`
 
 export function SEO({

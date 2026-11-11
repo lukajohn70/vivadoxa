@@ -498,7 +498,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 type="text"
                 value={resetEmail}
                 onChange={setResetEmail}
-                placeholder="admin@vivadoxa.ng or admin"
+                placeholder="admin@vivadoxamusic.com or admin"
                 required
                 autoComplete="username"
               />
@@ -789,7 +789,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 type="text"
                 value={email}
                 onChange={setEmail}
-                placeholder="admin@vivadoxa.ng or admin"
+                placeholder="admin@vivadoxamusic.com or admin"
                 required
                 autoComplete="username"
               />

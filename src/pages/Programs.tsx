@@ -167,7 +167,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
         provider: {
           "@type": "Organization",
           name: "Vivadoxa Music School",
-          sameAs: "https://vivadoxa.ng",
+          sameAs: "https://vivadoxamusic.com",
         },
         offers: {
           "@type": "Offer",

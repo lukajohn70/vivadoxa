@@ -380,13 +380,13 @@ try {
     // 4. Seed admins
     $adminsToSeed = [
         [
-            'email' => 'admin@vivadoxa.ng',
+            'email' => 'admin@vivadoxamusic.com',
             'name' => 'Tomi Adeyemi',
             'role' => 'superadmin',
             'pass' => 'VivadoxaAdmin2025!',
         ],
         [
-            'email' => 'staff@vivadoxa.ng',
+            'email' => 'staff@vivadoxamusic.com',
             'name' => 'Admissions Staff',
             'role' => 'staff',
             'pass' => 'StaffPass2025!',
@@ -438,9 +438,9 @@ try {
     $instCount = $pdo->query("SELECT COUNT(*) FROM `instructors`")->fetchColumn();
     if ($instCount == 0) {
         $seedInstructors = [
-            ['Tosin Adewale', 'Head of Piano & Composition', 'Classical, Contemporary & Jazz', 'Kaduna Studio', 'tosin@vivadoxa.ng', '08031110001'],
-            ['David Eze', 'Guitar & Production Instructor', 'Acoustic, Electric & DAWs', 'Kaduna Studio', 'david@vivadoxa.ng', '08031110002'],
-            ['Morenike Bello', 'Vocal Performance Lead', 'Breathing, Pitch & Stagecraft', 'Kaduna Studio', 'morenike@vivadoxa.ng', '08031110003'],
+            ['Tosin Adewale', 'Head of Piano & Composition', 'Classical, Contemporary & Jazz', 'Kaduna Studio', 'tosin@vivadoxamusic.com', '08031110001'],
+            ['David Eze', 'Guitar & Production Instructor', 'Acoustic, Electric & DAWs', 'Kaduna Studio', 'david@vivadoxamusic.com', '08031110002'],
+            ['Morenike Bello', 'Vocal Performance Lead', 'Breathing, Pitch & Stagecraft', 'Kaduna Studio', 'morenike@vivadoxamusic.com', '08031110003'],
         ];
 
         $insInst = $pdo->prepare("

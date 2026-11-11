@@ -141,7 +141,7 @@ export function Privacy({ go }: { go: (p: Page | string) => void }) {
               <p className="mb-3">
                 The Data Controller responsible for the processing of your
                 personal information collected through this website (
-                <strong>vivadoxa.ng</strong>), offline registration forms,
+                <strong>vivadoxamusic.com</strong>), offline registration forms,
                 studio enrollment portals, and customer care channels is:
               </p>
               <div className="p-4 rounded-xl bg-[#fbfaf7] border border-[var(--line)] text-xs space-y-1">
@@ -397,10 +397,10 @@ export function Privacy({ go }: { go: (p: Page | string) => void }) {
                   media pages, you may submit an Opt-Out Notice during
                   enrollment or anytime via email to{" "}
                   <a
-                    href="mailto:safeguarding@vivadoxa.ng"
+                    href="mailto:safeguarding@vivadoxamusic.com"
                     className="text-[var(--gold)] font-semibold underline"
                   >
-                    safeguarding@vivadoxa.ng
+                    safeguarding@vivadoxamusic.com
                   </a>
                   .
                 </li>

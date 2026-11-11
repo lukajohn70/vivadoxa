@@ -390,10 +390,10 @@ export function ChildProtection({ go }: { go: (p: Page | string) => void }) {
                   </strong>
                   Contact our Designated Safeguarding Lead directly at{" "}
                   <a
-                    href="mailto:safeguarding@vivadoxa.ng"
+                    href="mailto:safeguarding@vivadoxamusic.com"
                     className="text-[var(--gold)] underline font-mono"
                   >
-                    safeguarding@vivadoxa.ng
+                    safeguarding@vivadoxamusic.com
                   </a>{" "}
                   or via the emergency line at{" "}
                   <strong>+234 803 130 8881</strong>. All reports are treated

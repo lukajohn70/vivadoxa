@@ -260,7 +260,7 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                   </strong>
                   <p className="text-[11px]">
                     Instant settlement via 3D-Secure payment processor on
-                    vivadoxa.ng/payment.
+                    vivadoxamusic.com/payment.
                   </p>
                   <p className="text-[10px] text-[var(--muted)] mt-1">
                     Instant electronic receipt issued immediately.

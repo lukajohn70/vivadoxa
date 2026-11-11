@@ -2113,7 +2113,7 @@ export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   smtpUser: "",
   smtpPass: "",
   smtpEncryption: "tls",
-  fromEmail: "admissions@vivadoxa.ng",
+  fromEmail: "admissions@vivadoxamusic.com",
   fromName: "Vivadoxa Music Academy Admissions",
   whatsappMode: "direct",
   whatsappGatewayUrl: "",

@@ -419,7 +419,7 @@ export function StaffAndRolesView({
                   label="Official Email or Username"
                   value={email}
                   onChange={setEmail}
-                  placeholder="e.g. grace@vivadoxa.ng"
+                  placeholder="e.g. grace@vivadoxamusic.com"
                   required
                 />
 

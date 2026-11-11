@@ -51,7 +51,7 @@ export const SCHOOL_PHONE = "09075330330"
 export const SCHOOL_PHONE_2 = "09010267234"
 export const SCHOOL_WHATSAPP = "08031308881"
 export const SCHOOL_EMAIL = "vivadoxa@gmail.com"
-export const SCHOOL_EMAIL_SECONDARY = "hello@vivadoxa.ng"
+export const SCHOOL_EMAIL_SECONDARY = "hello@vivadoxamusic.com"
 export const SCHOOL_ADDRESS =
   "No. 49B Umaru Ibrahim Street, off Super Market Street beside Angwan Sunday Market, Angwan Sunday, Kaduna, Nigeria"
 export const GOOGLE_REVIEWS_URL =

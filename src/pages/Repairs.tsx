@@ -305,7 +305,7 @@ export function Repairs() {
         addressCountry: "NG",
       },
       telephone: "+2348031308881",
-      url: "https://vivadoxa.ng/repairs",
+      url: "https://vivadoxamusic.com/repairs",
     },
     areaServed: "Kaduna State, Nigeria",
   }
