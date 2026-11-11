@@ -350,18 +350,33 @@
     <!-- Online Payment Gateways (Ready for Admin API Keys) -->
     <script src="https://js.paystack.co/v1/inline.js" async></script>
     <script src="https://checkout.flutterwave.com/v3.js" async></script>
-    <script type="module" crossorigin src="/assets/index-ix90fk29.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-HI3lj1Jt.css">
+
+    <!-- Critical Preload Styles to Prevent Flash of Unstyled Content (FOUC) -->
+    <style>html,body{background-color:#0b0b0b;margin:0;padding:0}#root-loader{background-color:#0b0b0b;flex-direction:column;justify-content:center;align-items:center;width:100%;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;display:flex}.vdx-loader-card{text-align:center;flex-direction:column;align-items:center;padding:32px;display:flex}.vdx-brand-badge{background:#0b0b0b;border:1.5px solid #c96b3273;border-radius:14px;flex-direction:column;justify-content:center;align-items:center;margin-bottom:20px;padding:12px 28px;display:inline-flex;box-shadow:0 8px 32px #0009}.vdx-brand-title{letter-spacing:1.5px;color:#fff;font-family:DM Serif Display,Georgia,serif;font-size:28px;font-weight:700;line-height:1.1}.vdx-brand-title span{color:#c96b32}.vdx-brand-sub{letter-spacing:4px;text-transform:uppercase;color:#c96b32;margin-top:4px;font-size:9.5px;font-weight:800}.vdx-spinner{border:2px solid #c96b3233;border-top-color:#c96b32;border-radius:50%;width:26px;height:26px;animation:.75s linear infinite vdxSpin}@keyframes vdxSpin{to{transform:rotate(360deg)}}</style>
+    <script type="module" crossorigin src="/assets/index-MMOdTFCz.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BGybJowS.css">
   </head>
   <body>
+    <!-- Root mount target with instant branded loading state -->
+    <div id="root">
+      <div id="root-loader" aria-label="Loading Vivadoxa Music">
+        <div class="vdx-loader-card">
+          <div class="vdx-brand-badge">
+            <span class="vdx-brand-title">VIVA<span>DOX\</span></span>
+            <span class="vdx-brand-sub">MUSIC</span>
+          </div>
+          <div class="vdx-spinner" role="status" aria-label="Loading application"></div>
+        </div>
+      </div>
+    </div>
+
     <!--
       FAST CRAWLER & AI ENGINE PRE-RENDERED SEMANTIC SNAPSHOT
-      Ensures search crawlers and AI bots (Googlebot, Bingbot, GPTBot, PerplexityBot, ClaudeBot)
-      receive instant semantic text without needing to execute JavaScript.
-      React seamlessly replaces this content upon client mount.
+      Preserved in <noscript> so non-JS web crawlers and AI bots (Googlebot, Bingbot, GPTBot)
+      receive full semantic text, programs, and FAQs without causing a visual flash for human users.
     -->
-    <div id="root">
-      <header style="padding: 20px; border-bottom: 1px solid #e5e5e5; text-align: center;">
+    <noscript>
+      <header style="padding: 20px; border-bottom: 1px solid #e5e5e5; text-align: center; background: #fff;">
         <h1>Vivadoxa — Premier Music School, Instrument Repair Clinic &amp; Recording Studio</h1>
         <p><strong>Location:</strong> No. 49B Umaru Ibrahim Street, Angwan Sunday, Kaduna, Nigeria | <strong>Phone:</strong> +234 907 533 0330, +234 803 130 8881</p>
         <nav aria-label="Main Navigation">
@@ -377,7 +392,7 @@
         </nav>
       </header>
 
-      <main style="max-width: 1000px; margin: 20px auto; padding: 0 16px; font-family: system-ui, sans-serif; line-height: 1.6;">
+      <main style="max-width: 1000px; margin: 20px auto; padding: 0 16px; font-family: system-ui, sans-serif; line-height: 1.6; background: #fff;">
         <section>
           <h2>Kaduna's Leading Music Academy, Instrument Hospital &amp; Audio Production Facility</h2>
           <p>
@@ -441,14 +456,6 @@
           </dl>
         </section>
       </main>
-    </div>
-
-    <!-- Fallback for JavaScript-disabled crawlers -->
-    <noscript>
-      <div style="padding: 24px; text-align: center; background: #fff8f0; color: #333;">
-        <p><strong>Vivadoxa Music School, Instrument Repair Clinic &amp; Recording Studio</strong></p>
-        <p>Kaduna, Nigeria. Call: <a href="tel:+2349075330330">+234 907 533 0330</a> | <a href="https://vivadoxamusic.com/apply">Enroll Online</a></p>
-      </div>
     </noscript>
 
   </body>

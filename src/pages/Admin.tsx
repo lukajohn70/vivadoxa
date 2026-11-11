@@ -376,7 +376,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
             )}
 
             <form onSubmit={handleVerify2FA} className="admin-login-form">
-              <div>
+              <div style={{ marginBottom: 20 }}>
                 <label
                   htmlFor="admin-otp-input"
                   style={{
@@ -413,12 +413,15 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                     border: "2px solid var(--gold)",
                     background: "white",
                     fontFamily: "monospace",
+                    boxSizing: "border-box",
                   }}
                 />
               </div>
 
               <Button
                 type="submit"
+                fullWidth
+                style={{ marginTop: 6 }}
                 disabled={loginLoading || otpCode.length < 6}
               >
                 {loginLoading ? "Authorizing device…" : "Verify & Sign In"}
@@ -537,7 +540,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 autoComplete="username"
               />
 
-              <Button type="submit" disabled={resetLoading || !resetEmail.trim()}>
+              <Button type="submit" fullWidth style={{ marginTop: 6 }} disabled={resetLoading || !resetEmail.trim()}>
                 {resetLoading ? "Sending verification code…" : "Send Verification Code"}
               </Button>
 
@@ -634,7 +637,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
             )}
 
             <form onSubmit={handleVerifyOtpCode} className="admin-login-form">
-              <div>
+              <div style={{ marginBottom: 20 }}>
                 <label
                   htmlFor="admin-reset-code"
                   style={{
@@ -672,12 +675,15 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                     border: "2px solid var(--gold)",
                     background: "white",
                     fontFamily: "monospace",
+                    boxSizing: "border-box",
                   }}
                 />
               </div>
 
               <Button
                 type="submit"
+                fullWidth
+                style={{ marginTop: 6 }}
                 disabled={resetLoading || resetCode.length < 6}
               >
                 {resetLoading ? "Verifying Code…" : "Confirm Code & Proceed"}
@@ -791,7 +797,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
             )}
 
             <form onSubmit={handleCompletePasswordReset} className="admin-login-form">
-              <div>
+              <div style={{ marginBottom: 16 }}>
                 <label
                   htmlFor="admin-new-pass"
                   style={{
@@ -823,6 +829,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                       border: "1px solid var(--line-strong, #cbd5e1)",
                       fontSize: 14,
                       background: "white",
+                      boxSizing: "border-box",
                     }}
                   />
                   <button
@@ -847,7 +854,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 </div>
               </div>
 
-              <div style={{ marginTop: 14 }}>
+              <div style={{ marginBottom: 20 }}>
                 <label
                   htmlFor="admin-confirm-pass"
                   style={{
@@ -878,12 +885,15 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                     border: "1px solid var(--line-strong, #cbd5e1)",
                     fontSize: 14,
                     background: "white",
+                    boxSizing: "border-box",
                   }}
                 />
               </div>
 
               <Button
                 type="submit"
+                fullWidth
+                style={{ marginTop: 6 }}
                 disabled={
                   resetLoading ||
                   !newPassword ||
@@ -1040,7 +1050,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 </button>
               </div>
 
-              <Button type="submit" disabled={loginLoading}>
+              <Button type="submit" fullWidth style={{ marginTop: 6 }} disabled={loginLoading}>
                 {loginLoading ? "Signing in…" : "Sign in to Dashboard"}
               </Button>
             </form>
