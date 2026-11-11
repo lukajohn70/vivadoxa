@@ -27,38 +27,40 @@ function ProgramCard({ item, go }: ProgramCardProps) {
   const whatsappInquiry = `${WHATSAPP_URL}?text=Hello%20Vivadoxa,%20I%20would%20like%20to%20inquire%20about%20the%20${encodeURIComponent(item.name)}%20program.`
 
   return (
-    <article className="program-card h-full">
-      <div className="card-image">
+    <article className="program-card h-full flex flex-col bg-white border border-[#e6e5df] rounded-[var(--radius)] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+      <div className="card-image w-full h-[220px] relative overflow-hidden shrink-0 bg-slate-100">
         <LazyImage
           src={item.image}
           alt={`${item.name} lessons at Vivadoxa`}
           fallbackSrc="/media/programs/piano-syllabus.jpeg"
-          className="h-full"
+          containerClassName="w-full h-full"
+          className="w-full h-full object-cover object-top"
         />
-        <Badge tone="gold">{item.tag}</Badge>
+        <div className="absolute top-3.5 left-3.5 z-10 pointer-events-none">
+          <Badge tone="gold">{item.tag}</Badge>
+        </div>
       </div>
-      <div className="card-body">
-        <h3>{item.name}</h3>
-        <p>{item.desc}</p>
+      <div className="card-body p-5 sm:p-6 flex flex-col flex-1 justify-between bg-white">
+        <div className="mb-4">
+          <h3 className="font-serif text-xl sm:text-2xl text-[var(--navy)] capitalize mb-2 line-clamp-1">
+            {item.name}
+          </h3>
+          <p className="text-xs sm:text-[13.5px] text-[var(--muted)] leading-relaxed line-clamp-3">
+            {item.desc}
+          </p>
+        </div>
 
-        <div
-          className="card-foot"
-          style={{
-            marginTop: "auto",
-            borderTop: "1px solid var(--line)",
-            paddingTop: 14,
-          }}
-        >
-          <div className="flex items-center justify-between w-full gap-2">
+        <div className="card-foot mt-auto pt-3.5 border-t border-[var(--line)] flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full gap-2.5">
             <Button
               variant="primary"
               onClick={() => go("apply")}
               aria-label={`Enroll in ${item.name}`}
+              className="flex-1 justify-center rounded-lg min-h-[44px] text-xs sm:text-[13px] font-bold"
               style={{
-                flex: 1,
-                minHeight: 44,
-                fontSize: 13,
-                justifyContent: "center",
+                borderRadius: "8px",
+                backgroundColor: "var(--gold)",
+                color: "#ffffff",
               }}
             >
               Enroll <Icon name="arrow" size={14} />
@@ -67,7 +69,7 @@ function ProgramCard({ item, go }: ProgramCardProps) {
               href={whatsappInquiry}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 transition-transform hover:scale-105 active:scale-95"
+              className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 transition-transform hover:scale-105 active:scale-95 border border-[#25D366]/20 shadow-xs"
               style={{ background: "#e8f7f0", color: "#25D366" }}
               aria-label={`Ask about ${item.name} on WhatsApp`}
               title="Chat on WhatsApp"
@@ -104,38 +106,33 @@ export function Programs({ go }: { go: (p: Page) => void }) {
   const [level, setLevel] = useState("")
   const [showAllInstruments, setShowAllInstruments] = useState(false)
 
-  // Frontend-Backend consistency: sync live programs from MySQL database
+  // Frontend-Backend consistency: sync live programs from MySQL database safely without dropping catalog disciplines
   useEffect(() => {
     fetchAcademics("programs")
       .then((dbData) => {
         if (Array.isArray(dbData) && dbData.length > 0) {
-          setCourses(
-            dbData.map((c: any) => {
-              const matchedImg =
-                c.image ||
-                availableInstruments.find(
-                  (inst) =>
-                    c.name.toLowerCase().includes(inst.name.toLowerCase()) ||
-                    inst.name.toLowerCase().includes(c.name.toLowerCase()),
-                )?.image ||
-                staticPrograms.find((sp) =>
-                  c.name.toLowerCase().includes(sp.name.toLowerCase()),
-                )?.image ||
-                staticPrograms[0]?.image
-
+          setCourses((prevCourses) => {
+            return prevCourses.map((sp) => {
+              const dbItem = dbData.find(
+                (d: any) =>
+                  d.name &&
+                  (d.name.toLowerCase().includes(sp.name.toLowerCase()) ||
+                    sp.name.toLowerCase().includes(d.name.toLowerCase())),
+              )
+              if (!dbItem) return sp
               return {
-                name: c.name,
-                tag: c.tag || "Popular",
-                image: matchedImg,
-                fee: c.fee || "₦20,000 / month",
-                feeAmount: parseFloat(c.fee_amount || "20000"),
-                desc: c.desc || "",
-                category: c.category || "Instruments",
-                ageGroup: c.age_group || "All Ages",
-                level: c.level || "Beginner",
+                ...sp,
+                fee: dbItem.fee || sp.fee,
+                feeAmount: dbItem.fee_amount
+                  ? parseFloat(dbItem.fee_amount)
+                  : sp.feeAmount,
+                desc: dbItem.desc || sp.desc,
+                tag: dbItem.tag || sp.tag,
+                category: dbItem.category || sp.category,
+                level: dbItem.level || sp.level,
               }
-            }),
-          )
+            })
+          })
         }
       })
       .catch(() => {})
@@ -1254,7 +1251,7 @@ export function Programs({ go }: { go: (p: Page) => void }) {
                 key={item.name}
                 direction="up"
                 delay={(idx % 3) * 60}
-                className="h-full"
+                className="h-full flex flex-col"
               >
                 <ProgramCard item={item} go={go} />
               </ScrollReveal>
