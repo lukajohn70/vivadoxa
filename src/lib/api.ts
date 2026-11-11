@@ -786,17 +786,21 @@ export async function submitApplication(
 export async function checkApplicationStatus(
   ref: string,
   email?: string,
-): Promise<ApiResponse> {
+): Promise<ApiResponse & { applications_list?: any[]; student?: any }> {
   try {
-    const params = new URLSearchParams({ ref })
-    if (email) params.append("email", email)
+    const params = new URLSearchParams()
+    if (ref && ref.trim()) params.append("ref", ref.trim())
+    if (email && email.trim()) params.append("email", email.trim())
+    params.append("lookup", "1")
 
     const url = `${getApiUrl("applications.php")}?${params.toString()}`
     const res = await fetch(url, { credentials: "include" })
-    if (res.ok) {
-      const json = await res.json()
-      if (json.success && json.application) return json
-      if (json.error) return { success: false, error: json.error }
+    const json = await res.json().catch(() => null)
+    if (res.ok && json?.success && json?.application) {
+      return json
+    }
+    if (json?.error) {
+      return { success: false, error: json.error }
     }
   } catch (err: any) {
     return {
@@ -808,7 +812,7 @@ export async function checkApplicationStatus(
   return {
     success: false,
     error:
-      "No application record found matching this reference. Please check your reference number.",
+      "No application record found matching this reference or email. Please check your details.",
   }
 }
 
@@ -1134,8 +1138,32 @@ export async function updatePaymentStatus(
     } catch {}
   }
   return {
-    success: true,
-    message: `Payment ${reference} status updated to ${status}.`,
+    success: false,
+    error: `Unable to update payment status for ${reference}. Please check server connectivity.`,
+  }
+}
+
+export async function linkApplicationToPortal(
+  application_no: string,
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("user_portal.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "link_application", application_no }),
+    })
+    const json = await res.json().catch(() => null)
+    if (res.ok && json?.success) return json
+    return {
+      success: false,
+      error: json?.error || "Failed to link application to portal.",
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Network error linking application to portal.",
+    }
   }
 }
 

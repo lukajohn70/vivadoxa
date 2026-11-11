@@ -82,6 +82,10 @@ try {
         $pdo->exec("ALTER TABLE `applications` ADD COLUMN `letter_released` TINYINT(1) NOT NULL DEFAULT 0");
     } catch (Exception $e) {}
 
+    try {
+        $pdo->exec("ALTER TABLE `applications` ADD COLUMN `payment_status` ENUM('pending', 'verified', 'declined') NOT NULL DEFAULT 'pending' AFTER `status`");
+    } catch (Exception $e) {}
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `payments` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,

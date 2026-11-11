@@ -1749,22 +1749,26 @@ function AdminManager({ title }: { title: string }) {
     }
   }
 
-  async function handlePaymentVerify(ref: string) {
+  async function handlePaymentVerify(ref: string, appNo?: string) {
     const res = await updatePaymentStatus(ref, "verified")
     if (res && res.success) {
-      setActionNotice(`Payment ${ref} verified successfully.`)
-      loadData()
+      setActionNotice(res.message || `Payment ${ref} verified successfully.`)
+      await loadData()
       if (
         selectedRecord &&
         (selectedRecord.reference === ref ||
-          selectedRecord.payment_reference === ref)
+          selectedRecord.payment_reference === ref ||
+          (appNo && selectedRecord.application_no === appNo))
       ) {
         setSelectedRecord({
           ...selectedRecord,
           status: "approved",
           payment_status: "verified",
+          letter_released: 1,
         })
       }
+    } else {
+      setActionNotice(res?.error || `Unable to verify payment ${ref}.`)
     }
   }
 
@@ -5109,39 +5113,56 @@ function AdminManager({ title }: { title: string }) {
                       </p>
                     )}
 
-                    {selectedRecord.payment_status === "pending" &&
-                      selectedRecord.payment_reference && (
-                        <div
+                    {selectedRecord.payment_status === "verified" ? (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          padding: "8px 14px",
+                          background: "#ecfdf5",
+                          borderRadius: 6,
+                          border: "1px solid #a7f3d0",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: 12,
+                          color: "#047857",
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓ Tuition Payment Cleared &amp; Verified ({selectedRecord.payment_reference || "Reconciled"})
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          marginTop: 14,
+                          display: "flex",
+                          gap: 10,
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Button
+                          variant="primary"
+                          onClick={() =>
+                            handlePaymentVerify(
+                              selectedRecord.payment_reference || selectedRecord.application_no,
+                              selectedRecord.application_no,
+                            )
+                          }
                           style={{
-                            marginTop: 14,
-                            display: "flex",
-                            gap: 10,
-                            alignItems: "center",
-                            flexWrap: "wrap",
+                            background: "#15803d",
+                            color: "white",
+                            fontSize: 12,
+                            padding: "6px 14px",
                           }}
                         >
-                          <Button
-                            variant="primary"
-                            onClick={() =>
-                              handlePaymentVerify(
-                                selectedRecord.payment_reference,
-                              )
-                            }
-                            style={{
-                              background: "#15803d",
-                              color: "white",
-                              fontSize: 12,
-                              padding: "6px 14px",
-                            }}
-                          >
-                            ✓ Confirm &amp; Verify Bank Transfer
-                          </Button>
-                          <span style={{ fontSize: 11, color: "#854d0e" }}>
-                            Confirming clears the student's admission and
-                            unlocks their official digital payment receipt.
-                          </span>
-                        </div>
-                      )}
+                          ✓ Confirm &amp; Verify Tuition Payment
+                        </Button>
+                        <span style={{ fontSize: 11, color: "#854d0e" }}>
+                          Confirming clears the student's admission and unlocks their official digital payment receipt and admission letter.
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {selectedRecord.guardian_name && (

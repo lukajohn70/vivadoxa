@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import { Button, Badge, Field, Icon, PageHero } from "@/components/ui"
 import { SEO } from "@/components/SEO"
 import { isValidEmail, SCHOOL_PHONE } from "@/lib/utils"
@@ -11,25 +11,40 @@ import {
 } from "@/components/OfficialDocument"
 
 export function Status() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const initialRef = searchParams.get("ref") || ""
 
-  const [email, setEmail] = useState("")
-  const [refInput, setRefInput] = useState(initialRef)
+  const urlRef =
+    searchParams.get("ref") ||
+    searchParams.get("application_no") ||
+    searchParams.get("reference") ||
+    searchParams.get("code") ||
+    searchParams.get("app") ||
+    searchParams.get("q") ||
+    ""
+  const urlEmail = searchParams.get("email") || ""
+
+  const [email, setEmail] = useState(urlEmail)
+  const [refInput, setRefInput] = useState(urlRef)
   const [loading, setLoading] = useState(false)
   const [searchError, setSearchError] = useState("")
   const [searched, setSearched] = useState(false)
   const [application, setApplication] = useState<any | null>(null)
   const [payment, setPayment] = useState<any | null>(null)
+  const [student, setStudent] = useState<any | null>(null)
+  const [applicationsList, setApplicationsList] = useState<any[]>([])
+
   const [showSlip, setShowSlip] = useState(false)
   const [showLetter, setShowLetter] = useState(false)
   const [showReceipt, setShowReceipt] = useState(false)
 
-  // Auto-search if ref is in URL, or show preview if requested
+  // Auto-search if ref or email is in URL, or show preview if requested
   useEffect(() => {
     if (searchParams.get("previewSlip") === "1") {
       setApplication({
         fullName: "Chinedu Emmanuel Okonkwo",
+        first_name: "Chinedu",
+        last_name: "Okonkwo",
         application_no: "VDX-2026-0842",
         program: "Piano/keyboard",
         planTier: "6-months",
@@ -48,6 +63,8 @@ export function Status() {
     } else if (searchParams.get("previewLetter") === "1") {
       setApplication({
         fullName: "John Adamu",
+        first_name: "John",
+        last_name: "Adamu",
         application_no: "VM/ADM20260026",
         admission_no: "VM/ADM20260026",
         program: "Piano Studies",
@@ -57,7 +74,8 @@ export function Status() {
         tuition_fee: 100000,
         email: "john.adamu@example.com",
         phone: "08031234567",
-        status: "Admitted",
+        status: "approved",
+        letter_released: 1,
         created_at: "2026-11-09T10:00:00",
       })
       setShowLetter(true)
@@ -68,20 +86,26 @@ export function Status() {
         payer_name: "Chinedu Emmanuel Okonkwo",
         payer_email: "c.okonkwo@example.com",
         amount: 100000,
+        currency: "NGN",
         method: "Bank Transfer (Direct)",
-        status: "Confirmed",
+        status: "verified",
         program: "6 Months Program — Piano & Keyboard Mastery",
         created_at: new Date().toISOString(),
       })
       setShowReceipt(true)
-    } else if (initialRef) {
-      performLookup(initialRef, "")
+    } else if (urlRef || urlEmail) {
+      performLookup(urlRef, urlEmail)
     }
-  }, [initialRef, searchParams])
+  }, [urlRef, urlEmail, searchParams])
 
   async function performLookup(refToFind: string, emailToFind: string) {
-    if (!refToFind.trim()) {
-      setSearchError("Please enter your application reference.")
+    const cleanRef = refToFind.trim()
+    const cleanEmail = emailToFind.trim()
+
+    if (!cleanRef && !cleanEmail) {
+      setSearchError(
+        "Please enter your Application Reference Number, registered email, or payment reference.",
+      )
       return
     }
 
@@ -91,18 +115,22 @@ export function Status() {
 
     try {
       const res = await checkApplicationStatus(
-        refToFind.trim(),
-        emailToFind.trim() || undefined,
+        cleanRef,
+        cleanEmail || undefined,
       )
       if (res && res.success && res.application) {
         setApplication(res.application)
         setPayment(res.payment || null)
+        setStudent(res.student || null)
+        setApplicationsList(res.applications_list || [])
       } else {
         setApplication(null)
         setPayment(null)
+        setStudent(null)
+        setApplicationsList([])
         setSearchError(
           res.error ||
-            "No application record found matching the provided details. Please verify and try again.",
+            "No admission application found matching the provided details. Please verify your reference or email and try again.",
         )
       }
     } catch {
@@ -116,18 +144,28 @@ export function Status() {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (!refInput.trim()) {
+    const cleanRef = refInput.trim()
+    const cleanEmail = email.trim()
+
+    if (!cleanRef && !cleanEmail) {
       setSearchError(
-        "Please enter your application reference (e.g. VDX-2026-0001).",
+        "Please enter your application reference (e.g. VDX-2026-0184) or registered email.",
       )
       return
     }
-    if (email.trim() && !isValidEmail(email)) {
+
+    if (cleanEmail && !isValidEmail(cleanEmail) && !cleanRef) {
       setSearchError("Please enter a valid email address.")
       return
     }
-    performLookup(refInput, email)
+
+    performLookup(cleanRef, cleanEmail)
   }
+
+  const isApproved = application?.status === "approved"
+  const isTuitionVerified =
+    application?.payment_status === "verified" ||
+    payment?.status === "verified"
 
   return (
     <main>
@@ -139,7 +177,7 @@ export function Status() {
       <PageHero
         eyebrow="Admissions Portal"
         title="Track your application & enrollment."
-        body="Enter your application reference number to check your admission review, audition scheduling, and tuition verification status."
+        body="Enter your application reference number, registered email, or transaction reference to check your admission review, tuition clearance, and official documents."
         backTo="/"
         backLabel="Back to Home"
       />
@@ -149,14 +187,13 @@ export function Status() {
           <form className="status-search" onSubmit={handleSearch} noValidate>
             <Field
               id="status-ref"
-              label="Application reference"
-              placeholder="e.g. VDX-2026-0184"
+              label="Application reference or registered email"
+              placeholder="e.g. VDX-2026-0184 or you@example.com"
               value={refInput}
               onChange={(v) => {
                 setRefInput(v)
                 setSearchError("")
               }}
-              required
             />
             <Field
               id="status-email"
@@ -185,6 +222,58 @@ export function Status() {
               role="region"
               aria-label="Application status details"
             >
+              {/* If multiple applications exist for this candidate */}
+              {applicationsList.length > 1 && (
+                <div
+                  style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: 10,
+                    padding: "12px 16px",
+                    marginBottom: 18,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      color: "#166534",
+                      display: "block",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Multiple Applications on File ({applicationsList.length}):
+                  </span>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {applicationsList.map((app) => {
+                      const isCurrent =
+                        app.application_no === application.application_no
+                      return (
+                        <button
+                          key={app.id}
+                          type="button"
+                          onClick={() => performLookup(app.application_no, "")}
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: 6,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            background: isCurrent ? "var(--navy)" : "white",
+                            color: isCurrent ? "white" : "var(--navy)",
+                            border: "1px solid var(--line)",
+                          }}
+                        >
+                          {app.application_no} · {app.program} (
+                          {app.status})
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="status-top">
                 <div>
                   <span className="eyebrow">{application.application_no}</span>
@@ -195,24 +284,51 @@ export function Status() {
                     {application.program} · {application.study_mode} (
                     {application.skill_level})
                   </p>
+                  {student?.student_no && (
+                    <div style={{ marginTop: 6 }}>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#15803d",
+                          background: "#dcfce7",
+                          padding: "2px 8px",
+                          borderRadius: 4,
+                        }}
+                      >
+                        Enrolled Student ID: {student.student_no} ·{" "}
+                        {student.cohort || "Active Cohort"}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <Badge
-                  tone={
-                    application.status === "approved"
-                      ? "green"
-                      : application.status === "rejected"
-                        ? "red"
-                        : "gold"
-                  }
-                >
-                  {application.status === "approved"
-                    ? "Admission confirmed"
-                    : application.status === "reviewing"
-                      ? "In academic review"
-                      : application.status === "rejected"
-                        ? "Admission not offered"
-                        : "Under review"}
-                </Badge>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <Badge
+                    tone={
+                      isApproved
+                        ? "green"
+                        : application.status === "rejected"
+                          ? "red"
+                          : "gold"
+                    }
+                  >
+                    {isApproved
+                      ? "Admission confirmed"
+                      : application.status === "reviewing"
+                        ? "In academic review"
+                        : application.status === "rejected"
+                          ? "Admission not offered"
+                          : "Under review"}
+                  </Badge>
+
+                  <Badge tone={isTuitionVerified ? "green" : "gold"}>
+                    {isTuitionVerified
+                      ? "✓ Tuition Verified"
+                      : payment
+                        ? "● Payment Reconciling"
+                        : "Tuition Payment Due"}
+                  </Badge>
+                </div>
               </div>
 
               {/* ── Official Document Downloads Bar ── */}
@@ -271,57 +387,65 @@ export function Status() {
                   </Button>
 
                   <Button
-                    variant="secondary"
+                    variant={isTuitionVerified ? "secondary" : "secondary"}
                     onClick={() => {
-                      if (payment) setShowReceipt(true)
-                      else
+                      if (payment || isTuitionVerified) {
+                        setShowReceipt(true)
+                      } else {
                         alert(
-                          "Payment proof is still awaiting bank ledger reconciliation.",
+                          "Payment proof is awaiting bank ledger reconciliation. Once approved, your receipt will be unlocked.",
                         )
-                    }}
-                    style={{
-                      justifyContent: "center",
-                      fontSize: 12,
-                      minHeight: 40,
-                    }}
-                  >
-                    <Icon name="check" size={14} /> Payment Receipt (PDF)
-                  </Button>
-
-                  <Button
-                    variant={
-                      application.status === "approved" &&
-                      application.letter_released
-                        ? "primary"
-                        : "secondary"
-                    }
-                    onClick={() => {
-                      if (
-                        application.status === "approved" &&
-                        application.letter_released
-                      ) {
-                        setShowLetter(true)
                       }
                     }}
                     style={{
                       justifyContent: "center",
                       fontSize: 12,
                       minHeight: 40,
-                      opacity: application.letter_released ? 1 : 0.5,
-                      cursor: application.letter_released
+                      opacity: isTuitionVerified || payment ? 1 : 0.6,
+                    }}
+                  >
+                    <Icon name="check" size={14} />{" "}
+                    {isTuitionVerified
+                      ? "Payment Receipt (PDF)"
+                      : payment
+                        ? "Receipt Pending Verification"
+                        : "No Payment Recorded"}
+                  </Button>
+
+                  <Button
+                    variant={
+                      isApproved
+                        ? "primary"
+                        : "secondary"
+                    }
+                    onClick={() => {
+                      if (isApproved) {
+                        setShowLetter(true)
+                      } else {
+                        alert(
+                          "Your official admission letter will be unlocked once faculty admission review is approved.",
+                        )
+                      }
+                    }}
+                    style={{
+                      justifyContent: "center",
+                      fontSize: 12,
+                      minHeight: 40,
+                      opacity: isApproved ? 1 : 0.5,
+                      cursor: isApproved
                         ? "pointer"
                         : "default",
                     }}
                   >
                     <Icon name="copy" size={14} />{" "}
-                    {application.letter_released
+                    {isApproved
                       ? "Admission Letter (PDF)"
-                      : "Letter Not Yet Released"}
+                      : "Letter Under Review"}
                   </Button>
                 </div>
               </div>
 
-              {application.status === "approved" ? (
+              {isApproved ? (
                 <div className="admitted">
                   <div className="success-icon">
                     <Icon name="check" size={30} />
@@ -354,8 +478,28 @@ export function Status() {
                         beside Angwan Sunday Market, Kaduna) for student
                         instrument allocation and orientation.
                       </li>
+                      <li>
+                        Sign in to your{" "}
+                        <button
+                          type="button"
+                          onClick={() => navigate("/portal")}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "var(--gold)",
+                            textDecoration: "underline",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                        >
+                          Student &amp; Client Portal
+                        </button>{" "}
+                        to manage cohort timetables, makeup lesson requests, and fees.
+                      </li>
                     </ul>
                   </div>
+
                   <div
                     style={{
                       display: "flex",
@@ -365,23 +509,11 @@ export function Status() {
                       marginTop: 20,
                     }}
                   >
-                    {application.letter_released ? (
-                      <Button onClick={() => setShowLetter(true)}>
-                        <Icon name="copy" /> Download admission letter (PDF)
-                      </Button>
-                    ) : (
-                      <p
-                        style={{
-                          fontSize: 13,
-                          color: "var(--muted)",
-                          margin: 0,
-                        }}
-                      >
-                        Your official admission letter will be made available
-                        once the admissions office completes verification.
-                      </p>
-                    )}
-                    {payment && payment.status === "verified" && (
+                    <Button onClick={() => setShowLetter(true)}>
+                      <Icon name="copy" /> Download admission letter (PDF)
+                    </Button>
+
+                    {(isTuitionVerified || payment) && (
                       <Button
                         variant="secondary"
                         onClick={() => setShowReceipt(true)}
@@ -389,6 +521,15 @@ export function Status() {
                         <Icon name="check" /> Download payment receipt (PDF)
                       </Button>
                     )}
+
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate("/portal")}
+                      style={{ background: "#0b0b0b", color: "#f2a900" }}
+                    >
+                      Open Student Portal →
+                    </Button>
+
                     <a href={`tel:${SCHOOL_PHONE}`}>
                       <Button variant="ghost">Contact admissions desk</Button>
                     </a>
@@ -418,24 +559,24 @@ export function Status() {
                       ],
                       [
                         "Tuition payment matching",
-                        payment
-                          ? payment.status === "verified"
-                            ? `Payment confirmed (₦${Number(payment.amount).toLocaleString()})`
-                            : "Transfer details received — accounts matching"
-                          : "Awaiting bank transfer verification",
-                        payment && payment.status === "verified",
+                        isTuitionVerified
+                          ? `Payment confirmed (₦${Number(payment?.amount || application.tuition_fee).toLocaleString()})`
+                          : payment
+                            ? "Transfer proof received — awaiting ledger confirmation"
+                            : "Awaiting bank transfer verification or card payment",
+                        isTuitionVerified,
                       ],
                       [
                         "Academic review & placement",
                         application.status === "reviewing"
                           ? "Instructors reviewing course placement"
                           : "Pending payment reconciliation",
-                        application.status === "approved",
+                        isApproved,
                       ],
                       [
                         "Admission letter & class orientation",
                         "Issued once verified by faculty",
-                        application.status === "approved",
+                        isApproved,
                       ],
                     ].map(([title, desc, isDone], i) => (
                       <div
@@ -475,11 +616,27 @@ export function Status() {
                         </>
                       )}
                     </p>
+                    {!isTuitionVerified && (
+                      <div style={{ marginTop: 12 }}>
+                        <Button
+                          variant="secondary"
+                          onClick={() =>
+                            navigate(
+                              `/payment?ref=${application.application_no}&amount=${application.tuition_fee}&currency=${application.currency || "NGN"}`,
+                            )
+                          }
+                          style={{ fontSize: 12 }}
+                        >
+                          Submit Payment Proof / Pay Tuition →
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
             </div>
           )}
+
           {/* Official Document Modals */}
           {showSlip && application && (
             <ApplicationSlipModal
@@ -493,9 +650,22 @@ export function Status() {
               onClose={() => setShowLetter(false)}
             />
           )}
-          {showReceipt && payment && (
+          {showReceipt && (
             <PaymentReceiptModal
-              data={payment}
+              data={
+                payment || {
+                  reference: `VDX-PAY-${new Date().getFullYear()}-0001`,
+                  application_no: application.application_no,
+                  payer_name: `${application.first_name} ${application.last_name}`,
+                  payer_email: application.email,
+                  amount: application.tuition_fee,
+                  currency: application.currency || "NGN",
+                  method: "Official Bank Transfer",
+                  status: isTuitionVerified ? "verified" : "pending",
+                  program: application.program,
+                  created_at: new Date().toISOString(),
+                }
+              }
               onClose={() => setShowReceipt(false)}
             />
           )}

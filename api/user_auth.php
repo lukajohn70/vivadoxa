@@ -104,23 +104,43 @@ if ($method === 'GET') {
         $stmt = $pdo->prepare("
             SELECT id, email, phone, password_hash, full_name, role, avatar, address, guardian_name, guardian_phone, is_active, last_login
             FROM users
-            WHERE LOWER(email) = LOWER(:em) OR phone = :ph
+            WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) OR phone = :ph
             LIMIT 1
         ");
         $stmt->execute([':em' => $identifier, ':ph' => $identifier]);
         $user = $stmt->fetch();
 
+        // If not found directly, check if identifier is an application_no
         if (!$user) {
-            jsonResponse(['success' => false, 'error' => 'No account found with this email or phone. Please register or check your credentials.'], 401);
+            $appCheck = $pdo->prepare("SELECT email FROM applications WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:no)) LIMIT 1");
+            $appCheck->execute([':no' => $identifier]);
+            $appRow = $appCheck->fetch();
+            if ($appRow && !empty($appRow['email'])) {
+                $stmt->execute([':em' => $appRow['email'], ':ph' => $identifier]);
+                $user = $stmt->fetch();
+            }
+        }
+
+        if (!$user) {
+            jsonResponse(['success' => false, 'error' => 'No account found with this email, phone, or application reference. Please register or check your credentials.'], 401);
         }
 
         if (!$user['is_active']) {
             jsonResponse(['success' => false, 'error' => 'Your student account is deactivated. Please contact admissions.'], 403);
         }
 
-        // Strict database password verification using bcrypt
-        if (!password_verify($password, $user['password_hash'])) {
-            jsonResponse(['success' => false, 'error' => 'Incorrect password. Please try again.'], 401);
+        // Strict database password verification using bcrypt, with auto-provision fallback
+        $passwordValid = password_verify($password, $user['password_hash']);
+        if (!$passwordValid) {
+            // Check if account has auto-provision default password
+            if (password_verify('StudentPass2025!', $user['password_hash'])) {
+                // Activate account with student's chosen password
+                $newHash = password_hash($password, PASSWORD_BCRYPT);
+                $pdo->prepare("UPDATE users SET password_hash = :pw WHERE id = :id")->execute([':pw' => $newHash, ':id' => $user['id']]);
+                $passwordValid = true;
+            } else {
+                jsonResponse(['success' => false, 'error' => 'Incorrect password. Please try again.'], 401);
+            }
         }
 
         $userId = (int)$user['id'];
@@ -180,10 +200,38 @@ if ($method === 'GET') {
         }
 
         // Check duplicate
-        $stmt = $pdo->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:em) LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, full_name, email, phone, password_hash, is_active FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
         $stmt->execute([':em' => $email]);
-        if ($stmt->fetch()) {
-            jsonResponse(['success' => false, 'error' => 'An account with this email already exists. Please log in instead.'], 409);
+        $existing = $stmt->fetch();
+        if ($existing) {
+            // Account already exists (e.g. auto-provisioned upon application).
+            // Activate account, update password with student's chosen password, and log in seamlessly!
+            $hash = password_hash($password, PASSWORD_BCRYPT);
+            $pdo->prepare("
+                UPDATE users 
+                SET password_hash = :pw, 
+                    full_name = CASE WHEN :fn != '' THEN :fn ELSE full_name END,
+                    phone = CASE WHEN :ph != '' THEN :ph ELSE phone END,
+                    is_active = 1,
+                    last_login = NOW()
+                WHERE id = :id
+            ")->execute([
+                ':pw' => $hash,
+                ':fn' => $fullName,
+                ':ph' => $phone,
+                ':id' => $existing['id'],
+            ]);
+
+            $fStmt = $pdo->prepare("SELECT id, email, phone, full_name, role, avatar, address, guardian_name, guardian_phone, created_at FROM users WHERE id = :id LIMIT 1");
+            $fStmt->execute([':id' => $existing['id']]);
+            $freshUser = $fStmt->fetch();
+            $_SESSION['client_user'] = $freshUser;
+
+            jsonResponse([
+                'success' => true,
+                'message' => 'Your student portal account has been activated! Welcome to Vivadoxa.',
+                'user' => $freshUser,
+            ], 200);
         }
 
         $hash = password_hash($password, PASSWORD_BCRYPT);

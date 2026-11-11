@@ -8,34 +8,108 @@ $pdo = getDb();
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $ref = trim($_GET['ref'] ?? $_GET['application_no'] ?? '');
+    $ref = trim($_GET['ref'] ?? $_GET['application_no'] ?? $_GET['code'] ?? $_GET['reference'] ?? $_GET['tracking_code'] ?? $_GET['q'] ?? '');
     $email = trim($_GET['email'] ?? '');
+    $isSingleLookup = isset($_GET['track']) || isset($_GET['lookup']) || !empty($ref) || (!empty($email) && empty($_GET['search']) && empty($_GET['status']));
 
     // Single lookup mode (e.g. for student status checking)
-    if (!empty($ref)) {
-        $sql = "SELECT * FROM `applications` WHERE application_no = :ref";
-        $params = [':ref' => $ref];
-        if (!empty($email)) {
-            $sql .= " AND LOWER(email) = LOWER(:email)";
-            $params[':email'] = $email;
+    if ($isSingleLookup) {
+        // If ref contains '@' and email is empty, swap
+        if (strpos($ref, '@') !== false && empty($email)) {
+            $email = $ref;
+            $ref = '';
         }
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $app = $stmt->fetch();
+
+        $app = null;
+        if (!empty($ref) && !empty($email)) {
+            $sql = "SELECT * FROM `applications` 
+                    WHERE (LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
+                       OR phone = :ref 
+                       OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)))) 
+                      AND LOWER(TRIM(email)) = LOWER(TRIM(:email)) 
+                    ORDER BY id DESC LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':ref' => $ref, ':email' => $email]);
+            $app = $stmt->fetch();
+        } elseif (!empty($ref)) {
+            $sql = "SELECT * FROM `applications` 
+                    WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
+                       OR LOWER(TRIM(email)) = LOWER(TRIM(:ref)) 
+                       OR phone = :ref 
+                       OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) OR LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)))
+                    ORDER BY id DESC LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':ref' => $ref]);
+            $app = $stmt->fetch();
+
+            // If not found in applications, check if ref is a payment reference
+            if (!$app) {
+                $pCheck = $pdo->prepare("SELECT * FROM `payments` WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) LIMIT 1");
+                $pCheck->execute([':ref' => $ref]);
+                $foundPay = $pCheck->fetch();
+                if ($foundPay && !empty($foundPay['payer_email'])) {
+                    $appStmt = $pdo->prepare("SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
+                    $appStmt->execute([':em' => $foundPay['payer_email']]);
+                    $app = $appStmt->fetch();
+                }
+            }
+        } elseif (!empty($email)) {
+            $sql = "SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:email)) ORDER BY id DESC LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':email' => $email]);
+            $app = $stmt->fetch();
+        }
 
         if (!$app) {
-            jsonResponse(['success' => false, 'error' => 'No application found with these details.'], 404);
+            $searchedTerm = $ref ?: $email;
+            jsonResponse([
+                'success' => false, 
+                'error' => "No application record found for '$searchedTerm'. Please verify your application reference or email address."
+            ], 404);
         }
 
-        // Fetch any payment linked to this application
-        $payStmt = $pdo->prepare("SELECT * FROM `payments` WHERE application_no = :ref ORDER BY id DESC LIMIT 1");
-        $payStmt->execute([':ref' => $app['application_no']]);
+        // Fetch best payment record linked by application_no OR payer_email
+        $payStmt = $pdo->prepare("
+            SELECT * FROM `payments` 
+            WHERE (application_no = :no AND :no != '') 
+               OR (payer_email != '' AND LOWER(TRIM(payer_email)) = LOWER(TRIM(:em))) 
+            ORDER BY CASE WHEN status = 'verified' THEN 1 WHEN status = 'pending' THEN 2 ELSE 3 END, id DESC 
+            LIMIT 1
+        ");
+        $payStmt->execute([':no' => $app['application_no'], ':em' => $app['email']]);
         $payment = $payStmt->fetch() ?: null;
+
+        // Synchronize payment status
+        if ($payment && $payment['status'] === 'verified') {
+            $app['payment_status'] = 'verified';
+            if ($app['status'] !== 'approved') {
+                $app['status'] = 'approved';
+                $app['letter_released'] = 1;
+                $pdo->prepare("UPDATE `applications` SET `status` = 'approved', `payment_status` = 'verified', `letter_released` = 1 WHERE `id` = :id")->execute([':id' => $app['id']]);
+            }
+        } else {
+            $app['payment_status'] = $payment ? $payment['status'] : ($app['payment_status'] ?? 'pending');
+        }
+
+        // Fetch student record if enrolled
+        $studStmt = $pdo->prepare("SELECT * FROM `students` WHERE application_no = :no OR LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
+        $studStmt->execute([':no' => $app['application_no'], ':em' => $app['email']]);
+        $student = $studStmt->fetch() ?: null;
+        if ($student) {
+            $app['student_no'] = $student['student_no'];
+        }
+
+        // Fetch all applications under same email so applicant can toggle
+        $allAppsStmt = $pdo->prepare("SELECT id, application_no, program, study_mode, status, payment_status, created_at FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC");
+        $allAppsStmt->execute([':em' => $app['email']]);
+        $allApps = $allAppsStmt->fetchAll();
 
         jsonResponse([
             'success' => true,
             'application' => $app,
             'payment' => $payment,
+            'student' => $student,
+            'applications_list' => $allApps,
         ]);
     }
 
@@ -44,12 +118,12 @@ if ($method === 'GET') {
     $status = trim($_GET['status'] ?? '');
 
     $sql = "SELECT a.*, 
-                   p.reference AS payment_reference,
-                   p.status AS payment_status,
-                   p.amount AS payment_amount,
-                   p.currency AS payment_currency,
-                   p.method AS payment_method,
-                   p.created_at AS payment_date
+                   COALESCE(p.reference, a_p.reference) AS payment_reference,
+                   COALESCE(p.status, a_p.status, a.payment_status, 'pending') AS payment_status,
+                   COALESCE(p.amount, a_p.amount, a.tuition_fee) AS payment_amount,
+                   COALESCE(p.currency, a_p.currency, a.currency, 'NGN') AS payment_currency,
+                   COALESCE(p.method, a_p.method, 'Bank Transfer') AS payment_method,
+                   COALESCE(p.created_at, a_p.created_at) AS payment_date
             FROM `applications` a
             LEFT JOIN (
                 SELECT p1.* FROM `payments` p1
@@ -57,17 +131,24 @@ if ($method === 'GET') {
                     SELECT MAX(id) AS max_id FROM `payments` GROUP BY application_no
                 ) p2 ON p1.id = p2.max_id
             ) p ON p.application_no = a.application_no
+            LEFT JOIN (
+                SELECT p3.* FROM `payments` p3
+                INNER JOIN (
+                    SELECT MAX(id) AS max_id FROM `payments` GROUP BY payer_email
+                ) p4 ON p3.id = p4.max_id
+            ) a_p ON LOWER(TRIM(a_p.payer_email)) = LOWER(TRIM(a.email))
             WHERE 1=1";
     $params = [];
 
     if (!empty($search)) {
-        $sql .= " AND (a.first_name LIKE :s1 OR a.last_name LIKE :s2 OR a.email LIKE :s3 OR a.application_no LIKE :s4 OR p.reference LIKE :s5)";
+        $sql .= " AND (a.first_name LIKE :s1 OR a.last_name LIKE :s2 OR a.email LIKE :s3 OR a.application_no LIKE :s4 OR p.reference LIKE :s5 OR a_p.reference LIKE :s6)";
         $term = "%$search%";
         $params[':s1'] = $term;
         $params[':s2'] = $term;
         $params[':s3'] = $term;
         $params[':s4'] = $term;
         $params[':s5'] = $term;
+        $params[':s6'] = $term;
     }
 
     if (!empty($status)) {
@@ -96,17 +177,93 @@ if ($method === 'GET') {
             jsonResponse(['success' => false, 'error' => "Invalid status: $newStatus"], 400);
         }
 
+        // Find application
+        $targetApp = null;
         if (!empty($appNo)) {
-            $stmt = $pdo->prepare("UPDATE `applications` SET `status` = :st WHERE `application_no` = :no");
-            $stmt->execute([':st' => $newStatus, ':no' => $appNo]);
+            $stmt = $pdo->prepare("SELECT * FROM `applications` WHERE `application_no` = :no LIMIT 1");
+            $stmt->execute([':no' => $appNo]);
+            $targetApp = $stmt->fetch();
         } elseif ($id > 0) {
-            $stmt = $pdo->prepare("UPDATE `applications` SET `status` = :st WHERE `id` = :id");
-            $stmt->execute([':st' => $newStatus, ':id' => $id]);
-        } else {
+            $stmt = $pdo->prepare("SELECT * FROM `applications` WHERE `id` = :id LIMIT 1");
+            $stmt->execute([':id' => $id]);
+            $targetApp = $stmt->fetch();
+        }
+
+        if (!$targetApp) {
             jsonResponse(['success' => false, 'error' => 'Application ID or reference required.'], 400);
         }
 
-        jsonResponse(['success' => true, 'message' => "Application status updated to '$newStatus'."]);
+        $appNo = $targetApp['application_no'];
+        $appId = (int)$targetApp['id'];
+
+        if ($newStatus === 'approved') {
+            // Check if there is an existing payment
+            $pCheck = $pdo->prepare("SELECT id, status FROM `payments` WHERE application_no = :no OR (payer_email != '' AND LOWER(TRIM(payer_email)) = LOWER(TRIM(:em))) ORDER BY id DESC LIMIT 1");
+            $pCheck->execute([':no' => $appNo, ':em' => $targetApp['email']]);
+            $existingPay = $pCheck->fetch();
+
+            $payStatus = 'verified';
+            if ($existingPay) {
+                // Verify payment in payments table
+                $pdo->prepare("UPDATE `payments` SET `status` = 'verified', `verified_at` = NOW() WHERE `id` = :pid")->execute([':pid' => $existingPay['id']]);
+            }
+
+            // Update application: approved, payment_status = verified, letter_released = 1
+            $upSql = "UPDATE `applications` 
+                      SET `status` = 'approved', 
+                          `payment_status` = :pst, 
+                          `letter_released` = 1,
+                          `updated_at` = NOW() 
+                      WHERE `id` = :id";
+            $pdo->prepare($upSql)->execute([':pst' => $payStatus, ':id' => $appId]);
+
+            // Auto-enroll in students table if not already enrolled
+            $studCheck = $pdo->prepare("SELECT id FROM `students` WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:no)) OR LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
+            $studCheck->execute([':no' => $appNo, ':em' => $targetApp['email']]);
+            if (!$studCheck->fetch()) {
+                $studNo = 'VD-' . date('Y') . '-' . str_pad((string)rand(10, 999), 3, '0', STR_PAD_LEFT);
+                $pdo->prepare("
+                    INSERT INTO `students` (`student_no`, `application_no`, `full_name`, `email`, `phone`, `program`, `study_mode`, `cohort`, `status`)
+                    VALUES (:sno, :ano, :fn, :em, :ph, :pr, :sm, 'Saturday Cohort A', 'active')
+                ")->execute([
+                    ':sno' => $studNo,
+                    ':ano' => $appNo,
+                    ':fn'  => trim(($targetApp['first_name'] ?? '') . ' ' . ($targetApp['last_name'] ?? '')),
+                    ':em'  => $targetApp['email'],
+                    ':ph'  => $targetApp['phone'] ?? '',
+                    ':pr'  => $targetApp['program'] ?? 'Music Course',
+                    ':sm'  => $targetApp['study_mode'] ?? 'Onsite',
+                ]);
+            }
+
+            // Ensure portal user account exists
+            $uCheck = $pdo->prepare("SELECT id FROM `users` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
+            $uCheck->execute([':em' => $targetApp['email']]);
+            if (!$uCheck->fetch()) {
+                $uPass = password_hash('StudentPass2025!', PASSWORD_BCRYPT);
+                $pdo->prepare("
+                    INSERT INTO `users` (`full_name`, `email`, `phone`, `password_hash`, `role`, `is_active`)
+                    VALUES (:fn, :em, :ph, :pw, 'student', 1)
+                ")->execute([
+                    ':fn' => trim(($targetApp['first_name'] ?? '') . ' ' . ($targetApp['last_name'] ?? '')),
+                    ':em' => $targetApp['email'],
+                    ':ph' => $targetApp['phone'] ?? '',
+                    ':pw' => $uPass,
+                ]);
+            } else {
+                $pdo->prepare("UPDATE `users` SET `is_active` = 1 WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em))")->execute([':em' => $targetApp['email']]);
+            }
+        } else {
+            $stmt = $pdo->prepare("UPDATE `applications` SET `status` = :st, `updated_at` = NOW() WHERE `id` = :id");
+            $stmt->execute([':st' => $newStatus, ':id' => $appId]);
+        }
+
+        jsonResponse([
+            'success' => true, 
+            'message' => "Application $appNo status updated to '$newStatus'. Student ledger synchronized.",
+            'application_no' => $appNo,
+            'status' => $newStatus,
+        ]);
     }
 
     // ── Action: Modify application details (Admin) ────────────────────────────

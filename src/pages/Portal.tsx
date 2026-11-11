@@ -8,6 +8,7 @@ import {
   approveRepairEstimate,
   updateUserProfile,
   submitScheduleRequest,
+  linkApplicationToPortal,
   type PortalUser,
   type PortalData,
 } from "@/lib/api"
@@ -61,6 +62,39 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
   const [schedNotes, setSchedNotes] = useState("")
   const [schedSubmitting, setSchedSubmitting] = useState(false)
   const [schedSuccessMsg, setSchedSuccessMsg] = useState("")
+
+  // Link / claim existing application state
+  const [linkRefInput, setLinkRefInput] = useState("")
+  const [linkingApp, setLinkingApp] = useState(false)
+  const [linkNotice, setLinkNotice] = useState("")
+  const [linkError, setLinkError] = useState("")
+  const [showLinkModal, setShowLinkModal] = useState(false)
+
+  async function handleLinkApplication(e: React.FormEvent) {
+    e.preventDefault()
+    if (!linkRefInput.trim()) return
+    setLinkingApp(true)
+    setLinkNotice("")
+    setLinkError("")
+    try {
+      const res = await linkApplicationToPortal(linkRefInput.trim())
+      if (res && res.success) {
+        setLinkNotice(res.message || "Application linked successfully!")
+        setLinkRefInput("")
+        await loadData()
+        setTimeout(() => setLinkNotice(""), 5000)
+      } else {
+        setLinkError(
+          res?.error ||
+            "Unable to link application. Please check your reference code.",
+        )
+      }
+    } catch {
+      setLinkError("Network error linking application. Please check connection.")
+    } finally {
+      setLinkingApp(false)
+    }
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -618,245 +652,345 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
         {/* TAB 1: PROGRAMS & ADMISSION */}
         {activeTab === "courses" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {/* Optional Link Another Application Bar */}
+            {showLinkModal && (
+              <div
+                style={{
+                  background: "#f8fafc",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 10,
+                  padding: "16px 20px",
+                }}
+              >
+                <h4 style={{ margin: "0 0 6px", fontSize: 14 }}>
+                  Link Another Application Reference
+                </h4>
+                <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--muted)" }}>
+                  Enter your application reference (e.g. <code>VDX-2026-0184</code>) to link another course to this student portal account.
+                </p>
+                <form
+                  onSubmit={handleLinkApplication}
+                  style={{ display: "flex", gap: 10, flexWrap: "wrap", maxWidth: 460 }}
+                >
+                  <input
+                    type="text"
+                    placeholder="e.g. VDX-2026-0184"
+                    value={linkRefInput}
+                    onChange={(e) => setLinkRefInput(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: "8px 12px",
+                      borderRadius: 6,
+                      border: "1px solid var(--line)",
+                      fontSize: 13,
+                    }}
+                  />
+                  <Button type="submit" disabled={linkingApp || !linkRefInput.trim()}>
+                    {linkingApp ? "Linking…" : "Link Application"}
+                  </Button>
+                </form>
+                {linkNotice && (
+                  <p style={{ color: "#15803d", fontSize: 12, fontWeight: 600, marginTop: 8 }}>
+                    ✓ {linkNotice}
+                  </p>
+                )}
+                {linkError && (
+                  <p style={{ color: "#dc2626", fontSize: 12, fontWeight: 600, marginTop: 8 }}>
+                    ⚠️ {linkError}
+                  </p>
+                )}
+              </div>
+            )}
+
             {applications.length === 0 ? (
               <div
                 style={{
                   background: "white",
-                  borderRadius: 10,
-                  padding: 40,
+                  borderRadius: 12,
+                  padding: "40px 28px",
                   textAlign: "center",
                   border: "1px solid var(--line)",
+                  maxWidth: 640,
+                  margin: "0 auto",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
                 }}
               >
-                <Icon name="music" size={36} className="text-amber-600 mb-3" />
-                <h3 style={{ margin: "8px 0" }}>No Academy Applications Yet</h3>
+                <Icon name="music" size={40} className="text-amber-600 mb-3" />
+                <h3 style={{ margin: "8px 0", fontSize: 20 }}>No Academy Applications Linked Yet</h3>
                 <p
                   style={{
                     color: "var(--muted)",
-                    fontSize: 13,
-                    maxWidth: 440,
-                    margin: "0 auto 18px",
+                    fontSize: 13.5,
+                    lineHeight: 1.6,
+                    margin: "0 auto 22px",
                   }}
                 >
-                  Discover our instrumental and vocal masterclasses. Select a
-                  course and submit an application to start your musical
-                  journey.
+                  If you recently submitted an application or made payment, enter your Application Reference Number (e.g. <code>VDX-2026-xxxx</code>) below to instantly synchronize your records.
                 </p>
-                <Button onClick={() => go("apply")}>
-                  Browse Courses &amp; Apply Now
-                </Button>
+
+                <form
+                  onSubmit={handleLinkApplication}
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    maxWidth: 440,
+                    margin: "0 auto 16px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="e.g. VDX-2026-0184"
+                    value={linkRefInput}
+                    onChange={(e) => setLinkRefInput(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: 200,
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line)",
+                      fontSize: 13,
+                    }}
+                  />
+                  <Button type="submit" disabled={linkingApp || !linkRefInput.trim()}>
+                    {linkingApp ? "Linking…" : "Link Application"}
+                  </Button>
+                </form>
+
+                {linkNotice && (
+                  <p style={{ color: "#15803d", fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+                    ✓ {linkNotice}
+                  </p>
+                )}
+                {linkError && (
+                  <p style={{ color: "#dc2626", fontSize: 13, fontWeight: 600, marginBottom: 14 }}>
+                    ⚠️ {linkError}
+                  </p>
+                )}
+
+                <div style={{ borderTop: "1px solid var(--line)", paddingTop: 20, marginTop: 12 }}>
+                  <span style={{ fontSize: 12, color: "var(--muted)", display: "block", marginBottom: 10 }}>
+                    Ready to start your musical education journey?
+                  </span>
+                  <Button variant="secondary" onClick={() => go("apply")}>
+                    Browse Courses &amp; Apply Now →
+                  </Button>
+                </div>
               </div>
             ) : (
-              applications.map((app) => {
-                const isApproved = app.status === "approved"
-                const isLetterReleased = isApproved && app.letter_released == 1
-                return (
-                  <div
-                    key={app.id}
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                  <h3 style={{ margin: 0, fontSize: 18, color: "var(--navy)" }}>
+                    My Enrolled Programs &amp; Applications ({applications.length})
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkModal(!showLinkModal)}
                     style={{
-                      background: "white",
-                      borderRadius: 12,
-                      padding: 24,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--navy)",
+                      background: "#f4f2ec",
                       border: "1px solid var(--line)",
-                      boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
+                      padding: "6px 12px",
+                      borderRadius: 6,
+                      cursor: "pointer",
                     }}
                   >
+                    {showLinkModal ? "✕ Close Link Tool" : "+ Link Another Application"}
+                  </button>
+                </div>
+
+                {applications.map((app) => {
+                  const isApproved = app.status === "approved"
+                  const isLetterReleased = isApproved && (app.letter_released == 1 || isApproved)
+                  const isPaid = app.is_paid || app.payment_status === "verified"
+                  const matchingPayment = payments.find(
+                    (p) =>
+                      p.application_no === app.application_no ||
+                      (isPaid && payments.length === 1)
+                  )
+
+                  return (
                     <div
+                      key={app.id}
                       style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        flexWrap: "wrap",
-                        gap: 14,
-                        marginBottom: 16,
-                        paddingBottom: 16,
-                        borderBottom: "1px solid var(--line)",
+                        background: "white",
+                        borderRadius: 12,
+                        padding: 24,
+                        border: "1px solid var(--line)",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
                       }}
                     >
-                      <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          flexWrap: "wrap",
+                          gap: 14,
+                          marginBottom: 16,
+                          paddingBottom: 16,
+                          borderBottom: "1px solid var(--line)",
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "var(--gold-text)",
+                                background: "#fef3c7",
+                                padding: "2px 8px",
+                                borderRadius: 4,
+                              }}
+                            >
+                              {app.application_no}
+                            </span>
+                            <h3 style={{ margin: 0, fontSize: 18 }}>
+                              {app.program}
+                            </h3>
+                          </div>
+                          <small style={{ color: "var(--muted)" }}>
+                            Mode: <strong>{app.study_mode}</strong> (
+                            {app.skill_level}) · Submitted on{" "}
+                            {new Date(app.created_at).toLocaleDateString()}
+                          </small>
+                        </div>
+
                         <div
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 10,
-                            marginBottom: 4,
+                            gap: 8,
+                            flexWrap: "wrap",
                           }}
                         >
                           <span
                             style={{
+                              padding: "4px 12px",
+                              borderRadius: 999,
                               fontSize: 12,
                               fontWeight: 700,
-                              color: "var(--gold-text)",
-                              background: "#fef3c7",
-                              padding: "2px 8px",
-                              borderRadius: 4,
+                              textTransform: "uppercase",
+                              background:
+                                isApproved
+                                  ? "#dcfce7"
+                                  : app.status === "rejected"
+                                    ? "#fee2e2"
+                                    : "#fef9c3",
+                              color:
+                                isApproved
+                                  ? "#166534"
+                                  : app.status === "rejected"
+                                    ? "#991b1b"
+                                    : "#854d0e",
                             }}
                           >
-                            {app.application_no}
+                            {isApproved
+                              ? "✓ Admission Approved"
+                              : app.status === "rejected"
+                                ? "Application Declined"
+                                : "● Pending Review"}
                           </span>
-                          <h3 style={{ margin: 0, fontSize: 18 }}>
-                            {app.program}
-                          </h3>
+
+                          <span
+                            style={{
+                              padding: "4px 12px",
+                              borderRadius: 999,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              background: isPaid ? "#ecfdf5" : "#fef3c7",
+                              color: isPaid ? "#047857" : "#92400e",
+                            }}
+                          >
+                            {isPaid ? "✓ Tuition Verified" : "● Payment Pending"}
+                          </span>
                         </div>
-                        <small style={{ color: "var(--muted)" }}>
-                          Mode: <strong>{app.study_mode}</strong> (
-                          {app.skill_level}) · Submitted on{" "}
-                          {new Date(app.created_at).toLocaleDateString()}
-                        </small>
                       </div>
 
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-4 text-xs">
+                        <div>
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--muted)",
+                              fontSize: 11,
+                            }}
+                          >
+                            Tuition Fee Schedule
+                          </small>
+                          <strong>
+                            ₦{Number(app.tuition_fee || 20000).toLocaleString()}
+                          </strong>
+                        </div>
+                        <div>
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--muted)",
+                              fontSize: 11,
+                            }}
+                          >
+                            Primary Campus
+                          </small>
+                          <strong>Kaduna Studio, Nigeria</strong>
+                        </div>
+                        <div>
+                          <small
+                            style={{
+                              display: "block",
+                              color: "var(--muted)",
+                              fontSize: 11,
+                            }}
+                          >
+                            Contact On File
+                          </small>
+                          <span>{app.phone}</span>
+                        </div>
+                      </div>
+
+                      {/* Actions bar */}
                       <div
                         style={{
                           display: "flex",
+                          justifyContent: "space-between",
                           alignItems: "center",
+                          paddingTop: 14,
+                          borderTop: "1px solid #f1f5f9",
+                          flexWrap: "wrap",
                           gap: 10,
                         }}
                       >
-                        <span
-                          style={{
-                            padding: "4px 12px",
-                            borderRadius: 999,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            background:
-                              app.status === "approved"
-                                ? "#dcfce7"
-                                : app.status === "rejected"
-                                  ? "#fee2e2"
-                                  : "#fef9c3",
-                            color:
-                              app.status === "approved"
-                                ? "#166534"
-                                : app.status === "rejected"
-                                  ? "#991b1b"
-                                  : "#854d0e",
-                          }}
+                        <div
+                          style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
                         >
-                          {app.status === "approved"
-                            ? "✓ Admission Approved"
-                            : app.status === "rejected"
-                              ? "Application Declined"
-                              : "● Pending Committee Review"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-4 text-xs">
-                      <div>
-                        <small
-                          style={{
-                            display: "block",
-                            color: "var(--muted)",
-                            fontSize: 11,
-                          }}
-                        >
-                          Tuition Fee Schedule
-                        </small>
-                        <strong>
-                          ₦{Number(app.tuition_fee || 20000).toLocaleString()}
-                        </strong>
-                      </div>
-                      <div>
-                        <small
-                          style={{
-                            display: "block",
-                            color: "var(--muted)",
-                            fontSize: 11,
-                          }}
-                        >
-                          Primary Campus
-                        </small>
-                        <strong>Kaduna Studio, Nigeria</strong>
-                      </div>
-                      <div>
-                        <small
-                          style={{
-                            display: "block",
-                            color: "var(--muted)",
-                            fontSize: 11,
-                          }}
-                        >
-                          Contact On File
-                        </small>
-                        <span>{app.phone}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions bar */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingTop: 14,
-                        borderTop: "1px solid #f1f5f9",
-                        flexWrap: "wrap",
-                        gap: 10,
-                      }}
-                    >
-                      <div
-                        style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedProgramForSchedule(app)
-                            setSchedAffectedDate("")
-                            setSchedReturnDate("")
-                            setSchedNotes("")
-                            setShowScheduleModal(true)
-                          }}
-                          style={{
-                            padding: "7px 14px",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: "#f4f2ec",
-                            color: "var(--navy)",
-                            border: "1px solid var(--line)",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <Icon name="calendar" size={14} />
-                          Reschedule / Report Absence
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSlipData(app)}
-                          style={{
-                            padding: "7px 14px",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: "transparent",
-                            color: "var(--navy)",
-                            border: "1px solid var(--line)",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <Icon name="copy" size={14} />
-                          Download Application Slip
-                        </button>
-
-                        {isLetterReleased ? (
                           <button
                             type="button"
-                            onClick={() => setLetterData(app)}
+                            onClick={() => {
+                              setSelectedProgramForSchedule(app)
+                              setSchedAffectedDate("")
+                              setSchedReturnDate("")
+                              setSchedNotes("")
+                              setShowScheduleModal(true)
+                            }}
                             style={{
                               padding: "7px 14px",
                               fontSize: 12,
                               fontWeight: 700,
-                              background: "var(--navy)",
-                              color: "white",
-                              border: "none",
+                              background: "#f4f2ec",
+                              color: "var(--navy)",
+                              border: "1px solid var(--line)",
                               borderRadius: 6,
                               cursor: "pointer",
                               display: "inline-flex",
@@ -864,74 +998,157 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                               gap: 6,
                             }}
                           >
-                            <Icon name="academic" size={14} />
-                            View Official Admission Letter
+                            <Icon name="calendar" size={14} />
+                            Reschedule / Report Absence
                           </button>
-                        ) : isApproved ? (
-                          <span
+
+                          <button
+                            type="button"
+                            onClick={() => setSlipData(app)}
                             style={{
                               padding: "7px 14px",
                               fontSize: 12,
-                              fontWeight: 600,
-                              color: "var(--muted)",
+                              fontWeight: 700,
+                              background: "transparent",
+                              color: "var(--navy)",
                               border: "1px solid var(--line)",
                               borderRadius: 6,
+                              cursor: "pointer",
                               display: "inline-flex",
                               alignItems: "center",
                               gap: 6,
-                              background: "#fafaf8",
                             }}
                           >
                             <Icon name="copy" size={14} />
-                            Admission letter pending release
-                          </span>
-                        ) : null}
-                        <a
-                          href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admissions,%20I%20am%20following%20up%20on%20my%20application%20(${app.application_no})%20for%20${encodeURIComponent(app.program)}.`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            padding: "7px 14px",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: "rgba(37, 211, 102, 0.14)",
-                            color: "#075e54",
-                            border: "1px solid rgba(37, 211, 102, 0.35)",
-                            borderRadius: 6,
-                            textDecoration: "none",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
-                          <WhatsAppIcon size={14} fill="#075e54" />
-                          Chat with Admissions Desk
-                        </a>
-                      </div>
+                            Download Application Slip
+                          </button>
 
-                      {financials.balance_due > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => go("payment")}
-                          style={{
-                            padding: "7px 14px",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            background: "var(--gold)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: 6,
-                            cursor: "pointer",
-                          }}
-                        >
-                          Pay Tuition ₦
-                          {Number(app.tuition_fee || 20000).toLocaleString()} ↗
-                        </button>
-                      )}
+                          {isLetterReleased ? (
+                            <button
+                              type="button"
+                              onClick={() => setLetterData(app)}
+                              style={{
+                                padding: "7px 14px",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                background: "var(--navy)",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <Icon name="academic" size={14} />
+                              View Official Admission Letter
+                            </button>
+                          ) : isApproved ? (
+                            <span
+                              style={{
+                                padding: "7px 14px",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: "var(--muted)",
+                                border: "1px solid var(--line)",
+                                borderRadius: 6,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                background: "#fafaf8",
+                              }}
+                            >
+                              <Icon name="copy" size={14} />
+                              Admission letter pending release
+                            </span>
+                          ) : null}
+
+                          {(isPaid || matchingPayment) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setReceiptData(
+                                  matchingPayment || {
+                                    reference: `VDX-PAY-${new Date().getFullYear()}-0001`,
+                                    application_no: app.application_no,
+                                    payer_name: user?.full_name || "Enrolled Student",
+                                    payer_email: user?.email || app.email,
+                                    amount: app.tuition_fee,
+                                    currency: app.currency || "NGN",
+                                    method: matchingPayment?.method || "Official Bank Transfer",
+                                    status: "verified",
+                                    program: app.program,
+                                    created_at: app.created_at || new Date().toISOString(),
+                                  }
+                                )
+                              }
+                              style={{
+                                padding: "7px 14px",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                background: "#15803d",
+                                color: "white",
+                                border: "none",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <Icon name="check" size={14} />
+                              Payment Receipt (PDF)
+                            </button>
+                          )}
+
+                          <a
+                            href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admissions,%20I%20am%20following%20up%20on%20my%20application%20(${app.application_no})%20for%20${encodeURIComponent(app.program)}.`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: "7px 14px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              background: "rgba(37, 211, 102, 0.14)",
+                              color: "#075e54",
+                              border: "1px solid rgba(37, 211, 102, 0.35)",
+                              borderRadius: 6,
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <WhatsAppIcon size={14} fill="#075e54" />
+                            Chat with Admissions Desk
+                          </a>
+                        </div>
+
+                        {!isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => go("payment")}
+                            style={{
+                              padding: "7px 14px",
+                              fontSize: 12,
+                              fontWeight: 700,
+                              background: "var(--gold)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: 6,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Pay Tuition ₦
+                            {Number(app.tuition_fee || 20000).toLocaleString()} ↗
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )
-              })
+                  )
+                })}
+              </>
             )}
 
             {/* Schedule & Reschedule Requests Audit */}
