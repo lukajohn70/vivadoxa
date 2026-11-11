@@ -3262,14 +3262,38 @@ export async function requestAdminPasswordReset(
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || "Failed to send password reset code. Please check your network.",
+      error: err.message || "Failed to send verification code. Please check your network.",
     }
   }
 }
 
-export async function verifyAdminPasswordReset(
+export async function verifyAdminResetCode(
   email: string,
-  code: string,
+  code: string
+): Promise<ApiResponse & { reset_token?: string; email?: string }> {
+  try {
+    const res = await fetch(getApiUrl("login.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        action: "verify_reset_code",
+        email: email.trim(),
+        code: code.trim(),
+      }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to verify reset code. Please check your network.",
+    }
+  }
+}
+
+export async function completeAdminPasswordReset(
+  email: string,
+  resetTokenOrCode: string,
   newPassword: string
 ): Promise<ApiResponse> {
   try {
@@ -3278,9 +3302,10 @@ export async function verifyAdminPasswordReset(
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
-        action: "verify_password_reset",
+        action: "complete_password_reset",
         email: email.trim(),
-        code: code.trim(),
+        reset_token: resetTokenOrCode.trim(),
+        code: resetTokenOrCode.trim(),
         new_password: newPassword,
       }),
     })
@@ -3291,6 +3316,14 @@ export async function verifyAdminPasswordReset(
       error: err.message || "Failed to reset password. Please check your network.",
     }
   }
+}
+
+export async function verifyAdminPasswordReset(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<ApiResponse> {
+  return completeAdminPasswordReset(email, code, newPassword)
 }
 
 export async function verifyUser2FA(

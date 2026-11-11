@@ -48,14 +48,22 @@ try {
             `user_id` INT NOT NULL,
             `email` VARCHAR(191) NOT NULL,
             `code` VARCHAR(10) NOT NULL,
+            `reset_token` VARCHAR(64) NULL,
             `ip_address` VARCHAR(50) NULL,
             `user_agent` TEXT NULL,
             `expires_at` DATETIME NOT NULL,
+            `is_verified` TINYINT(1) NOT NULL DEFAULT 0,
             `is_used` TINYINT(1) NOT NULL DEFAULT 0,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX `idx_reset_verify` (`user_type`, `user_id`, `code`, `is_used`)
         ) ENGINE=InnoDB;
     ");
+    try {
+        $pdo->exec("ALTER TABLE `password_reset_codes` ADD COLUMN `reset_token` VARCHAR(64) NULL AFTER `code`");
+    } catch (Exception $e) {}
+    try {
+        $pdo->exec("ALTER TABLE `password_reset_codes` ADD COLUMN `is_verified` TINYINT(1) NOT NULL DEFAULT 0 AFTER `is_used`");
+    } catch (Exception $e) {}
 
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `applications` (

@@ -36,6 +36,8 @@ import {
   releaseAdmissionLetter,
   revokeAdmissionLetter,
   requestAdminPasswordReset,
+  verifyAdminResetCode,
+  completeAdminPasswordReset,
   verifyAdminPasswordReset,
 } from "@/lib/api"
 import {
@@ -80,7 +82,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
     cancel2FA,
   } = useAdminAuth()
 
-  const [authMode, setAuthMode] = useState<"login" | "forgot_request" | "forgot_verify">("login")
+  const [authMode, setAuthMode] = useState<"login" | "forgot_request" | "forgot_otp" | "forgot_new_password">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -92,6 +94,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
   const [resetEmail, setResetEmail] = useState("")
   const [resetMaskedEmail, setResetMaskedEmail] = useState("")
   const [resetCode, setResetCode] = useState("")
+  const [resetToken, setResetToken] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -162,6 +165,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
     }
   }
 
+  // Step 1: Request 6-digit reset code
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!resetEmail.trim()) return
@@ -173,11 +177,83 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
       if (res.success) {
         setResetMaskedEmail(res.email_masked || res.email || resetEmail.trim())
         setResetSuccessNotice(
-          res.message || "A 6-digit password reset code has been sent to your registered staff email."
+          res.message || "If an active staff account matches your details, a 6-digit verification code has been dispatched."
         )
-        setAuthMode("forgot_verify")
+        // Advance to Step 2: OTP Confirmation FIRST
+        setAuthMode("forgot_otp")
       } else {
-        setResetError(res.error || "Failed to send reset code. Please verify your staff email.")
+        setResetError(res.error || "Failed to send reset code. Please try again.")
+      }
+    } catch (err: any) {
+      setResetError(err.message || "Network error. Please try again.")
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  // Step 2: Verify 6-digit OTP code FIRST
+  const handleVerifyOtpCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const cleanCode = resetCode.trim()
+    if (!cleanCode || cleanCode.length < 6) {
+      setResetError("Please enter the complete 6-digit verification code.")
+      return
+    }
+
+    setResetLoading(true)
+    setResetError("")
+    setResetSuccessNotice("")
+    try {
+      const res = await verifyAdminResetCode(resetEmail.trim(), cleanCode)
+      if (res.success) {
+        setResetToken(res.reset_token || cleanCode)
+        setResetSuccessNotice("Verification code confirmed! Now enter your new password below.")
+        // Advance to Step 3: THEN Password Reset Screen
+        setAuthMode("forgot_new_password")
+      } else {
+        setResetError(res.error || "Invalid or expired verification code. Please check your code or request a new one.")
+      }
+    } catch (err: any) {
+      setResetError(err.message || "Network error. Please try again.")
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  // Step 3: Set new password
+  const handleCompletePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const p1 = String(newPassword).trim()
+    const p2 = String(confirmPassword).trim()
+
+    if (!p1 || p1.length < 8) {
+      setResetError("New password must be at least 8 characters long.")
+      return
+    }
+    if (p1 !== p2) {
+      setResetError("Passwords do not match. Please verify both fields.")
+      return
+    }
+
+    setResetLoading(true)
+    setResetError("")
+    setResetSuccessNotice("")
+    try {
+      const res = await completeAdminPasswordReset(resetEmail.trim(), resetToken || resetCode.trim(), p1)
+      if (res.success) {
+        setEmail(resetEmail.trim())
+        setPassword(p1)
+        setResetSuccessNotice("Password updated successfully! Signing in…")
+        // Attempt immediate login
+        const loginOk = await login(resetEmail.trim(), p1)
+        if (loginOk) {
+          go("admin")
+        } else {
+          setAuthMode("login")
+          setResetSuccessNotice("Password updated successfully! Please sign in with your new password.")
+        }
+      } else {
+        setResetError(res.error || "Failed to update password. Please check your session.")
       }
     } catch (err: any) {
       setResetError(err.message || "Network error. Please try again.")
@@ -193,7 +269,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
     try {
       const res = await requestAdminPasswordReset(resetEmail.trim())
       if (res.success) {
-        setResetSuccessNotice("A fresh 6-digit reset code has been dispatched to your email.")
+        setResetSuccessNotice("A fresh 6-digit verification code has been dispatched to your email.")
       } else {
         setResetError(res.error || "Failed to resend code.")
       }
@@ -201,48 +277,6 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
       setResetError(err.message || "Network error.")
     } finally {
       setResetResending(false)
-    }
-  }
-
-  const handleVerifyReset = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!resetCode.trim() || resetCode.trim().length < 6) {
-      setResetError("Please enter the complete 6-digit code.")
-      return
-    }
-    if (newPassword.length < 8) {
-      setResetError("New password must be at least 8 characters long.")
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setResetError("Passwords do not match.")
-      return
-    }
-
-    setResetLoading(true)
-    setResetError("")
-    setResetSuccessNotice("")
-    try {
-      const res = await verifyAdminPasswordReset(resetEmail.trim(), resetCode.trim(), newPassword)
-      if (res.success) {
-        setEmail(resetEmail.trim())
-        setPassword(newPassword)
-        setResetSuccessNotice("Password updated successfully! Signing in…")
-        // Attempt immediate login
-        const loginOk = await login(resetEmail.trim(), newPassword)
-        if (loginOk) {
-          go("admin")
-        } else {
-          setAuthMode("login")
-          setResetSuccessNotice("Password updated successfully! Please sign in with your new password.")
-        }
-      } else {
-        setResetError(res.error || "Failed to reset password. Please check your verification code.")
-      }
-    } catch (err: any) {
-      setResetError(err.message || "Network error. Please try again.")
-    } finally {
-      setResetLoading(false)
     }
   }
 
@@ -504,7 +538,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               />
 
               <Button type="submit" disabled={resetLoading || !resetEmail.trim()}>
-                {resetLoading ? "Sending reset code…" : "Send Reset Code"}
+                {resetLoading ? "Sending verification code…" : "Send Verification Code"}
               </Button>
 
               <div
@@ -537,7 +571,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               </div>
             </form>
           </>
-        ) : authMode === "forgot_verify" ? (
+        ) : authMode === "forgot_otp" ? (
           <>
             <div className="admin-login-head">
               <span
@@ -557,11 +591,11 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                     background: "#157054",
                   }}
                 />
-                Reset Code Sent
+                Step 1 of 2 · OTP Verification
               </span>
-              <h1>Set New Password</h1>
+              <h1>Confirm Reset Code</h1>
               <p>
-                Enter the 6-digit code dispatched to <strong>{resetMaskedEmail || resetEmail}</strong> and choose your new password.
+                Enter the 6-digit verification code sent to <strong>{resetMaskedEmail || resetEmail}</strong>.
               </p>
             </div>
 
@@ -599,7 +633,7 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
               </div>
             )}
 
-            <form onSubmit={handleVerifyReset} className="admin-login-form">
+            <form onSubmit={handleVerifyOtpCode} className="admin-login-form">
               <div>
                 <label
                   htmlFor="admin-reset-code"
@@ -620,9 +654,10 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                   autoComplete="one-time-code"
                   maxLength={6}
                   value={resetCode}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setResetCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
+                    setResetError("")
+                  }}
                   placeholder="••••••"
                   autoFocus
                   required
@@ -641,58 +676,11 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                 />
               </div>
 
-              <div style={{ position: "relative" }}>
-                <Field
-                  id="admin-new-pass"
-                  label="New Password (min. 8 characters)"
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={setNewPassword}
-                  placeholder="••••••••••••"
-                  required
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  aria-label={showNewPassword ? "Hide password" : "Show password"}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "36px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "var(--muted)",
-                    fontSize: "12px",
-                    padding: "4px",
-                  }}
-                >
-                  {showNewPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-
-              <Field
-                id="admin-confirm-pass"
-                label="Confirm New Password"
-                type={showNewPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-                placeholder="••••••••••••"
-                required
-                autoComplete="new-password"
-              />
-
               <Button
                 type="submit"
-                disabled={
-                  resetLoading ||
-                  resetCode.length < 6 ||
-                  !newPassword ||
-                  !confirmPassword
-                }
+                disabled={resetLoading || resetCode.length < 6}
               >
-                {resetLoading ? "Updating Password…" : "Update Password & Sign In"}
+                {resetLoading ? "Verifying Code…" : "Confirm Code & Proceed"}
               </Button>
 
               <div
@@ -736,6 +724,202 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
                   }}
                 >
                   Back to Sign In
+                </button>
+              </div>
+            </form>
+          </>
+        ) : authMode === "forgot_new_password" ? (
+          <>
+            <div className="admin-login-head">
+              <span
+                className="eyebrow"
+                style={{
+                  color: "var(--gold)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: "var(--gold)",
+                  }}
+                />
+                Step 2 of 2 · Set New Password
+              </span>
+              <h1>Choose New Password</h1>
+              <p>
+                Verification code confirmed. Enter your new password below.
+              </p>
+            </div>
+
+            {resetError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(220, 38, 38, 0.1)",
+                  border: "1px solid rgba(220, 38, 38, 0.3)",
+                  borderRadius: "6px",
+                  color: "#dc2626",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetError}
+              </div>
+            )}
+
+            {resetSuccessNotice && (
+              <div
+                role="status"
+                style={{
+                  padding: "10px 14px",
+                  background: "rgba(21, 112, 84, 0.1)",
+                  border: "1px solid rgba(21, 112, 84, 0.3)",
+                  borderRadius: "6px",
+                  color: "#157054",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
+                {resetSuccessNotice}
+              </div>
+            )}
+
+            <form onSubmit={handleCompletePasswordReset} className="admin-login-form">
+              <div>
+                <label
+                  htmlFor="admin-new-pass"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: "var(--navy)",
+                  }}
+                >
+                  New Password (min. 8 characters):
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    id="admin-new-pass"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value)
+                      setResetError("")
+                    }}
+                    placeholder="••••••••••••"
+                    required
+                    autoComplete="new-password"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 8,
+                      border: "1px solid var(--line-strong, #cbd5e1)",
+                      fontSize: 14,
+                      background: "white",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: "absolute",
+                      right: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "var(--muted)",
+                      fontSize: "12px",
+                      padding: "4px",
+                    }}
+                  >
+                    {showNewPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <label
+                  htmlFor="admin-confirm-pass"
+                  style={{
+                    display: "block",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    marginBottom: 6,
+                    color: "var(--navy)",
+                  }}
+                >
+                  Confirm New Password:
+                </label>
+                <input
+                  id="admin-confirm-pass"
+                  type={showNewPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value)
+                    setResetError("")
+                  }}
+                  placeholder="••••••••••••"
+                  required
+                  autoComplete="new-password"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border: "1px solid var(--line-strong, #cbd5e1)",
+                    fontSize: 14,
+                    background: "white",
+                  }}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={
+                  resetLoading ||
+                  !newPassword ||
+                  !confirmPassword ||
+                  newPassword.length < 8
+                }
+              >
+                {resetLoading ? "Updating Password…" : "Save New Password & Sign In"}
+              </Button>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  fontSize: 12,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login")
+                    setResetError("")
+                    setResetSuccessNotice("")
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--muted)",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: "13px",
+                  }}
+                >
+                  Cancel &amp; Return to Sign In
                 </button>
               </div>
             </form>

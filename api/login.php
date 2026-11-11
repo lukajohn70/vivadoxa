@@ -119,18 +119,15 @@ if ($action === 'request_password_reset') {
     $stmt->execute([':email' => $cleanInput, ':fullEmail' => $emailCandidate]);
     $admin = $stmt->fetch();
 
-    if (!$admin) {
+    // OWASP Anti-Enumeration: Always return a generic success response
+    // Never reveal whether a staff account exists with the provided identifier
+    if (!$admin || empty($admin['is_active'])) {
+        usleep(random_int(120000, 220000));
         jsonResponse([
-            'success' => false,
-            'error' => 'No staff administrator account found with this email or username.',
-        ], 404);
-    }
-
-    if (!$admin['is_active']) {
-        jsonResponse([
-            'success' => false,
-            'error' => 'This account has been deactivated. Please contact an administrator.',
-        ], 403);
+            'success' => true,
+            'message' => 'If an active staff account matches your details, a 6-digit verification code has been dispatched to your email.',
+            'email' => $cleanInput,
+        ]);
     }
 
     $adminId = (int)$admin['id'];
@@ -217,18 +214,13 @@ if ($action === 'request_password_reset') {
     ]);
 }
 
-// ── Action: Verify Password Reset Code & Update Password ─────────────────────
-if ($action === 'verify_password_reset') {
+// ── Action: Confirm OTP Reset Code First ─────────────────────────────────────
+if ($action === 'verify_reset_code') {
     $email = trim($input['email'] ?? '');
     $code = trim($input['code'] ?? '');
-    $newPassword = trim($input['new_password'] ?? $input['password'] ?? '');
 
-    if (empty($email) || empty($code) || empty($newPassword)) {
-        jsonResponse(['success' => false, 'error' => 'Email, reset code, and new password are required.'], 400);
-    }
-
-    if (strlen($newPassword) < 8) {
-        jsonResponse(['success' => false, 'error' => 'Password must be at least 8 characters long.'], 400);
+    if (empty($email) || empty($code)) {
+        jsonResponse(['success' => false, 'error' => 'Email and 6-digit verification code are required.'], 400);
     }
 
     $cleanInput = strtolower($email);
@@ -238,7 +230,6 @@ if ($action === 'verify_password_reset') {
         $emailCandidate = $cleanInput;
     }
 
-    // Verify reset code
     $stmt = $pdo->prepare("
         SELECT id, user_id, email, expires_at, is_used 
         FROM password_reset_codes 
@@ -256,9 +247,86 @@ if ($action === 'verify_password_reset') {
         jsonResponse(['success' => false, 'error' => 'Invalid or expired verification code. Please request a new reset code.'], 400);
     }
 
+    $resetToken = bin2hex(random_bytes(32));
+
+    try {
+        $pdo->prepare("UPDATE password_reset_codes SET reset_token = :token, is_verified = 1 WHERE id = :id")->execute([
+            ':token' => $resetToken,
+            ':id' => $resetRow['id'],
+        ]);
+    } catch (Exception $e) {}
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Verification code confirmed. You may now set your new password.',
+        'reset_token' => $resetToken,
+        'email' => $resetRow['email'],
+    ]);
+}
+
+// ── Action: Complete Password Reset (New Password) ───────────────────────────
+if ($action === 'verify_password_reset' || $action === 'complete_password_reset') {
+    $email = trim($input['email'] ?? '');
+    $code = trim($input['code'] ?? '');
+    $resetToken = trim($input['reset_token'] ?? $input['token'] ?? '');
+    $newPassword = trim($input['new_password'] ?? $input['password'] ?? '');
+
+    if (empty($email) || (empty($code) && empty($resetToken)) || empty($newPassword)) {
+        jsonResponse(['success' => false, 'error' => 'Email, reset credential, and new password are required.'], 400);
+    }
+
+    if (strlen($newPassword) < 8) {
+        jsonResponse(['success' => false, 'error' => 'Password must be at least 8 characters long.'], 400);
+    }
+
+    $cleanInput = strtolower($email);
+    if (strpos($cleanInput, '@') === false) {
+        $emailCandidate = $cleanInput . '@vivadoxamusic.com';
+    } else {
+        $emailCandidate = $cleanInput;
+    }
+
+    // Verify reset code or token
+    $resetRow = null;
+    if (!empty($resetToken)) {
+        try {
+            $stmt = $pdo->prepare("
+                SELECT id, user_id, email, expires_at, is_used 
+                FROM password_reset_codes 
+                WHERE user_type = 'admin' 
+                  AND (LOWER(TRIM(email)) = LOWER(TRIM(:em)) OR LOWER(TRIM(email)) = LOWER(TRIM(:fullEmail))) 
+                  AND reset_token = :token 
+                  AND is_used = 0 
+                  AND expires_at > NOW() 
+                ORDER BY id DESC LIMIT 1
+            ");
+            $stmt->execute([':em' => $cleanInput, ':fullEmail' => $emailCandidate, ':token' => $resetToken]);
+            $resetRow = $stmt->fetch();
+        } catch (Exception $e) {}
+    }
+
+    if (!$resetRow && !empty($code)) {
+        $stmt = $pdo->prepare("
+            SELECT id, user_id, email, expires_at, is_used 
+            FROM password_reset_codes 
+            WHERE user_type = 'admin' 
+              AND (LOWER(TRIM(email)) = LOWER(TRIM(:em)) OR LOWER(TRIM(email)) = LOWER(TRIM(:fullEmail))) 
+              AND code = :code 
+              AND is_used = 0 
+              AND expires_at > NOW() 
+            ORDER BY id DESC LIMIT 1
+        ");
+        $stmt->execute([':em' => $cleanInput, ':fullEmail' => $emailCandidate, ':code' => $code]);
+        $resetRow = $stmt->fetch();
+    }
+
+    if (!$resetRow) {
+        jsonResponse(['success' => false, 'error' => 'Invalid or expired verification session. Please request a new reset code.'], 400);
+    }
+
     $adminId = (int)$resetRow['user_id'];
 
-    // Invalidate code
+    // Invalidate code and token
     $pdo->prepare("UPDATE password_reset_codes SET is_used = 1 WHERE id = :id")->execute([':id' => $resetRow['id']]);
     $pdo->prepare("UPDATE password_reset_codes SET is_used = 1 WHERE user_type = 'admin' AND user_id = :uid")->execute([':uid' => $adminId]);
 

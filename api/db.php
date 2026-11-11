@@ -122,6 +122,9 @@ function jsonResponse(array $data, int $statusCode = 200) {
 
 function getJsonInput(): array {
     $raw = file_get_contents('php://input');
+    if (!$raw && php_sapi_name() === 'cli') {
+        $raw = file_get_contents('php://stdin');
+    }
     if (!$raw) {
         return $_POST;
     }
