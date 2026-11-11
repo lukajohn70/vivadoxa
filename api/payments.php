@@ -31,9 +31,12 @@ function ensurePaymentsSchema(PDO $pdo): void {
     $checked = true;
 }
 
-$pdo = getDb();
-ensurePaymentsSchema($pdo);
-$method = $_SERVER['REQUEST_METHOD'];
+try {
+    $pdo = getDb();
+    ensurePaymentsSchema($pdo);
+    ensureApplicationSchema($pdo);
+    reconcileOrphanedPayments($pdo);
+    $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     $ref = trim($_GET['ref'] ?? '');
@@ -178,6 +181,47 @@ if ($method === 'GET') {
             $appStmt = $pdo->prepare("SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
             $appStmt->execute([':em' => $payerEmail]);
             $appRow = $appStmt->fetch();
+        }
+
+        if (!$appRow) {
+            $assignedAppNo = !empty($targetAppNo) ? $targetAppNo : ('VDX-' . date('Y') . '-' . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT));
+            $payerName = trim($payRow['payer_name'] ?? 'Student Applicant');
+            $nameParts = preg_split('/\s+/', $payerName, 2);
+            $fn = $nameParts[0] ?: 'Student';
+            $ln = $nameParts[1] ?? 'Applicant';
+            $tuitionFee = (float)($payRow['amount'] ?? 55000.00);
+            $initStatus = ($newStatus === 'verified') ? 'approved' : 'pending';
+            $initPayStatus = ($newStatus === 'verified') ? 'verified' : 'pending';
+            $initRel = ($newStatus === 'verified') ? 1 : 0;
+
+            try {
+                $insApp = $pdo->prepare("
+                    INSERT INTO `applications`
+                    (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `tuition_fee`, `status`, `payment_status`, `letter_released`, `created_at`)
+                    VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', :fee, :st, :pst, :rel, :cat)
+                ");
+                $insApp->execute([
+                    ':no' => $assignedAppNo,
+                    ':fn' => $fn,
+                    ':ln' => $ln,
+                    ':em' => $payerEmail,
+                    ':fee' => $tuitionFee,
+                    ':st' => $initStatus,
+                    ':pst' => $initPayStatus,
+                    ':rel' => $initRel,
+                    ':cat' => $payRow['created_at'] ?? date('Y-m-d H:i:s'),
+                ]);
+
+                $fetchApp = $pdo->prepare("SELECT * FROM `applications` WHERE `application_no` = :no LIMIT 1");
+                $fetchApp->execute([':no' => $assignedAppNo]);
+                $appRow = $fetchApp->fetch();
+
+                if ($payRow && empty($payRow['application_no'])) {
+                    $pdo->prepare("UPDATE `payments` SET `application_no` = :no WHERE id = :pid")->execute([':no' => $assignedAppNo, ':pid' => $payRow['id']]);
+                }
+            } catch (Throwable $insAppEx) {
+                error_log("Failed to auto-create application from payment: " . $insAppEx->getMessage());
+            }
         }
 
         if ($appRow) {
@@ -458,8 +502,28 @@ if ($method === 'GET') {
         }
     }
 
-    // If still no application exists, auto-provision an application record so student admission flow is intact
-    if (empty($appNo) || $appNo === 'VDX-2026-0101') {
+    // Ensure application record exists for $appNo (in case application submission had network glitch, offline fallback, etc.)
+    if (!empty($appNo) && $appNo !== 'VDX-2026-0101' && !str_ends_with($appNo, '-0101')) {
+        $appExist = $pdo->prepare("SELECT id FROM `applications` WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:no)) LIMIT 1");
+        $appExist->execute([':no' => $appNo]);
+        if (!$appExist->fetch()) {
+            $names = preg_split('/\s+/', $payerName, 2);
+            try {
+                $insApp = $pdo->prepare("
+                    INSERT INTO `applications`
+                    (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `status`, `payment_status`, `tuition_fee`, `created_at`)
+                    VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', 'pending', 'pending', :fee, NOW())
+                ");
+                $insApp->execute([
+                    ':no' => $appNo,
+                    ':fn' => $names[0] ?? $payerName,
+                    ':ln' => $names[1] ?? '',
+                    ':em' => $payerEmail,
+                    ':fee' => $amount,
+                ]);
+            } catch (Throwable $e) {}
+        }
+    } else {
         $appNo = 'VDX-' . date('Y') . '-' . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT);
         $names = preg_split('/\s+/', $payerName, 2);
         try {
@@ -475,7 +539,26 @@ if ($method === 'GET') {
                 ':em' => $payerEmail,
                 ':fee' => $amount,
             ]);
-        } catch (Exception $e) {}
+        } catch (Throwable $e) {}
+    }
+
+    // Ensure student portal user account exists in users table
+    if (!empty($payerEmail)) {
+        try {
+            $uChk = $pdo->prepare("SELECT id FROM `users` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
+            $uChk->execute([':em' => $payerEmail]);
+            if (!$uChk->fetch()) {
+                $uPass = password_hash('StudentPass2025!', PASSWORD_BCRYPT);
+                $pdo->prepare("
+                    INSERT INTO `users` (`full_name`, `email`, `password_hash`, `role`, `is_active`)
+                    VALUES (:fn, :em, :pw, 'student', 1)
+                ")->execute([
+                    ':fn' => $payerName,
+                    ':em' => $payerEmail,
+                    ':pw' => $uPass,
+                ]);
+            }
+        } catch (Throwable $uEx) {}
     }
 
     try {
@@ -650,4 +733,13 @@ if ($method === 'GET') {
     ], 201);
 } else {
     jsonResponse(['success' => false, 'error' => 'Method not allowed.'], 405);
+}
+} catch (Throwable $e) {
+    error_log("Error in payments.php: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+    jsonResponse([
+        'success' => false,
+        'error' => 'Payments API error: ' . $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+    ], 500);
 }

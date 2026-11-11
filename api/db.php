@@ -1,5 +1,6 @@
 <?php
 // ─── Database connection & common helpers for Vivadoxa ─────────────────────────
+ini_set('memory_limit', '256M');
 
 // CORS headers for Vite dev server & production
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
@@ -116,7 +117,14 @@ function getDb(): PDO {
 function jsonResponse(array $data, int $statusCode = 200) {
     http_response_code($statusCode);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data);
+    $json = json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+    if ($json === false) {
+        $json = json_encode([
+            'success' => false,
+            'error' => 'JSON encoding failed: ' . json_last_error_msg(),
+        ]);
+    }
+    echo $json;
     exit;
 }
 
@@ -267,4 +275,148 @@ function saveBase64MediaImage(string $dataUri, string $subfolder, string $prefix
     }
 
     return '/media/' . $subfolder . '/' . $safeName;
+}
+
+/**
+ * Ensure all required columns exist in the applications table.
+ */
+function ensureApplicationSchema(PDO $pdo): void {
+    static $ensured = false;
+    if ($ensured) return;
+    $ensured = true;
+
+    try {
+        $cols = $pdo->query("SHOW COLUMNS FROM `applications`")->fetchAll(PDO::FETCH_COLUMN);
+        $existing = array_map('strtolower', $cols ?: []);
+
+        $needed = [
+            'class_type' => "ALTER TABLE `applications` ADD COLUMN `class_type` VARCHAR(100) DEFAULT 'Regular classes'",
+            'state_of_origin' => "ALTER TABLE `applications` ADD COLUMN `state_of_origin` VARCHAR(100) NULL",
+            'marital_status' => "ALTER TABLE `applications` ADD COLUMN `marital_status` VARCHAR(50) DEFAULT 'Single'",
+            'nationality' => "ALTER TABLE `applications` ADD COLUMN `nationality` VARCHAR(100) DEFAULT 'Nigerian'",
+            'occupation' => "ALTER TABLE `applications` ADD COLUMN `occupation` VARCHAR(100) NULL",
+            'sponsor' => "ALTER TABLE `applications` ADD COLUMN `sponsor` VARCHAR(150) NULL",
+            'session_time' => "ALTER TABLE `applications` ADD COLUMN `session_time` VARCHAR(100) DEFAULT 'Morning Section (10 AM-1 PM)'",
+            'duration' => "ALTER TABLE `applications` ADD COLUMN `duration` VARCHAR(50) DEFAULT '3 Months'",
+            'currency' => "ALTER TABLE `applications` ADD COLUMN `currency` VARCHAR(10) DEFAULT 'NGN'",
+            'tuition_fee' => "ALTER TABLE `applications` ADD COLUMN `tuition_fee` DECIMAL(12, 2) NOT NULL DEFAULT 0.00",
+            'passport_photo' => "ALTER TABLE `applications` ADD COLUMN `passport_photo` LONGTEXT NULL",
+            'letter_released' => "ALTER TABLE `applications` ADD COLUMN `letter_released` TINYINT(1) NOT NULL DEFAULT 0",
+            'payment_status' => "ALTER TABLE `applications` ADD COLUMN `payment_status` ENUM('pending', 'verified', 'declined') NOT NULL DEFAULT 'pending'",
+            'dob' => "ALTER TABLE `applications` ADD COLUMN `dob` DATE NULL",
+            'gender' => "ALTER TABLE `applications` ADD COLUMN `gender` VARCHAR(20) NULL",
+            'guardian_name' => "ALTER TABLE `applications` ADD COLUMN `guardian_name` VARCHAR(100) NULL",
+            'guardian_phone' => "ALTER TABLE `applications` ADD COLUMN `guardian_phone` VARCHAR(50) NULL",
+            'address' => "ALTER TABLE `applications` ADD COLUMN `address` TEXT NULL",
+        ];
+
+        foreach ($needed as $col => $sql) {
+            if (!in_array(strtolower($col), $existing, true)) {
+                try {
+                    $pdo->exec($sql);
+                } catch (Throwable $alterEx) {}
+            }
+        }
+    } catch (Throwable $e) {}
+}
+
+/**
+ * Auto-reconcile any payments that have an application_no not yet in applications table.
+ */
+function reconcileOrphanedPayments(PDO $pdo): void {
+    static $reconciled = false;
+    if ($reconciled) return;
+    $reconciled = true;
+
+    try {
+        $stmt = $pdo->query("
+            SELECT p.* 
+            FROM `payments` p 
+            LEFT JOIN `applications` a ON LOWER(TRIM(p.application_no)) = LOWER(TRIM(a.application_no))
+            WHERE a.id IS NULL 
+              AND p.application_no IS NOT NULL 
+              AND TRIM(p.application_no) != ''
+        ");
+        $orphans = $stmt ? $stmt->fetchAll() : [];
+
+        foreach ($orphans as $p) {
+            $appNo = trim($p['application_no']);
+            $payerName = trim($p['payer_name'] ?? '');
+            $payerEmail = trim($p['payer_email'] ?? '');
+            $amount = (float)($p['amount'] ?? 55000.00);
+            $payStatus = $p['status'] ?? 'pending';
+            $isVerified = ($payStatus === 'verified');
+            $appStatus = $isVerified ? 'approved' : 'pending';
+            $letterRel = $isVerified ? 1 : 0;
+            $createdAt = !empty($p['created_at']) ? $p['created_at'] : date('Y-m-d H:i:s');
+
+            $nameParts = preg_split('/\s+/', $payerName, 2);
+            $firstName = $nameParts[0] ?: 'Student';
+            $lastName = $nameParts[1] ?? 'Applicant';
+
+            // Check if application exists by email
+            $existingApp = null;
+            if (!empty($payerEmail)) {
+                $chk = $pdo->prepare("SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) AND (application_no IS NULL OR application_no = '' OR application_no = :ano) LIMIT 1");
+                $chk->execute([':em' => $payerEmail, ':ano' => $appNo]);
+                $existingApp = $chk->fetch();
+            }
+
+            if ($existingApp) {
+                $pdo->prepare("
+                    UPDATE `applications` 
+                    SET `application_no` = :ano,
+                        `tuition_fee` = :fee,
+                        `status` = CASE WHEN :v = 1 THEN 'approved' ELSE `status` END,
+                        `payment_status` = :pst,
+                        `letter_released` = CASE WHEN :v = 1 THEN 1 ELSE `letter_released` END
+                    WHERE `id` = :id
+                ")->execute([
+                    ':ano' => $appNo,
+                    ':fee' => $amount,
+                    ':v' => $isVerified ? 1 : 0,
+                    ':pst' => $payStatus,
+                    ':id' => $existingApp['id']
+                ]);
+            } else {
+                $ins = $pdo->prepare("
+                    INSERT INTO `applications`
+                    (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `status`, `payment_status`, `tuition_fee`, `letter_released`, `created_at`)
+                    VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', :st, :pst, :fee, :rel, :cat)
+                ");
+                $ins->execute([
+                    ':no' => $appNo,
+                    ':fn' => $firstName,
+                    ':ln' => $lastName,
+                    ':em' => $payerEmail,
+                    ':st' => $appStatus,
+                    ':pst' => $payStatus,
+                    ':fee' => $amount,
+                    ':rel' => $letterRel,
+                    ':cat' => $createdAt
+                ]);
+            }
+
+            // Also ensure student account in users table if email is present
+            if (!empty($payerEmail)) {
+                try {
+                    $uCheck = $pdo->prepare("SELECT id FROM `users` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) LIMIT 1");
+                    $uCheck->execute([':em' => $payerEmail]);
+                    if (!$uCheck->fetch()) {
+                        $uPass = password_hash('StudentPass2025!', PASSWORD_BCRYPT);
+                        $pdo->prepare("
+                            INSERT INTO `users` (`full_name`, `email`, `password_hash`, `role`, `is_active`)
+                            VALUES (:fn, :em, :pw, 'student', 1)
+                        ")->execute([
+                            ':fn' => $payerName,
+                            ':em' => $payerEmail,
+                            ':pw' => $uPass
+                        ]);
+                    }
+                } catch (Throwable $uEx) {}
+            }
+        }
+    } catch (Throwable $reconEx) {
+        error_log("Reconcile error: " . $reconEx->getMessage());
+    }
 }

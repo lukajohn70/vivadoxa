@@ -122,6 +122,9 @@ try {
         $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `phone` VARCHAR(50) NOT NULL DEFAULT ''");
     } catch (Exception $e) {}
 
+    ensureApplicationSchema($pdo);
+    reconcileOrphanedPayments($pdo);
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `payments` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,

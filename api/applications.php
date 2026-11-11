@@ -4,69 +4,143 @@ require_once __DIR__ . '/notifier.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-$pdo = getDb();
-$method = $_SERVER['REQUEST_METHOD'];
+try {
+    $pdo = getDb();
+    ensureApplicationSchema($pdo);
+    reconcileOrphanedPayments($pdo);
 
-if ($method === 'GET') {
-    $ref = trim($_GET['ref'] ?? $_GET['application_no'] ?? $_GET['code'] ?? $_GET['reference'] ?? $_GET['tracking_code'] ?? $_GET['q'] ?? '');
-    $email = trim($_GET['email'] ?? '');
-    $isSingleLookup = isset($_GET['track']) || isset($_GET['lookup']) || !empty($ref) || (!empty($email) && empty($_GET['search']) && empty($_GET['status']));
+    $method = $_SERVER['REQUEST_METHOD'];
 
-    // Single lookup mode (e.g. for student status checking)
-    if ($isSingleLookup) {
-        // If ref contains '@' and email is empty, swap
-        if (strpos($ref, '@') !== false && empty($email)) {
-            $email = $ref;
-            $ref = '';
-        }
+    if ($method === 'GET') {
+        $ref = trim($_GET['ref'] ?? $_GET['application_no'] ?? $_GET['code'] ?? $_GET['reference'] ?? $_GET['tracking_code'] ?? $_GET['q'] ?? '');
+        $email = trim($_GET['email'] ?? '');
+        $isSingleLookup = isset($_GET['track']) || isset($_GET['lookup']) || !empty($ref) || (!empty($email) && empty($_GET['search']) && empty($_GET['status']));
 
-        $app = null;
-        if (!empty($ref) && !empty($email)) {
-            $sql = "SELECT * FROM `applications` 
-                    WHERE (LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
-                       OR phone = :ref 
-                       OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)))) 
-                      AND LOWER(TRIM(email)) = LOWER(TRIM(:email)) 
-                    ORDER BY id DESC LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':ref' => $ref, ':email' => $email]);
-            $app = $stmt->fetch();
-        } elseif (!empty($ref)) {
-            $sql = "SELECT * FROM `applications` 
-                    WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
-                       OR LOWER(TRIM(email)) = LOWER(TRIM(:ref)) 
-                       OR phone = :ref 
-                       OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) OR LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)))
-                    ORDER BY id DESC LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':ref' => $ref]);
-            $app = $stmt->fetch();
+        // Single lookup mode (e.g. for student status checking)
+        if ($isSingleLookup) {
+            // If ref contains '@' and email is empty, swap
+            if (strpos($ref, '@') !== false && empty($email)) {
+                $email = $ref;
+                $ref = '';
+            }
 
-            // If not found in applications, check if ref is a payment reference
-            if (!$app) {
-                $pCheck = $pdo->prepare("SELECT * FROM `payments` WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) LIMIT 1");
-                $pCheck->execute([':ref' => $ref]);
-                $foundPay = $pCheck->fetch();
-                if ($foundPay && !empty($foundPay['payer_email'])) {
-                    $appStmt = $pdo->prepare("SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
-                    $appStmt->execute([':em' => $foundPay['payer_email']]);
-                    $app = $appStmt->fetch();
+            $app = null;
+            if (!empty($ref) && !empty($email)) {
+                $sql = "SELECT * FROM `applications` 
+                        WHERE (LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
+                           OR phone = :ref 
+                           OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)))) 
+                          AND LOWER(TRIM(email)) = LOWER(TRIM(:email)) 
+                        ORDER BY id DESC LIMIT 1";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([':ref' => $ref, ':email' => $email]);
+                $app = $stmt->fetch();
+            } elseif (!empty($ref)) {
+                $sql = "SELECT * FROM `applications` 
+                        WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)) 
+                           OR LOWER(TRIM(email)) = LOWER(TRIM(:ref)) 
+                           OR phone = :ref 
+                           OR application_no IN (SELECT application_no FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) OR LOWER(TRIM(application_no)) = LOWER(TRIM(:ref)))
+                        ORDER BY id DESC LIMIT 1";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([':ref' => $ref]);
+                $app = $stmt->fetch();
+
+                // If not found in applications, check if ref is a payment reference or application_no in payments
+                if (!$app) {
+                    $pCheck = $pdo->prepare("
+                        SELECT * FROM `payments` 
+                        WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref))
+                           OR LOWER(TRIM(application_no)) = LOWER(TRIM(:ref))
+                        ORDER BY id DESC LIMIT 1
+                    ");
+                    $pCheck->execute([':ref' => $ref]);
+                    $foundPay = $pCheck->fetch();
+                    if ($foundPay) {
+                        $pEmail = trim($foundPay['payer_email'] ?? '');
+                        if (!empty($pEmail)) {
+                            $appStmt = $pdo->prepare("SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
+                            $appStmt->execute([':em' => $pEmail]);
+                            $app = $appStmt->fetch();
+                        }
+                        if (!$app) {
+                            // Auto-provision application record from payment on the fly
+                            $pAppNo = !empty($foundPay['application_no']) ? $foundPay['application_no'] : $ref;
+                            $nameParts = preg_split('/\s+/', trim($foundPay['payer_name'] ?? ''), 2);
+                            $fn = $nameParts[0] ?: 'Student';
+                            $ln = $nameParts[1] ?? 'Applicant';
+                            $st = ($foundPay['status'] === 'verified') ? 'approved' : 'pending';
+                            $rel = ($foundPay['status'] === 'verified') ? 1 : 0;
+                            $ins = $pdo->prepare("
+                                INSERT INTO `applications`
+                                (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `tuition_fee`, `status`, `payment_status`, `letter_released`, `created_at`)
+                                VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', :fee, :st, :pst, :rel, :cat)
+                                ON DUPLICATE KEY UPDATE `status` = VALUES(`status`), `payment_status` = VALUES(`payment_status`)
+                            ");
+                            $ins->execute([
+                                ':no' => $pAppNo,
+                                ':fn' => $fn,
+                                ':ln' => $ln,
+                                ':em' => $pEmail,
+                                ':fee' => $foundPay['amount'] ?? 70000.00,
+                                ':st' => $st,
+                                ':pst' => $foundPay['status'] ?? 'pending',
+                                ':rel' => $rel,
+                                ':cat' => $foundPay['created_at'] ?? date('Y-m-d H:i:s'),
+                            ]);
+                            $fetchCreated = $pdo->prepare("SELECT * FROM `applications` WHERE `application_no` = :no LIMIT 1");
+                            $fetchCreated->execute([':no' => $pAppNo]);
+                            $app = $fetchCreated->fetch();
+                        }
+                    }
+                }
+            } elseif (!empty($email)) {
+                $sql = "SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:email)) ORDER BY id DESC LIMIT 1";
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([':email' => $email]);
+                $app = $stmt->fetch();
+
+                if (!$app) {
+                    $pCheck = $pdo->prepare("SELECT * FROM `payments` WHERE LOWER(TRIM(payer_email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
+                    $pCheck->execute([':em' => $email]);
+                    $foundPay = $pCheck->fetch();
+                    if ($foundPay) {
+                        $pAppNo = !empty($foundPay['application_no']) ? $foundPay['application_no'] : ('VDX-' . date('Y') . '-' . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT));
+                        $nameParts = preg_split('/\s+/', trim($foundPay['payer_name'] ?? ''), 2);
+                        $fn = $nameParts[0] ?: 'Student';
+                        $ln = $nameParts[1] ?? 'Applicant';
+                        $st = ($foundPay['status'] === 'verified') ? 'approved' : 'pending';
+                        $rel = ($foundPay['status'] === 'verified') ? 1 : 0;
+                        $ins = $pdo->prepare("
+                            INSERT INTO `applications`
+                            (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `tuition_fee`, `status`, `payment_status`, `letter_released`, `created_at`)
+                            VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', :fee, :st, :pst, :rel, :cat)
+                        ");
+                        $ins->execute([
+                            ':no' => $pAppNo,
+                            ':fn' => $fn,
+                            ':ln' => $ln,
+                            ':em' => $email,
+                            ':fee' => $foundPay['amount'] ?? 70000.00,
+                            ':st' => $st,
+                            ':pst' => $foundPay['status'] ?? 'pending',
+                            ':rel' => $rel,
+                            ':cat' => $foundPay['created_at'] ?? date('Y-m-d H:i:s'),
+                        ]);
+                        $fetchCreated = $pdo->prepare("SELECT * FROM `applications` WHERE `application_no` = :no LIMIT 1");
+                        $fetchCreated->execute([':no' => $pAppNo]);
+                        $app = $fetchCreated->fetch();
+                    }
                 }
             }
-        } elseif (!empty($email)) {
-            $sql = "SELECT * FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:email)) ORDER BY id DESC LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':email' => $email]);
-            $app = $stmt->fetch();
-        }
 
-        if (!$app) {
-            $searchedTerm = $ref ?: $email;
-            jsonResponse([
-                'success' => false, 
-                'error' => "No application record found for '$searchedTerm'. Please verify your application reference or email address."
-            ], 404);
-        }
+            if (!$app) {
+                $searchedTerm = $ref ?: $email;
+                jsonResponse([
+                    'success' => false, 
+                    'error' => "No application record found for '$searchedTerm'. Please verify your application reference or email address."
+                ], 404);
+            }
 
         // Fetch best payment record linked by application_no OR payer_email
         $payStmt = $pdo->prepare("
@@ -129,13 +203,13 @@ if ($method === 'GET') {
             LEFT JOIN (
                 SELECT p1.* FROM `payments` p1
                 INNER JOIN (
-                    SELECT MAX(id) AS max_id FROM `payments` GROUP BY application_no
+                    SELECT MAX(id) AS max_id FROM `payments` WHERE application_no IS NOT NULL AND application_no != '' GROUP BY application_no
                 ) p2 ON p1.id = p2.max_id
             ) p ON p.application_no = a.application_no
             LEFT JOIN (
                 SELECT p3.* FROM `payments` p3
                 INNER JOIN (
-                    SELECT MAX(id) AS max_id FROM `payments` GROUP BY payer_email
+                    SELECT MAX(id) AS max_id FROM `payments` WHERE payer_email IS NOT NULL AND payer_email != '' GROUP BY payer_email
                 ) p4 ON p3.id = p4.max_id
             ) a_p ON LOWER(TRIM(a_p.payer_email)) = LOWER(TRIM(a.email))
             WHERE 1=1";
@@ -630,4 +704,13 @@ if ($method === 'GET') {
     ], 201);
 } else {
     jsonResponse(['success' => false, 'error' => 'Method not allowed.'], 405);
+}
+} catch (Throwable $e) {
+    error_log("Error in applications.php: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+    jsonResponse([
+        'success' => false,
+        'error' => 'Application API error: ' . $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+    ], 500);
 }
