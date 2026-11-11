@@ -128,3 +128,140 @@ function getJsonInput(): array {
     $decoded = json_decode($raw, true);
     return is_array($decoded) ? $decoded : $_POST;
 }
+
+/**
+ * Save an uploaded image file into all web-accessible media directories:
+ * 1. $baseDir/media/$subfolder (cPanel Apache webroot direct access)
+ * 2. $baseDir/public/media/$subfolder (Vite dev server)
+ * 3. $baseDir/dist/media/$subfolder (Local production build)
+ */
+function saveMediaImage(array $fileInfo, string $subfolder, string $prefix = 'img'): array {
+    $errorCode = $fileInfo['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($errorCode !== UPLOAD_ERR_OK) {
+        $errorMsg = match ($errorCode) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uploaded image file exceeds server size limits (upload_max_filesize).',
+            UPLOAD_ERR_PARTIAL => 'Image file upload was only partially completed. Please try again.',
+            UPLOAD_ERR_NO_FILE => 'No file was selected for upload.',
+            default => 'File upload error (Code ' . $errorCode . ').',
+        };
+        return ['success' => false, 'error' => $errorMsg];
+    }
+
+    $fileTmp = $fileInfo['tmp_name'];
+    $origName = basename($fileInfo['name']);
+    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+    $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'svg', 'jfif'];
+    if (!in_array($ext, $allowedExts)) {
+        return ['success' => false, 'error' => 'Invalid file format (.' . $ext . '). Supported formats: JPG, PNG, WEBP, GIF, AVIF, SVG.'];
+    }
+
+    $safeName = $prefix . '-' . time() . '-' . rand(100, 999) . '.' . $ext;
+    $baseDir = dirname(__DIR__);
+
+    $primaryDir = $baseDir . '/media/' . $subfolder;
+    $publicDir = $baseDir . '/public/media/' . $subfolder;
+    $distDir = $baseDir . '/dist/media/' . $subfolder;
+
+    $allDirs = [$primaryDir, $publicDir, $distDir];
+    foreach ($allDirs as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+    }
+
+    $saved = false;
+    $primaryPath = $primaryDir . '/' . $safeName;
+    if (move_uploaded_file($fileTmp, $primaryPath)) {
+        $saved = true;
+        @chmod($primaryPath, 0644);
+    } else {
+        // Fallback: write to public directory
+        $publicPath = $publicDir . '/' . $safeName;
+        if (move_uploaded_file($fileTmp, $publicPath)) {
+            $saved = true;
+            $primaryPath = $publicPath;
+            @chmod($publicPath, 0644);
+        }
+    }
+
+    if (!$saved) {
+        return ['success' => false, 'error' => 'Failed to write uploaded image to server storage. Please check disk permissions.'];
+    }
+
+    // Mirror to other media directories so it is accessible in all environments
+    foreach ($allDirs as $dir) {
+        $targetFile = $dir . '/' . $safeName;
+        if ($targetFile !== $primaryPath) {
+            @copy($primaryPath, $targetFile);
+            @chmod($targetFile, 0644);
+        }
+    }
+
+    $webUrl = '/media/' . $subfolder . '/' . $safeName;
+
+    return [
+        'success' => true,
+        'message' => 'Image uploaded successfully.',
+        'image_url' => $webUrl,
+        'filename' => $safeName,
+    ];
+}
+
+/**
+ * Convert base64 data URI (data:image/...) to a static file in all media directories.
+ */
+function saveBase64MediaImage(string $dataUri, string $subfolder, string $prefix = 'img'): ?string {
+    if (!preg_match('#^data:image/([a-zA-Z0-9\+\-\.]+);base64,(.+)$#i', $dataUri, $matches)) {
+        return null;
+    }
+
+    $rawExt = strtolower($matches[1]);
+    $ext = match ($rawExt) {
+        'jpeg', 'jpg' => 'jpeg',
+        'png' => 'png',
+        'webp' => 'webp',
+        'gif' => 'gif',
+        'svg+xml' => 'svg',
+        default => 'jpeg',
+    };
+
+    $binaryData = base64_decode($matches[2]);
+    if ($binaryData === false || strlen($binaryData) < 10) {
+        return null;
+    }
+
+    $safeName = $prefix . '-' . time() . '-' . rand(100, 999) . '.' . $ext;
+    $baseDir = dirname(__DIR__);
+
+    $primaryDir = $baseDir . '/media/' . $subfolder;
+    $publicDir = $baseDir . '/public/media/' . $subfolder;
+    $distDir = $baseDir . '/dist/media/' . $subfolder;
+
+    $allDirs = [$primaryDir, $publicDir, $distDir];
+    foreach ($allDirs as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+    }
+
+    $primaryPath = $primaryDir . '/' . $safeName;
+    if (@file_put_contents($primaryPath, $binaryData) === false) {
+        $primaryPath = $publicDir . '/' . $safeName;
+        if (@file_put_contents($primaryPath, $binaryData) === false) {
+            return null;
+        }
+    }
+
+    @chmod($primaryPath, 0644);
+
+    foreach ($allDirs as $dir) {
+        $targetFile = $dir . '/' . $safeName;
+        if ($targetFile !== $primaryPath) {
+            @file_put_contents($targetFile, $binaryData);
+            @chmod($targetFile, 0644);
+        }
+    }
+
+    return '/media/' . $subfolder . '/' . $safeName;
+}

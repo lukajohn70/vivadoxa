@@ -18,6 +18,16 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # Fallback for uploaded media stored in public/media/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+  RewriteRule ^(media/.+)$ public/$1 [L]
+
+  # Fallback for uploaded media stored in dist/media/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f
+  RewriteRule ^(media/.+)$ dist/$1 [L]
+
   # Route all other URLs to the index.html SPA entrypoint
   RewriteRule ^ index.html [L]
 </IfModule>

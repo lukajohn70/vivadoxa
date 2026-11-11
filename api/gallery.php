@@ -291,34 +291,10 @@ if ($method === 'GET') {
     ]);
 } elseif ($method === 'POST') {
     // Check if multipart/form-data upload
-    if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
-
-        $fileTmp = $_FILES['photo']['tmp_name'];
-        $origName = basename($_FILES['photo']['name']);
-        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-
-        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        if (!in_array($ext, $allowedExts)) {
-            jsonResponse(['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, WEBP and GIF are allowed.'], 400);
-        }
-
-        $safeName = 'gallery-' . time() . '-' . rand(100, 999) . '.' . $ext;
-        $destPath = $uploadDir . '/' . $safeName;
-
-        if (move_uploaded_file($fileTmp, $destPath)) {
-            $webUrl = '/media/gallery/' . $safeName;
-            jsonResponse([
-                'success' => true,
-                'message' => 'Photo uploaded successfully.',
-                'image_url' => $webUrl,
-                'filename' => $safeName
-            ]);
-        } else {
-            jsonResponse(['success' => false, 'error' => 'Failed to save uploaded file.'], 500);
-        }
+    $uploadFile = $_FILES['photo'] ?? $_FILES['image'] ?? $_FILES['file'] ?? null;
+    if ($uploadFile !== null) {
+        $uploadResult = saveMediaImage($uploadFile, 'gallery', 'gallery');
+        jsonResponse($uploadResult, $uploadResult['success'] ? 200 : 400);
     }
 
     $input = getJsonInput();
@@ -333,6 +309,14 @@ if ($method === 'GET') {
         }
         if (empty($item['image'])) {
             jsonResponse(['success' => false, 'error' => 'Photo image is required.'], 400);
+        }
+
+        // Convert base64 image data to physical media file
+        if (is_string($item['image']) && str_starts_with($item['image'], 'data:image/')) {
+            $savedUrl = saveBase64MediaImage($item['image'], 'gallery', 'gallery');
+            if ($savedUrl) {
+                $item['image'] = $savedUrl;
+            }
         }
 
         $id = !empty($item['id']) ? trim($item['id']) : 'gal-' . time() . '-' . rand(100, 999);

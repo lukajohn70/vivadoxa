@@ -93,42 +93,10 @@ if ($method === 'GET') {
     }
 } elseif ($method === 'POST') {
     // Check if multipart/form-data upload for hero images
-    if (isset($_FILES['hero_image']) && $_FILES['hero_image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = dirname(__DIR__) . '/public/media/hero';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0755, true);
-        }
-        $distUploadDir = dirname(__DIR__) . '/dist/media/hero';
-        if (is_dir(dirname(__DIR__) . '/dist') && !is_dir($distUploadDir)) {
-            @mkdir($distUploadDir, 0755, true);
-        }
-
-        $fileTmp = $_FILES['hero_image']['tmp_name'];
-        $origName = basename($_FILES['hero_image']['name']);
-        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-
-        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        if (!in_array($ext, $allowedExts)) {
-            jsonResponse(['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, WEBP and GIF are allowed.'], 400);
-        }
-
-        $safeName = 'hero-' . time() . '-' . rand(100, 999) . '.' . $ext;
-        $destPath = $uploadDir . '/' . $safeName;
-
-        if (move_uploaded_file($fileTmp, $destPath)) {
-            if (is_dir($distUploadDir)) {
-                @copy($destPath, $distUploadDir . '/' . $safeName);
-            }
-            $webUrl = '/media/hero/' . $safeName;
-            jsonResponse([
-                'success' => true,
-                'message' => 'Hero image uploaded successfully.',
-                'image_url' => $webUrl,
-                'filename' => $safeName,
-            ]);
-        } else {
-            jsonResponse(['success' => false, 'error' => 'Failed to save uploaded file.'], 500);
-        }
+    $heroUpload = $_FILES['hero_image'] ?? $_FILES['photo'] ?? $_FILES['image'] ?? $_FILES['file'] ?? null;
+    if ($heroUpload !== null) {
+        $uploadResult = saveMediaImage($heroUpload, 'hero', 'hero');
+        jsonResponse($uploadResult, $uploadResult['success'] ? 200 : 400);
     }
 
     $input = getJsonInput();
@@ -157,6 +125,16 @@ if ($method === 'GET') {
         if (!is_array($slides)) {
             jsonResponse(['success' => false, 'error' => 'Slides data must be an array.'], 400);
         }
+        // Automatically convert any base64 image data to physical media files
+        foreach ($slides as &$slide) {
+            if (!empty($slide['src']) && is_string($slide['src']) && str_starts_with($slide['src'], 'data:image/')) {
+                $savedUrl = saveBase64MediaImage($slide['src'], 'hero', 'hero');
+                if ($savedUrl) {
+                    $slide['src'] = $savedUrl;
+                }
+            }
+        }
+        unset($slide);
         saveSystemSetting('homepage_hero_slides', $slides);
         jsonResponse([
             'success' => true,
