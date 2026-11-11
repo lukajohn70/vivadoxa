@@ -150,9 +150,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Best Music School in Kaduna — Vivadoxa Music Academy, Instrument Repair & Studio"
-        description="Vivadoxa is the best music school in Kaduna, certified musical instrument repair clinic & modern recording studio. Practical training across 17 instruments, ABRSM/MUSON exam prep, and audio engineering."
-        keywords="best music school in kaduna, music schools in kaduna, best music school in the kaduna, music school kaduna, best music academy kaduna, instrument repair kaduna, musical instrument repair, fix saxophone kaduna, guitar repair kaduna, piano lessons kaduna, music studio kaduna, recording studio kaduna, music lessons kaduna, voice training kaduna, audio mixing studio kaduna, instrument rentals kaduna"
+        title="Vivadoxa — Best Music School, Instrument Repair Clinic & Recording Studio in Kaduna"
+        description="Vivadoxa is Kaduna's premier music ecosystem: certified training across 17 instruments, precision musical instrument repair hospital, modern recording studio, instrument rentals & audio store."
+        keywords="best music school in kaduna, music schools in kaduna, instrument repair kaduna, musical instrument repair clinic, fix saxophone kaduna, guitar repair kaduna, keyboard repair kaduna, recording studio kaduna, music studio kaduna, rehearsal studio kaduna, instrument rentals kaduna, audio equipment store kaduna"
         canonicalUrl="/"
       />
 
