@@ -69,6 +69,10 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
   const [linkNotice, setLinkNotice] = useState("")
   const [linkError, setLinkError] = useState("")
   const [showLinkModal, setShowLinkModal] = useState(false)
+  const [viewingProofFile, setViewingProofFile] = useState<{
+    url: string
+    ref: string
+  } | null>(null)
 
   async function handleLinkApplication(e: React.FormEvent) {
     e.preventDefault()
@@ -114,6 +118,25 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
       const res = await fetchUserPortalData(activeUser.email)
       if (res && res.success && res.portal) {
         setPortalData(res.portal)
+
+        // Auto-heal: If no applications linked yet, check for stored application/payment reference
+        if (!res.portal.applications || res.portal.applications.length === 0) {
+          const cachedRef =
+            sessionStorage.getItem("vdx_current_ref") ||
+            localStorage.getItem("vdx_current_ref") ||
+            localStorage.getItem("vdx_current_payment_ref")
+          if (cachedRef && !cachedRef.endsWith("-0101")) {
+            try {
+              const linkRes = await linkApplicationToPortal(cachedRef)
+              if (linkRes && linkRes.success) {
+                const refreshed = await fetchUserPortalData(activeUser.email)
+                if (refreshed && refreshed.success && refreshed.portal) {
+                  setPortalData(refreshed.portal)
+                }
+              }
+            } catch {}
+          }
+        }
       }
     } catch {
       // Fallback or error
@@ -1099,6 +1122,34 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                             >
                               <Icon name="check" size={14} />
                               Payment Receipt (PDF)
+                            </button>
+                          )}
+
+                          {matchingPayment?.receipt_file && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setViewingProofFile({
+                                  url: matchingPayment.receipt_file,
+                                  ref: matchingPayment.reference || app.application_no,
+                                })
+                              }
+                              style={{
+                                padding: "7px 14px",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                background: "#f0fdf4",
+                                color: "#166534",
+                                border: "1px solid #bbf7d0",
+                                borderRadius: 6,
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <Icon name="check" size={14} />
+                              View Uploaded Bank Proof
                             </button>
                           )}
 
@@ -2724,6 +2775,172 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                 </>
               )}
             </form>
+          </div>
+        </div>
+      )}
+      {/* Student Uploaded Bank Transfer Proof Lightbox */}
+      {viewingProofFile && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 15, 30, 0.85)",
+            zIndex: 9999,
+            display: "grid",
+            placeItems: "center",
+            padding: 16,
+          }}
+          onClick={() => setViewingProofFile(null)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: 12,
+              maxWidth: 720,
+              width: "100%",
+              maxHeight: "90vh",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "14px 18px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf9f6",
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: 14, color: "var(--navy)" }}>
+                  Uploaded Bank Transfer Proof
+                </strong>
+                <small
+                  style={{
+                    display: "block",
+                    fontFamily: "monospace",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {viewingProofFile.ref}
+                </small>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingProofFile(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: 22,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                overflowY: "auto",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#0f172a",
+                minHeight: 300,
+              }}
+            >
+              {viewingProofFile.url.startsWith("data:application/pdf") ? (
+                <div style={{ textAlign: "center", color: "white", padding: 24 }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>📄</div>
+                  <p style={{ margin: "0 0 16px", fontSize: 14 }}>
+                    PDF Bank Transfer Slip
+                  </p>
+                  <a
+                    href={viewingProofFile.url}
+                    download={`Receipt-Proof-${viewingProofFile.ref}.pdf`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "8px 18px",
+                      borderRadius: 6,
+                      background: "#c96b32",
+                      color: "white",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Download PDF Proof
+                  </a>
+                </div>
+              ) : (
+                <img
+                  src={viewingProofFile.url}
+                  alt="Transfer Receipt Proof"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "70vh",
+                    objectFit: "contain",
+                    borderRadius: 4,
+                  }}
+                />
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: "12px 18px",
+                borderTop: "1px solid var(--line)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#faf9f6",
+              }}
+            >
+              <a
+                href={viewingProofFile.url}
+                download={`Receipt-Proof-${viewingProofFile.ref}.jpg`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 14px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "white",
+                  border: "1px solid var(--line)",
+                  color: "var(--navy)",
+                  textDecoration: "none",
+                }}
+              >
+                ⬇ Download Proof
+              </a>
+              <button
+                type="button"
+                onClick={() => setViewingProofFile(null)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "var(--navy)",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Close Preview
+              </button>
+            </div>
           </div>
         </div>
       )}

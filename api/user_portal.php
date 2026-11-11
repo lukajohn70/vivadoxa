@@ -122,7 +122,7 @@ if ($method === 'GET') {
 
     // 3. Tuition & Service Payments
     $paySql = "
-        SELECT id, reference, application_no, payer_name, payer_email, amount, currency, method, status, notes, created_at, verified_at
+        SELECT id, reference, application_no, payer_name, payer_email, amount, currency, method, status, notes, receipt_file, created_at, verified_at
         FROM payments
         WHERE LOWER(TRIM(payer_email)) = :em
     ";
@@ -142,6 +142,45 @@ if ($method === 'GET') {
     $payStmt = $pdo->prepare($paySql);
     $payStmt->execute($payParams);
     $payments = $payStmt->fetchAll();
+
+    // Auto-heal check: if student portal has payments but applications list was empty, restore application row
+    if (empty($applications) && !empty($payments)) {
+        foreach ($payments as $pay) {
+            $targetAno = !empty($pay['application_no']) && $pay['application_no'] !== 'VDX-2026-0101'
+                ? $pay['application_no']
+                : ('VDX-' . date('Y') . '-' . str_pad((string)$pay['id'], 4, '0', STR_PAD_LEFT));
+            
+            $chk = $pdo->prepare("SELECT id FROM applications WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:no)) LIMIT 1");
+            $chk->execute([':no' => $targetAno]);
+            if (!$chk->fetch()) {
+                $names = preg_split('/\s+/', trim($pay['payer_name'] ?: ($user['full_name'] ?? 'Student')), 2);
+                $pdo->prepare("
+                    INSERT INTO applications 
+                    (application_no, first_name, last_name, email, phone, program, study_mode, skill_level, status, payment_status, tuition_fee, created_at)
+                    VALUES (:no, :fn, :ln, :em, :ph, 'Music Academy Course', 'Onsite', 'Beginner', :st, :pst, :fee, :cat)
+                ")->execute([
+                    ':no' => $targetAno,
+                    ':fn' => $names[0] ?? 'Student',
+                    ':ln' => $names[1] ?? '',
+                    ':em' => $email,
+                    ':ph' => $phone,
+                    ':st' => $pay['status'] === 'verified' ? 'approved' : 'pending',
+                    ':pst' => $pay['status'],
+                    ':fee' => $pay['amount'],
+                    ':cat' => $pay['created_at'],
+                ]);
+                $pdo->prepare("UPDATE payments SET application_no = :no WHERE id = :id")->execute([':no' => $targetAno, ':id' => $pay['id']]);
+            }
+        }
+
+        // Re-query applications
+        $appStmt->execute([
+            ':em'  => $email,
+            ':ph'  => $phone,
+            ':cph' => $cleanPhone,
+        ]);
+        $applications = $appStmt->fetchAll();
+    }
 
     // Harmonize payment status back into applications
     $verifiedAppNos = [];
@@ -236,9 +275,9 @@ if ($method === 'GET') {
 
     // ── Action: Link / Claim existing application ─────────────────────────────
     if ($action === 'link_application') {
-        $appNo = trim($input['application_no'] ?? $input['ref'] ?? '');
-        if (empty($appNo)) {
-            jsonResponse(['success' => false, 'error' => 'Application reference is required.'], 400);
+        $refInput = trim($input['application_no'] ?? $input['ref'] ?? '');
+        if (empty($refInput)) {
+            jsonResponse(['success' => false, 'error' => 'Application reference or payment code is required.'], 400);
         }
 
         if (!$user) {
@@ -246,15 +285,60 @@ if ($method === 'GET') {
         }
 
         $userEmail = strtolower(trim($user['email']));
+
+        // 1. Try finding directly in applications by application_no
         $findStmt = $pdo->prepare("SELECT * FROM applications WHERE LOWER(TRIM(application_no)) = LOWER(TRIM(:no)) LIMIT 1");
-        $findStmt->execute([':no' => $appNo]);
+        $findStmt->execute([':no' => $refInput]);
         $targetApp = $findStmt->fetch();
 
+        // 2. If not found, try finding by payment reference
         if (!$targetApp) {
-            jsonResponse(['success' => false, 'error' => "No application record found for reference '$appNo'. Please check your reference code."], 404);
+            $pFind = $pdo->prepare("SELECT * FROM payments WHERE LOWER(TRIM(reference)) = LOWER(TRIM(:ref)) LIMIT 1");
+            $pFind->execute([':ref' => $refInput]);
+            $payRec = $pFind->fetch();
+            if ($payRec) {
+                if (!empty($payRec['application_no']) && $payRec['application_no'] !== 'VDX-2026-0101') {
+                    $findStmt->execute([':no' => $payRec['application_no']]);
+                    $targetApp = $findStmt->fetch();
+                }
+                if (!$targetApp && !empty($payRec['payer_email'])) {
+                    $findStmtEmail = $pdo->prepare("SELECT * FROM applications WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
+                    $findStmtEmail->execute([':em' => $payRec['payer_email']]);
+                    $targetApp = $findStmtEmail->fetch();
+                }
+                // If payment exists but no application record exists, synthesize one now
+                if (!$targetApp) {
+                    $newAppNo = !empty($payRec['application_no']) && $payRec['application_no'] !== 'VDX-2026-0101'
+                        ? $payRec['application_no']
+                        : ('VDX-' . date('Y') . '-' . str_pad((string)$payRec['id'], 4, '0', STR_PAD_LEFT));
+                    $names = preg_split('/\s+/', trim($payRec['payer_name'] ?: $user['full_name']), 2);
+                    $pdo->prepare("
+                        INSERT INTO applications 
+                        (application_no, first_name, last_name, email, phone, program, study_mode, skill_level, status, payment_status, tuition_fee, created_at)
+                        VALUES (:no, :fn, :ln, :em, :ph, 'Music Academy Course', 'Onsite', 'Beginner', :st, :pst, :fee, :cat)
+                    ")->execute([
+                        ':no' => $newAppNo,
+                        ':fn' => $names[0] ?? 'Student',
+                        ':ln' => $names[1] ?? '',
+                        ':em' => $userEmail,
+                        ':ph' => $user['phone'] ?? '',
+                        ':st' => $payRec['status'] === 'verified' ? 'approved' : 'pending',
+                        ':pst' => $payRec['status'],
+                        ':fee' => $payRec['amount'],
+                        ':cat' => $payRec['created_at'],
+                    ]);
+                    $pdo->prepare("UPDATE payments SET application_no = :no, payer_email = :em WHERE id = :pid")->execute([':no' => $newAppNo, ':em' => $userEmail, ':pid' => $payRec['id']]);
+                    $findStmt->execute([':no' => $newAppNo]);
+                    $targetApp = $findStmt->fetch();
+                }
+            }
         }
 
-        // Link application to current user's email
+        if (!$targetApp) {
+            jsonResponse(['success' => false, 'error' => "No application or payment record found for '$refInput'. Please verify your reference code."], 404);
+        }
+
+        // Link application, payment, and student records to current user's email
         $pdo->prepare("UPDATE applications SET email = :em, updated_at = NOW() WHERE id = :id")->execute([':em' => $userEmail, ':id' => $targetApp['id']]);
         $pdo->prepare("UPDATE payments SET payer_email = :em WHERE application_no = :no")->execute([':em' => $userEmail, ':no' => $targetApp['application_no']]);
         $pdo->prepare("UPDATE students SET email = :em WHERE application_no = :no")->execute([':em' => $userEmail, ':no' => $targetApp['application_no']]);

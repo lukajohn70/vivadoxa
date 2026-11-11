@@ -1468,6 +1468,12 @@ function AdminManager({ title }: { title: string }) {
   const [editCourse, setEditCourse] = useState<any | null>(null)
   const [editInstructor, setEditInstructor] = useState<any | null>(null)
   const [editPerformance, setEditPerformance] = useState<any | null>(null)
+  const [viewingReceipt, setViewingReceipt] = useState<{
+    url: string
+    title: string
+    ref: string
+    payerName?: string
+  } | null>(null)
 
   // Action Approval Modal state (approval of actions)
   const [approvalModal, setApprovalModal] = useState<{
@@ -1750,7 +1756,7 @@ function AdminManager({ title }: { title: string }) {
   }
 
   async function handlePaymentVerify(ref: string, appNo?: string) {
-    const res = await updatePaymentStatus(ref, "verified")
+    const res = await updatePaymentStatus(ref, "verified", appNo)
     if (res && res.success) {
       setActionNotice(res.message || `Payment ${ref} verified successfully.`)
       await loadData()
@@ -2590,9 +2596,10 @@ function AdminManager({ title }: { title: string }) {
                 )}
                 {title === "Payments" && (
                   <tr>
-                    <th scope="col">Payment Ref</th>
-                    <th scope="col">Payer</th>
+                    <th scope="col">Payment Ref &amp; Application</th>
+                    <th scope="col">Payer Details</th>
                     <th scope="col">Amount</th>
+                    <th scope="col">Receipt Proof</th>
                     <th scope="col">Method &amp; Notes</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
@@ -2881,32 +2888,125 @@ function AdminManager({ title }: { title: string }) {
                       {title === "Payments" && (
                         <>
                           <td>
-                            <code>{row.reference}</code>
-                            {row.application_no && (
+                            <code style={{ fontWeight: 700 }}>{row.reference}</code>
+                            {row.application_no ? (
+                              <div style={{ marginTop: 4 }}>
+                                <span
+                                  style={{
+                                    display: "inline-block",
+                                    padding: "2px 7px",
+                                    borderRadius: 4,
+                                    background: "#fef3c7",
+                                    border: "1px solid #fde68a",
+                                    color: "#92400e",
+                                    fontFamily: "monospace",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  App: {row.application_no}
+                                </span>
+                                {row.app_program && (
+                                  <small
+                                    style={{
+                                      display: "block",
+                                      color: "var(--muted)",
+                                      fontSize: 11,
+                                      marginTop: 2,
+                                    }}
+                                  >
+                                    {row.app_program} ({row.app_study_mode || "Onsite"})
+                                  </small>
+                                )}
+                              </div>
+                            ) : (
                               <small
                                 style={{
                                   display: "block",
                                   color: "var(--muted)",
+                                  fontSize: 11,
+                                  fontStyle: "italic",
+                                  marginTop: 3,
                                 }}
                               >
-                                App: {row.application_no}
+                                Direct Checkout
                               </small>
                             )}
                           </td>
                           <td>
-                            <div>{row.payer_name}</div>
-                            <small style={{ color: "var(--muted)" }}>
+                            <div style={{ fontWeight: 600 }}>{row.payer_name}</div>
+                            <small style={{ color: "var(--muted)", display: "block" }}>
                               {row.payer_email}
                             </small>
+                            {row.payer_phone && (
+                              <small style={{ color: "#047857", fontSize: 11, display: "block" }}>
+                                📞 {row.payer_phone}
+                              </small>
+                            )}
                           </td>
                           <td>
                             <strong>
-                              ₦{Number(row.amount).toLocaleString()}
+                              {row.currency === "USD" ? "$" : "₦"}
+                              {Number(row.amount).toLocaleString()}{" "}
+                              <small style={{ fontWeight: 400, color: "var(--muted)" }}>
+                                {row.currency || "NGN"}
+                              </small>
                             </strong>
                           </td>
                           <td>
-                            <div>{row.method}</div>
-                            <small style={{ color: "var(--muted)" }}>
+                            {row.receipt_file ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setViewingReceipt({
+                                    url: row.receipt_file,
+                                    title: "Transfer Receipt Proof",
+                                    ref: row.reference,
+                                    payerName: row.payer_name,
+                                  })
+                                }}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "4px 9px",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  background: "#f0fdf4",
+                                  border: "1px solid #bbf7d0",
+                                  color: "#15803d",
+                                  cursor: "pointer",
+                                }}
+                                title="Click to view full receipt proof"
+                              >
+                                {row.receipt_file.startsWith("data:image") ? (
+                                  <img
+                                    src={row.receipt_file}
+                                    alt="Receipt"
+                                    style={{
+                                      width: 22,
+                                      height: 22,
+                                      objectFit: "cover",
+                                      borderRadius: 3,
+                                      border: "1px solid #86efac",
+                                    }}
+                                  />
+                                ) : (
+                                  <span>📄</span>
+                                )}
+                                <span>View Receipt</span>
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11, color: "var(--muted)" }}>
+                                No file uploaded
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600 }}>{row.method}</div>
+                            <small style={{ color: "var(--muted)", display: "block" }}>
                               {row.notes}
                             </small>
                           </td>
@@ -2924,18 +3024,27 @@ function AdminManager({ title }: { title: string }) {
                             </Badge>
                           </td>
                           <td>
-                            {row.status !== "verified" && (
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                               <button
-                                className="action-btn accept"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handlePaymentVerify(row.reference)
-                                }}
-                                title="Verify payment"
+                                className="action-btn"
+                                onClick={() => setSelectedRecord(row)}
+                                title="View payment details"
                               >
-                                ✓ Verify
+                                View
                               </button>
-                            )}
+                              {row.status !== "verified" && (
+                                <button
+                                  className="action-btn accept"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handlePaymentVerify(row.reference, row.application_no)
+                                  }}
+                                  title="Verify payment & reconcile admission"
+                                >
+                                  ✓ Verify
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </>
                       )}
@@ -3721,11 +3830,63 @@ function AdminManager({ title }: { title: string }) {
                               </Badge>
                             </span>
                           </div>
-                          <div style={{ fontSize: 12, color: "var(--muted)" }}>
-                            {row.payer_email}{" "}
-                            {row.application_no
-                              ? `· App: ${row.application_no}`
-                              : ""}
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--muted)",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: 6,
+                            }}
+                          >
+                            <div>
+                              {row.payer_email}
+                              {row.application_no ? (
+                                <span
+                                  style={{
+                                    marginLeft: 6,
+                                    padding: "2px 6px",
+                                    background: "#fef3c7",
+                                    border: "1px solid #fde68a",
+                                    color: "#92400e",
+                                    borderRadius: 4,
+                                    fontFamily: "monospace",
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  App: {row.application_no}
+                                </span>
+                              ) : null}
+                            </div>
+                            {row.receipt_file && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setViewingReceipt({
+                                    url: row.receipt_file,
+                                    title: "Transfer Receipt Proof",
+                                    ref: row.reference,
+                                    payerName: row.payer_name,
+                                  })
+                                }}
+                                style={{
+                                  padding: "3px 8px",
+                                  borderRadius: 4,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  background: "#f0fdf4",
+                                  border: "1px solid #bbf7d0",
+                                  color: "#15803d",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                📎 View Receipt
+                              </button>
+                            )}
                           </div>
                           <div
                             style={{
@@ -3769,7 +3930,11 @@ function AdminManager({ title }: { title: string }) {
                               <strong
                                 style={{ fontSize: 15, color: "var(--navy)" }}
                               >
-                                ₦{Number(row.amount).toLocaleString()}
+                                {row.currency === "USD" ? "$" : "₦"}
+                                {Number(row.amount).toLocaleString()}{" "}
+                                <small style={{ fontWeight: 400, color: "var(--muted)", fontSize: 11 }}>
+                                  {row.currency || "NGN"}
+                                </small>
                               </strong>
                             </div>
                           </div>
@@ -3782,7 +3947,7 @@ function AdminManager({ title }: { title: string }) {
                                 className="action-btn accept"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handlePaymentVerify(row.reference)
+                                  handlePaymentVerify(row.reference, row.application_no)
                                 }}
                                 style={{
                                   flex: 1,
@@ -5113,6 +5278,72 @@ function AdminManager({ title }: { title: string }) {
                       </p>
                     )}
 
+                    {selectedRecord.receipt_file && (
+                      <div
+                        style={{
+                          marginTop: 14,
+                          padding: "10px 14px",
+                          background: "#ffffff",
+                          border: "1px solid #bbf7d0",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          flexWrap: "wrap",
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          {selectedRecord.receipt_file.startsWith("data:image") ? (
+                            <img
+                              src={selectedRecord.receipt_file}
+                              alt="Receipt Proof"
+                              style={{
+                                width: 44,
+                                height: 44,
+                                objectFit: "cover",
+                                borderRadius: 6,
+                                border: "1px solid #cbd5e1",
+                                cursor: "pointer",
+                              }}
+                              onClick={() =>
+                                setViewingReceipt({
+                                  url: selectedRecord.receipt_file,
+                                  title: `Receipt Proof — ${selectedRecord.first_name} ${selectedRecord.last_name}`,
+                                  ref: selectedRecord.payment_reference || selectedRecord.application_no,
+                                  payerName: `${selectedRecord.first_name} ${selectedRecord.last_name}`,
+                                })
+                              }
+                            />
+                          ) : (
+                            <div style={{ fontSize: 26 }}>📄</div>
+                          )}
+                          <div>
+                            <strong style={{ fontSize: 13, color: "var(--navy)", display: "block" }}>
+                              Uploaded Bank Transfer Receipt
+                            </strong>
+                            <small style={{ color: "var(--muted)", fontSize: 11 }}>
+                              Attached bank deposit proof for tuition reconciliation
+                            </small>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            setViewingReceipt({
+                              url: selectedRecord.receipt_file,
+                              title: `Receipt Proof — ${selectedRecord.first_name} ${selectedRecord.last_name}`,
+                              ref: selectedRecord.payment_reference || selectedRecord.application_no,
+                              payerName: `${selectedRecord.first_name} ${selectedRecord.last_name}`,
+                            })
+                          }
+                        >
+                          🔍 Inspect Transfer Proof
+                        </Button>
+                      </div>
+                    )}
+
                     {selectedRecord.payment_status === "verified" ? (
                       <div
                         style={{
@@ -5373,67 +5604,313 @@ function AdminManager({ title }: { title: string }) {
 
               {/* Payment Details */}
               {title === "Payments" && (
-                <div className="doc-grid" style={{ margin: "0" }}>
-                  <div>
-                    <small>Payment Reference</small>
-                    <strong>{selectedRecord.reference}</strong>
-                  </div>
-                  <div>
-                    <small>Application Number</small>
-                    <strong>{selectedRecord.application_no || "—"}</strong>
-                  </div>
-                  <div>
-                    <small>Payer Name</small>
-                    <strong>{selectedRecord.payer_name}</strong>
-                  </div>
-                  <div>
-                    <small>Payer Email</small>
-                    <strong>{selectedRecord.payer_email}</strong>
-                  </div>
-                  <div>
-                    <small>Amount Paid</small>
-                    <strong style={{ fontSize: 18, color: "var(--navy)" }}>
-                      ₦{Number(selectedRecord.amount).toLocaleString()}
-                    </strong>
-                  </div>
-                  <div>
-                    <small>Payment Method</small>
-                    <strong>{selectedRecord.method}</strong>
-                  </div>
-                  <div style={{ gridColumn: "1/-1" }}>
-                    <small>Bank Narration / Notes</small>
-                    <strong>{selectedRecord.notes || "—"}</strong>
-                  </div>
-                  {selectedRecord.payer_phone && (
-                    <div
-                      style={{
-                        gridColumn: "1/-1",
-                        display: "flex",
-                        gap: 10,
-                        paddingTop: 8,
-                      }}
-                    >
-                      <a
-                        href={`https://wa.me/${(selectedRecord.payer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.payer_name || "")},%20this%20is%20Vivadoxa%20Accounts%20regarding%20your%20payment%20(Ref:%20${selectedRecord.reference}).`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                  <div className="doc-grid" style={{ margin: "0" }}>
+                    <div>
+                      <small>Payment Reference</small>
+                      <strong style={{ fontFamily: "monospace" }}>{selectedRecord.reference}</strong>
+                    </div>
+                    <div>
+                      <small>Application Number</small>
+                      <div>
+                        <strong
+                          style={{
+                            fontFamily: "monospace",
+                            color: selectedRecord.application_no ? "#92400e" : "var(--muted)",
+                          }}
+                        >
+                          {selectedRecord.application_no || "— (Direct Checkout)"}
+                        </strong>
+                        {selectedRecord.app_program && (
+                          <small style={{ display: "block", color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+                            {selectedRecord.app_program} ({selectedRecord.app_study_mode || "Onsite"})
+                          </small>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <small>Payer Name</small>
+                      <strong>{selectedRecord.payer_name}</strong>
+                    </div>
+                    <div>
+                      <small>Payer Email</small>
+                      <strong>{selectedRecord.payer_email}</strong>
+                    </div>
+                    <div>
+                      <small>Amount Paid</small>
+                      <strong style={{ fontSize: 18, color: "var(--navy)" }}>
+                        {selectedRecord.currency === "USD" ? "$" : "₦"}
+                        {Number(selectedRecord.amount).toLocaleString()}{" "}
+                        <span style={{ fontSize: 12, fontWeight: 500 }}>
+                          {selectedRecord.currency || "NGN"}
+                        </span>
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Payment Method</small>
+                      <strong>{selectedRecord.method}</strong>
+                    </div>
+                    <div style={{ gridColumn: "1/-1" }}>
+                      <small>Bank Narration / Notes</small>
+                      <strong>{selectedRecord.notes || "—"}</strong>
+                    </div>
+                    {selectedRecord.payer_phone && (
+                      <div
                         style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          padding: "6px 12px",
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: "rgba(37, 211, 102, 0.15)",
-                          color: "#075e54",
-                          border: "1px solid rgba(37, 211, 102, 0.35)",
-                          textDecoration: "none",
+                          gridColumn: "1/-1",
+                          display: "flex",
+                          gap: 10,
+                          paddingTop: 4,
                         }}
                       >
-                        <WhatsAppIcon size={14} fill="#075e54" />
-                        WhatsApp Payer
-                      </a>
+                        <a
+                          href={`https://wa.me/${(selectedRecord.payer_phone || "").replace(/[^0-9]/g, "")}?text=Hello%20${encodeURIComponent(selectedRecord.payer_name || "")},%20this%20is%20Vivadoxa%20Accounts%20regarding%20your%20payment%20(Ref:%20${selectedRecord.reference}).`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 12px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: "rgba(37, 211, 102, 0.15)",
+                            color: "#075e54",
+                            border: "1px solid rgba(37, 211, 102, 0.35)",
+                            textDecoration: "none",
+                          }}
+                        >
+                          <WhatsAppIcon size={14} fill="#075e54" />
+                          WhatsApp Payer
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Uploaded Bank Transfer Receipt Proof */}
+                  <div
+                    style={{
+                      background: "#faf9f6",
+                      border: "1.5px solid var(--line)",
+                      borderRadius: 10,
+                      padding: 16,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 10,
+                      }}
+                    >
+                      <strong style={{ fontSize: 13, color: "var(--navy)" }}>
+                        📄 Uploaded Bank Transfer Receipt / Proof
+                      </strong>
+                      {selectedRecord.receipt_file ? (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            background: "#dcfce7",
+                            color: "#15803d",
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            fontWeight: 700,
+                          }}
+                        >
+                          Proof Attached
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            background: "#f1f5f9",
+                            color: "var(--muted)",
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                          }}
+                        >
+                          No Attachment
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedRecord.receipt_file ? (
+                      <div>
+                        {selectedRecord.receipt_file.startsWith("data:image") ||
+                        selectedRecord.receipt_file.match(/\.(jpeg|jpg|png|webp|gif)/i) ? (
+                          <div style={{ textAlign: "center" }}>
+                            <div
+                              style={{
+                                maxHeight: 380,
+                                overflow: "hidden",
+                                borderRadius: 8,
+                                border: "1px solid #e2e8f0",
+                                background: "#0f172a",
+                                display: "inline-block",
+                                maxWidth: "100%",
+                                cursor: "pointer",
+                              }}
+                              onClick={() =>
+                                setViewingReceipt({
+                                  url: selectedRecord.receipt_file,
+                                  title: `Receipt Proof — ${selectedRecord.payer_name}`,
+                                  ref: selectedRecord.reference,
+                                  payerName: selectedRecord.payer_name,
+                                })
+                              }
+                              title="Click to view full receipt"
+                            >
+                              <img
+                                src={selectedRecord.receipt_file}
+                                alt="Transfer Receipt Proof"
+                                style={{
+                                  maxHeight: 380,
+                                  maxWidth: "100%",
+                                  objectFit: "contain",
+                                  display: "block",
+                                  margin: "0 auto",
+                                }}
+                              />
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                gap: 10,
+                                marginTop: 10,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                  setViewingReceipt({
+                                    url: selectedRecord.receipt_file,
+                                    title: `Receipt Proof — ${selectedRecord.payer_name}`,
+                                    ref: selectedRecord.reference,
+                                    payerName: selectedRecord.payer_name,
+                                  })
+                                }
+                              >
+                                🔍 Click to Enlarge Receipt
+                              </Button>
+                              <a
+                                href={selectedRecord.receipt_file}
+                                download={`Receipt-${selectedRecord.reference || "proof"}.jpg`}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "6px 14px",
+                                  borderRadius: 6,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  background: "#f1f5f9",
+                                  border: "1px solid #cbd5e1",
+                                  color: "var(--navy)",
+                                  textDecoration: "none",
+                                }}
+                              >
+                                ⬇ Download Image
+                              </a>
+                            </div>
+                          </div>
+                        ) : selectedRecord.receipt_file.startsWith("data:application/pdf") ? (
+                          <div style={{ textAlign: "center", padding: "16px 0" }}>
+                            <div style={{ fontSize: 44, marginBottom: 8 }}>📄</div>
+                            <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--muted)" }}>
+                              Official PDF Bank Transfer Receipt Slip Attached
+                            </p>
+                            <a
+                              href={selectedRecord.receipt_file}
+                              download={`Receipt-${selectedRecord.reference || "proof"}.pdf`}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                                padding: "8px 16px",
+                                borderRadius: 6,
+                                fontSize: 13,
+                                fontWeight: 700,
+                                background: "#c96b32",
+                                color: "white",
+                                textDecoration: "none",
+                              }}
+                            >
+                              Open / Download PDF Document
+                            </a>
+                          </div>
+                        ) : (
+                          <div>
+                            <a
+                              href={selectedRecord.receipt_file}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                color: "var(--gold)",
+                                fontWeight: 600,
+                                fontSize: 13,
+                              }}
+                            >
+                              Open Uploaded Proof Document ↗
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          padding: "16px",
+                          background: "#f8fafc",
+                          borderRadius: 6,
+                          textAlign: "center",
+                          color: "var(--muted)",
+                          fontSize: 12.5,
+                        }}
+                      >
+                        No digital bank transfer receipt image or PDF was uploaded with this transaction.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Verification action inside modal */}
+                  {selectedRecord.status !== "verified" && (
+                    <div
+                      style={{
+                        padding: 14,
+                        background: "#fffbeb",
+                        border: "1px solid #fde68a",
+                        borderRadius: 8,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: 13, color: "#92400e", display: "block" }}>
+                          Payment Awaiting Verification
+                        </strong>
+                        <small style={{ color: "#b45309", fontSize: 11.5 }}>
+                          Confirming this payment will unlock the student's admission letter and activate portal credentials.
+                        </small>
+                      </div>
+                      <Button
+                        variant="primary"
+                        onClick={() =>
+                          handlePaymentVerify(
+                            selectedRecord.reference,
+                            selectedRecord.application_no,
+                          )
+                        }
+                        style={{ fontWeight: 700 }}
+                      >
+                        ✓ Verify Payment &amp; Clear Admission
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -8178,6 +8655,174 @@ function AdminManager({ title }: { title: string }) {
               >
                 {approvalModal.confirmLabel}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-Screen Receipt Inspection Lightbox */}
+      {viewingReceipt && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 15, 30, 0.88)",
+            zIndex: 9999,
+            display: "grid",
+            placeItems: "center",
+            padding: 16,
+          }}
+          onClick={() => setViewingReceipt(null)}
+        >
+          <div
+            style={{
+              background: "white",
+              borderRadius: 12,
+              maxWidth: 780,
+              width: "100%",
+              maxHeight: "92vh",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.35)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "14px 20px",
+                borderBottom: "1px solid var(--line)",
+                background: "#faf9f6",
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: 15, color: "var(--navy)" }}>
+                  {viewingReceipt.title || "Bank Transfer Receipt Proof"}
+                </strong>
+                <small
+                  style={{
+                    display: "block",
+                    fontFamily: "monospace",
+                    color: "var(--muted)",
+                  }}
+                >
+                  Reference: {viewingReceipt.ref}{" "}
+                  {viewingReceipt.payerName ? `· ${viewingReceipt.payerName}` : ""}
+                </small>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingReceipt(null)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: 22,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                overflowY: "auto",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "#0f172a",
+                minHeight: 320,
+              }}
+            >
+              {viewingReceipt.url.startsWith("data:application/pdf") ? (
+                <div style={{ textAlign: "center", color: "white", padding: 30 }}>
+                  <div style={{ fontSize: 52, marginBottom: 12 }}>📄</div>
+                  <p style={{ margin: "0 0 16px", fontSize: 14 }}>
+                    Official PDF Bank Transfer Receipt Document
+                  </p>
+                  <a
+                    href={viewingReceipt.url}
+                    download={`Receipt-${viewingReceipt.ref}.pdf`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "10px 22px",
+                      borderRadius: 6,
+                      background: "#c96b32",
+                      color: "white",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Open / Download PDF Document
+                  </a>
+                </div>
+              ) : (
+                <img
+                  src={viewingReceipt.url}
+                  alt="Transfer Receipt Proof"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "72vh",
+                    objectFit: "contain",
+                    borderRadius: 4,
+                  }}
+                />
+              )}
+            </div>
+
+            <div
+              style={{
+                padding: "12px 20px",
+                borderTop: "1px solid var(--line)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                background: "#faf9f6",
+              }}
+            >
+              <a
+                href={viewingReceipt.url}
+                download={`Receipt-${viewingReceipt.ref}.jpg`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 14px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "white",
+                  border: "1px solid var(--line)",
+                  color: "var(--navy)",
+                  textDecoration: "none",
+                }}
+              >
+                ⬇ Download High-Res File
+              </a>
+              <button
+                type="button"
+                onClick={() => setViewingReceipt(null)}
+                style={{
+                  padding: "6px 16px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "var(--navy)",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>

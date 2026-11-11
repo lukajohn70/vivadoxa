@@ -86,6 +86,18 @@ try {
         $pdo->exec("ALTER TABLE `applications` ADD COLUMN `payment_status` ENUM('pending', 'verified', 'declined') NOT NULL DEFAULT 'pending' AFTER `status`");
     } catch (Exception $e) {}
 
+    try {
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `study_mode` VARCHAR(50) NOT NULL DEFAULT 'Onsite'");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `program` VARCHAR(100) NOT NULL DEFAULT 'Music Academy Course'");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `phone` VARCHAR(50) NOT NULL DEFAULT ''");
+    } catch (Exception $e) {}
+
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `payments` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -98,6 +110,7 @@ try {
             `method` VARCHAR(50) NOT NULL DEFAULT 'Bank Transfer',
             `status` ENUM('pending', 'verified', 'declined') NOT NULL DEFAULT 'pending',
             `notes` TEXT NULL,
+            `receipt_file` LONGTEXT NULL,
             `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             `verified_at` DATETIME NULL
         ) ENGINE=InnoDB;
@@ -105,6 +118,10 @@ try {
 
     try {
         $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
+    } catch (Exception $e) {}
+
+    try {
+        $pdo->exec("ALTER TABLE `payments` ADD COLUMN `receipt_file` LONGTEXT NULL AFTER `notes`");
     } catch (Exception $e) {}
 
     $pdo->exec("

@@ -123,7 +123,8 @@ if ($method === 'GET') {
                    COALESCE(p.amount, a_p.amount, a.tuition_fee) AS payment_amount,
                    COALESCE(p.currency, a_p.currency, a.currency, 'NGN') AS payment_currency,
                    COALESCE(p.method, a_p.method, 'Bank Transfer') AS payment_method,
-                   COALESCE(p.created_at, a_p.created_at) AS payment_date
+                   COALESCE(p.created_at, a_p.created_at) AS payment_date,
+                   COALESCE(p.receipt_file, a_p.receipt_file) AS receipt_file
             FROM `applications` a
             LEFT JOIN (
                 SELECT p1.* FROM `payments` p1
@@ -505,11 +506,16 @@ if ($method === 'GET') {
         ':passport' => !empty($passportPhoto) ? $passportPhoto : null,
     ]);
 
-    // Auto-provision Student Portal Account if not existing
+    // Auto-provision Student Portal Account if not existing and initialize session
+    $provisionedUser = null;
     try {
-        $uCheck = $pdo->prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(:em) LIMIT 1");
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $uCheck = $pdo->prepare("SELECT id, email, phone, full_name, role, avatar, address, guardian_name, guardian_phone, created_at FROM users WHERE LOWER(email) = LOWER(:em) LIMIT 1");
         $uCheck->execute([':em' => $email]);
-        if (!$uCheck->fetch()) {
+        $provisionedUser = $uCheck->fetch();
+        if (!$provisionedUser) {
             $userPass = !empty($input['password']) ? trim($input['password']) : 'StudentPass2025!';
             $uHash = password_hash($userPass, PASSWORD_BCRYPT);
             $uIns = $pdo->prepare("
@@ -525,7 +531,21 @@ if ($method === 'GET') {
                 ':gn' => $guardianName,
                 ':gp' => $guardianPhone,
             ]);
+            $uid = (int)$pdo->lastInsertId();
+            $provisionedUser = [
+                'id' => $uid,
+                'email' => $email,
+                'phone' => $phone,
+                'full_name' => trim($firstName . ' ' . $lastName),
+                'role' => 'student',
+                'avatar' => null,
+                'address' => $address,
+                'guardian_name' => $guardianName,
+                'guardian_phone' => $guardianPhone,
+                'created_at' => date('Y-m-d H:i:s'),
+            ];
         }
+        $_SESSION['client_user'] = $provisionedUser;
     } catch (Exception $uEx) {}
 
     // Automated Notifications Pipeline
@@ -606,6 +626,7 @@ if ($method === 'GET') {
         'message' => 'Application submitted successfully!',
         'application_no' => $appNo,
         'tuition_fee' => $tuitionFee,
+        'user' => $provisionedUser ?? null,
     ], 201);
 } else {
     jsonResponse(['success' => false, 'error' => 'Method not allowed.'], 405);

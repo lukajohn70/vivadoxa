@@ -1049,6 +1049,7 @@ export async function submitPaymentProof(
     notes:
       data.notes ||
       `Payment Date: ${data.paymentDate || new Date().toISOString().slice(0, 10)}`,
+    receipt_file: data.receipt_file || data.receiptFile || data.proof_image || "",
     created_at: new Date().toISOString(),
   }
 
@@ -1099,6 +1100,7 @@ export async function submitPaymentProof(
 export async function updatePaymentStatus(
   reference: string,
   status: string,
+  applicationNo?: string,
 ): Promise<ApiResponse> {
   // Update local cache
   try {
@@ -1108,6 +1110,7 @@ export async function updatePaymentStatus(
       const target = list.find((p) => p.reference === reference)
       if (target) {
         target.status = status
+        if (applicationNo) target.application_no = applicationNo
         if (status === "verified") target.verified_at = new Date().toISOString()
         localStorage.setItem("vdx_payments", JSON.stringify(list))
       }
@@ -1127,7 +1130,12 @@ export async function updatePaymentStatus(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ action: "update_status", reference, status }),
+        body: JSON.stringify({
+          action: "update_status",
+          reference,
+          status,
+          application_no: applicationNo,
+        }),
       })
       const text = await res.text().catch(() => "")
       if (text && text.trim().startsWith("{")) {

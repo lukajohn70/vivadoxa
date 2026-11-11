@@ -202,6 +202,64 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     return Object.keys(e).length === 0
   }
 
+  async function readFileAsBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (file.type.startsWith("image/")) {
+        const img = new Image()
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          img.src = e.target?.result as string
+        }
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas")
+            const MAX_WIDTH = 1600
+            const MAX_HEIGHT = 1600
+            let width = img.width
+            let height = img.height
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width)
+                width = MAX_WIDTH
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height)
+                height = MAX_HEIGHT
+              }
+            }
+
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext("2d")
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height)
+              resolve(canvas.toDataURL("image/jpeg", 0.85))
+            } else {
+              resolve(img.src)
+            }
+          } catch {
+            resolve(img.src)
+          }
+        }
+        img.onerror = () => {
+          const fallbackReader = new FileReader()
+          fallbackReader.onload = () => resolve(fallbackReader.result as string)
+          fallbackReader.onerror = reject
+          fallbackReader.readAsDataURL(file)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      } else {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      }
+    })
+  }
+
   async function handlePaymentSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validateProof()) return
@@ -210,11 +268,28 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
     setSubmitError("")
 
     try {
+      let receiptBase64 = ""
+      if (proof.receiptFile && proof.receiptFile.length > 0) {
+        try {
+          receiptBase64 = await readFileAsBase64(proof.receiptFile[0])
+        } catch (fileErr) {
+          console.warn("Failed to process receipt file:", fileErr)
+        }
+      }
+
       const cleanAmt =
         Number(String(proof.amountPaid).replace(/[^0-9.]/g, "")) ||
         defaultAmount
+
+      const effectiveAppNo =
+        appRef && !appRef.endsWith("-0101")
+          ? appRef
+          : sessionStorage.getItem("vdx_current_ref") ||
+            localStorage.getItem("vdx_current_ref") ||
+            ""
+
       const res = await submitPaymentProof({
-        applicationNo: appRef,
+        applicationNo: effectiveAppNo,
         payerName: proof.payerName.trim(),
         payerEmail: (proof.payerEmail || studentEmail || "").trim(),
         amountPaid: cleanAmt,
@@ -222,14 +297,26 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
         transactionRef: proof.transactionRef.trim(),
         paymentDate: proof.paymentDate,
         method: isUSD ? "International Wire / Transfer" : "Bank Transfer",
+        receipt_file: receiptBase64,
       })
 
       if (res && res.success) {
+        const finalRef = res.application_no || effectiveAppNo || appRef
+        if (finalRef && !finalRef.endsWith("-0101")) {
+          sessionStorage.setItem("vdx_current_ref", finalRef)
+          localStorage.setItem("vdx_current_ref", finalRef)
+        }
+        if (res.reference || proof.transactionRef) {
+          localStorage.setItem(
+            "vdx_current_payment_ref",
+            res.reference || proof.transactionRef.trim(),
+          )
+        }
         setSent(true)
         setIsInstantGateway(false)
       } else {
         setSubmitError(
-          res.error ||
+          res?.error ||
             "Unable to log payment proof. Please check your details and try again.",
         )
       }
@@ -708,20 +795,37 @@ export function Payment({ go }: { go: (p: Page | string) => void }) {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
+              variant="primary"
+              onClick={() => go("portal")}
+              style={{ minHeight: 44, fontWeight: 700 }}
+            >
+              Access Student Portal →
+            </Button>
+            <Button
               variant="secondary"
               onClick={() => go(`/status?ref=${appRef}`)}
               style={{ minHeight: 44 }}
             >
-              Check Application Status Tracker →
+              Track Application Status →
             </Button>
             <Button
-              variant="primary"
+              variant="secondary"
               onClick={() => go("home")}
               style={{ minHeight: 44 }}
             >
               Return to Homepage
             </Button>
           </div>
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              marginTop: 14,
+              textAlign: "center",
+            }}
+          >
+            Your student portal account is synchronized with this application and payment. You can track your admission, download your slips, and access your classes anytime.
+          </p>
         </div>
 
         {/* Modal Previews for Instant Downloads */}

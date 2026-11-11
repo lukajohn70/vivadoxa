@@ -10,9 +10,24 @@ function ensurePaymentsSchema(PDO $pdo): void {
     if ($checked) return;
     try {
         $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
-    } catch (Exception $e) {
-        // Column already exists or table not ready
-    }
+    } catch (Exception $e) {}
+    try {
+        $pdo->exec("ALTER TABLE `payments` ADD COLUMN `receipt_file` LONGTEXT NULL AFTER `notes`");
+    } catch (Exception $e) {}
+    try {
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `study_mode` VARCHAR(50) NOT NULL DEFAULT 'Onsite'");
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `program` VARCHAR(100) NOT NULL DEFAULT 'Music Academy Course'");
+        $pdo->exec("ALTER TABLE `applications` MODIFY COLUMN `phone` VARCHAR(50) NOT NULL DEFAULT ''");
+    } catch (Exception $e) {}
+    try {
+        // Auto-heal: synchronize payments lacking application_no with their applications by email
+        $pdo->exec("
+            UPDATE `payments` p
+            INNER JOIN `applications` a ON (p.payer_email != '' AND LOWER(TRIM(p.payer_email)) = LOWER(TRIM(a.email)))
+            SET p.application_no = a.application_no
+            WHERE p.application_no IS NULL OR p.application_no = '' OR p.application_no = 'VDX-2026-0101'
+        ");
+    } catch (Exception $e) {}
     $checked = true;
 }
 
@@ -23,7 +38,21 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method === 'GET') {
     $ref = trim($_GET['ref'] ?? '');
     if (!empty($ref)) {
-        $stmt = $pdo->prepare("SELECT * FROM `payments` WHERE reference = :ref1 OR application_no = :ref2 LIMIT 1");
+        $stmt = $pdo->prepare("
+            SELECT p.*,
+                   COALESCE(NULLIF(p.application_no, ''), a.application_no) AS application_no,
+                   a.program AS app_program,
+                   a.study_mode AS app_study_mode,
+                   a.phone AS payer_phone,
+                   a.status AS app_status
+            FROM `payments` p
+            LEFT JOIN `applications` a ON (
+                (p.application_no IS NOT NULL AND p.application_no != '' AND p.application_no != 'VDX-2026-0101' AND LOWER(TRIM(p.application_no)) = LOWER(TRIM(a.application_no)))
+                OR (p.payer_email != '' AND LOWER(TRIM(p.payer_email)) = LOWER(TRIM(a.email)))
+            )
+            WHERE p.reference = :ref1 OR p.application_no = :ref2 
+            LIMIT 1
+        ");
         $stmt->execute([':ref1' => $ref, ':ref2' => $ref]);
         $row = $stmt->fetch();
         if ($row) {
@@ -33,7 +62,20 @@ if ($method === 'GET') {
         }
     }
 
-    $stmt = $pdo->query("SELECT * FROM `payments` ORDER BY created_at DESC LIMIT 100");
+    $stmt = $pdo->query("
+        SELECT p.*,
+               COALESCE(NULLIF(p.application_no, ''), a.application_no) AS application_no,
+               a.program AS app_program,
+               a.study_mode AS app_study_mode,
+               a.phone AS payer_phone,
+               a.status AS app_status
+        FROM `payments` p
+        LEFT JOIN `applications` a ON (
+            (p.application_no IS NOT NULL AND p.application_no != '' AND p.application_no != 'VDX-2026-0101' AND LOWER(TRIM(p.application_no)) = LOWER(TRIM(a.application_no)))
+            OR (p.payer_email != '' AND LOWER(TRIM(p.payer_email)) = LOWER(TRIM(a.email)))
+        )
+        ORDER BY p.created_at DESC LIMIT 200
+    ");
     $rows = $stmt->fetchAll();
     jsonResponse(['success' => true, 'data' => $rows, 'payments' => $rows]);
 } elseif ($method === 'POST') {
@@ -396,6 +438,7 @@ if ($method === 'GET') {
     }
     $reference = trim($input['transactionRef'] ?? $input['reference'] ?? ('REF-VDX-' . rand(10000, 99999)));
     $appNo = trim($input['applicationNo'] ?? $input['application_no'] ?? '');
+    $receiptFile = trim($input['receipt_file'] ?? $input['receiptFile'] ?? $input['proof_image'] ?? '');
     $methodType = trim($input['method'] ?? 'Bank Transfer');
     $notes = trim($input['notes'] ?? ('Payment Date: ' . ($input['paymentDate'] ?? date('Y-m-d'))));
 
@@ -403,15 +446,49 @@ if ($method === 'GET') {
         jsonResponse(['success' => false, 'error' => 'Please provide payer name and payment amount.'], 400);
     }
 
+    // Auto-resolve application number if placeholder or empty
+    if (empty($appNo) || $appNo === 'VDX-2026-0101' || str_ends_with($appNo, '-0101')) {
+        if (!empty($payerEmail)) {
+            $mStmt = $pdo->prepare("SELECT application_no FROM `applications` WHERE LOWER(TRIM(email)) = LOWER(TRIM(:em)) ORDER BY id DESC LIMIT 1");
+            $mStmt->execute([':em' => $payerEmail]);
+            $mApp = $mStmt->fetch();
+            if ($mApp && !empty($mApp['application_no'])) {
+                $appNo = $mApp['application_no'];
+            }
+        }
+    }
+
+    // If still no application exists, auto-provision an application record so student admission flow is intact
+    if (empty($appNo) || $appNo === 'VDX-2026-0101') {
+        $appNo = 'VDX-' . date('Y') . '-' . str_pad((string)rand(100, 9999), 4, '0', STR_PAD_LEFT);
+        $names = preg_split('/\s+/', $payerName, 2);
+        try {
+            $insApp = $pdo->prepare("
+                INSERT INTO `applications`
+                (`application_no`, `first_name`, `last_name`, `email`, `phone`, `program`, `study_mode`, `skill_level`, `status`, `payment_status`, `tuition_fee`, `created_at`)
+                VALUES (:no, :fn, :ln, :em, '', 'Music Academy Course', 'Onsite', 'Beginner', 'pending', 'pending', :fee, NOW())
+            ");
+            $insApp->execute([
+                ':no' => $appNo,
+                ':fn' => $names[0] ?? $payerName,
+                ':ln' => $names[1] ?? '',
+                ':em' => $payerEmail,
+                ':fee' => $amount,
+            ]);
+        } catch (Exception $e) {}
+    }
+
     try {
         $stmt = $pdo->prepare("
-            INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`)
-            VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes)
+            INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`, `receipt_file`)
+            VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes, :receipt)
             ON DUPLICATE KEY UPDATE
+                `application_no` = COALESCE(NULLIF(VALUES(`application_no`), ''), `application_no`),
                 `payer_name` = VALUES(`payer_name`),
                 `amount` = VALUES(`amount`),
                 `currency` = VALUES(`currency`),
-                `notes` = VALUES(`notes`)
+                `notes` = VALUES(`notes`),
+                `receipt_file` = CASE WHEN VALUES(`receipt_file`) IS NOT NULL AND VALUES(`receipt_file`) != '' THEN VALUES(`receipt_file`) ELSE `receipt_file` END
         ");
 
         $stmt->execute([
@@ -423,59 +500,70 @@ if ($method === 'GET') {
             ':curr' => $currency,
             ':method' => $methodType,
             ':notes' => $notes,
+            ':receipt' => !empty($receiptFile) ? $receiptFile : null,
         ]);
 
         if (!empty($appNo)) {
             try {
-                $pdo->prepare("UPDATE `applications` SET `updated_at` = NOW() WHERE `application_no` = :no")->execute([':no' => $appNo]);
+                $pdo->prepare("
+                    UPDATE `applications` 
+                    SET `payment_status` = 'pending', 
+                        `updated_at` = NOW() 
+                    WHERE `application_no` = :no AND `payment_status` != 'verified'
+                ")->execute([':no' => $appNo]);
             } catch (Exception $appUpEx) {}
         }
     } catch (Exception $dbEx) {
-        if (stripos($dbEx->getMessage(), 'currency') !== false) {
+        try {
+            ensurePaymentsSchema($pdo);
+            $stmt = $pdo->prepare("
+                INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `currency`, `method`, `status`, `notes`, `receipt_file`)
+                VALUES (:ref, :app_no, :name, :email, :amt, :curr, :method, 'pending', :notes, :receipt)
+                ON DUPLICATE KEY UPDATE
+                    `application_no` = COALESCE(NULLIF(VALUES(`application_no`), ''), `application_no`),
+                    `payer_name` = VALUES(`payer_name`),
+                    `amount` = VALUES(`amount`),
+                    `currency` = VALUES(`currency`),
+                    `notes` = VALUES(`notes`),
+                    `receipt_file` = CASE WHEN VALUES(`receipt_file`) IS NOT NULL AND VALUES(`receipt_file`) != '' THEN VALUES(`receipt_file`) ELSE `receipt_file` END
+            ");
+            $stmt->execute([
+                ':ref' => $reference,
+                ':app_no' => !empty($appNo) ? $appNo : null,
+                ':name' => $payerName,
+                ':email' => !empty($payerEmail) ? $payerEmail : '',
+                ':amt' => $amount,
+                ':curr' => $currency,
+                ':method' => $methodType,
+                ':notes' => $notes,
+                ':receipt' => !empty($receiptFile) ? $receiptFile : null,
+            ]);
+        } catch (Exception $fallbackEx) {
             try {
-                $pdo->exec("ALTER TABLE `payments` ADD COLUMN `currency` VARCHAR(10) NOT NULL DEFAULT 'NGN' AFTER `amount`");
-                $stmt->execute([
+                $stmtNoCurr = $pdo->prepare("
+                    INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `method`, `status`, `notes`)
+                    VALUES (:ref, :app_no, :name, :email, :amt, :method, 'pending', :notes)
+                    ON DUPLICATE KEY UPDATE
+                        `application_no` = COALESCE(NULLIF(VALUES(`application_no`), ''), `application_no`),
+                        `payer_name` = VALUES(`payer_name`),
+                        `amount` = VALUES(`amount`),
+                        `notes` = VALUES(`notes`)
+                ");
+                $stmtNoCurr->execute([
                     ':ref' => $reference,
                     ':app_no' => !empty($appNo) ? $appNo : null,
                     ':name' => $payerName,
                     ':email' => !empty($payerEmail) ? $payerEmail : '',
                     ':amt' => $amount,
-                    ':curr' => $currency,
                     ':method' => $methodType,
-                    ':notes' => $notes,
+                    ':notes' => "[Currency: $currency] " . $notes,
                 ]);
-            } catch (Exception $fallbackEx) {
-                // Fall back to query without currency column
-                try {
-                    $stmtNoCurr = $pdo->prepare("
-                        INSERT INTO `payments` (`reference`, `application_no`, `payer_name`, `payer_email`, `amount`, `method`, `status`, `notes`)
-                        VALUES (:ref, :app_no, :name, :email, :amt, :method, 'pending', :notes)
-                        ON DUPLICATE KEY UPDATE
-                            `payer_name` = VALUES(`payer_name`),
-                            `amount` = VALUES(`amount`),
-                            `notes` = VALUES(`notes`)
-                    ");
-                    $stmtNoCurr->execute([
-                        ':ref' => $reference,
-                        ':app_no' => !empty($appNo) ? $appNo : null,
-                        ':name' => $payerName,
-                        ':email' => !empty($payerEmail) ? $payerEmail : '',
-                        ':amt' => $amount,
-                        ':method' => $methodType,
-                        ':notes' => "[Currency: $currency] " . $notes,
-                    ]);
-                } catch (Exception $finalEx) {
-                    jsonResponse([
-                        'success' => false,
-                        'error' => 'Unable to record payment: ' . $finalEx->getMessage(),
-                    ], 500);
-                }
+            } catch (Exception $finalEx) {
+                jsonResponse([
+                    'success' => false,
+                    'error' => 'Unable to record payment: ' . $finalEx->getMessage(),
+                ], 500);
             }
-        } else {
-            jsonResponse([
-                'success' => false,
-                'error' => 'Unable to record payment: ' . $dbEx->getMessage(),
-            ], 500);
         }
     }
 
@@ -557,6 +645,7 @@ if ($method === 'GET') {
     jsonResponse([
         'success' => true,
         'reference' => $reference,
+        'application_no' => $appNo,
         'message' => 'Proof of payment submitted successfully.',
     ], 201);
 } else {

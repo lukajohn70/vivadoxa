@@ -457,6 +457,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
       if (res && res.success && res.application_no) {
         // Cache application context for payment checkout & document download
         sessionStorage.setItem("vdx_current_ref", res.application_no)
+        localStorage.setItem("vdx_current_ref", res.application_no)
         sessionStorage.setItem("vdx_current_amount", String(effectiveAmount))
         sessionStorage.setItem("vdx_current_currency", data.currency || "NGN")
         sessionStorage.setItem(
@@ -464,12 +465,17 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
           data.studyMode || "Onsite",
         )
         sessionStorage.setItem("vdx_current_name", effectiveFullName)
+        localStorage.setItem("vdx_current_name", effectiveFullName)
         sessionStorage.setItem("vdx_current_email", data.email)
+        localStorage.setItem("vdx_current_email", data.email)
         sessionStorage.setItem("vdx_current_phone", data.phone || "")
         sessionStorage.setItem("vdx_current_program", effectiveProgram)
         sessionStorage.setItem("vdx_current_schedule", data.schedule || "")
         sessionStorage.setItem("vdx_current_plan", effectivePlan)
         sessionStorage.setItem("vdx_current_address", effectiveAddress)
+        if (res.user) {
+          localStorage.setItem("vdx_portal_user", JSON.stringify(res.user))
+        }
         if (data.passportPhoto) {
           sessionStorage.setItem("vdx_current_passport", data.passportPhoto)
         }
