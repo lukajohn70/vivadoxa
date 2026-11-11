@@ -12,6 +12,7 @@ import {
   reorderGallery,
   resetGalleryDefaults,
   uploadGalleryPhoto,
+  getMediaUrl,
 } from "@/lib/api"
 import type { GalleryItem } from "@/types"
 
@@ -373,13 +374,19 @@ export function AdminGalleryView({
                     >
                       {formImage ? (
                         <img
-                          src={formImage}
+                          src={getMediaUrl(formImage)}
                           alt="Preview"
                           className="w-full h-full object-cover"
                           style={{
                             width: "100%",
                             height: "100%",
                             objectFit: "cover",
+                          }}
+                          onError={(e: any) => {
+                            const fallback = getMediaUrl("/media/gallery/gallery-01-youth-saxophone.jpeg")
+                            if (e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback
+                            }
                           }}
                         />
                       ) : (
@@ -736,10 +743,16 @@ export function AdminGalleryView({
                         title="Click to preview"
                       >
                         <img
-                          src={item.image}
+                          src={getMediaUrl(item.image)}
                           alt={item.title}
                           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e: any) => {
+                            const fallback = getMediaUrl("/media/gallery/gallery-01-youth-saxophone.jpeg")
+                            if (e.currentTarget.src !== fallback) {
+                              e.currentTarget.src = fallback
+                            }
+                          }}
                         />
                         <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                           <Icon name="search" size={14} className="text-white" />
@@ -902,7 +915,7 @@ export function AdminGalleryView({
               style={{ aspectRatio: "4/3" }}
             >
               <img
-                src={previewPhoto.image}
+                src={getMediaUrl(previewPhoto.image)}
                 alt={previewPhoto.title}
                 className="w-full h-full object-contain"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}

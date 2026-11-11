@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ImgHTMLAttributes } from "react"
 import { useNetworkStatus } from "@/hooks/useNetworkStatus"
+import { getMediaUrl } from "@/lib/api"
 
 interface LazyImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string
@@ -48,7 +49,8 @@ export function LazyImage({
     return () => observer.disconnect()
   }, [shouldLoad])
 
-  const imageSrc = hasError ? fallbackSrc : src
+  const rawSrc = hasError ? fallbackSrc : src
+  const imageSrc = getMediaUrl(rawSrc)
 
   return (
     <div

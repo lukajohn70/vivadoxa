@@ -10,6 +10,7 @@ import {
   resetHeroSlides,
   uploadHeroImage,
   DEFAULT_HERO_SLIDES,
+  getMediaUrl,
   type HeroSlideItem,
 } from "@/lib/api"
 
@@ -431,13 +432,19 @@ export function AdminHeroSlidesView({
             }}
           >
             <img
-              src={currentSimSlide.src}
+              src={getMediaUrl(currentSimSlide.src)}
               alt={currentSimSlide.alt}
               style={{
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
                 transition: "opacity 0.4s ease",
+              }}
+              onError={(e: any) => {
+                const fallback = getMediaUrl("/media/programs/sax-ensemble.jpeg")
+                if (e.currentTarget.src !== fallback) {
+                  e.currentTarget.src = fallback
+                }
               }}
             />
             {/* Subtle Gradient Overlay */}
@@ -713,11 +720,14 @@ export function AdminHeroSlidesView({
                       }}
                     >
                       <img
-                        src={slide.src}
+                        src={getMediaUrl(slide.src)}
                         alt={slide.alt || slide.title}
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={(e: any) => {
-                          e.target.src = "/media/programs/sax-ensemble.jpeg"
+                          const fallback = getMediaUrl("/media/programs/sax-ensemble.jpeg")
+                          if (e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback
+                          }
                         }}
                       />
                     </div>
@@ -969,9 +979,15 @@ export function AdminHeroSlidesView({
                     }}
                   >
                     <img
-                      src={formSrc}
+                      src={getMediaUrl(formSrc)}
                       alt="Hero slide preview"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={(e: any) => {
+                        const fallback = getMediaUrl("/media/programs/sax-ensemble.jpeg")
+                        if (e.currentTarget.src !== fallback) {
+                          e.currentTarget.src = fallback
+                        }
+                      }}
                     />
                     <div
                       style={{
@@ -1049,7 +1065,7 @@ export function AdminHeroSlidesView({
                         }}
                         title={p.title}
                       >
-                        <img src={p.src} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={getMediaUrl(p.src)} alt={p.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </button>
                     ))}
                   </div>

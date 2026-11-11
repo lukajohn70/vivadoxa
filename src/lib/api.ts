@@ -44,10 +44,47 @@ export const getApiUrl = (endpoint: string): string => {
   return `/api/${clean}`
 }
 
+/**
+ * Universal media URL resolver:
+ * - Keeps data URLs, blob URLs, and external http(s) URLs as-is
+ * - On local MAMP development (/Vivadoxa), ensures path is prefixed with /Vivadoxa/media/...
+ * - On production (cPanel) or Vite dev server, returns /media/... cleanly
+ */
+export const getMediaUrl = (src?: string | null): string => {
+  if (!src) return ""
+  if (
+    src.startsWith("http://") ||
+    src.startsWith("https://") ||
+    src.startsWith("data:") ||
+    src.startsWith("blob:")
+  ) {
+    return src
+  }
+
+  const clean = src.startsWith("/") ? src : `/${src}`
+
+  // Local development under MAMP document root (/Vivadoxa/...)
+  if (
+    typeof window !== "undefined" &&
+    (window.location.pathname.startsWith("/Vivadoxa") ||
+      ((window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1") &&
+        (window.location.port === "" || window.location.port === "80")))
+  ) {
+    if (!clean.startsWith("/Vivadoxa/")) {
+      return `/Vivadoxa${clean}`
+    }
+  }
+
+  return clean
+}
+
 export interface ApiResponse<T = any> {
   success: boolean
   message?: string
   error?: string
+  image_url?: string
+  filename?: string
   data?: T
   application_no?: string
   tuition_fee?: number | string
@@ -2380,7 +2417,7 @@ export async function resetHeroSlides(): Promise<ApiResponse> {
 
 export async function uploadHeroImage(
   file: File,
-): Promise<ApiResponse & { image_url?: string }> {
+): Promise<ApiResponse & { image_url?: string; filename?: string }> {
   try {
     const formData = new FormData()
     formData.append("hero_image", file)
@@ -3134,7 +3171,9 @@ export async function resetGalleryDefaults(): Promise<ApiResponse> {
   }
 }
 
-export async function uploadGalleryPhoto(file: File): Promise<ApiResponse> {
+export async function uploadGalleryPhoto(
+  file: File,
+): Promise<ApiResponse & { image_url?: string; filename?: string }> {
   try {
     const formData = new FormData()
     formData.append("photo", file)
@@ -3143,7 +3182,11 @@ export async function uploadGalleryPhoto(file: File): Promise<ApiResponse> {
       credentials: "include",
       body: formData,
     })
-    return await res.json()
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return { success: false, error: "Failed to parse upload response from server." }
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to upload photo." }
   }

@@ -28,6 +28,7 @@ import {
   fetchHeroSlides,
   getCachedHeroSlides,
   DEFAULT_HERO_SLIDES,
+  getMediaUrl,
   type HeroSlideItem,
 } from "@/lib/api"
 import {
@@ -243,10 +244,16 @@ export function Home({ go }: { go: (p: Page) => void }) {
                       aria-hidden={!isActive}
                     >
                       <img
-                        src={slide.src}
+                        src={getMediaUrl(slide.src)}
                         alt={slide.alt || slide.title}
                         fetchPriority={idx === 0 ? "high" : "low"}
                         loading={idx === 0 ? "eager" : "lazy"}
+                        onError={(e: any) => {
+                          const fallback = getMediaUrl("/media/programs/sax-ensemble.jpeg")
+                          if (e.currentTarget.src !== fallback) {
+                            e.currentTarget.src = fallback
+                          }
+                        }}
                       />
                       <div className="hero-slide-overlay" aria-hidden="true" />
                     </div>

@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Button, Icon, WhatsAppIcon } from "@/components/ui"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
-import { fetchGalleryItems } from "@/lib/api"
+import { fetchGalleryItems, getMediaUrl } from "@/lib/api"
 import { initialGalleryItems } from "@/lib/data"
 import { WHATSAPP_URL } from "@/lib/utils"
 import type { GalleryItem, Page } from "@/types"
@@ -648,9 +648,15 @@ export function GallerySection({
             {/* Image viewport */}
             <div className="flex-1 bg-black flex items-center justify-center min-h-[300px] max-h-[58vh] lg:max-h-[85vh] overflow-hidden">
               <img
-                src={activeItem.image}
+                src={getMediaUrl(activeItem.image)}
                 alt={activeItem.title}
                 className="max-h-full max-w-full object-contain"
+                onError={(e: any) => {
+                  const fallback = getMediaUrl("/media/programs/piano-recital-denim.jpeg")
+                  if (e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback
+                  }
+                }}
               />
             </div>
 
