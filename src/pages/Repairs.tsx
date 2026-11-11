@@ -1621,7 +1621,7 @@ export function Repairs() {
                   <LazyImage
                     src={repairSaxImg}
                     alt="Vivadoxa master technician repairing a golden brass saxophone at the workbench"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                   <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider z-10">
                     Acoustic &amp; Brass Bench
@@ -1657,7 +1657,7 @@ export function Repairs() {
                   <LazyImage
                     src={repairElectronicsImg}
                     alt="Vivadoxa electronics technician using multimeter diagnosing synthesizer keyboard circuit board"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                   <div className="absolute top-4 left-4 bg-[var(--navy)]/90 backdrop-blur-sm px-3 py-1 rounded-md border border-[var(--gold)]/40 text-[var(--gold2)] text-xs font-bold uppercase tracking-wider z-10">
                     Electronics &amp; Circuit Bench

@@ -664,12 +664,47 @@ function getDurationDetails(
   }
 }
 
+export const ADMISSION_DISCIPLINES = [
+  "Piano Studies",
+  "Alto Saxophone Studies",
+  "Soprano Saxophone Studies",
+  "Tenor Saxophone Studies",
+  "Violin Studies",
+  "Acoustic Guitar Studies",
+  "Lead Guitar Studies",
+  "Bass Guitar Studies",
+  "Drum Set & Percussion Studies",
+  "Talking Drum Studies",
+  "Vocal Studies",
+  "Sound & Audio Engineering Studies",
+  "Trumpet Studies",
+  "Flute Studies",
+  "Clarinet Studies",
+  "Euphonium Studies",
+  "Ukulele Studies",
+]
+
 /** Adapts the program name and specific instruction text based on the selected course */
-function getProgramDetails(rawProgram?: string) {
-  const p = (rawProgram || "Piano Studies").trim()
+export function getProgramDetails(rawProgram?: string) {
+  const p = (rawProgram || "").trim()
   const lower = p.toLowerCase()
 
-  if (lower.includes("piano") || lower.includes("keyboard")) {
+  // Clean out generic fallback terms so that generic placeholders never bleed into the official letter
+  const isGeneric =
+    !p ||
+    lower === "music course" ||
+    lower === "music academy course" ||
+    lower === "music academy" ||
+    lower === "academy program" ||
+    lower === "academy course" ||
+    lower === "music" ||
+    lower === "course" ||
+    lower === "others specify" ||
+    lower === "general" ||
+    lower.startsWith("music course") ||
+    lower.startsWith("music academy")
+
+  if (isGeneric || lower.includes("piano") || lower.includes("keyboard")) {
     return {
       title: "Piano Studies",
       instruction:
@@ -688,6 +723,13 @@ function getProgramDetails(rawProgram?: string) {
       title: "Soprano Saxophone Studies",
       instruction:
         "structured soprano saxophone instruction designed to develop your musical knowledge, embouchure, intonation and breath control techniques, sight-reading abilities, performance skills and overall musicianship.",
+    }
+  }
+  if (lower.includes("tenor sax")) {
+    return {
+      title: "Tenor Saxophone Studies",
+      instruction:
+        "structured tenor saxophone instruction designed to develop your musical knowledge, embouchure, tone resonance and breath control techniques, sight-reading abilities, performance skills and overall musicianship.",
     }
   }
   if (lower.includes("sax")) {
@@ -791,7 +833,8 @@ function getProgramDetails(rawProgram?: string) {
   if (
     lower.includes("sound") ||
     lower.includes("studio") ||
-    lower.includes("engineering")
+    lower.includes("engineering") ||
+    lower.includes("production")
   ) {
     return {
       title: "Sound & Audio Engineering Studies",
@@ -839,6 +882,15 @@ function formatAdmissionNo(
 
 // ── Official Admission Letter ────────────────────────────────────────────────
 export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterProps) {
+  const initialProgram =
+    data.program ||
+    data.course ||
+    data.instrument ||
+    data.programme ||
+    data.app_program ||
+    "Piano Studies"
+  const [currentProgram, setCurrentProgram] = useState(initialProgram)
+
   const studentName =
     data.fullName ||
     `${data.first_name || ""} ${data.last_name || ""}`.trim() ||
@@ -857,7 +909,15 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
       : new Date()
   const issueDateStr = formatAcademicDate(issueDate)
 
-  // 2. Commencement Date (Start Date based on issue date + 6 days, or explicit field)
+  // 2. Dynamic Course & Duration Details
+  const durationInfo = getDurationDetails(
+    data.planTier,
+    data.duration,
+    currentProgram,
+  )
+  const programInfo = getProgramDetails(currentProgram)
+
+  // 3. Commencement Date (Start Date based on issue date + 6 days, or explicit field)
   const rawCommencement =
     data.commencement_date || data.start_date || data.startDate
   const commencementDate =
@@ -865,14 +925,6 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
       ? new Date(rawCommencement)
       : new Date(issueDate.getTime() + 6 * 24 * 60 * 60 * 1000)
   const commencementDateStr = formatAcademicDate(commencementDate)
-
-  // 3. Dynamic Course & Duration Details
-  const durationInfo = getDurationDetails(
-    data.planTier,
-    data.duration,
-    data.program,
-  )
-  const programInfo = getProgramDetails(data.program)
 
   // 4. Completion Date (Finish Date based on commencement date + duration chosen minus 1 day)
   const rawCompletion =
@@ -1389,7 +1441,37 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label
+                htmlFor="admission-discipline-select-page"
+                style={{ fontSize: 11.5, fontWeight: 700, color: "var(--muted)" }}
+              >
+                Discipline:
+              </label>
+              <select
+                id="admission-discipline-select-page"
+                value={programInfo.title}
+                onChange={(e) => setCurrentProgram(e.target.value)}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "5px 10px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                  background: "white",
+                  color: "var(--navy)",
+                  cursor: "pointer",
+                }}
+              >
+                {ADMISSION_DISCIPLINES.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <Button
               variant="primary"
               onClick={handleDownload}
@@ -1450,7 +1532,21 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
           >
             Close
           </Button>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-[11px] font-bold text-slate-300 whitespace-nowrap">Discipline:</span>
+              <select
+                value={programInfo.title}
+                onChange={(e) => setCurrentProgram(e.target.value)}
+                className="bg-slate-800 text-white border border-slate-700 text-xs rounded px-2.5 py-1.5 font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-[var(--gold)] w-full sm:w-auto"
+              >
+                {ADMISSION_DISCIPLINES.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Button
               onClick={handleDownload}
               disabled={isDownloading}

@@ -906,21 +906,29 @@ export function Home({ go }: { go: (p: Page) => void }) {
               <div>
                 <div style={{ position: "relative" }}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
-                    <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
+                    <div className="relative rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-44 sm:h-52 group shadow-sm">
                       <LazyImage
                         src={repairSaxImg}
                         alt="Brass & saxophone overhaul at Vivadoxa workshop"
                         fallbackSrc="/media/repairs/saxophone-overhaul.jpeg"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded text-[11px] font-bold text-white tracking-wide border border-white/10 z-10">
+                        Acoustic &amp; Brass Bench
+                      </div>
                     </div>
-                    <div className="rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-36 sm:h-48 group">
+                    <div className="relative rounded-[var(--radius)] overflow-hidden border border-[var(--line)] bg-[#0a192f] h-44 sm:h-52 group shadow-sm">
                       <LazyImage
                         src={repairElectronicsImg}
                         alt="Keyboard electronics diagnostic with multimeter at Vivadoxa clinic"
                         fallbackSrc="/media/repairs/keyboard-electronics.jpeg"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded text-[11px] font-bold text-white tracking-wide border border-white/10 z-10">
+                        Digital &amp; Keyboards Clinic
+                      </div>
                     </div>
                   </div>
 
