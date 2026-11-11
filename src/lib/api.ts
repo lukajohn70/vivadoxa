@@ -2437,8 +2437,24 @@ export async function uploadHeroImage(
 }
 
 // ── Staff & Administrator Management ──────────────────────────────────────────
+export function getAdminAuthHeaders(): Record<string, string> {
+  try {
+    const raw =
+      sessionStorage.getItem("vdx_admin_session") ||
+      localStorage.getItem("vdx_admin_session")
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed?.email) {
+        return { "X-Admin-Email": parsed.email }
+      }
+    }
+  } catch {}
+  return {}
+}
+
 export async function fetchAdmins(): Promise<any[]> {
   try {
+    const authHeaders = getAdminAuthHeaders()
     // If there are unsynced local staff accounts in cache with credentials, commit them to MySQL first
     const localList = getLocalArray<any>("vdx_admins", [])
     for (const localAdmin of localList) {
@@ -2446,7 +2462,7 @@ export async function fetchAdmins(): Promise<any[]> {
         try {
           await fetch(getApiUrl("admins.php"), {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...authHeaders },
             credentials: "include",
             body: JSON.stringify({
               action: "add",
@@ -2462,6 +2478,7 @@ export async function fetchAdmins(): Promise<any[]> {
 
     const res = await fetch(getApiUrl("admins.php"), {
       credentials: "include",
+      headers: { ...authHeaders },
     })
     if (res.ok) {
       const data = await res.json()
@@ -2485,7 +2502,7 @@ export async function addStaffAdmin(data: {
   try {
     const res = await fetch(getApiUrl("admins.php"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({ action: "add", ...data }),
     })
@@ -2525,7 +2542,7 @@ export async function updateStaffAdmin(data: {
   try {
     const res = await fetch(getApiUrl("admins.php"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({ action: "update", ...data }),
     })
@@ -2557,7 +2574,7 @@ export async function toggleStaffActive(id: number): Promise<ApiResponse> {
   try {
     const res = await fetch(getApiUrl("admins.php"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({ action: "toggle_active", id }),
     })
@@ -2589,7 +2606,7 @@ export async function deleteStaffAdmin(id: number): Promise<ApiResponse> {
   try {
     const res = await fetch(getApiUrl("admins.php"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({ action: "delete", id }),
     })
@@ -3456,7 +3473,7 @@ export async function changeStaffPassword(
   try {
     const res = await fetch(getApiUrl("admins.php"), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAdminAuthHeaders() },
       credentials: "include",
       body: JSON.stringify({
         action: "change_password",

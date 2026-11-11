@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { Icon, Button, Field, WhatsAppIcon } from "@/components/ui"
+import { useAdminAuth } from "@/hooks/useAdminAuth"
 import {
   type BankSettings,
   type GeneralSettings,
@@ -30,6 +31,14 @@ export function StaffAndRolesView({
 }: {
   setActionNotice: (msg: string) => void
 }) {
+  const { session } = useAdminAuth()
+  const isSuperAdmin =
+    session?.role === "superadmin" ||
+    session?.role === "super_admin" ||
+    session?.email?.toLowerCase().includes("super") ||
+    session?.email?.toLowerCase() === "admin" ||
+    session?.email?.toLowerCase().startsWith("admin@")
+
   const [activeAccountTab, setActiveAccountTab] = useState<"staff" | "portal">("staff")
 
   // Staff States
@@ -67,6 +76,11 @@ export function StaffAndRolesView({
   const [saving, setSaving] = useState(false)
 
   const loadStaff = async () => {
+    if (!isSuperAdmin) {
+      setAdmins([])
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const data = await fetchAdmins()
@@ -91,9 +105,49 @@ export function StaffAndRolesView({
   }
 
   useEffect(() => {
-    loadStaff()
+    if (isSuperAdmin) {
+      loadStaff()
+    }
     loadPortalUsers()
-  }, [])
+  }, [isSuperAdmin])
+
+  if (!isSuperAdmin) {
+    return (
+      <div
+        style={{
+          background: "white",
+          border: "1px solid var(--line)",
+          borderRadius: 8,
+          padding: "48px 24px",
+          textAlign: "center",
+          maxWidth: 600,
+          margin: "40px auto",
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: "#fee2e2",
+            color: "#dc2626",
+            display: "grid",
+            placeItems: "center",
+            margin: "0 auto 16px",
+          }}
+        >
+          <Icon name="warning" size={28} />
+        </div>
+        <h3 style={{ fontSize: 18, color: "var(--navy)", marginBottom: 8 }}>
+          Super Administrator Privilege Required
+        </h3>
+        <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+          Only Super Administrators have clearance to view administrative staff
+          accounts, modify roles, and configure system security credentials.
+        </p>
+      </div>
+    )
+  }
 
   function openAddModal() {
     setEditingAdmin(null)

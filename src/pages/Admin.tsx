@@ -1061,6 +1061,73 @@ export function AdminLogin({ go }: { go: (p: Page) => void }) {
   )
 }
 
+// ─── Role-Based Access Control (RBAC) Helpers ─────────────────────────────────
+export function getRoleTitle(role?: string): string {
+  switch ((role || "").toLowerCase()) {
+    case "superadmin":
+    case "super_admin":
+      return "Super Administrator"
+    case "admissions":
+      return "Admissions Officer"
+    case "finance":
+      return "Financial Officer"
+    case "workshop":
+      return "Workshop Lead"
+    case "staff":
+    default:
+      return "Staff Member"
+  }
+}
+
+export function isTabAllowedForRole(tab: string, role?: string): boolean {
+  const normRole = (role || "staff").toLowerCase()
+  if (normRole === "superadmin" || normRole === "super_admin") return true
+
+  switch (normRole) {
+    case "admissions":
+      return [
+        "Dashboard",
+        "Applications",
+        "Enquiries",
+        "Weekly Bulletin",
+        "Programs & Courses",
+        "Students",
+        "Class Schedule",
+      ].includes(tab)
+
+    case "finance":
+      return [
+        "Dashboard",
+        "Payments",
+        "Applications",
+        "Payment Settings",
+      ].includes(tab)
+
+    case "workshop":
+      return [
+        "Dashboard",
+        "Repairs",
+        "Shop & Rentals",
+        "Enquiries",
+      ].includes(tab)
+
+    case "staff":
+    default:
+      return [
+        "Dashboard",
+        "Enquiries",
+        "Weekly Bulletin",
+        "Programs & Courses",
+        "Instructors",
+        "Performances & Recitals",
+        "Photo Gallery",
+        "Students",
+        "Class Schedule",
+        "Hero Slideshow",
+      ].includes(tab)
+  }
+}
+
 // ─── Main Admin Portal ────────────────────────────────────────────────────────
 export function Admin({ go }: { go: (p: Page) => void }) {
   const { session, logout } = useAdminAuth()
@@ -1079,6 +1146,13 @@ export function Admin({ go }: { go: (p: Page) => void }) {
   const [mobileNav, setMobileNav] = useState(false)
   const [liveStats, setLiveStats] = useState<any>(null)
   const [showNotifDropdown, setShowNotifDropdown] = useState(false)
+
+  // Enforce role clearance on active tab
+  useEffect(() => {
+    if (!isTabAllowedForRole(active, session?.role)) {
+      setActive("Dashboard")
+    }
+  }, [active, session?.role])
 
   const refreshStats = useCallback(() => {
     fetchStats()
@@ -1148,6 +1222,17 @@ export function Admin({ go }: { go: (p: Page) => void }) {
     ],
   ]
 
+  const filteredNavGroups = useMemo(() => {
+    return navGroups
+      .map(([group, items]) => {
+        const allowedItems = items.filter((item) =>
+          isTabAllowedForRole(item, session?.role),
+        )
+        return [group, allowedItems] as [string, string[]]
+      })
+      .filter(([, items]) => items.length > 0)
+  }, [navGroups, session?.role])
+
   function closeNav(item: string) {
     setActive(item)
     setMobileNav(false)
@@ -1182,11 +1267,11 @@ export function Admin({ go }: { go: (p: Page) => void }) {
           </span>
           <div>
             <strong>{session?.name || "Administrator"}</strong>
-            <small>Staff Administrator</small>
+            <small>{getRoleTitle(session?.role)}</small>
           </div>
         </div>
         <nav aria-label="Admin navigation">
-          {navGroups.map(([group, items]) => (
+          {filteredNavGroups.map(([group, items]) => (
             <div className="admin-nav-group" key={group}>
               <small>{group}</small>
               {items.map((item, i) => {
@@ -1698,6 +1783,33 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
   )[0]
   const avgMonthly = Math.round(total6Months / Math.max(1, monthlyData.length))
 
+  const canViewFinancials = isTabAllowedForRole("Payments", session?.role)
+
+  const filteredMetricCards = metricCards.filter((card) =>
+    isTabAllowedForRole(card.target, session?.role),
+  )
+
+  const welcomeActionTab = isTabAllowedForRole("Applications", session?.role)
+    ? "Applications"
+    : isTabAllowedForRole("Repairs", session?.role)
+      ? "Repairs"
+      : isTabAllowedForRole("Payments", session?.role)
+        ? "Payments"
+        : isTabAllowedForRole("Students", session?.role)
+          ? "Students"
+          : "Dashboard"
+
+  const welcomeActionLabel =
+    welcomeActionTab === "Applications"
+      ? "Review applications"
+      : welcomeActionTab === "Repairs"
+        ? "Manage repairs"
+        : welcomeActionTab === "Payments"
+          ? "Review payments"
+          : welcomeActionTab === "Students"
+            ? "View students"
+            : "Dashboard"
+
   return (
     <>
       <div className="welcome-panel">
@@ -1715,13 +1827,15 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
             revenues, workshop repairs and schedules.
           </p>
         </div>
-        <Button onClick={() => setActive("Applications")}>
-          Review applications <Icon name="arrow" />
-        </Button>
+        {welcomeActionTab !== "Dashboard" && (
+          <Button onClick={() => setActive(welcomeActionTab)}>
+            {welcomeActionLabel} <Icon name="arrow" />
+          </Button>
+        )}
       </div>
 
       <div className="metric-grid" role="list" aria-label="Key metrics">
-        {metricCards.map((card) => (
+        {filteredMetricCards.map((card) => (
           <article
             key={card.title}
             role="listitem"
@@ -1762,124 +1876,126 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
         ))}
       </div>
 
-      <div className="admin-panels">
-        <section className="chart-panel">
-          <div className="panel-title">
-            <div>
-              <h2>Revenue Overview (Last 6 Months)</h2>
-              <p>
-                Audited inflows aggregated from verified payment transactions
-              </p>
+      {canViewFinancials && (
+        <div className="admin-panels">
+          <section className="chart-panel">
+            <div className="panel-title">
+              <div>
+                <h2>Revenue Overview (Last 6 Months)</h2>
+                <p>
+                  Audited inflows aggregated from verified payment transactions
+                </p>
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "var(--navy)",
+                  background: "#f4f2ec",
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  border: "1px solid var(--line)",
+                }}
+              >
+                Current Academic Session
+              </span>
             </div>
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "var(--navy)",
-                background: "#f4f2ec",
-                padding: "6px 12px",
-                borderRadius: 6,
-                border: "1px solid var(--line)",
-              }}
-            >
-              Current Academic Session
-            </span>
-          </div>
 
-          <div className="chart" aria-label="Revenue chart">
-            <div className="bars">
-              {monthlyData.map((m) => {
-                const heightPct =
-                  m.amount > 0
-                    ? Math.max(14, Math.round((m.amount / maxRevenue) * 100))
-                    : 4
-                return (
-                  <div
-                    key={m.month}
-                    title={`${m.month}: ${m.formatted}`}
-                    style={{ position: "relative" }}
-                  >
-                    {m.amount > 0 && (
-                      <span
+            <div className="chart" aria-label="Revenue chart">
+              <div className="bars">
+                {monthlyData.map((m) => {
+                  const heightPct =
+                    m.amount > 0
+                      ? Math.max(14, Math.round((m.amount / maxRevenue) * 100))
+                      : 4
+                  return (
+                    <div
+                      key={m.month}
+                      title={`${m.month}: ${m.formatted}`}
+                      style={{ position: "relative" }}
+                    >
+                      {m.amount > 0 && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: "var(--navy)",
+                            marginBottom: 4,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {m.formatted}
+                        </span>
+                      )}
+                      <i
                         style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          color: "var(--navy)",
-                          marginBottom: 4,
-                          whiteSpace: "nowrap",
+                          height: `${heightPct}%`,
+                          transition: "height 0.4s ease",
+                          background:
+                            m.amount > 0
+                              ? "linear-gradient(180deg, var(--gold) 0%, #8f471e 100%)"
+                              : "#e5e7eb",
+                          borderRadius: "5px 5px 0 0",
                         }}
-                      >
-                        {m.formatted}
+                      />
+                      <span style={{ fontWeight: 600, marginTop: 7 }}>
+                        {m.month}
                       </span>
-                    )}
-                    <i
-                      style={{
-                        height: `${heightPct}%`,
-                        transition: "height 0.4s ease",
-                        background:
-                          m.amount > 0
-                            ? "linear-gradient(180deg, var(--gold) 0%, #8f471e 100%)"
-                            : "#e5e7eb",
-                        borderRadius: "5px 5px 0 0",
-                      }}
-                    />
-                    <span style={{ fontWeight: 600, marginTop: 7 }}>
-                      {m.month}
-                    </span>
-                  </div>
-                )
-              })}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4.5 pt-4 border-t border-[var(--line)]">
-            <div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  display: "block",
-                }}
-              >
-                6-Month Inflow Total
-              </span>
-              <strong style={{ fontSize: 16, color: "var(--navy)" }}>
-                ₦{total6Months.toLocaleString()}
-              </strong>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4.5 pt-4 border-t border-[var(--line)]">
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    display: "block",
+                  }}
+                >
+                  6-Month Inflow Total
+                </span>
+                <strong style={{ fontSize: 16, color: "var(--navy)" }}>
+                  ₦{total6Months.toLocaleString()}
+                </strong>
+              </div>
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    display: "block",
+                  }}
+                >
+                  Peak Month
+                </span>
+                <strong style={{ fontSize: 16, color: "var(--gold-text)" }}>
+                  {peakMonth && peakMonth.amount > 0
+                    ? `${peakMonth.month} (${peakMonth.formatted})`
+                    : "—"}
+                </strong>
+              </div>
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    display: "block",
+                  }}
+                >
+                  Average Monthly Intake
+                </span>
+                <strong style={{ fontSize: 16, color: "var(--navy)" }}>
+                  ₦{avgMonthly.toLocaleString()} / mo
+                </strong>
+              </div>
             </div>
-            <div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  display: "block",
-                }}
-              >
-                Peak Month
-              </span>
-              <strong style={{ fontSize: 16, color: "var(--gold-text)" }}>
-                {peakMonth && peakMonth.amount > 0
-                  ? `${peakMonth.month} (${peakMonth.formatted})`
-                  : "—"}
-              </strong>
-            </div>
-            <div>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "var(--muted)",
-                  display: "block",
-                }}
-              >
-                Average Monthly Intake
-              </span>
-              <strong style={{ fontSize: 16, color: "var(--navy)" }}>
-                ₦{avgMonthly.toLocaleString()} / mo
-              </strong>
-            </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
+      )}
 
       {/* Operational Quick Management Hub */}
       <div
@@ -1986,7 +2102,9 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
               tab: "Students",
               icon: "users",
             },
-          ].map((item) => (
+          ]
+            .filter((item) => isTabAllowedForRole(item.tab, session?.role))
+            .map((item) => (
             <div
               key={item.title}
               onClick={() => setActive(item.tab)}
@@ -2102,6 +2220,46 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
 // ─── Operational Manager & Data Tables ─────────────────────────────────────────
 function AdminManager({ title }: { title: string }) {
   const { session } = useAdminAuth()
+
+  if (!isTabAllowedForRole(title, session?.role)) {
+    return (
+      <div
+        style={{
+          background: "white",
+          border: "1px solid var(--line)",
+          borderRadius: 8,
+          padding: "48px 24px",
+          textAlign: "center",
+          maxWidth: 600,
+          margin: "40px auto",
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: "#fee2e2",
+            color: "#dc2626",
+            display: "grid",
+            placeItems: "center",
+            margin: "0 auto 16px",
+          }}
+        >
+          <Icon name="warning" size={28} />
+        </div>
+        <h3 style={{ fontSize: 18, color: "var(--navy)", marginBottom: 8 }}>
+          Access Restricted
+        </h3>
+        <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+          Your administrative role (
+          <strong>{getRoleTitle(session?.role)}</strong>) does not have
+          clearance to access the <strong>{title}</strong> module.
+        </p>
+      </div>
+    )
+  }
+
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")

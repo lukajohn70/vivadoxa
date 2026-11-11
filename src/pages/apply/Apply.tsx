@@ -637,7 +637,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                 }}
               >
                 {/* Left: School Title & Category Checkboxes */}
-                <div style={{ flex: "1 1 340px" }}>
+                <div style={{ flex: "1 1 300px", minWidth: 0, width: "100%" }}>
                   <div className="flex items-center gap-2 mb-1">
                     <span
                       style={{
@@ -694,14 +694,14 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       background: "#f8fafc",
                       border: "1.5px solid #cbd5e1",
                       borderRadius: 10,
-                      padding: "12px 16px",
+                      padding: "12px 14px",
                       boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                     }}
                   >
-                    <div className="flex items-center justify-between mb-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2.5">
                       <span
                         style={{
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontWeight: 800,
                           textTransform: "uppercase",
                           letterSpacing: "0.8px",
@@ -712,7 +712,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       </span>
                       <span
                         style={{
-                          fontSize: 11.5,
+                          fontSize: 11,
                           color: "#334155",
                           fontWeight: 600,
                         }}
@@ -724,7 +724,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                       {([
                         "Regular classes",
                         "Private classes",
@@ -752,7 +752,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                                 }
                               }
                             }}
-                            className={`px-3 py-2.5 rounded-lg border text-left cursor-pointer transition-all flex items-center gap-2.5 ${
+                            className={`px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-lg border text-left cursor-pointer transition-all flex items-center gap-2 ${
                               checked
                                 ? "border-[var(--navy)] bg-black/5 text-[var(--navy)] ring-2 ring-black/10 shadow-xs"
                                 : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-50 shadow-xs"
@@ -798,6 +798,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
 
                 {/* Right: Passport Photo Box from docx */}
                 <div
+                  className="mx-auto sm:mx-0 my-1 sm:my-0"
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -901,6 +902,8 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "6px 12px",
                   marginBottom: 16,
                 }}
               >
@@ -1124,6 +1127,8 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "6px 12px",
                   marginBottom: 16,
                 }}
               >
@@ -1153,7 +1158,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
               </p>
 
               {/* Exact 17 Available Instruments + Intermediate Piano + Others Specify Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 mb-4">
                 {OFFICIAL_AVAILABLE_INSTRUMENTS.map((item) => {
                   const isSelected = data.program === item.name
                   return (
@@ -1164,55 +1169,58 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                         set("program", item.name)
                         set("category", item.family)
                       }}
-                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                      className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-start gap-3 ${
                         isSelected
                           ? "border-[var(--navy)] bg-black/5 ring-2 ring-black/10 shadow-xs"
                           : "border-slate-300 bg-white hover:border-slate-400 shadow-xs"
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
+                      <span
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 4,
+                          border: isSelected
+                            ? "2px solid var(--navy)"
+                            : "2px solid #64748b",
+                          background: isSelected ? "var(--navy)" : "white",
+                          color: "white",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 900,
+                          flexShrink: 0,
+                          marginTop: 2,
+                        }}
+                      >
+                        {isSelected ? "✓" : ""}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div
                           style={{
-                            width: 16,
-                            height: 16,
-                            borderRadius: 4,
-                            border: isSelected
-                              ? "2px solid var(--navy)"
-                              : "2px solid #475569",
-                            background: isSelected ? "var(--navy)" : "white",
-                            color: "white",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 10,
-                            fontWeight: 900,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {isSelected ? "✓" : ""}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 13,
+                            fontSize: 13.5,
                             fontWeight: isSelected ? 700 : 600,
                             color: isSelected ? "var(--navy)" : "#0f172a",
-                            lineHeight: 1.25,
+                            lineHeight: 1.3,
+                            wordBreak: "break-word",
                           }}
                         >
                           {item.name}
-                        </span>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 9.5,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            color: isSelected ? "#9a3412" : "#64748b",
+                            fontWeight: 700,
+                            marginTop: 2,
+                          }}
+                        >
+                          {item.family}
+                        </div>
                       </div>
-                      <span
-                        style={{
-                          fontSize: 9,
-                          textTransform: "uppercase",
-                          color: isSelected ? "var(--gold)" : "var(--muted)",
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {item.family.split(" ")[0]}
-                      </span>
                     </button>
                   )
                 })}
@@ -1281,6 +1289,8 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "6px 12px",
                   marginBottom: 16,
                 }}
               >
@@ -1602,6 +1612,8 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "6px 12px",
                   marginBottom: 16,
                 }}
               >

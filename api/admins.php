@@ -6,8 +6,42 @@ header('Content-Type: application/json; charset=utf-8');
 $pdo = getDb();
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Ensure session
+// Ensure session and enforce Super Admin RBAC
 $currentAdmin = $_SESSION['admin_user'] ?? null;
+$adminRole = strtolower(trim($currentAdmin['role'] ?? ''));
+
+// Check header fallback if session is not present
+if (empty($adminRole)) {
+    $emailHeader = trim($_SERVER['HTTP_X_ADMIN_EMAIL'] ?? '');
+    if (!empty($emailHeader)) {
+        $stmt = $pdo->prepare("SELECT id, email, name, role, is_active FROM admins WHERE LOWER(email) = LOWER(:email) AND is_active = 1 LIMIT 1");
+        $stmt->execute([':email' => $emailHeader]);
+        $row = $stmt->fetch();
+        if ($row) {
+            $currentAdmin = $row;
+            $adminRole = strtolower(trim($row['role'] ?? ''));
+            $_SESSION['admin_user'] = [
+                'id' => (int)$row['id'],
+                'email' => $row['email'],
+                'name' => $row['name'],
+                'role' => $row['role'],
+            ];
+        }
+    }
+}
+
+$isSuperAdmin = ($adminRole === 'superadmin' || $adminRole === 'super_admin' || (!empty($currentAdmin['email']) && (
+    strpos(strtolower($currentAdmin['email']), 'super') !== false ||
+    strtolower($currentAdmin['email']) === 'admin' ||
+    strpos(strtolower($currentAdmin['email']), 'admin@') === 0
+)));
+
+if (!$isSuperAdmin) {
+    jsonResponse([
+        'success' => false,
+        'error' => 'Access Denied: Only Super Administrators have permission to view or manage staff accounts.',
+    ], 403);
+}
 
 if ($method === 'GET') {
     try {

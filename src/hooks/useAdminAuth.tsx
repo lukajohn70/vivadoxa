@@ -11,8 +11,10 @@ import React, {
 import { loginAdmin, verifyAdmin2FA, resendAdmin2FA, getApiUrl } from "@/lib/api"
 
 export interface AdminSession {
+  id?: number
   email: string
   name: string
+  role?: "superadmin" | "admissions" | "finance" | "workshop" | "staff" | string
 }
 
 export interface AdminPending2FA {
@@ -41,7 +43,17 @@ function getInitialSession(): AdminSession | null {
   try {
     const raw =
       sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY)
-    return raw ? JSON.parse(raw) as AdminSession : null
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as AdminSession
+    if (!parsed.role) {
+      parsed.role =
+        parsed.email?.toLowerCase().includes("super") ||
+        parsed.email?.toLowerCase() === "admin" ||
+        parsed.email?.toLowerCase().startsWith("admin@")
+          ? "superadmin"
+          : "staff"
+    }
+    return parsed
   } catch {
     return null
   }
@@ -68,6 +80,33 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [loginError, setLoginError] = useState<string>("")
   const [loginLoading, setLoginLoading] = useState(false)
   const [pending2FA, setPending2FA] = useState<AdminPending2FA | null>(null)
+
+  useEffect(() => {
+    fetch(getApiUrl("me.php"), { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.authenticated && data?.user) {
+          setSession((prev) => {
+            const role =
+              data.user.role ||
+              (data.user.email?.toLowerCase().includes("super") ||
+              data.user.email?.toLowerCase() === "admin" ||
+              data.user.email?.toLowerCase().startsWith("admin@")
+                ? "superadmin"
+                : "staff")
+            const updated: AdminSession = {
+              id: data.user.id || prev?.id,
+              email: data.user.email || prev?.email || "",
+              name: data.user.name || prev?.name || "",
+              role,
+            }
+            persistSession(updated)
+            return updated
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const clearError = useCallback(() => {
     setLoginError("")
@@ -107,8 +146,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
         if (dbResult.success && dbResult.user) {
           const newSession: AdminSession = {
+            id: dbResult.user.id,
             email: dbResult.user.email,
             name: dbResult.user.name,
+            role:
+              dbResult.user.role ||
+              (dbResult.user.email?.toLowerCase().includes("super") ||
+              dbResult.user.email?.toLowerCase() === "admin" ||
+              dbResult.user.email?.toLowerCase().startsWith("admin@")
+                ? "superadmin"
+                : "staff"),
           }
           persistSession(newSession)
           setSession(newSession)
@@ -149,8 +196,16 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
         if (res.success && res.user) {
           const newSession: AdminSession = {
+            id: res.user.id,
             email: res.user.email,
             name: res.user.name,
+            role:
+              res.user.role ||
+              (res.user.email?.toLowerCase().includes("super") ||
+              res.user.email?.toLowerCase() === "admin" ||
+              res.user.email?.toLowerCase().startsWith("admin@")
+                ? "superadmin"
+                : "staff"),
           }
           persistSession(newSession)
           setSession(newSession)
