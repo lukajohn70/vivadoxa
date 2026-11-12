@@ -1,7 +1,7 @@
 // ─── Admin Shop & Rental Catalog Manager ────────────────────────────────────────
-// Add, edit, remove items, descriptions, clinic notes, stock, and fleet types.
+// Add, edit, remove items, descriptions, clinic notes, stock, fleet types, and categories.
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Icon, Button, Field, Textarea } from "@/components/ui"
 import {
   fetchCatalogStore,
@@ -16,6 +16,9 @@ import {
   saveFleetType,
   toggleFleetTypeStatus,
   deleteFleetType,
+  saveRentalCategory,
+  deleteRentalCategory,
+  uploadCatalogImage,
   resetCatalogDefaults,
 } from "@/lib/api"
 
@@ -47,17 +50,31 @@ const DEFAULT_FLEET_TYPES: RentalFleetType[] = [
   },
 ]
 
+const DEFAULT_RENTAL_CATEGORIES = [
+  "Strings",
+  "Keys",
+  "Guitars",
+  "Woodwinds",
+  "Brass",
+  "PA & Sound",
+  "Backline",
+  "Percussion",
+  "Microphones",
+  "Accessories",
+]
+
 export function ShopAndRentalsView({
   setActionNotice,
 }: {
   setActionNotice: (msg: string) => void
 }) {
   const [activeSubTab, setActiveSubTab] = useState<"store" | "rentals">("store")
-  const [rentalSection, setRentalSection] = useState<"equipment" | "fleet_types">("equipment")
+  const [rentalSection, setRentalSection] = useState<"equipment" | "fleet_types" | "categories">("equipment")
   const [loading, setLoading] = useState(true)
   const [storeProducts, setStoreProducts] = useState<any[]>([])
   const [rentalItems, setRentalItems] = useState<any[]>([])
   const [fleetTypes, setFleetTypes] = useState<RentalFleetType[]>(DEFAULT_FLEET_TYPES)
+  const [rentalCategories, setRentalCategories] = useState<string[]>(DEFAULT_RENTAL_CATEGORIES)
   const [search, setSearch] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [fleetTypeFilter, setFleetTypeFilter] = useState("all")
@@ -82,6 +99,13 @@ export function ShopAndRentalsView({
   const [formRentalType, setFormRentalType] = useState<string>("student")
   const [formRecommendedFor, setFormRecommendedFor] = useState("")
 
+  // Image Upload State
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [imageUploadMode, setImageUploadMode] = useState<"upload" | "url">("upload")
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null)
+  const [localPreview, setLocalPreview] = useState<string | null>(null)
+
   // Fleet Types Modal State
   const [showFleetTypeModal, setShowFleetTypeModal] = useState(false)
   const [editingFleetType, setEditingFleetType] = useState<RentalFleetType | null>(null)
@@ -92,6 +116,13 @@ export function ShopAndRentalsView({
   const [formFtActive, setFormFtActive] = useState(true)
   const [savingFleetType, setSavingFleetType] = useState(false)
   const [deleteConfirmFtId, setDeleteConfirmFtId] = useState<string | null>(null)
+
+  // Categories Modal State
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<string | null>(null)
+  const [formCategoryName, setFormCategoryName] = useState("")
+  const [savingCategory, setSavingCategory] = useState(false)
+  const [deleteConfirmCat, setDeleteConfirmCat] = useState<string | null>(null)
 
   const loadData = async () => {
     setLoading(true)
@@ -107,6 +138,11 @@ export function ShopAndRentalsView({
       } else {
         setFleetTypes(DEFAULT_FLEET_TYPES)
       }
+      if (rentalsData?.categories && rentalsData.categories.length > 0) {
+        setRentalCategories(rentalsData.categories)
+      } else {
+        setRentalCategories(DEFAULT_RENTAL_CATEGORIES)
+      }
     } catch {
       // Handled gracefully
     } finally {
@@ -121,7 +157,11 @@ export function ShopAndRentalsView({
   const openAddModal = () => {
     setEditingItem(null)
     setFormName("")
-    setFormCategory(activeSubTab === "store" ? "Guitars" : "Strings")
+    setFormCategory(
+      activeSubTab === "store"
+        ? "Guitars"
+        : rentalCategories[0] || "Strings",
+    )
     setFormBrand("")
     setFormBadge("")
     setFormImage(
@@ -139,13 +179,16 @@ export function ShopAndRentalsView({
     setFormIsActive(true)
     setFormRentalType(fleetTypes[0]?.id || "student")
     setFormRecommendedFor("Beginner & Intermediate scholars")
+    setImageUploadMode("upload")
+    setImageUploadError(null)
+    setLocalPreview(null)
     setShowItemModal(true)
   }
 
   const openEditModal = (item: any) => {
     setEditingItem(item)
     setFormName(item.name || "")
-    setFormCategory(item.category || "Guitars")
+    setFormCategory(item.category || (activeSubTab === "store" ? "Guitars" : "Strings"))
     setFormBrand(item.brand || "")
     setFormBadge(item.badge || "")
     setFormImage(item.image || "/media/programs/guitar-acoustic-recital.jpeg")
@@ -162,13 +205,73 @@ export function ShopAndRentalsView({
     setFormIsActive(item.isActive !== false && item.is_active !== false)
     setFormRentalType(item.type || "student")
     setFormRecommendedFor(item.recommendedFor || item.idealFor || "")
+    setImageUploadMode("upload")
+    setImageUploadError(null)
+    setLocalPreview(null)
     setShowItemModal(true)
+  }
+
+  // ── Image File Upload Handler ─────────────────────────────────────────────
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Quick client validation
+    if (!file.type.startsWith("image/")) {
+      setImageUploadError("Please select a valid image file (JPG, PNG, WEBP, GIF).")
+      return
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      setImageUploadError("Image exceeds 12MB limit. Please choose a smaller photo.")
+      return
+    }
+
+    setImageUploadError(null)
+    setUploadingImage(true)
+
+    // Immediate local preview so the admin sees the picture right away
+    const localPreviewUrl = URL.createObjectURL(file)
+    setLocalPreview(localPreviewUrl)
+
+    try {
+      const res = await uploadCatalogImage(
+        file,
+        activeSubTab === "store" ? "store" : "rentals",
+      )
+      if (res?.success && res.image_url) {
+        setFormImage(res.image_url)
+        setLocalPreview(null)
+        setActionNotice("Photo uploaded successfully.")
+      } else {
+        setLocalPreview(null)
+        setImageUploadError(res?.error || "Failed to upload image to server.")
+      }
+    } catch (err: any) {
+      setLocalPreview(null)
+      setImageUploadError(err.message || "Network error during upload.")
+    } finally {
+      setUploadingImage(false)
+      // Reset input value so re-selecting same file triggers onChange
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
   }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formName.trim()) {
       alert("Please provide an item name.")
+      return
+    }
+
+    if (uploadingImage) {
+      alert("Please wait for photo upload to finish.")
+      return
+    }
+
+    if (!formImage.trim() || formImage.startsWith("blob:")) {
+      alert("Please upload a photo or enter an image URL.")
       return
     }
 
@@ -350,10 +453,63 @@ export function ShopAndRentalsView({
     }
   }
 
+  // ── Category Handlers ─────────────────────────────────────────────────────
+  const openAddCategoryModal = () => {
+    setEditingCategory(null)
+    setFormCategoryName("")
+    setShowCategoryModal(true)
+  }
+
+  const openEditCategoryModal = (cat: string) => {
+    setEditingCategory(cat)
+    setFormCategoryName(cat)
+    setShowCategoryModal(true)
+  }
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formCategoryName.trim()) {
+      alert("Please provide a category name.")
+      return
+    }
+    setSavingCategory(true)
+    const res = await saveRentalCategory({
+      name: formCategoryName.trim(),
+      oldName: editingCategory || undefined,
+    })
+    setSavingCategory(false)
+    if (res?.success) {
+      setActionNotice(
+        editingCategory
+          ? `Renamed category to "${formCategoryName}".`
+          : `Added new category "${formCategoryName}".`,
+      )
+      // If currently in item modal, update formCategory to the new category name
+      if (showItemModal) {
+        setFormCategory(formCategoryName.trim())
+      }
+      setShowCategoryModal(false)
+      loadData()
+    } else {
+      alert(res?.error || "Failed to save category.")
+    }
+  }
+
+  const handleDeleteCategory = async (cat: string) => {
+    const res = await deleteRentalCategory(cat)
+    if (res?.success) {
+      setActionNotice(`Category "${cat}" removed.`)
+      setDeleteConfirmCat(null)
+      loadData()
+    } else {
+      alert(res?.error || "Failed to delete category.")
+    }
+  }
+
   const handleReset = async () => {
     if (
       !confirm(
-        "Are you sure you want to restore the default showcase products, rental fleet, and fleet types?",
+        "Are you sure you want to restore the default showcase products, rental fleet, categories, and fleet types?",
       )
     ) {
       return
@@ -377,7 +533,8 @@ export function ShopAndRentalsView({
       item.type?.toLowerCase().includes(search.toLowerCase())
 
     const matchesCategory =
-      categoryFilter === "all" || item.category === categoryFilter
+      categoryFilter === "all" ||
+      (item.category && item.category.toLowerCase() === categoryFilter.toLowerCase())
 
     const matchesFleetType =
       activeSubTab !== "rentals" ||
@@ -404,19 +561,11 @@ export function ShopAndRentalsView({
     "Percussion",
     "Accessories",
   ]
-  const rentalCategories = [
-    "all",
-    "Strings",
-    "Keys",
-    "Guitars",
-    "Woodwinds",
-    "Brass",
-    "PA & Sound",
-    "Backline",
-  ]
 
   const activeCategories =
-    activeSubTab === "store" ? storeCategories : rentalCategories
+    activeSubTab === "store"
+      ? storeCategories
+      : ["all", ...rentalCategories]
 
   return (
     <div className="space-y-6">
@@ -425,7 +574,7 @@ export function ShopAndRentalsView({
         <div
           className="admin-page-view"
           style={{
-            maxWidth: 820,
+            maxWidth: 840,
             margin: "0 auto",
             animation: "fadeIn 0.15s ease-out",
           }}
@@ -497,7 +646,7 @@ export function ShopAndRentalsView({
                   : `Add ${activeSubTab === "store" ? "New Product" : "New Rental Gear"}`}
               </h2>
               <p style={{ margin: "4px 0 0", fontSize: 12.5, color: "var(--muted)" }}>
-                Enter details for the public showcase. No prices will be displayed publicly.
+                Enter gear details and upload photos for the public catalog showcase.
               </p>
             </div>
 
@@ -513,9 +662,20 @@ export function ShopAndRentalsView({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
-                      Category *
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-[var(--navy)]">
+                        Category *
+                      </label>
+                      {activeSubTab === "rentals" && (
+                        <button
+                          type="button"
+                          onClick={openAddCategoryModal}
+                          className="text-[11px] font-bold text-[var(--gold)] hover:underline cursor-pointer"
+                        >
+                          + New Category
+                        </button>
+                      )}
+                    </div>
                     <select
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value)}
@@ -581,88 +741,212 @@ export function ShopAndRentalsView({
                     label="Recommended For / Ideal Usage"
                     value={formRecommendedFor}
                     onChange={(e) => setFormRecommendedFor(e.target.value)}
-                    placeholder="e.g. Beginner violin scholars, Sunday service recitals"
+                    placeholder="e.g. Beginner violin scholars, Sunday service recitals, church sound rigs"
                   />
                 )}
 
-                {/* Image URL & quick presets */}
-                <div>
-                  <label className="block text-xs font-bold text-[var(--navy)] mb-1.5">
-                    Image Path / URL *
-                  </label>
+                {/* ── Product / Gear Photo (Direct Device Upload + URL option) ──── */}
+                <div className="bg-[#FAF8F5] p-4 rounded-xl border border-[var(--line)] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-[var(--navy)] flex items-center gap-1.5">
+                      <span>Gear Image / Photo *</span>
+                      {uploadingImage && (
+                        <span className="text-[10px] text-[var(--gold)] font-bold animate-pulse">
+                          (Uploading...)
+                        </span>
+                      )}
+                    </label>
+
+                    {/* Mode switcher pills */}
+                    <div className="inline-flex p-0.5 rounded-lg bg-white border border-[var(--line)] text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setImageUploadMode("upload")}
+                        className={`px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer ${
+                          imageUploadMode === "upload"
+                            ? "bg-[var(--gold)] text-white shadow-xs"
+                            : "text-slate-600 hover:text-[var(--navy)]"
+                        }`}
+                      >
+                        📷 Upload Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageUploadMode("url")}
+                        className={`px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer ${
+                          imageUploadMode === "url"
+                            ? "bg-[var(--gold)] text-white shadow-xs"
+                            : "text-slate-600 hover:text-[var(--navy)]"
+                        }`}
+                      >
+                        🔗 Image URL / Presets
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Hidden native file input */}
                   <input
-                    type="text"
-                    value={formImage}
-                    onChange={(e) => setFormImage(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
-                    placeholder="/media/programs/guitar-acoustic-recital.jpeg"
-                    required
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                    onChange={handleImageFileUpload}
+                    className="hidden"
                   />
-                  <div className="flex flex-wrap gap-1 mt-1.5 text-[10px] text-slate-500">
-                    <span>Presets:</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormImage("/media/programs/guitar-acoustic-recital.jpeg")
-                      }
-                      className="underline hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Guitar
-                    </button>
-                    <span>·</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormImage("/media/programs/violin-solo-rainbow.jpeg")
-                      }
-                      className="underline hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Violin
-                    </button>
-                    <span>·</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormImage("/media/programs/piano-syllabus.jpeg")
-                      }
-                      className="underline hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Piano
-                    </button>
-                    <span>·</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormImage("/media/programs/sax-solo-grey.jpeg")
-                      }
-                      className="underline hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Sax
-                    </button>
-                    <span>·</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormImage("/media/programs/drums-tama-red.jpeg")
-                      }
-                      className="underline hover:text-[var(--gold)] cursor-pointer"
-                    >
-                      Drums
-                    </button>
+
+                  {imageUploadMode === "upload" ? (
+                    <div>
+                      {/* Clickable upload dropzone */}
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all bg-white hover:border-[var(--gold)] hover:bg-amber-50/20 ${
+                          uploadingImage ? "opacity-60 pointer-events-none" : "border-slate-300"
+                        }`}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-amber-50 text-[var(--gold)] flex items-center justify-center mx-auto mb-2">
+                          {uploadingImage ? (
+                            <Icon name="refresh" size={20} className="animate-spin" />
+                          ) : (
+                            <Icon name="upload" size={20} />
+                          )}
+                        </div>
+                        <p className="text-xs font-bold text-[var(--navy)]">
+                          {uploadingImage
+                            ? "Uploading photo to server..."
+                            : "Click here to choose photo from your phone or computer"}
+                        </p>
+                        <p className="text-[11px] text-[var(--muted)] mt-1">
+                          Supports JPG, PNG, WEBP, GIF (High resolution recommended, up to 12MB)
+                        </p>
+                      </div>
+
+                      {imageUploadError && (
+                        <p className="text-xs text-red-600 font-semibold mt-2">
+                          ⚠️ {imageUploadError}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="text"
+                        value={formImage}
+                        onChange={(e) => setFormImage(e.target.value)}
+                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
+                        placeholder="/media/programs/guitar-acoustic-recital.jpeg or https://..."
+                        required
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1.5 text-[10px] text-slate-500">
+                        <span>Presets:</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormImage("/media/programs/guitar-acoustic-recital.jpeg")
+                          }
+                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                        >
+                          Guitar
+                        </button>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormImage("/media/programs/violin-solo-rainbow.jpeg")
+                          }
+                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                        >
+                          Violin
+                        </button>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormImage("/media/programs/piano-syllabus.jpeg")
+                          }
+                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                        >
+                          Piano
+                        </button>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormImage("/media/programs/sax-solo-grey.jpeg")
+                          }
+                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                        >
+                          Sax
+                        </button>
+                        <span>·</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormImage("/media/programs/drums-tama-red.jpeg")
+                          }
+                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                        >
+                          Drums
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4:3 Live Image Preview with Replace shortcut */}
+                  <div className="flex items-center gap-4 pt-2">
+                    <div className="w-40 aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)] shadow-xs shrink-0 relative group flex items-center justify-center">
+                      {localPreview || formImage ? (
+                        <img
+                          src={localPreview || formImage}
+                          alt="Image preview"
+                          className="w-full h-full object-cover"
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          onError={(e) => {
+                            ;(e.target as HTMLImageElement).style.opacity = "0.2"
+                          }}
+                        />
+                      ) : (
+                        <div className="text-center p-3 text-slate-400">
+                          <Icon name="upload" size={24} className="mx-auto mb-1 opacity-60" />
+                          <span className="text-[10px] font-semibold">No Image</span>
+                        </div>
+                      )}
+                      {(localPreview || formImage) && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-bold cursor-pointer"
+                        >
+                          Change Photo
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1 text-xs">
+                      <span className="font-bold text-[var(--navy)] block">
+                        4:3 Public Card Preview
+                      </span>
+                      <p className="text-[11px] text-[var(--muted)] mt-0.5 truncate">
+                        {localPreview ? (
+                          <span className="text-amber-700 font-semibold animate-pulse">
+                            Uploading photo to server...
+                          </span>
+                        ) : formImage ? (
+                          <>
+                            Path: <code className="text-slate-600">{formImage}</code>
+                          </>
+                        ) : (
+                          <span className="text-slate-400">No image chosen yet</span>
+                        )}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="btn btn-secondary !py-1 !px-2.5 !text-[11px] mt-2 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Icon name="upload" size={11} />
+                        <span>{formImage || localPreview ? "Select Different Photo" : "Upload Photo"}</span>
+                      </button>
+                    </div>
                   </div>
-                  {/* 4:3 image preview matching catalog showcase cards */}
-                  <div className="mt-3 w-48 aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)]">
-                    <img
-                      src={formImage}
-                      alt="Image preview"
-                      className="w-full h-full object-cover"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      onError={(e) => {
-                        ;(e.target as HTMLImageElement).style.opacity = "0.2"
-                      }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">4:3 preview — as it appears on showcase cards</p>
                 </div>
 
                 {activeSubTab === "store" ? (
@@ -749,7 +1033,7 @@ export function ShopAndRentalsView({
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={saving}>
+                  <Button type="submit" disabled={saving || uploadingImage}>
                     {saving ? "Saving..." : editingItem ? "Update Item" : "Add to Showcase"}
                   </Button>
                 </div>
@@ -806,6 +1090,15 @@ export function ShopAndRentalsView({
                   <Icon name="plus" size={14} />
                   <span>Add Fleet Type</span>
                 </Button>
+              ) : activeSubTab === "rentals" && rentalSection === "categories" ? (
+                <Button
+                  type="button"
+                  onClick={openAddCategoryModal}
+                  className="!py-2 !px-4 !text-xs flex items-center gap-1.5"
+                >
+                  <Icon name="plus" size={14} />
+                  <span>Add Category</span>
+                </Button>
               ) : (
                 <Button
                   type="button"
@@ -823,17 +1116,17 @@ export function ShopAndRentalsView({
                 type="button"
                 onClick={handleReset}
                 className="p-2 rounded-lg border border-[var(--line)] text-slate-500 hover:text-[var(--navy)] hover:bg-slate-50 text-xs cursor-pointer"
-                title="Reset catalog and fleet types to showroom defaults"
+                title="Reset catalog, fleet types, and categories to showroom defaults"
               >
                 <Icon name="refresh" size={14} />
               </button>
             </div>
           </div>
 
-          {/* ── Rentals Management Sub-Bar (Equipment vs Fleet Types) ──── */}
+          {/* ── Rentals Management Sub-Bar (Equipment vs Fleet Types vs Categories) ──── */}
           {activeSubTab === "rentals" && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-[var(--line)] shadow-xs">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setRentalSection("equipment")}
@@ -859,17 +1152,28 @@ export function ShopAndRentalsView({
                   <Icon name="settings" size={13} />
                   <span>Rental Fleet Types ({fleetTypes.length})</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setRentalSection("categories")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    rentalSection === "categories"
+                      ? "bg-[var(--gold)] text-white shadow-xs"
+                      : "bg-[#FAF8F5] border border-[var(--line)] text-slate-700 hover:text-[var(--navy)]"
+                  }`}
+                >
+                  <Icon name="file" size={13} />
+                  <span>Fleet Categories ({rentalCategories.length})</span>
+                </button>
               </div>
 
               <div className="text-xs text-[var(--muted)] flex items-center gap-2">
                 <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  {fleetTypes.filter((ft) => ft.isActive !== false).length} Active Fleet Types
+                  {fleetTypes.filter((ft) => ft.isActive !== false).length} Active Types
                 </span>
-                {fleetTypes.some((ft) => ft.isActive === false) && (
-                  <span className="font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                    {fleetTypes.filter((ft) => ft.isActive === false).length} Disabled
-                  </span>
-                )}
+                <span className="font-semibold text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                  {rentalCategories.length} Categories
+                </span>
               </div>
             </div>
           )}
@@ -1007,8 +1311,101 @@ export function ShopAndRentalsView({
                 })}
               </div>
             </div>
+          ) : activeSubTab === "rentals" && rentalSection === "categories" ? (
+            /* ── SECTION B: Manage Rental Categories ────────────────────── */
+            <div className="space-y-4">
+              <div className="bg-white rounded-xl border border-[var(--line)] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-base text-[var(--navy)]">
+                    Rental Fleet Categories
+                  </h3>
+                  <p className="text-xs text-[var(--muted)] mt-0.5">
+                    Classify your rental gear by instrument family or audio department. When you rename a category, all equipment items under it are automatically updated.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={openAddCategoryModal}
+                  className="!py-2 !px-4 !text-xs shrink-0 flex items-center gap-1.5"
+                >
+                  <Icon name="plus" size={14} />
+                  <span>Add Category</span>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {rentalCategories.map((cat) => {
+                  const gearCount = rentalItems.filter(
+                    (r) => r.category && r.category.toLowerCase() === cat.toLowerCase(),
+                  ).length
+
+                  return (
+                    <div
+                      key={cat}
+                      className="bg-white rounded-xl border border-[var(--line)] p-4 shadow-xs flex flex-col justify-between hover:shadow-md transition-all"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-2">
+                          <span className="text-[10px] uppercase font-bold text-[var(--gold)]">
+                            Rental Classification
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            {gearCount} items
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-sm text-[var(--navy)]">{cat}</h4>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          {gearCount > 0
+                            ? `${gearCount} gear piece${gearCount > 1 ? "s" : ""} currently listed`
+                            : "No equipment assigned yet"}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 mt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEditCategoryModal(cat)}
+                          className="px-2.5 py-1 rounded-lg border border-[var(--line)] text-slate-700 hover:text-[var(--navy)] hover:bg-slate-50 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Icon name="pen" size={12} />
+                          <span>Rename</span>
+                        </button>
+
+                        {deleteConfirmCat === cat ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="px-2 py-1 rounded bg-red-600 text-white text-[11px] font-bold cursor-pointer"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteConfirmCat(null)}
+                              className="px-2 py-1 rounded bg-slate-200 text-slate-700 text-[11px] cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmCat(cat)}
+                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs cursor-pointer"
+                            title={`Delete ${cat} category`}
+                          >
+                            <Icon name="trash" size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           ) : (
-            /* ── SECTION B: Equipment Catalog Grid ──────────────────────── */
+            /* ── SECTION C: Equipment Catalog Grid ──────────────────────── */
             <>
               {/* ── Filters & Search ───────────────────────────────────────── */}
               <div className="space-y-3">
@@ -1101,7 +1498,7 @@ export function ShopAndRentalsView({
                   <Icon name="info" size={28} className="mx-auto text-[var(--muted)] mb-2" />
                   <h4 className="text-sm font-bold text-[var(--navy)]">No items match your filter</h4>
                   <p className="text-xs text-[var(--muted)] mt-1 mb-4">
-                    Try adjusting your search query, status, or fleet type filter.
+                    Try adjusting your search query, status, or category filter.
                   </p>
                   <Button onClick={openAddModal} className="!text-xs">
                     {activeSubTab === "store" ? "Add New Product" : "Add New Rental Gear"}
@@ -1401,6 +1798,65 @@ export function ShopAndRentalsView({
                     : editingFleetType
                     ? "Update Fleet Type"
                     : "Create Fleet Type"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── CATEGORY MODAL (Add / Edit Rental Category) ──────────────── */}
+      {showCategoryModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          style={{ animation: "fadeIn 0.15s ease-out" }}
+        >
+          <div className="bg-white rounded-2xl border border-[var(--line)] shadow-xl max-w-md w-full overflow-hidden">
+            <div className="p-5 border-b border-[var(--line)] bg-[#FAF8F5] flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-base text-[var(--navy)]">
+                  {editingCategory ? "Rename Rental Category" : "Add New Rental Category"}
+                </h3>
+                <p className="text-xs text-[var(--muted)] mt-0.5">
+                  {editingCategory
+                    ? `Renaming "${editingCategory}" will automatically update all equipment in this category.`
+                    : "Create a new category classification for rental instruments and gear."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(false)}
+                className="text-slate-400 hover:text-black text-sm p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategory}>
+              <div className="p-6 space-y-4">
+                <Field
+                  label="Category Name *"
+                  value={formCategoryName}
+                  onChange={(e) => setFormCategoryName(e.target.value)}
+                  placeholder="e.g. Percussion, Microphones, DJ & FX, Traditional"
+                  required
+                />
+              </div>
+
+              <div className="p-4 border-t border-[var(--line)] bg-[#FAF8F5] flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowCategoryModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={savingCategory}>
+                  {savingCategory
+                    ? "Saving..."
+                    : editingCategory
+                    ? "Update Category"
+                    : "Add Category"}
                 </Button>
               </div>
             </form>

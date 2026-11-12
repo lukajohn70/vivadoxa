@@ -3008,7 +3008,11 @@ export async function fetchCatalogRentals(): Promise<any[]> {
   return []
 }
 
-export async function fetchCatalogRentalsData(): Promise<{ rentals: any[]; fleetTypes: any[] }> {
+export async function fetchCatalogRentalsData(): Promise<{
+  rentals: any[]
+  fleetTypes: any[]
+  categories: string[]
+}> {
   try {
     const res = await fetch(`${getApiUrl("catalog.php")}?type=rentals`, {
       credentials: "include",
@@ -3018,12 +3022,13 @@ export async function fetchCatalogRentalsData(): Promise<{ rentals: any[]; fleet
       return {
         rentals: Array.isArray(data.rentals) ? data.rentals : [],
         fleetTypes: Array.isArray(data.fleetTypes) ? data.fleetTypes : [],
+        categories: Array.isArray(data.categories) ? data.categories : [],
       }
     }
   } catch (err) {
     console.warn("fetchCatalogRentalsData network fallback:", err)
   }
-  return { rentals: [], fleetTypes: [] }
+  return { rentals: [], fleetTypes: [], categories: [] }
 }
 
 export async function fetchCatalogFleetTypes(): Promise<any[]> {
@@ -3161,6 +3166,69 @@ export async function deleteFleetType(id: string): Promise<ApiResponse> {
       success: false,
       error: err.message || "Failed to delete fleet type.",
     }
+  }
+}
+
+export async function saveRentalCategory(payload: {
+  name: string
+  oldName?: string
+}): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save_rental_category", ...payload }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to save rental category.",
+    }
+  }
+}
+
+export async function deleteRentalCategory(name: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete_rental_category", name }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to delete rental category.",
+    }
+  }
+}
+
+export async function uploadCatalogImage(
+  file: File,
+  subfolder: "rentals" | "store" = "rentals",
+): Promise<ApiResponse & { image_url?: string; filename?: string }> {
+  try {
+    const formData = new FormData()
+    formData.append("image", file)
+    formData.append("subfolder", subfolder)
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    })
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return {
+      success: false,
+      error: "Failed to parse upload response from server.",
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to upload image." }
   }
 }
 

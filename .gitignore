@@ -20,3 +20,17 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Uploaded dynamic catalog media
+media/rentals/*
+!media/rentals/.gitkeep
+public/media/rentals/*
+!public/media/rentals/.gitkeep
+dist/media/rentals/*
+!dist/media/rentals/.gitkeep
+media/store/*
+!media/store/.gitkeep
+public/media/store/*
+!public/media/store/.gitkeep
+dist/media/store/*
+!dist/media/store/.gitkeep

@@ -365,6 +365,19 @@ function getCatalogRentalItems(array $defaults): array {
     return $saved;
 }
 
+$defaultRentalCategories = [
+    'Strings',
+    'Keys',
+    'Guitars',
+    'Woodwinds',
+    'Brass',
+    'PA & Sound',
+    'Backline',
+    'Percussion',
+    'Microphones',
+    'Accessories',
+];
+
 // Helper to get fleet types from system_settings
 function getCatalogFleetTypes(array $defaults): array {
     $saved = getSystemSetting('rental_fleet_types', null);
@@ -373,6 +386,16 @@ function getCatalogFleetTypes(array $defaults): array {
         return $defaults;
     }
     return $saved;
+}
+
+// Helper to get rental categories from system_settings
+function getCatalogRentalCategories(array $defaults): array {
+    $saved = getSystemSetting('rental_catalog_categories', null);
+    if (!is_array($saved) || empty($saved)) {
+        saveSystemSetting('rental_catalog_categories', $defaults);
+        return $defaults;
+    }
+    return array_values(array_unique(array_filter(array_map('trim', $saved))));
 }
 
 if ($method === 'GET') {
@@ -384,10 +407,12 @@ if ($method === 'GET') {
     } elseif ($type === 'rentals') {
         $rentals = getCatalogRentalItems($defaultRentalItems);
         $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        $categories = getCatalogRentalCategories($defaultRentalCategories);
         jsonResponse([
             'success' => true,
             'rentals' => $rentals,
             'fleetTypes' => $fleetTypes,
+            'categories' => $categories,
         ]);
     } elseif ($type === 'fleet_types') {
         $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
@@ -395,18 +420,35 @@ if ($method === 'GET') {
             'success' => true,
             'fleetTypes' => $fleetTypes,
         ]);
+    } elseif ($type === 'rental_categories') {
+        $categories = getCatalogRentalCategories($defaultRentalCategories);
+        jsonResponse([
+            'success' => true,
+            'categories' => $categories,
+        ]);
     } else {
         $products = getCatalogStoreProducts($defaultStoreProducts);
         $rentals = getCatalogRentalItems($defaultRentalItems);
         $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        $categories = getCatalogRentalCategories($defaultRentalCategories);
         jsonResponse([
             'success' => true,
             'products' => $products,
             'rentals' => $rentals,
             'fleetTypes' => $fleetTypes,
+            'categories' => $categories,
         ]);
     }
 } elseif ($method === 'POST') {
+    // Check if multipart/form-data upload for catalog/rental gear
+    $uploadFile = $_FILES['image'] ?? $_FILES['photo'] ?? $_FILES['file'] ?? null;
+    if ($uploadFile !== null) {
+        $subfolder = !empty($_POST['subfolder']) && $_POST['subfolder'] === 'store' ? 'store' : 'rentals';
+        $prefix = $subfolder === 'store' ? 'product' : 'rental';
+        $uploadResult = saveMediaImage($uploadFile, $subfolder, $prefix);
+        jsonResponse($uploadResult, $uploadResult['success'] ? 200 : 400);
+    }
+
     $input = getJsonInput();
     $action = trim($input['action'] ?? '');
 
@@ -420,6 +462,12 @@ if ($method === 'GET') {
         $products = getCatalogStoreProducts($defaultStoreProducts);
         $id = !empty($item['id']) ? trim($item['id']) : 'item-' . time() . '-' . rand(100, 999);
         $item['id'] = $id;
+        if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0) {
+            $savedPath = saveBase64MediaImage($item['image'], 'store', 'product');
+            if ($savedPath) {
+                $item['image'] = $savedPath;
+            }
+        }
         $item['inStock'] = isset($item['inStock']) ? (bool)$item['inStock'] : true;
         if (empty($item['specs']) || !is_array($item['specs'])) {
             $item['specs'] = is_string($item['specs'] ?? '') ? array_filter(array_map('trim', explode("\n", $item['specs']))) : [];
@@ -489,6 +537,12 @@ if ($method === 'GET') {
         $rentals = getCatalogRentalItems($defaultRentalItems);
         $id = !empty($item['id']) ? trim($item['id']) : 'rental-' . time() . '-' . rand(100, 999);
         $item['id'] = $id;
+        if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0) {
+            $savedPath = saveBase64MediaImage($item['image'], 'rentals', 'rental');
+            if ($savedPath) {
+                $item['image'] = $savedPath;
+            }
+        }
         $item['inStock'] = isset($item['inStock']) ? (bool)$item['inStock'] : true;
         $item['isActive'] = isset($item['isActive']) ? (bool)$item['isActive'] : (isset($item['is_active']) ? (bool)$item['is_active'] : true);
         $item['is_active'] = $item['isActive'];
@@ -670,17 +724,98 @@ if ($method === 'GET') {
         ]);
     }
 
+    // ── RENTAL CATEGORIES MANAGEMENT ──────────────────────────────
+    elseif ($action === 'save_rental_category') {
+        $name = trim($input['name'] ?? '');
+        $oldName = trim($input['oldName'] ?? '');
+        if (empty($name)) {
+            jsonResponse(['success' => false, 'error' => 'Category name is required.'], 400);
+        }
+
+        $categories = getCatalogRentalCategories($defaultRentalCategories);
+        $rentals = getCatalogRentalItems($defaultRentalItems);
+        $rentalsUpdated = false;
+
+        if (!empty($oldName)) {
+            // Edit / rename category
+            $found = false;
+            foreach ($categories as $idx => $cat) {
+                if (strcasecmp($cat, $oldName) === 0) {
+                    $categories[$idx] = $name;
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $categories[] = $name;
+            }
+
+            // Also update any rental gear items having the old category name
+            foreach ($rentals as $idx => $r) {
+                if (isset($r['category']) && strcasecmp($r['category'], $oldName) === 0) {
+                    $rentals[$idx]['category'] = $name;
+                    $rentalsUpdated = true;
+                }
+            }
+        } else {
+            // Add new category
+            $exists = false;
+            foreach ($categories as $cat) {
+                if (strcasecmp($cat, $name) === 0) {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists) {
+                $categories[] = $name;
+            }
+        }
+
+        $categories = array_values(array_unique(array_filter(array_map('trim', $categories))));
+        saveSystemSetting('rental_catalog_categories', $categories);
+        if ($rentalsUpdated) {
+            saveSystemSetting('rental_catalog_items', $rentals);
+        }
+
+        jsonResponse([
+            'success' => true,
+            'message' => !empty($oldName) ? "Category renamed to '$name'." : "Category '$name' added successfully.",
+            'category' => $name,
+            'categories' => $categories,
+            'rentals' => $rentals,
+        ]);
+    } elseif ($action === 'delete_rental_category') {
+        $name = trim($input['name'] ?? '');
+        if (empty($name)) {
+            jsonResponse(['success' => false, 'error' => 'Category name is required.'], 400);
+        }
+
+        $categories = getCatalogRentalCategories($defaultRentalCategories);
+        $filtered = array_values(array_filter($categories, function($cat) use ($name) {
+            return strcasecmp($cat, $name) !== 0;
+        }));
+
+        saveSystemSetting('rental_catalog_categories', $filtered);
+        jsonResponse([
+            'success' => true,
+            'message' => "Category '$name' removed.",
+            'categories' => $filtered,
+        ]);
+    }
+
     // ── RESET TO DEFAULTS ─────────────────────────────────────────
     elseif ($action === 'reset_catalog') {
         saveSystemSetting('store_catalog_items', $defaultStoreProducts);
         saveSystemSetting('rental_catalog_items', $defaultRentalItems);
         saveSystemSetting('rental_fleet_types', $defaultRentalFleetTypes);
+        saveSystemSetting('rental_catalog_categories', $defaultRentalCategories);
         jsonResponse([
             'success' => true,
             'message' => 'Catalog reset to standard showroom inventory.',
             'products' => $defaultStoreProducts,
             'rentals' => $defaultRentalItems,
             'fleetTypes' => $defaultRentalFleetTypes,
+            'categories' => $defaultRentalCategories,
         ]);
     } else {
         jsonResponse(['success' => false, 'error' => 'Invalid catalog action.'], 400);
