@@ -198,16 +198,118 @@ function AppShell() {
   )
 }
 
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Vivadoxa application error caught by boundary:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#f7f5f0",
+            color: "#191715",
+            fontFamily: "Inter, sans-serif",
+            padding: "24px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 480,
+              background: "#ffffff",
+              padding: "36px 28px",
+              borderRadius: 12,
+              boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+              border: "1px solid #dfdad0",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "DM Serif Display, Georgia, serif",
+                fontSize: 26,
+                color: "#c96b32",
+                marginBottom: 8,
+              }}
+            >
+              VIVADOXA
+            </div>
+            <h1
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: "#0b0b0b",
+                marginBottom: 10,
+              }}
+            >
+              Application Encountered an Issue
+            </h1>
+            <p
+              style={{
+                fontSize: 13.5,
+                color: "#5c5954",
+                lineHeight: 1.5,
+                marginBottom: 20,
+              }}
+            >
+              An unexpected error occurred while rendering this page.
+              Please reload or return to the home page.
+            </p>
+            <button
+              onClick={() => {
+                window.location.href = "/"
+              }}
+              style={{
+                background: "#c96b32",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: 8,
+                padding: "10px 22px",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Reload Vivadoxa
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 export default function App() {
   const basename = window.location.pathname.startsWith("/Vivadoxa")
     ? "/Vivadoxa"
     : undefined
 
   return (
-    <BrowserRouter basename={basename}>
-      <AdminAuthProvider>
-        <AppShell />
-      </AdminAuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter basename={basename}>
+        <AdminAuthProvider>
+          <AppShell />
+        </AdminAuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
