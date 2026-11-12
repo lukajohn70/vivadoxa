@@ -1,7 +1,7 @@
 // ─── Admin Portal ─────────────────────────────────────────────────────────────
 // Streamlined school operations dashboard. 100% database driven.
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Logo, Button, Icon, Badge, Field, WhatsAppIcon } from "@/components/ui"
 import { useAdminAuth } from "@/hooks/useAdminAuth"
 import {
@@ -1132,20 +1132,16 @@ export function isTabAllowedForRole(tab: string, role?: string): boolean {
 export function Admin({ go }: { go: (p: Page) => void }) {
   const { session, logout } = useAdminAuth()
 
+  const [active, setActive] = useState("Dashboard")
+  const [mobileNav, setMobileNav] = useState(false)
+  const [liveStats, setLiveStats] = useState<any>(null)
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
+
   useEffect(() => {
     if (!session) {
       go("admin-login")
     }
   }, [session, go])
-
-  if (!session) {
-    return null
-  }
-
-  const [active, setActive] = useState("Dashboard")
-  const [mobileNav, setMobileNav] = useState(false)
-  const [liveStats, setLiveStats] = useState<any>(null)
-  const [showNotifDropdown, setShowNotifDropdown] = useState(false)
 
   // Enforce role clearance on active tab
   useEffect(() => {
@@ -1237,6 +1233,10 @@ export function Admin({ go }: { go: (p: Page) => void }) {
     setActive(item)
     setMobileNav(false)
     setShowNotifDropdown(false)
+  }
+
+  if (!session) {
+    return null
   }
 
   return (
@@ -1651,6 +1651,12 @@ export function Admin({ go }: { go: (p: Page) => void }) {
         <div className="admin-content">
           {active === "Dashboard" ? (
             <AdminOverview setActive={setActive} />
+          ) : !isTabAllowedForRole(active, session?.role) ? (
+            <RestrictedView
+              title={active}
+              role={session?.role}
+              setActive={setActive}
+            />
           ) : (
             <AdminManager title={active} />
           )}
@@ -2217,49 +2223,66 @@ function AdminOverview({ setActive }: { setActive: (v: string) => void }) {
   )
 }
 
+function RestrictedView({
+  title,
+  role,
+  setActive,
+}: {
+  title: string
+  role?: string
+  setActive: (tab: string) => void
+}) {
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid var(--line)",
+        borderRadius: 8,
+        padding: "48px 24px",
+        textAlign: "center",
+        maxWidth: 600,
+        margin: "40px auto",
+      }}
+    >
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: "#fee2e2",
+          color: "#dc2626",
+          display: "grid",
+          placeItems: "center",
+          margin: "0 auto 16px",
+        }}
+      >
+        <Icon name="warning" size={28} />
+      </div>
+      <h3 style={{ fontSize: 18, color: "var(--navy)", marginBottom: 8 }}>
+        Access Restricted
+      </h3>
+      <p
+        style={{
+          color: "var(--muted)",
+          fontSize: 13,
+          lineHeight: 1.5,
+          marginBottom: 20,
+        }}
+      >
+        Your administrative role (
+        <strong>{getRoleTitle(role)}</strong>) does not have
+        clearance to access the <strong>{title}</strong> module.
+      </p>
+      <Button variant="secondary" onClick={() => setActive("Dashboard")}>
+        Return to Dashboard
+      </Button>
+    </div>
+  )
+}
+
 // ─── Operational Manager & Data Tables ─────────────────────────────────────────
 function AdminManager({ title }: { title: string }) {
   const { session } = useAdminAuth()
-
-  if (!isTabAllowedForRole(title, session?.role)) {
-    return (
-      <div
-        style={{
-          background: "white",
-          border: "1px solid var(--line)",
-          borderRadius: 8,
-          padding: "48px 24px",
-          textAlign: "center",
-          maxWidth: 600,
-          margin: "40px auto",
-        }}
-      >
-        <div
-          style={{
-            width: 56,
-            height: 56,
-            borderRadius: "50%",
-            background: "#fee2e2",
-            color: "#dc2626",
-            display: "grid",
-            placeItems: "center",
-            margin: "0 auto 16px",
-          }}
-        >
-          <Icon name="warning" size={28} />
-        </div>
-        <h3 style={{ fontSize: 18, color: "var(--navy)", marginBottom: 8 }}>
-          Access Restricted
-        </h3>
-        <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
-          Your administrative role (
-          <strong>{getRoleTitle(session?.role)}</strong>) does not have
-          clearance to access the <strong>{title}</strong> module.
-        </p>
-      </div>
-    )
-  }
-
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
