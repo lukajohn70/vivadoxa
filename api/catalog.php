@@ -295,6 +295,25 @@ $defaultRentalItems = [
     ],
 ];
 
+$defaultRentalFleetTypes = [
+    [
+        'id' => 'student',
+        'name' => 'Student Home Practice',
+        'description' => 'Vetted practice instruments for students, scholars and home learners with clinic maintenance included.',
+        'badge' => 'Student Practice Fleet',
+        'isActive' => true,
+        'order' => 1,
+    ],
+    [
+        'id' => 'event',
+        'name' => 'Stage, PA & Event Backline',
+        'description' => 'Professional concert sound systems, stage backline amps, drum kits, and live event gear in Kaduna.',
+        'badge' => 'Concert & Event Gear',
+        'isActive' => true,
+        'order' => 2,
+    ],
+];
+
 function sanitizeCatalogImage(?string $path): string {
     if (empty($path)) {
         return '/media/programs/guitar-acoustic-recital.jpeg';
@@ -339,6 +358,19 @@ function getCatalogRentalItems(array $defaults): array {
         if (isset($item['image'])) {
             $item['image'] = sanitizeCatalogImage($item['image']);
         }
+        if (!isset($item['isActive'])) {
+            $item['isActive'] = isset($item['is_active']) ? (bool)$item['is_active'] : true;
+        }
+    }
+    return $saved;
+}
+
+// Helper to get fleet types from system_settings
+function getCatalogFleetTypes(array $defaults): array {
+    $saved = getSystemSetting('rental_fleet_types', null);
+    if (!is_array($saved) || empty($saved)) {
+        saveSystemSetting('rental_fleet_types', $defaults);
+        return $defaults;
     }
     return $saved;
 }
@@ -351,14 +383,27 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'products' => $products]);
     } elseif ($type === 'rentals') {
         $rentals = getCatalogRentalItems($defaultRentalItems);
-        jsonResponse(['success' => true, 'rentals' => $rentals]);
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        jsonResponse([
+            'success' => true,
+            'rentals' => $rentals,
+            'fleetTypes' => $fleetTypes,
+        ]);
+    } elseif ($type === 'fleet_types') {
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        jsonResponse([
+            'success' => true,
+            'fleetTypes' => $fleetTypes,
+        ]);
     } else {
         $products = getCatalogStoreProducts($defaultStoreProducts);
         $rentals = getCatalogRentalItems($defaultRentalItems);
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
         jsonResponse([
             'success' => true,
             'products' => $products,
             'rentals' => $rentals,
+            'fleetTypes' => $fleetTypes,
         ]);
     }
 } elseif ($method === 'POST') {
@@ -445,6 +490,11 @@ if ($method === 'GET') {
         $id = !empty($item['id']) ? trim($item['id']) : 'rental-' . time() . '-' . rand(100, 999);
         $item['id'] = $id;
         $item['inStock'] = isset($item['inStock']) ? (bool)$item['inStock'] : true;
+        $item['isActive'] = isset($item['isActive']) ? (bool)$item['isActive'] : (isset($item['is_active']) ? (bool)$item['is_active'] : true);
+        $item['is_active'] = $item['isActive'];
+        if (empty($item['type'])) {
+            $item['type'] = 'student';
+        }
         if (empty($item['inclusions']) || !is_array($item['inclusions'])) {
             $item['inclusions'] = is_string($item['inclusions'] ?? '') ? array_filter(array_map('trim', explode("\n", $item['inclusions']))) : [];
         }
@@ -501,17 +551,136 @@ if ($method === 'GET') {
             'message' => 'Rental availability updated.',
             'rentals' => $rentals,
         ]);
+    } elseif ($action === 'toggle_rental_active' || $action === 'toggle_rental_status') {
+        $id = trim($input['id'] ?? '');
+        if (!$id) {
+            jsonResponse(['success' => false, 'error' => 'Rental item ID is required.'], 400);
+        }
+        $rentals = getCatalogRentalItems($defaultRentalItems);
+        $updatedStatus = null;
+        foreach ($rentals as $idx => $r) {
+            if ($r['id'] === $id) {
+                $current = isset($r['isActive']) ? (bool)$r['isActive'] : (isset($r['is_active']) ? (bool)$r['is_active'] : true);
+                $rentals[$idx]['isActive'] = !$current;
+                $rentals[$idx]['is_active'] = !$current;
+                $updatedStatus = $rentals[$idx]['isActive'];
+                break;
+            }
+        }
+
+        saveSystemSetting('rental_catalog_items', $rentals);
+        jsonResponse([
+            'success' => true,
+            'message' => $updatedStatus ? 'Gear enabled and active in fleet.' : 'Gear disabled and hidden from website.',
+            'isActive' => $updatedStatus,
+            'rentals' => $rentals,
+        ]);
+    }
+
+    // ── RENTAL FLEET TYPES MANAGEMENT ─────────────────────────────
+    elseif ($action === 'save_fleet_type') {
+        $fleetType = $input['fleetType'] ?? $input['type'] ?? $input;
+        $name = trim($fleetType['name'] ?? '');
+        if (empty($name)) {
+            jsonResponse(['success' => false, 'error' => 'Fleet type name is required.'], 400);
+        }
+
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        $rawId = trim($fleetType['id'] ?? '');
+        if (empty($rawId)) {
+            $rawId = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', trim($name)));
+            $rawId = trim($rawId, '-');
+            if (empty($rawId)) {
+                $rawId = 'fleet-' . time();
+            }
+        }
+        $id = $rawId;
+
+        $entry = [
+            'id' => $id,
+            'name' => $name,
+            'description' => trim($fleetType['description'] ?? ''),
+            'badge' => trim($fleetType['badge'] ?? ''),
+            'isActive' => isset($fleetType['isActive']) ? (bool)$fleetType['isActive'] : true,
+            'order' => isset($fleetType['order']) ? (int)$fleetType['order'] : count($fleetTypes) + 1,
+        ];
+
+        $found = false;
+        foreach ($fleetTypes as $idx => $ft) {
+            if ($ft['id'] === $id) {
+                $fleetTypes[$idx] = array_merge($ft, $entry);
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $fleetTypes[] = $entry;
+        }
+
+        saveSystemSetting('rental_fleet_types', $fleetTypes);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Rental fleet type saved successfully.',
+            'fleetType' => $entry,
+            'fleetTypes' => $fleetTypes,
+        ]);
+    } elseif ($action === 'toggle_fleet_type_status' || $action === 'toggle_fleet_type') {
+        $id = trim($input['id'] ?? '');
+        if (!$id) {
+            jsonResponse(['success' => false, 'error' => 'Fleet type ID is required.'], 400);
+        }
+
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        $updatedStatus = null;
+        foreach ($fleetTypes as $idx => $ft) {
+            if ($ft['id'] === $id) {
+                $currentActive = isset($ft['isActive']) ? (bool)$ft['isActive'] : true;
+                $fleetTypes[$idx]['isActive'] = !$currentActive;
+                $updatedStatus = $fleetTypes[$idx]['isActive'];
+                break;
+            }
+        }
+
+        saveSystemSetting('rental_fleet_types', $fleetTypes);
+        jsonResponse([
+            'success' => true,
+            'message' => $updatedStatus ? 'Fleet type enabled on website.' : 'Fleet type disabled and hidden from website.',
+            'isActive' => $updatedStatus,
+            'fleetTypes' => $fleetTypes,
+        ]);
+    } elseif ($action === 'delete_fleet_type') {
+        $id = trim($input['id'] ?? '');
+        if (!$id) {
+            jsonResponse(['success' => false, 'error' => 'Fleet type ID is required.'], 400);
+        }
+        if ($id === 'student' || $id === 'event') {
+            jsonResponse(['success' => false, 'error' => 'Default system fleet types cannot be deleted. You can disable them instead.'], 400);
+        }
+
+        $fleetTypes = getCatalogFleetTypes($defaultRentalFleetTypes);
+        $filtered = array_values(array_filter($fleetTypes, function($ft) use ($id) {
+            return $ft['id'] !== $id;
+        }));
+
+        saveSystemSetting('rental_fleet_types', $filtered);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Rental fleet type removed.',
+            'fleetTypes' => $filtered,
+        ]);
     }
 
     // ── RESET TO DEFAULTS ─────────────────────────────────────────
     elseif ($action === 'reset_catalog') {
         saveSystemSetting('store_catalog_items', $defaultStoreProducts);
         saveSystemSetting('rental_catalog_items', $defaultRentalItems);
+        saveSystemSetting('rental_fleet_types', $defaultRentalFleetTypes);
         jsonResponse([
             'success' => true,
             'message' => 'Catalog reset to standard showroom inventory.',
             'products' => $defaultStoreProducts,
             'rentals' => $defaultRentalItems,
+            'fleetTypes' => $defaultRentalFleetTypes,
         ]);
     } else {
         jsonResponse(['success' => false, 'error' => 'Invalid catalog action.'], 400);

@@ -3008,6 +3008,39 @@ export async function fetchCatalogRentals(): Promise<any[]> {
   return []
 }
 
+export async function fetchCatalogRentalsData(): Promise<{ rentals: any[]; fleetTypes: any[] }> {
+  try {
+    const res = await fetch(`${getApiUrl("catalog.php")}?type=rentals`, {
+      credentials: "include",
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success) {
+      return {
+        rentals: Array.isArray(data.rentals) ? data.rentals : [],
+        fleetTypes: Array.isArray(data.fleetTypes) ? data.fleetTypes : [],
+      }
+    }
+  } catch (err) {
+    console.warn("fetchCatalogRentalsData network fallback:", err)
+  }
+  return { rentals: [], fleetTypes: [] }
+}
+
+export async function fetchCatalogFleetTypes(): Promise<any[]> {
+  try {
+    const res = await fetch(`${getApiUrl("catalog.php")}?type=fleet_types`, {
+      credentials: "include",
+    })
+    const data = await res.json().catch(() => null)
+    if (res.ok && data?.success && Array.isArray(data.fleetTypes)) {
+      return data.fleetTypes
+    }
+  } catch (err) {
+    console.warn("fetchCatalogFleetTypes network fallback:", err)
+  }
+  return []
+}
+
 export async function saveRentalGear(
   item: Record<string, any>,
 ): Promise<ApiResponse> {
@@ -3057,6 +3090,76 @@ export async function toggleRentalStock(id: string): Promise<ApiResponse> {
     return {
       success: false,
       error: err.message || "Failed to toggle rental availability.",
+    }
+  }
+}
+
+export async function toggleRentalActive(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_rental_active", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to toggle rental active status.",
+    }
+  }
+}
+
+export async function saveFleetType(
+  fleetType: Record<string, any>,
+): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "save_fleet_type", fleetType }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to save fleet type.",
+    }
+  }
+}
+
+export async function toggleFleetTypeStatus(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "toggle_fleet_type_status", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to toggle fleet type status.",
+    }
+  }
+}
+
+export async function deleteFleetType(id: string): Promise<ApiResponse> {
+  try {
+    const res = await fetch(getApiUrl("catalog.php"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "delete_fleet_type", id }),
+    })
+    return await res.json()
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to delete fleet type.",
     }
   }
 }

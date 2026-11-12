@@ -29,7 +29,7 @@ import {
   bassGuitarImg,
   studioImg,
 } from "@/lib/data"
-import { fetchCatalogRentals, submitEnquiry } from "@/lib/api"
+import { fetchCatalogRentalsData, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
 import { LazyImage } from "@/components/LazyImage"
 import CartCheckout from "@/components/CartCheckout"
@@ -38,15 +38,45 @@ import type { Page } from "@/types"
 export interface RentalItem {
   id: string
   name: string
-  category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass" | "PA & Sound" | "Backline" | "Microphones"
-  type: "student" | "event"
+  category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass" | "PA & Sound" | "Backline" | "Microphones" | string
+  type: string
   image: string
   inclusions?: string[]
   features?: string[]
   recommendedFor?: string
   idealFor?: string
   inStock?: boolean
+  isActive?: boolean
+  is_active?: boolean
 }
+
+export interface RentalFleetType {
+  id: string
+  name: string
+  description?: string
+  badge?: string
+  isActive?: boolean
+  order?: number
+}
+
+export const DEFAULT_FLEET_TYPES: RentalFleetType[] = [
+  {
+    id: "student",
+    name: "Student Home Practice",
+    description: "Vetted practice instruments for students, scholars and home learners with clinic maintenance included.",
+    badge: "Student Practice Fleet",
+    isActive: true,
+    order: 1,
+  },
+  {
+    id: "event",
+    name: "Stage, PA & Event Backline",
+    description: "Professional concert sound systems, stage backline amps, drum kits, and live event gear in Kaduna.",
+    badge: "Concert & Event Gear",
+    isActive: true,
+    order: 2,
+  },
+]
 
 const DEFAULT_RENTALS: RentalItem[] = [
   {
@@ -193,7 +223,8 @@ const DEFAULT_RENTALS: RentalItem[] = [
 
 export function Rentals({ go }: { go: (p: Page) => void }) {
   const [rentals, setRentals] = useState<RentalItem[]>(DEFAULT_RENTALS)
-  const [activeTab, setActiveTab] = useState<"students" | "events" | "terms">("students")
+  const [fleetTypes, setFleetTypes] = useState<RentalFleetType[]>(DEFAULT_FLEET_TYPES)
+  const [activeTab, setActiveTab] = useState<string>("student")
 
   // Multi-Item Selection State with localStorage persistence
   const [selectedRentals, setSelectedRentals] = useState<RentalItem[]>(() => {
@@ -227,21 +258,57 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
 
   // Dynamic fetch from database / backend
   useEffect(() => {
-    fetchCatalogRentals().then((data) => {
+    fetchCatalogRentalsData().then(({ rentals: data, fleetTypes: ftData }) => {
       if (data && Array.isArray(data) && data.length > 0) {
         setRentals(data as RentalItem[])
+      }
+      if (ftData && Array.isArray(ftData) && ftData.length > 0) {
+        setFleetTypes(ftData as RentalFleetType[])
       }
     })
   }, [])
 
-  const studentItems = rentals.filter((r) => r.type === "student" || (!r.type && r.category !== "PA & Sound" && r.category !== "Backline"))
-  const eventItems = rentals.filter((r) => r.type === "event" || r.category === "PA & Sound" || r.category === "Backline")
+  // Active items & active fleet types filter
+  const activeFleetTypes = fleetTypes.filter((ft) => ft.isActive !== false)
+  const activeRentals = rentals.filter(
+    (r) => r.isActive !== false && (r as any).is_active !== false,
+  )
 
-  const [visibleStudentCount, setVisibleStudentCount] = useState(6)
-  const [visibleEventCount, setVisibleEventCount] = useState(4)
+  // Ensure active tab points to a valid active fleet or terms
+  useEffect(() => {
+    if (activeTab !== "terms") {
+      const exists = activeFleetTypes.some((ft) => ft.id === activeTab)
+      if (!exists && activeFleetTypes.length > 0) {
+        setActiveTab(activeFleetTypes[0].id)
+      }
+    }
+  }, [activeFleetTypes, activeTab])
 
-  const displayedStudentItems = studentItems.slice(0, visibleStudentCount)
-  const displayedEventItems = eventItems.slice(0, visibleEventCount)
+  // Helper to get active items for a given fleet type
+  const getItemsForFleet = (fleetId: string) => {
+    return activeRentals.filter((r) => {
+      if (fleetId === "student" || fleetId === "students") {
+        return (
+          r.type === "student" ||
+          (!r.type && r.category !== "PA & Sound" && r.category !== "Backline")
+        )
+      }
+      if (fleetId === "event" || fleetId === "events") {
+        return (
+          r.type === "event" ||
+          (!r.type && (r.category === "PA & Sound" || r.category === "Backline"))
+        )
+      }
+      return r.type === fleetId
+    })
+  }
+
+  const [visibleCountMap, setVisibleCountMap] = useState<Record<string, number>>({})
+  const getVisibleCount = (fleetId: string) =>
+    visibleCountMap[fleetId] || (fleetId === "event" ? 4 : 6)
+  const setVisibleCount = (fleetId: string, count: number) => {
+    setVisibleCountMap((prev) => ({ ...prev, [fleetId]: count }))
+  }
 
   // Multi-selection helpers
   const isSelected = (id: string) => selectedRentals.some((item) => item.id === id)
@@ -464,29 +531,25 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
             </ScrollReveal>
 
             <ScrollReveal direction="right" delay={100}>
-              <div className="inline-flex p-1.5 rounded-xl bg-white border border-[var(--line)] shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("students")}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "students"
-                      ? "bg-[var(--gold)] text-white shadow-xs"
-                      : "text-[var(--muted)] hover:text-[var(--navy)]"
-                  }`}
-                >
-                  Student Home Practice ({studentItems.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("events")}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === "events"
-                      ? "bg-[var(--gold)] text-white shadow-xs"
-                      : "text-[var(--muted)] hover:text-[var(--navy)]"
-                  }`}
-                >
-                  Stage, PA &amp; Event Backline ({eventItems.length})
-                </button>
+              <div className="inline-flex flex-wrap p-1.5 rounded-xl bg-white border border-[var(--line)] shadow-xs">
+                {activeFleetTypes.map((ft) => {
+                  const count = getItemsForFleet(ft.id).length
+                  const isActive = activeTab === ft.id
+                  return (
+                    <button
+                      key={ft.id}
+                      type="button"
+                      onClick={() => setActiveTab(ft.id)}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[var(--gold)] text-white shadow-xs"
+                          : "text-[var(--muted)] hover:text-[var(--navy)]"
+                      }`}
+                    >
+                      {ft.name} ({count})
+                    </button>
+                  )
+                })}
                 <button
                   type="button"
                   onClick={() => setActiveTab("terms")}
@@ -502,272 +565,296 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
             </ScrollReveal>
           </div>
 
-          {/* Tab 1: Student Rentals */}
-          {activeTab === "students" && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayedStudentItems.map((item, idx) => {
-                const selected = isSelected(item.id)
-                return (
-                  <ScrollReveal
-                    key={item.id}
-                    direction="up"
-                    delay={(idx % 3) * 70}
-                    className="h-full"
+          {/* Dynamic Active Fleet View */}
+          {activeTab !== "terms" && (() => {
+            const currentFleet =
+              activeFleetTypes.find((ft) => ft.id === activeTab) ||
+              activeFleetTypes[0]
+
+            if (!currentFleet) {
+              return (
+                <div className="bg-white rounded-2xl border border-[var(--line)] p-12 text-center max-w-lg mx-auto">
+                  <Icon name="info" size={32} className="mx-auto text-[var(--gold)] mb-3" />
+                  <h3 className="font-bold text-base text-[var(--navy)]">Rental Fleet Transitioning</h3>
+                  <p className="text-xs text-[var(--muted)] mt-1 mb-4">
+                    Our rental catalog is currently undergoing inventory updates. Please check back soon or inquire via WhatsApp.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => directWhatsAppInquiry("General Rental Inquiry")}
+                    className="btn btn-primary !text-xs inline-flex items-center gap-2 cursor-pointer"
                   >
-                  <div
-                    className={`bg-white rounded-2xl border transition-all flex flex-col group relative h-full ${
-                      selected
-                        ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
-                        : "border-[var(--line)] shadow-xs hover:shadow-md"
-                    }`}
+                    <WhatsAppIcon size={14} /> Inquire on WhatsApp
+                  </button>
+                </div>
+              )
+            }
+
+            const fleetItems = getItemsForFleet(currentFleet.id)
+            const visibleCount = getVisibleCount(currentFleet.id)
+            const displayedItems = fleetItems.slice(0, visibleCount)
+            const isHorizontalLayout = currentFleet.id === "event" || currentFleet.id === "backline"
+
+            if (fleetItems.length === 0) {
+              return (
+                <div className="bg-white rounded-2xl border border-[var(--line)] p-12 text-center max-w-lg mx-auto">
+                  <Icon name="info" size={32} className="mx-auto text-[var(--gold)] mb-3" />
+                  <h3 className="font-bold text-base text-[var(--navy)]">
+                    No gear currently listed under {currentFleet.name}
+                  </h3>
+                  <p className="text-xs text-[var(--muted)] mt-1 mb-4">
+                    Instruments and equipment for this fleet are currently undergoing clinical intonation or reserved. Contact admin for custom fleet bookings.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => directWhatsAppInquiry(`Inquiry for ${currentFleet.name}`)}
+                    className="btn btn-primary !text-xs inline-flex items-center gap-2 cursor-pointer"
                   >
-                    {/* Multi-Select Checkbox overlay */}
+                    <WhatsAppIcon size={14} /> Inquire on WhatsApp
+                  </button>
+                </div>
+              )
+            }
+
+            return (
+              <>
+                {isHorizontalLayout ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {displayedItems.map((item, idx) => {
+                      const selected = isSelected(item.id)
+                      return (
+                        <ScrollReveal
+                          key={item.id}
+                          direction="up"
+                          delay={(idx % 2) * 80}
+                          className="h-full"
+                        >
+                          <div
+                            className={`bg-white rounded-2xl border transition-all flex flex-col sm:flex-row group relative h-full ${
+                              selected
+                                ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
+                                : "border-[var(--line)] shadow-xs hover:shadow-md"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleSelectRental(item)}
+                              className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
+                                selected
+                                  ? "bg-[var(--gold)] text-white"
+                                  : "bg-white/95 text-[var(--navy)] hover:bg-white"
+                              }`}
+                              title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                            >
+                              <span
+                                className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                                  selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
+                                }`}
+                              >
+                                {selected ? "✓" : ""}
+                              </span>
+                              <span>{selected ? "Selected" : "Select"}</span>
+                            </button>
+
+                            <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
+                              <LazyImage
+                                src={item.image}
+                                alt={item.name}
+                                fallbackSrc="/media/studio/multi-instrument-lab.jpeg"
+                                className="group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden pointer-events-none" />
+                              <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md z-10">
+                                {item.category}
+                              </span>
+                            </div>
+
+                            <div className="p-5 flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center justify-between gap-2 mb-1 pr-20">
+                                  <h3 className="font-bold text-base text-[var(--navy)]">{item.name}</h3>
+                                </div>
+                                <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor || item.recommendedFor}</p>
+
+                                <ul className="space-y-1 text-xs text-slate-600 mb-4">
+                                  {(item.features || item.inclusions || []).map((f, i) => (
+                                    <li key={i} className="flex items-start gap-1.5">
+                                      <span className="text-[var(--gold)] font-bold">✓</span>
+                                      <span>{f}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                                <span className="text-[11px] text-[var(--muted)]">
+                                  {currentFleet.badge || "Technician Vetted"}
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => directWhatsAppInquiry(item.name)}
+                                    className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
+                                    title="Inquire on WhatsApp"
+                                  >
+                                    <WhatsAppIcon size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleInquiry(item.name)}
+                                    className="btn btn-primary !py-2 !px-4 !text-xs cursor-pointer"
+                                  >
+                                    Reserve Item
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </ScrollReveal>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {displayedItems.map((item, idx) => {
+                      const selected = isSelected(item.id)
+                      return (
+                        <ScrollReveal
+                          key={item.id}
+                          direction="up"
+                          delay={(idx % 3) * 70}
+                          className="h-full"
+                        >
+                          <div
+                            className={`bg-white rounded-2xl border transition-all flex flex-col group relative h-full ${
+                              selected
+                                ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
+                                : "border-[var(--line)] shadow-xs hover:shadow-md"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleSelectRental(item)}
+                              className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
+                                selected
+                                  ? "bg-[var(--gold)] text-white"
+                                  : "bg-white/95 text-[var(--navy)] hover:bg-white"
+                              }`}
+                              title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                            >
+                              <span
+                                className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
+                                  selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
+                                }`}
+                              >
+                                {selected ? "✓" : ""}
+                              </span>
+                              <span>{selected ? "Selected" : "Select"}</span>
+                            </button>
+
+                            <div className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl">
+                              <LazyImage
+                                src={item.image}
+                                alt={item.name}
+                                fallbackSrc="/media/programs/violin-solo-rainbow.jpeg"
+                                className="group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                              <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs z-10">
+                                {item.category}
+                              </span>
+                              <span className="absolute bottom-3 left-3 bg-white/95 text-[var(--navy)] font-bold text-xs px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1.5 z-10">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{" "}
+                                {currentFleet.badge || currentFleet.name}
+                              </span>
+                            </div>
+
+                            <div className="p-5 flex-1 flex flex-col">
+                              <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
+                              <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor || item.idealFor}</p>
+
+                              <div className="mb-4 pt-3 border-t border-[var(--line)]">
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] block mb-1.5">
+                                  Inclusions &amp; Setup:
+                                </span>
+                                <ul className="space-y-1 text-xs text-slate-600">
+                                  {(item.inclusions || item.features || []).map((inc, i) => (
+                                    <li key={i} className="flex items-start gap-1.5">
+                                      <span className="text-[var(--gold)] font-bold">✓</span>
+                                      <span>{inc}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                                <div>
+                                  <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
+                                    Rental Policy
+                                  </small>
+                                  <strong className="text-xs text-slate-700 font-semibold">Upfront Payment</strong>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => directWhatsAppInquiry(item.name)}
+                                    className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
+                                    title="Inquire on WhatsApp"
+                                  >
+                                    <WhatsAppIcon size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleInquiry(item.name)}
+                                    className="btn btn-primary !py-2 !px-3.5 !text-xs cursor-pointer"
+                                  >
+                                    Reserve Item
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </ScrollReveal>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {fleetItems.length > visibleCount && (
+                  <div className="text-center mt-10">
                     <button
                       type="button"
-                      onClick={() => toggleSelectRental(item)}
-                      className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
-                        selected
-                          ? "bg-[var(--gold)] text-white"
-                          : "bg-white/95 text-[var(--navy)] hover:bg-white"
-                      }`}
-                      title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                      onClick={() => setVisibleCount(currentFleet.id, visibleCount + (isHorizontalLayout ? 4 : 6))}
+                      className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
                     >
-                      <span
-                        className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
-                          selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
-                        }`}
-                      >
-                        {selected ? "✓" : ""}
+                      <span>
+                        View More {currentFleet.name} ({fleetItems.length - visibleCount} remaining)
                       </span>
-                      <span>{selected ? "Selected" : "Select"}</span>
+                      <Icon name="arrow" size={13} className="rotate-90" />
                     </button>
-
-                    <div className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl">
-                      <LazyImage
-                        src={item.image}
-                        alt={item.name}
-                        fallbackSrc="/media/programs/violin-solo-rainbow.jpeg"
-                        className="group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md shadow-xs z-10">
-                        {item.category}
-                      </span>
-                      <span className="absolute bottom-3 left-3 bg-white/95 text-[var(--navy)] font-bold text-xs px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1.5 z-10">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Student Practice Fleet
-                      </span>
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col">
-                      <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
-                      <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor}</p>
-
-                      <div className="mb-4 pt-3 border-t border-[var(--line)]">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] block mb-1.5">
-                          Inclusions &amp; Setup:
-                        </span>
-                        <ul className="space-y-1 text-xs text-slate-600">
-                          {(item.inclusions || []).map((inc, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-[var(--gold)] font-bold">✓</span>
-                              <span>{inc}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
-                        <div>
-                          <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
-                            Rental Policy
-                          </small>
-                          <strong className="text-xs text-slate-700 font-semibold">Upfront Payment</strong>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => directWhatsAppInquiry(item.name)}
-                            className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
-                            title="Inquire on WhatsApp"
-                          >
-                            <WhatsAppIcon size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInquiry(item.name)}
-                            className="btn btn-primary !py-2 !px-3.5 !text-xs cursor-pointer"
-                          >
-                            Reserve Item
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-                  </ScrollReveal>
-                )
-              })}
-            </div>
+                )}
 
-            {studentItems.length > visibleStudentCount && (
-              <div className="text-center mt-10">
-                <button
-                  type="button"
-                  onClick={() => setVisibleStudentCount((prev) => prev + 6)}
-                  className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
-                >
-                  <span>View More Student Instruments ({studentItems.length - visibleStudentCount} remaining)</span>
-                  <Icon name="arrow" size={13} className="rotate-90" />
-                </button>
-              </div>
-            )}
-
-            {visibleStudentCount >= studentItems.length && studentItems.length > 6 && (
-              <div className="text-center mt-10 flex items-center justify-center gap-3">
-                <span className="text-xs text-[var(--muted)]">Showing all {studentItems.length} student practice instruments</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVisibleStudentCount(6)
-                    document.getElementById("rental-catalog")?.scrollIntoView({ behavior: "smooth" })
-                  }}
-                  className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
-                >
-                  Show Less ↑
-                </button>
-              </div>
-            )}
-            </>
-          )}
-
-          {/* Tab 2: Stage & Event Backline */}
-          {activeTab === "events" && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {displayedEventItems.map((item, idx) => {
-                const selected = isSelected(item.id)
-                return (
-                  <ScrollReveal
-                    key={item.id}
-                    direction="up"
-                    delay={(idx % 2) * 80}
-                    className="h-full"
-                  >
-                  <div
-                    className={`bg-white rounded-2xl border transition-all flex flex-col sm:flex-row group relative h-full ${
-                      selected
-                        ? "border-[var(--gold)] shadow-md ring-2 ring-[var(--gold)]/20"
-                        : "border-[var(--line)] shadow-xs hover:shadow-md"
-                    }`}
-                  >
-                    {/* Multi-Select Checkbox overlay */}
+                {visibleCount >= fleetItems.length && fleetItems.length > (isHorizontalLayout ? 4 : 6) && (
+                  <div className="text-center mt-10 flex items-center justify-center gap-3">
+                    <span className="text-xs text-[var(--muted)]">
+                      Showing all {fleetItems.length} items in {currentFleet.name}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => toggleSelectRental(item)}
-                      className={`absolute top-3 right-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold shadow-sm transition-all cursor-pointer ${
-                        selected
-                          ? "bg-[var(--gold)] text-white"
-                          : "bg-white/95 text-[var(--navy)] hover:bg-white"
-                      }`}
-                      title={selected ? "Click to deselect" : "Select item for multi-item rental reservation"}
+                      onClick={() => {
+                        setVisibleCount(currentFleet.id, isHorizontalLayout ? 4 : 6)
+                        document.getElementById("rental-catalog")?.scrollIntoView({ behavior: "smooth" })
+                      }}
+                      className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
                     >
-                      <span
-                        className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${
-                          selected ? "bg-white text-[var(--gold)]" : "border border-slate-400"
-                        }`}
-                      >
-                        {selected ? "✓" : ""}
-                      </span>
-                      <span>{selected ? "Selected" : "Select"}</span>
+                      Show Less ↑
                     </button>
-
-                    <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
-                      <LazyImage
-                        src={item.image}
-                        alt={item.name}
-                        fallbackSrc="/media/studio/multi-instrument-lab.jpeg"
-                        className="group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent sm:hidden pointer-events-none" />
-                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md z-10">
-                        {item.category}
-                      </span>
-                    </div>
-
-                    <div className="p-5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-1 pr-20">
-                          <h3 className="font-bold text-base text-[var(--navy)]">{item.name}</h3>
-                        </div>
-                        <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor || item.recommendedFor}</p>
-
-                        <ul className="space-y-1 text-xs text-slate-600 mb-4">
-                          {(item.features || item.inclusions || []).map((f, i) => (
-                            <li key={i} className="flex items-start gap-1.5">
-                              <span className="text-[var(--gold)] font-bold">✓</span>
-                              <span>{f}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
-                        <span className="text-[11px] text-[var(--muted)]">Sound engineer available</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => directWhatsAppInquiry(item.name)}
-                            className="btn btn-secondary !py-2 !px-2.5 !text-xs cursor-pointer"
-                            title="Inquire on WhatsApp"
-                          >
-                            <WhatsAppIcon size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInquiry(item.name)}
-                            className="btn btn-primary !py-2 !px-4 !text-xs cursor-pointer"
-                          >
-                            Book Event Gear
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-                  </ScrollReveal>
-                )
-              })}
-            </div>
-
-            {eventItems.length > visibleEventCount && (
-              <div className="text-center mt-10">
-                <button
-                  type="button"
-                  onClick={() => setVisibleEventCount((prev) => prev + 4)}
-                  className="btn btn-secondary !py-3 !px-8 text-xs font-bold inline-flex items-center gap-2 shadow-xs hover:border-[var(--gold)] cursor-pointer"
-                >
-                  <span>View More Event &amp; Sound Gear ({eventItems.length - visibleEventCount} remaining)</span>
-                  <Icon name="arrow" size={13} className="rotate-90" />
-                </button>
-              </div>
-            )}
-
-            {visibleEventCount >= eventItems.length && eventItems.length > 4 && (
-              <div className="text-center mt-10 flex items-center justify-center gap-3">
-                <span className="text-xs text-[var(--muted)]">Showing all {eventItems.length} stage &amp; event sound packages</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVisibleEventCount(4)
-                    document.getElementById("rental-catalog")?.scrollIntoView({ behavior: "smooth" })
-                  }}
-                  className="text-xs font-bold text-[var(--gold)] hover:underline cursor-pointer"
-                >
-                  Show Less ↑
-                </button>
-              </div>
-            )}
-            </>
-          )}
+                )}
+              </>
+            )
+          })()}
 
           {/* Tab 3: Protocol & FAQ */}
           {activeTab === "terms" && (
