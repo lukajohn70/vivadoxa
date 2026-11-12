@@ -149,12 +149,21 @@ function getJsonInput(): array {
 function saveMediaImage(array $fileInfo, string $subfolder, string $prefix = 'img'): array {
     $errorCode = $fileInfo['error'] ?? UPLOAD_ERR_NO_FILE;
     if ($errorCode !== UPLOAD_ERR_OK) {
-        $errorMsg = match ($errorCode) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Uploaded image file exceeds server size limits (upload_max_filesize).',
-            UPLOAD_ERR_PARTIAL => 'Image file upload was only partially completed. Please try again.',
-            UPLOAD_ERR_NO_FILE => 'No file was selected for upload.',
-            default => 'File upload error (Code ' . $errorCode . ').',
-        };
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $errorMsg = 'Uploaded image file exceeds server size limits (upload_max_filesize).';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errorMsg = 'Image file upload was only partially completed. Please try again.';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errorMsg = 'No file was selected for upload.';
+                break;
+            default:
+                $errorMsg = 'File upload error (Code ' . $errorCode . ').';
+                break;
+        }
         return ['success' => false, 'error' => $errorMsg];
     }
 
@@ -228,14 +237,15 @@ function saveBase64MediaImage(string $dataUri, string $subfolder, string $prefix
     }
 
     $rawExt = strtolower($matches[1]);
-    $ext = match ($rawExt) {
-        'jpeg', 'jpg' => 'jpeg',
+    $extMap = [
+        'jpeg' => 'jpeg',
+        'jpg' => 'jpeg',
         'png' => 'png',
         'webp' => 'webp',
         'gif' => 'gif',
         'svg+xml' => 'svg',
-        default => 'jpeg',
-    };
+    ];
+    $ext = $extMap[$rawExt] ?? 'jpeg';
 
     $binaryData = base64_decode($matches[2]);
     if ($binaryData === false || strlen($binaryData) < 10) {
