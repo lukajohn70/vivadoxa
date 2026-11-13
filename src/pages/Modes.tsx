@@ -18,11 +18,12 @@ const MODES = [
   {
     name: "Online",
     sub: "Live one-to-one video lessons across Nigeria & Diaspora",
-    price: "₦20,000 / $25",
+    price: "₦30,000 – ₦50,000",
     best: false,
     items: [
+      "Twice/week (2×) — ₦30,000/month · Thrice/week (3×) — ₦50,000/month",
+      "1-hour per session",
       "Nigerian students pay in Naira (₦) · Diaspora students pay in Dollars ($)",
-      "Weekdays (3 days per week) or Weekends (Friday/Saturday)",
       "Live 1-on-1 video masterclasses & digital sheet music",
       "WhatsApp direct feedback from faculty",
     ],
@@ -33,9 +34,10 @@ const MODES = [
     price: "₦70,000",
     best: false,
     items: [
+      "2 contacts/week × 2 hours each — ₦70,000/month",
       "Available across Kaduna metropolis",
       "1-on-1 personalized learning pace",
-      "Weekdays (3 days per week) or Weekends (Friday/Saturday)",
+      "3 contacts/week option — price on enquiry",
     ],
   },
 ]
@@ -44,9 +46,8 @@ export function Modes({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Study Modes — In-Studio Music Classes, Home Coaching & Online Lessons | Vivadoxa"
+        title="Study Modes | Vivadoxa Music School Kaduna"
         description="Choose your ideal music learning format. Onsite lessons in our fully equipped Kaduna studio, 1-on-1 private home music coaching, or interactive online video classes."
-        keywords="study modes, home music lessons kaduna, onsite music studio classes, online music lessons nigeria, private music tutor"
         canonicalUrl="/modes"
       />
 

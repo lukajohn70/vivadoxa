@@ -2258,7 +2258,7 @@ export function ApplicationSlipModal({ data, onClose }: ApplicationSlipProps) {
             : data.planTier === "2-years"
               ? isUSD
                 ? 600
-                : 500000
+                : 450000
               : data.planTier === "home-lessons"
                 ? isUSD
                   ? 90

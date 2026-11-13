@@ -80,9 +80,8 @@ export function Performances({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Student Recitals & Live Concert Performances | Vivadoxa Music School"
+        title="Student Recitals & Concerts | Vivadoxa Kaduna"
         description="Watch inspiring live performances, student ensemble concerts, piano recitals, and saxophone showcases recorded at Vivadoxa Music School in Kaduna."
-        keywords="student recitals kaduna, live music concert, saxophone performance, piano recital, student musicians nigeria"
         canonicalUrl="/performances"
       />
 

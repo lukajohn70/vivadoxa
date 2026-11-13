@@ -340,7 +340,7 @@ export default function CartCheckout({
                 label="WhatsApp / Phone Number"
                 value={formPhone}
                 onChange={(e: any) => setFormPhone(typeof e === "string" ? e : e?.target?.value ?? "")}
-                placeholder="e.g. 0803 130 8881"
+                placeholder="e.g. 0907 533 0330"
                 required
                 error={phoneError}
               />
@@ -445,7 +445,7 @@ export default function CartCheckout({
 
               {/* WhatsApp follow-up */}
               <a
-                href={`https://wa.me/2348031308881?text=${buildWhatsAppMsg()}`}
+                href={`https://wa.me/2349075330330?text=${buildWhatsAppMsg()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary w-full justify-center inline-flex items-center gap-2 !py-2.5 !text-xs mb-3"

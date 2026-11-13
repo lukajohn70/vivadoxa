@@ -9,7 +9,7 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
   return (
     <>
       <SEO
-        title="Tuition, Refund & Instrument Policy — Vivadoxa Music School"
+        title="Tuition & Refund Policy | Vivadoxa Music School"
         description="Official tuition rates, installment terms, studio instrument usage, refund criteria, and repair warranties at Vivadoxa Music School."
         canonicalUrl="/tuition-policy"
       />
@@ -187,11 +187,23 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                     2-Years Diploma Program
                   </span>
                   <strong className="block text-lg font-bold text-[var(--navy)] mt-1">
-                    ₦500,000
+                    ₦450,000
                   </strong>
                   <small className="text-[11px] text-[var(--muted)]">
                     Full conservatory diploma. Virtuoso repertoire, complete
                     album recording project &amp; Vivadoxa Diploma.
+                  </small>
+                </div>
+                <div className="p-4 rounded-xl bg-[#fbfaf7] border border-[var(--line)] sm:col-span-2 lg:col-span-3">
+                  <span className="text-[10px] uppercase font-bold text-[var(--gold)] tracking-wider">
+                    Online Lessons (Live 1-on-1 Video)
+                  </span>
+                  <strong className="block text-lg font-bold text-[var(--navy)] mt-1">
+                    ₦30,000 – ₦50,000 / month
+                  </strong>
+                  <small className="text-[11px] text-[var(--muted)]">
+                    Twice/week (2×) — ₦30,000/month · Thrice/week (3×) — ₦50,000/month.
+                    1 hour per session. Available nationwide &amp; diaspora.
                   </small>
                 </div>
                 <div className="p-4 rounded-xl bg-[#fbfaf7] border border-[var(--line)] sm:col-span-2 lg:col-span-3">
@@ -202,8 +214,8 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                     ₦70,000 / month
                   </strong>
                   <small className="text-[11px] text-[var(--muted)]">
-                    Dedicated home instruction by accredited faculty delivered
-                    to your residence in Kaduna.
+                    2 contacts/week × 2 hours each. Dedicated home instruction by accredited faculty
+                    delivered to your residence in Kaduna. 3 contacts/week available on enquiry.
                   </small>
                 </div>
               </div>
@@ -685,7 +697,7 @@ export function TuitionPolicy({ go }: { go: (p: Page | string) => void }) {
                   </a>
                 </p>
                 <p>
-                  Phone: 09075330330 / 09010267234 · WhatsApp: 08031308881
+                  Phone: 09075330330 / 09010267234 · WhatsApp: 09075330330
                   (Office Hours: Mon–Fri, 9am–5pm WAT)
                 </p>
               </div>

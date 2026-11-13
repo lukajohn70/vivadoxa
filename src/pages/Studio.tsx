@@ -191,9 +191,8 @@ export function Studio({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Music Studio Kaduna — Professional Recording, Rehearsal & Production"
-        description="Book Vivadoxa Music Studio in Kaduna for pristine vocal tracking, live band rehearsals, multi-track audio recording, mixing, mastering & sound engineering."
-        keywords="music studio, music studio kaduna, recording studio kaduna, rehearsal studio kaduna, audio mixing studio, sound engineering kaduna, music production studio, vocal recording booth"
+        title="Recording Studio in Kaduna | Vivadoxa"
+        description="Professional recording studio in Kaduna for vocal tracking, album production, stem mixing, mastering &amp; band rehearsals. Call 09075330330."
         canonicalUrl="/studio"
         ogImage="/media/studio/multi-instrument-lab.jpeg"
         schema={[studioSchema, faqSchema]}

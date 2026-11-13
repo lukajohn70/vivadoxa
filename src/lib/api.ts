@@ -2132,7 +2132,7 @@ export interface GeneralSettings {
 export const DEFAULT_GENERAL_SETTINGS: GeneralSettings = {
   schoolPhone: "09075330330",
   schoolPhone2: "09010267234",
-  schoolWhatsapp: "08031308881",
+  schoolWhatsapp: "09075330330",
   schoolEmail: "vivadoxa@gmail.com",
   officialGmail: "vivadoxa@gmail.com",
   copyOfficialGmail: true,
@@ -2251,7 +2251,7 @@ export async function testWhatsAppNotification(
   const cleanPhone = (phone || "").replace(/\D/g, "")
   const intlPhone = cleanPhone.startsWith("0")
     ? "234" + cleanPhone.slice(1)
-    : cleanPhone || "2348031308881"
+    : cleanPhone || "2349075330330"
   return {
     success: true,
     recipient: phone,

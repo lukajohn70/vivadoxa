@@ -143,9 +143,8 @@ export function Contact() {
   return (
     <main>
       <SEO
-        title="Contact Vivadoxa — Music School, Instrument Repair & Recording Studio | Kaduna"
+        title="Contact Vivadoxa | Kaduna Music School"
         description="Get in touch with Vivadoxa Music School, Instrument Repair Clinic & Recording Studio in Kaduna. Inquire about classes, diagnostic drop-offs, and rehearsal bookings."
-        keywords="contact music school kaduna, instrument repair kaduna phone, recording studio kaduna address, vivadoxa phone number"
         canonicalUrl="/contact"
       />
 

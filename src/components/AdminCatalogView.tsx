@@ -96,8 +96,12 @@ export function ShopAndRentalsView({
   const [formSpecs, setFormSpecs] = useState("")
   const [formInStock, setFormInStock] = useState(true)
   const [formIsActive, setFormIsActive] = useState(true)
+  const [formPriceLabel, setFormPriceLabel] = useState("")
   const [formRentalType, setFormRentalType] = useState<string>("student")
   const [formRecommendedFor, setFormRecommendedFor] = useState("")
+  const [formDailyRateLabel, setFormDailyRateLabel] = useState("")
+  const [formWeeklyRateLabel, setFormWeeklyRateLabel] = useState("")
+  const [formMonthlyRateLabel, setFormMonthlyRateLabel] = useState("")
 
   // Image Upload State
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -177,8 +181,12 @@ export function ShopAndRentalsView({
     setFormSpecs("")
     setFormInStock(true)
     setFormIsActive(true)
+    setFormPriceLabel("")
     setFormRentalType(fleetTypes[0]?.id || "student")
     setFormRecommendedFor("Beginner & Intermediate scholars")
+    setFormDailyRateLabel("")
+    setFormWeeklyRateLabel("")
+    setFormMonthlyRateLabel("")
     setImageUploadMode("upload")
     setImageUploadError(null)
     setLocalPreview(null)
@@ -203,8 +211,12 @@ export function ShopAndRentalsView({
     setFormSpecs(specsList)
     setFormInStock(item.inStock !== false)
     setFormIsActive(item.isActive !== false && item.is_active !== false)
+    setFormPriceLabel(item.priceLabel || "")
     setFormRentalType(item.type || "student")
     setFormRecommendedFor(item.recommendedFor || item.idealFor || "")
+    setFormDailyRateLabel(item.dailyRateLabel || (item.dailyRate ? `₦${Number(item.dailyRate).toLocaleString()}` : ""))
+    setFormWeeklyRateLabel(item.weeklyRateLabel || (item.weeklyRate ? `₦${Number(item.weeklyRate).toLocaleString()}` : ""))
+    setFormMonthlyRateLabel(item.monthlyRateLabel || (item.monthlyRate ? `₦${Number(item.monthlyRate).toLocaleString()}` : ""))
     setImageUploadMode("upload")
     setImageUploadError(null)
     setLocalPreview(null)
@@ -291,6 +303,7 @@ export function ShopAndRentalsView({
         image: formImage.trim(),
         setupNote: formSetupNote.trim() || "Pre-delivery clinic inspection passed",
         specs: specsArray,
+        priceLabel: formPriceLabel.trim(),
         inStock: formInStock,
       }
 
@@ -316,6 +329,12 @@ export function ShopAndRentalsView({
         image: formImage.trim(),
         recommendedFor: formRecommendedFor.trim(),
         idealFor: formRecommendedFor.trim(),
+        dailyRateLabel: formDailyRateLabel.trim(),
+        weeklyRateLabel: formWeeklyRateLabel.trim(),
+        monthlyRateLabel: formMonthlyRateLabel.trim(),
+        dailyRate: parseInt(formDailyRateLabel.replace(/[^0-9]/g, "")) || 0,
+        weeklyRate: parseInt(formWeeklyRateLabel.replace(/[^0-9]/g, "")) || 0,
+        monthlyRate: parseInt(formMonthlyRateLabel.replace(/[^0-9]/g, "")) || 0,
         inclusions: specsArray,
         features: specsArray,
         inStock: formInStock,
@@ -728,21 +747,52 @@ export function ShopAndRentalsView({
                 </div>
 
                 {activeSubTab === "store" && (
-                  <Field
-                    label="Badge Label (Optional)"
-                    value={formBadge}
-                    onChange={(e) => setFormBadge(e.target.value)}
-                    placeholder="e.g. Bestseller, Faculty Choice, French Import"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Field
+                      label="Selling Price / Price Label"
+                      value={formPriceLabel}
+                      onChange={(e) => setFormPriceLabel(e.target.value)}
+                      placeholder="e.g. ₦85,000 or Enquire for Quote"
+                    />
+                    <Field
+                      label="Badge Label (Optional)"
+                      value={formBadge}
+                      onChange={(e) => setFormBadge(e.target.value)}
+                      placeholder="e.g. Bestseller, Faculty Choice, French Import"
+                    />
+                  </div>
                 )}
 
                 {activeSubTab === "rentals" && (
-                  <Field
-                    label="Recommended For / Ideal Usage"
-                    value={formRecommendedFor}
-                    onChange={(e) => setFormRecommendedFor(e.target.value)}
-                    placeholder="e.g. Beginner violin scholars, Sunday service recitals, church sound rigs"
-                  />
+                  <>
+                    <Field
+                      label="Recommended For / Ideal Usage"
+                      value={formRecommendedFor}
+                      onChange={(e) => setFormRecommendedFor(e.target.value)}
+                      placeholder="e.g. Beginner violin scholars, Sunday service recitals, church sound rigs"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-amber-50/40 p-3.5 rounded-xl border border-[var(--gold)]/20">
+                      <Field
+                        label="Daily Rate"
+                        value={formDailyRateLabel}
+                        onChange={(e) => setFormDailyRateLabel(e.target.value)}
+                        placeholder="e.g. ₦4,000"
+                      />
+                      <Field
+                        label="Weekly Rate"
+                        value={formWeeklyRateLabel}
+                        onChange={(e) => setFormWeeklyRateLabel(e.target.value)}
+                        placeholder="e.g. ₦18,000"
+                      />
+                      <Field
+                        label="Monthly Rate"
+                        value={formMonthlyRateLabel}
+                        onChange={(e) => setFormMonthlyRateLabel(e.target.value)}
+                        placeholder="e.g. ₦40,000"
+                      />
+                    </div>
+                  </>
                 )}
 
                 {/* ── Product / Gear Photo (Direct Device Upload + URL option) ──── */}
@@ -1557,6 +1607,20 @@ export function ShopAndRentalsView({
                               <h4 className="font-bold text-xs sm:text-sm text-[var(--navy)] line-clamp-2 leading-snug">
                                 {item.name}
                               </h4>
+
+                              {activeSubTab === "store" && item.priceLabel && (
+                                <p className="text-xs font-black text-[var(--gold)] mt-0.5">
+                                  {item.priceLabel}
+                                </p>
+                              )}
+
+                              {activeSubTab === "rentals" && (item.dailyRateLabel || item.weeklyRateLabel || item.monthlyRateLabel) && (
+                                <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold text-slate-700 mt-1">
+                                  {item.dailyRateLabel && <span className="bg-amber-50 text-amber-900 border border-amber-200/60 px-1.5 py-0.5 rounded">{item.dailyRateLabel}/d</span>}
+                                  {item.weeklyRateLabel && <span className="bg-amber-50 text-amber-900 border border-amber-200/60 px-1.5 py-0.5 rounded">{item.weeklyRateLabel}/w</span>}
+                                  {item.monthlyRateLabel && <span className="bg-emerald-50 text-emerald-800 border border-emerald-200/60 px-1.5 py-0.5 rounded">{item.monthlyRateLabel}/m</span>}
+                                </div>
+                              )}
 
                               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                                 {itemFleetType && (

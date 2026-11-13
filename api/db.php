@@ -2,6 +2,26 @@
 // ─── Database connection & common helpers for Vivadoxa ─────────────────────────
 ini_set('memory_limit', '256M');
 
+// PHP 7.4 compatibility polyfills for PHP 8 string functions
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(?string $haystack, ?string $needle): bool {
+        if ($haystack === null || $needle === null) return false;
+        return $needle === '' || strpos($haystack, $needle) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(?string $haystack, ?string $needle): bool {
+        if ($haystack === null || $needle === null) return false;
+        return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
+    }
+}
+if (!function_exists('str_contains')) {
+    function str_contains(?string $haystack, ?string $needle): bool {
+        if ($haystack === null || $needle === null) return false;
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+
 // CORS headers for Vite dev server & production
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '*';
 header("Access-Control-Allow-Origin: $origin");

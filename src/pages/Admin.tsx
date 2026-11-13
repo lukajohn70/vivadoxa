@@ -2710,7 +2710,7 @@ function AdminManager({ title }: { title: string }) {
     if (templateType === "general") {
       setReplySubject(`Re: ${subj}`)
       setReplyMessage(
-        `Dear ${name},\n\nThank you for reaching out to Vivadoxa Music.\n\nWe have reviewed your inquiry regarding "${subj}" and our team would be pleased to assist you.\n\n[Please enter your response details here]\n\nIf you have any further questions or would like to schedule a visit to our Kaduna studios at Angwan Sunday, feel free to reply directly to this email or reach us on WhatsApp at 08031308881.\n\nWarm regards,\nVivadoxa Music Support Team\nKaduna, Nigeria`,
+        `Dear ${name},\n\nThank you for reaching out to Vivadoxa Music.\n\nWe have reviewed your inquiry regarding "${subj}" and our team would be pleased to assist you.\n\n[Please enter your response details here]\n\nIf you have any further questions or would like to schedule a visit to our Kaduna studios at Angwan Sunday, feel free to reply directly to this email or reach us on WhatsApp at 09075330330.\n\nWarm regards,\nVivadoxa Music Support Team\nKaduna, Nigeria`,
       )
     } else if (templateType === "rentals") {
       setReplySubject(`Re: Rental Booking Inquiry — ${subj}`)

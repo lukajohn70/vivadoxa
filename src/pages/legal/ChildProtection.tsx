@@ -9,7 +9,7 @@ export function ChildProtection({ go }: { go: (p: Page | string) => void }) {
   return (
     <>
       <SEO
-        title="Child Safeguarding & Protection Policy — Vivadoxa Music School"
+        title="Child Protection Policy | Vivadoxa Music School"
         description="Vivadoxa Music School's child protection protocols, vetting standards, and optical transparency safeguarding policies for young music students."
         canonicalUrl="/safeguarding"
       />
@@ -396,7 +396,7 @@ export function ChildProtection({ go }: { go: (p: Page | string) => void }) {
                     safeguarding@vivadoxamusic.com
                   </a>{" "}
                   or via the emergency line at{" "}
-                  <strong>+234 803 130 8881</strong>. All reports are treated
+                  <strong>09075330330</strong>. All reports are treated
                   with absolute confidentiality.
                 </div>
                 <div className="p-3.5 rounded-xl bg-[#fbfaf7] border border-[var(--line)]">
@@ -452,7 +452,7 @@ export function ChildProtection({ go }: { go: (p: Page | string) => void }) {
                   </a>
                 </p>
                 <p>
-                  Emergency Hotline: 09075330330 / 08031308881 (24/7 for urgent
+                  Emergency Hotline: 09075330330 / 09010267234 (24/7 for urgent
                   child welfare matters)
                 </p>
               </div>

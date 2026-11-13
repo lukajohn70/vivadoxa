@@ -39,9 +39,86 @@ export function formatDate(iso: string): string {
   })
 }
 
+/**
+ * Automatically compress and downscale high-resolution images on the client
+ * before uploading to the server. Shrinks 10MB+ smartphone photos to ~300-500KB
+ * in milliseconds for instant, lightweight uploads.
+ */
+export async function compressImageForUpload(
+  file: File,
+  maxDimension = 1920,
+  quality = 0.88,
+): Promise<File> {
+  if (
+    !file.type.startsWith("image/") ||
+    file.type === "image/svg+xml" ||
+    file.type === "image/gif"
+  ) {
+    return file
+  }
+
+  // If already under 600KB, skip compression
+  if (file.size < 600 * 1024) {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width)
+            width = maxDimension
+          } else {
+            width = Math.round((width * maxDimension) / height)
+            height = maxDimension
+          }
+        }
+
+        const canvas = document.createElement("canvas")
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext("2d")
+        if (!ctx) {
+          resolve(file)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+        canvas.toBlob(
+          (blob) => {
+            if (!blob || blob.size >= file.size) {
+              resolve(file)
+            } else {
+              const compressedFile = new File(
+                [blob],
+                file.name.replace(/\.[^.]+$/, ".jpeg"),
+                {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                },
+              )
+              resolve(compressedFile)
+            }
+          },
+          "image/jpeg",
+          quality,
+        )
+      }
+      img.onerror = () => resolve(file)
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => resolve(file)
+    reader.readAsDataURL(file)
+  })
+}
+
 /** WhatsApp deep-link with pre-filled admissions message */
 export const WHATSAPP_URL =
-  "https://wa.me/2348031308881?text=Hello%20Vivadoxa%2C%20I%20have%20an%20enquiry%20about%20admissions."
+  "https://wa.me/2349075330330?text=Hello%20Vivadoxa%2C%20I%20have%20an%20enquiry%20about%20admissions."
 
 // ─── School constants ─────────────────────────────────────────────────────────
 export const BANK_NAME = "Guaranty Trust Bank (GTBank)"
@@ -49,7 +126,7 @@ export const BANK_ACCOUNT_NO = "0236649229"
 export const BANK_ACCOUNT_NAME = "Frederick Chrysantius"
 export const SCHOOL_PHONE = "09075330330"
 export const SCHOOL_PHONE_2 = "09010267234"
-export const SCHOOL_WHATSAPP = "08031308881"
+export const SCHOOL_WHATSAPP = "09075330330"
 export const SCHOOL_EMAIL = "vivadoxa@gmail.com"
 export const SCHOOL_EMAIL_SECONDARY = "hello@vivadoxamusic.com"
 export const SCHOOL_ADDRESS =

@@ -150,9 +150,8 @@ export function Home({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Vivadoxa — Best Music School, Instrument Repair Clinic & Recording Studio in Kaduna"
-        description="Vivadoxa is Kaduna's premier music ecosystem: certified training across 17 instruments, precision musical instrument repair hospital, modern recording studio, instrument rentals & audio store."
-        keywords="best music school in kaduna, music schools in kaduna, instrument repair kaduna, musical instrument repair clinic, fix saxophone kaduna, guitar repair kaduna, keyboard repair kaduna, recording studio kaduna, music studio kaduna, rehearsal studio kaduna, instrument rentals kaduna, audio equipment store kaduna"
+        title="Vivadoxa — Music School in Kaduna"
+        description="Kaduna's premier music school: certified piano, guitar &amp; saxophone lessons, instrument repairs, recording studio &amp; gear rentals. Call 09075330330."
         canonicalUrl="/"
       />
 
@@ -169,10 +168,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
               <em>passion.</em>
             </h1>
             <p>
-              Kaduna&apos;s premier music academy, master instrument clinic,
-              purpose-built recording studio, vetted instrument sales, and sound
-              equipment rentals. Structured conservatory preparation across 17
-              core disciplines, master technicians, and dedicated stage recitals.
+              Kaduna&apos;s premier music school offering certified piano lessons, guitar lessons,
+              and saxophone lessons alongside expert musical instrument repairs, keyboard repairs,
+              a modern recording studio, instrument shop, and sound equipment rentals.
             </p>
             <div className="button-row">
               <Button onClick={() => go("apply")}>
@@ -209,7 +207,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
               <div className="credential-item">
                 <span className="credential-label">Heritage</span>
                 <strong className="credential-val">
-                  Founded in Kaduna, 2013
+                  Founded in Kaduna, 2019
                 </strong>
               </div>
               <div className="credential-divider" aria-hidden="true" />
@@ -366,7 +364,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
             <ScrollReveal direction="left" className="max-w-2xl">
               <div>
-                <span className="eyebrow">Musical Disciplines</span>
+                <span className="eyebrow">Music Lessons in Kaduna</span>
                 <h2
                   style={{
                     fontSize: "clamp(30px, 4vw, 44px)",
@@ -374,7 +372,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     color: "var(--navy)",
                   }}
                 >
-                  Pick your sound. Master your instrument.
+                  Piano, guitar &amp; saxophone lessons in Kaduna.
                 </h2>
                 <p
                   style={{
@@ -385,9 +383,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     lineHeight: 1.6,
                   }}
                 >
-                  Structured, practical instruction across 17 core instrumental
-                  disciplines and audio engineering. Available via in-studio
-                  lessons in Kaduna or private home coaching.
+                  Structured practical training across 17 instrumental disciplines: piano lessons,
+                  guitar lessons, saxophone lessons, drums, and vocal performance. Available via in-studio
+                  classes in Kaduna or private home lessons.
                 </p>
               </div>
             </ScrollReveal>
@@ -873,7 +871,7 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     color: "var(--navy)",
                   }}
                 >
-                  Expert repairs &amp; precision servicing for your instruments.
+                  Musical instrument repairs &amp; keyboard repairs in Kaduna.
                 </h2>
                 <p
                   style={{
@@ -883,8 +881,8 @@ export function Home({ go }: { go: (p: Page) => void }) {
                     maxWidth: 540,
                   }}
                 >
-                  From sticky piano keys and fret buzz to brass valve alignment
-                  and violin bridge refitting. Choose{" "}
+                  From keyboard repairs, sticky piano keys, and fret leveling to saxophone pad overhauls,
+                  brass valve alignment, and violin setup. Choose{" "}
                   <strong>Studio Drop-off</strong> in Kaduna or request a{" "}
                   <strong>Courier Pickup</strong> right from your doorstep.
                 </p>
@@ -1179,9 +1177,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Instrument &amp; Sound Rentals</h3>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Sound Equipment Rentals in Kaduna</h3>
                     <p className="text-xs text-[var(--muted)] mb-4">
-                      Practice instruments for student scholars and high-fidelity sound gear for church services and events in Kaduna.
+                      Sound equipment rentals in Kaduna: PA sound systems, stage keyboards, drum kits &amp; wireless mics for concerts, church programs and events.
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-600 mb-6">
                       <li className="flex items-center gap-2">
@@ -1226,9 +1224,9 @@ export function Home({ go }: { go: (p: Page) => void }) {
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Vivadoxa Music Store</h3>
+                    <h3 className="font-bold text-lg text-[var(--navy)] mb-1">Musical Instrument Shop in Kaduna</h3>
                     <p className="text-xs text-[var(--muted)] mb-4">
-                      Verified guitars, keyboards, violins, saxophones, Vandoren reeds, and D&apos;Addario strings in Kaduna.
+                      Vivadoxa musical instrument shop in Kaduna: verified guitars, digital keyboards, violins, saxophones, Vandoren reeds &amp; audio accessories.
                     </p>
                     <ul className="space-y-1.5 text-xs text-slate-600 mb-6">
                       <li className="flex items-center gap-2">

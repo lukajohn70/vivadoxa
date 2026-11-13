@@ -10,7 +10,7 @@ export function Gallery({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Photo Gallery | Vivadoxa Music Academy Kaduna"
+        title="Photo Gallery | Vivadoxa Kaduna"
         description="Explore authentic moments from Vivadoxa Music Academy: student recitals, violin and saxophone solos, keyboard labs, drum ensembles, and masterclasses in Kaduna."
         canonicalUrl="/gallery"
       />

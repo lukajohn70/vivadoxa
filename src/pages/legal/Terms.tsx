@@ -9,7 +9,7 @@ export function Terms({ go }: { go: (p: Page | string) => void }) {
   return (
     <>
       <SEO
-        title="Terms of Service & Enrollment Agreement — Vivadoxa Music School"
+        title="Terms of Service | Vivadoxa Music School"
         description="Terms of service, studio etiquette, instrument safety, attendance, and code of conduct at Vivadoxa Music School."
         canonicalUrl="/terms"
       />

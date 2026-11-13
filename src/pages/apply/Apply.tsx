@@ -154,8 +154,8 @@ export const OFFICIAL_DURATION_PLANS = [
     id: "2-years",
     name: "2 Years Diploma Program",
     duration: "2 Years",
-    feeNGN: 500000,
-    feeNGNLabel: "₦500,000",
+    feeNGN: 450000,
+    feeNGNLabel: "₦450,000",
     feeUSD: 600,
     feeUSDLabel: "$600",
     desc: "Full conservatory curriculum, professional tracking, solo recital & Diploma.",
@@ -168,7 +168,7 @@ export const OFFICIAL_DURATION_PLANS = [
     feeNGNLabel: "₦70,000 / month",
     feeUSD: 90,
     feeUSDLabel: "$90 / month",
-    desc: "1-on-1 personalized private coaching at your residence or private online session.",
+    desc: "1-on-1 private coaching at your residence. 2 contacts/week × 2 hours each — ₦70,000/month. 3 contacts/week available on enquiry.",
   },
 ]
 
@@ -515,7 +515,7 @@ export function Apply({ go }: { go: (p: Page | string) => void }) {
       style={{ background: "#f1ede6", minHeight: "100vh", paddingBottom: 60 }}
     >
       <SEO
-        title="Official Admission Application Form"
+        title="Apply to Vivadoxa Music School | Kaduna"
         description="Official student admission application form for Vivadoxa Music School Kaduna. Standardized conservatory matriculation for instrumental and vocal studies."
       />
 

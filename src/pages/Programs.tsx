@@ -179,9 +179,8 @@ export function Programs({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="Music School Programs & Courses Kaduna — Piano, Guitar, Sax, Drums & Vocals"
-        description="Enroll in Vivadoxa Music School Kaduna. Graded conservatory curriculums (ABRSM & MUSON), 1-on-1 practical coaching in piano, saxophone, guitar, violin, drums & vocal performance."
-        keywords="music schools, music schools in kaduna, music school kaduna, piano lessons kaduna, guitar lessons kaduna, saxophone school, singing lessons, drum academy kaduna"
+        title="Music School & Lessons in Kaduna | Vivadoxa"
+        description="Certified music school in Kaduna. Structured piano lessons, guitar lessons, saxophone lessons &amp; vocal training from beginner to diploma. Call 09075330330."
         canonicalUrl="/programs"
         ogImage="/media/programs/piano-syllabus.jpeg"
         schema={programsSchema}

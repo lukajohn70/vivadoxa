@@ -113,8 +113,8 @@ export const officialPricingTiers: PricingTier[] = [
     id: "tier-2years",
     name: "Professional Diploma",
     duration: "2 Years",
-    fee: "₦500,000",
-    feeAmount: 500000,
+    fee: "₦450,000",
+    feeAmount: 450000,
     badge: "Diploma",
     target: "Fixed across all disciplines",
     inclusions: [

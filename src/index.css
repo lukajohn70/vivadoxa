@@ -352,11 +352,40 @@ footer a:hover{color:white}
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-/* ── Back to Top Floating Button ────────────────────────────────────────── */
+/* ── Cart Floating Quick Action Button (Stacked Cleanly Above WhatsApp) ─── */
+.cart-floating-btn {
+  position: fixed;
+  right: 28px;
+  bottom: 104px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 998;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(201, 107, 50, 0.45);
+  border: 2px solid white;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-decoration: none;
+}
+.cart-floating-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  background: var(--gold2);
+  box-shadow: 0 14px 30px rgba(201, 107, 50, 0.6);
+}
+.cart-floating-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Back to Top Floating Button (Bottom Left to never overlap Cart or WhatsApp) ────────────────────────────────────────── */
 .back-to-top-btn {
   position: fixed;
-  right: 34px;
-  bottom: 100px;
+  left: 28px;
+  bottom: 28px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -391,7 +420,8 @@ footer a:hover{color:white}
 }
 .back-to-top-tooltip {
   position: absolute;
-  right: calc(100% + 14px);
+  left: calc(100% + 14px);
+  right: auto;
   background: #0b0b0b;
   color: #fafafa;
   font-size: 11px;
@@ -403,7 +433,7 @@ footer a:hover{color:white}
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transform: translateX(8px);
+  transform: translateX(-8px);
   transition: all 0.2s ease-out;
 }
 .back-to-top-btn:hover .back-to-top-tooltip {
@@ -420,9 +450,16 @@ footer a:hover{color:white}
   .whatsapp-floating-btn .whatsapp-tooltip {
     display: none;
   }
+  .cart-floating-btn {
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    width: 48px;
+    height: 48px;
+  }
   .back-to-top-btn {
-    right: calc(18px + env(safe-area-inset-right, 0px));
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    right: auto;
     width: 42px;
     height: 42px;
   }

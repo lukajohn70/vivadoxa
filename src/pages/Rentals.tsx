@@ -28,6 +28,9 @@ import {
   drumsImg,
   bassGuitarImg,
   studioImg,
+  guitarLeadImg,
+  clarinetImg,
+  talkingDrumsImg,
 } from "@/lib/data"
 import { fetchCatalogRentalsData, submitEnquiry } from "@/lib/api"
 import { ScrollReveal } from "@/components/ScrollReveal"
@@ -41,6 +44,12 @@ export interface RentalItem {
   category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass" | "PA & Sound" | "Backline" | "Microphones" | string
   type: string
   image: string
+  dailyRate?: number
+  weeklyRate?: number
+  monthlyRate?: number
+  dailyRateLabel?: string
+  weeklyRateLabel?: string
+  monthlyRateLabel?: string
   inclusions?: string[]
   features?: string[]
   recommendedFor?: string
@@ -85,6 +94,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Strings",
     type: "student",
     image: violinImg,
+    dailyRate: 3500,
+    weeklyRate: 15000,
+    monthlyRate: 35000,
+    dailyRateLabel: "₦3,500",
+    weeklyRateLabel: "₦15,000",
+    monthlyRateLabel: "₦35,000",
     recommendedFor: "Beginner & Intermediate strings scholars",
     inclusions: [
       "Fitted wooden bow & organic rosin",
@@ -99,6 +114,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Keys",
     type: "student",
     image: pianoImg,
+    dailyRate: 4000,
+    weeklyRate: 18000,
+    monthlyRate: 40000,
+    dailyRateLabel: "₦4,000",
+    weeklyRateLabel: "₦18,000",
+    monthlyRateLabel: "₦40,000",
     recommendedFor: "Piano syllabus practice, ear training & theory",
     inclusions: [
       "Sturdy X-frame foldable keyboard stand",
@@ -113,6 +134,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Guitars",
     type: "student",
     image: guitarAcousticImg,
+    dailyRate: 2500,
+    weeklyRate: 10000,
+    monthlyRate: 25000,
+    dailyRateLabel: "₦2,500",
+    weeklyRateLabel: "₦10,000",
+    monthlyRateLabel: "₦25,000",
     recommendedFor: "Fingerpicking, classical posture & pop chords",
     inclusions: [
       "Water-resistant padded gig bag",
@@ -127,6 +154,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Woodwinds",
     type: "student",
     image: saxophoneImg,
+    dailyRate: 6000,
+    weeklyRate: 25000,
+    monthlyRate: 60000,
+    dailyRateLabel: "₦6,000",
+    weeklyRateLabel: "₦25,000",
+    monthlyRateLabel: "₦60,000",
     recommendedFor: "Wind players, band members & soloists",
     inclusions: [
       "Ergonomic mouthpiece, ligature & protective cap",
@@ -137,10 +170,16 @@ const DEFAULT_RENTALS: RentalItem[] = [
   },
   {
     id: "flute",
-    name: "C Concert Concert Flute (Silver Plated)",
+    name: "C Concert Flute (Silver Plated)",
     category: "Woodwinds",
     type: "student",
     image: fluteImg,
+    dailyRate: 3500,
+    weeklyRate: 14000,
+    monthlyRate: 32000,
+    dailyRateLabel: "₦3,500",
+    weeklyRateLabel: "₦14,000",
+    monthlyRateLabel: "₦32,000",
     recommendedFor: "Classical repertoire, breath control & orchestra",
     inclusions: [
       "Precision-aligned split-E mechanism & offset-G key",
@@ -155,6 +194,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Brass",
     type: "student",
     image: trumpetImg,
+    dailyRate: 4000,
+    weeklyRate: 16000,
+    monthlyRate: 38000,
+    dailyRateLabel: "₦4,000",
+    weeklyRateLabel: "₦16,000",
+    monthlyRateLabel: "₦38,000",
     recommendedFor: "Brass fundamentals, embouchure & ensemble playing",
     inclusions: [
       "Standard 7C brass mouthpiece",
@@ -164,11 +209,77 @@ const DEFAULT_RENTALS: RentalItem[] = [
     ],
   },
   {
+    id: "electric-bass",
+    name: "Electric Bass Guitar & Practice Rig",
+    category: "Guitars",
+    type: "student",
+    image: bassGuitarImg,
+    dailyRate: 5000,
+    weeklyRate: 20000,
+    monthlyRate: 45000,
+    dailyRateLabel: "₦5,000",
+    weeklyRateLabel: "₦20,000",
+    monthlyRateLabel: "₦45,000",
+    recommendedFor: "Groove practice, bass walking lines & rehearsal",
+    inclusions: [
+      "Padded instrument gig bag & guitar strap",
+      "Shielded low-noise 1/4\" audio cable",
+      "Digital headstock tuner & spare string set",
+      "Electronic pickup and action clinic inspection",
+    ],
+  },
+  {
+    id: "clarinet",
+    name: "Bb Student Clarinet Outfit",
+    category: "Woodwinds",
+    type: "student",
+    image: clarinetImg,
+    dailyRate: 3500,
+    weeklyRate: 15000,
+    monthlyRate: 35000,
+    dailyRateLabel: "₦3,500",
+    weeklyRateLabel: "₦15,000",
+    monthlyRateLabel: "₦35,000",
+    recommendedFor: "Classical repertoire, school band & wind ensembles",
+    inclusions: [
+      "Mouthpiece, ligature, cap & cork grease",
+      "Pack of 2.0 strength reeds & cleaning pull-through",
+      "Plush padded lightweight carrying case",
+      "Key regulation & pad airtight seal verified",
+    ],
+  },
+  {
+    id: "talking-drum",
+    name: "Traditional Nigerian Talking Drum (Gangan)",
+    category: "Backline",
+    type: "student",
+    image: talkingDrumsImg,
+    dailyRate: 3000,
+    weeklyRate: 12000,
+    monthlyRate: 28000,
+    dailyRateLabel: "₦3,000",
+    weeklyRateLabel: "₦12,000",
+    monthlyRateLabel: "₦28,000",
+    recommendedFor: "Cultural percussion, church worship & live performances",
+    inclusions: [
+      "Curved wooden curved beater (Opa)",
+      "Traditional woven shoulder strap",
+      "Inspected leather tension cords & authentic goatskin head",
+      "Protective fabric travel bag",
+    ],
+  },
+  {
     id: "pa-system",
     name: "Active Concert PA System (2x Tops + Subwoofer)",
     category: "PA & Sound",
     type: "event",
     image: studioImg,
+    dailyRate: 35000,
+    weeklyRate: 160000,
+    monthlyRate: 450000,
+    dailyRateLabel: "₦35,000",
+    weeklyRateLabel: "₦160,000",
+    monthlyRateLabel: "₦450,000",
     idealFor: "Church crusades, live outdoor concerts, wedding banquets",
     features: [
       "Up to 2,000 Watts RMS clean sound dispersion",
@@ -183,6 +294,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Backline",
     type: "event",
     image: drumsImg,
+    dailyRate: 18000,
+    weeklyRate: 80000,
+    monthlyRate: 220000,
+    dailyRateLabel: "₦18,000",
+    weeklyRateLabel: "₦80,000",
+    monthlyRateLabel: "₦220,000",
     idealFor: "Concerts, youth rallies, music video shoots & recitals",
     features: [
       "Bass drum, 2 rack toms, 1 floor tom, 14-inch snare drum",
@@ -197,6 +314,12 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Backline",
     type: "event",
     image: bassGuitarImg,
+    dailyRate: 10000,
+    weeklyRate: 45000,
+    monthlyRate: 120000,
+    dailyRateLabel: "₦10,000",
+    weeklyRateLabel: "₦45,000",
+    monthlyRateLabel: "₦120,000",
     idealFor: "Ensemble rehearsals, church guest bands & stage live backline",
     features: [
       "Punchy 15-inch neodymium speaker with balanced XLR direct out",
@@ -211,12 +334,38 @@ const DEFAULT_RENTALS: RentalItem[] = [
     category: "Keys",
     type: "event",
     image: pianoImg,
+    dailyRate: 15000,
+    weeklyRate: 65000,
+    monthlyRate: 180000,
+    dailyRateLabel: "₦15,000",
+    weeklyRateLabel: "₦65,000",
+    monthlyRateLabel: "₦180,000",
     idealFor: "Classical recitals, worship conferences & corporate galas",
     features: [
       "Graded hammer action keys replicating acoustic grand touch",
       "Stereo balanced outputs, expression & sustain pedal unit",
       "Double-X heavy duty stage stand & padded flight transport case",
       "Preloaded concert grand, electric pianos, strings & organ patches",
+    ],
+  },
+  {
+    id: "wireless-mics",
+    name: "UHF Dual Wireless Handheld Microphone System",
+    category: "PA & Sound",
+    type: "event",
+    image: guitarLeadImg,
+    dailyRate: 6000,
+    weeklyRate: 25000,
+    monthlyRate: 65000,
+    dailyRateLabel: "₦6,000",
+    weeklyRateLabel: "₦25,000",
+    monthlyRateLabel: "₦65,000",
+    idealFor: "Praise & worship, MCs, wedding receptions & public lectures",
+    features: [
+      "Dual UHF metal handheld transmitters with cardioid capsules",
+      "Up to 80m transmission range with anti-interference auto-scan",
+      "Dual XLR balanced outputs + 1/4\" mixed jack out",
+      "Carrying case, foam windscreens & rechargeable batteries included",
     ],
   },
 ]
@@ -342,10 +491,12 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
   }
 
   const directWhatsAppInquiry = (gearName: string) => {
+    const item = rentals.find((r) => r.name === gearName || r.id === gearName)
+    const rateText = item?.dailyRateLabel ? ` [Rates: ${item.dailyRateLabel}/day | ${item.weeklyRateLabel}/wk | ${item.monthlyRateLabel}/mo]` : ""
     const msg = `Hello Vivadoxa Admin, I would like to inquire about renting:%0A%0A• Item: ${encodeURIComponent(
-      gearName,
-    )}%0A%0APlease let me know current availability, rental fee quote, and pickup/delivery options.`
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+      gearName + rateText,
+    )}%0A%0APlease let me know current availability, rental confirmation, and pickup/delivery options in Kaduna.`
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   // Wire MULTIPLE rental items to Admin via WhatsApp
@@ -354,7 +505,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     if (selectedRentals.length === 0) return
 
     const itemsList = selectedRentals
-      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})`)
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})${item.dailyRateLabel ? ` - Daily: ${item.dailyRateLabel} | Weekly: ${item.weeklyRateLabel} | Monthly: ${item.monthlyRateLabel}` : ""}`)
       .join("%0A")
 
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
@@ -380,7 +531,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       formNotes || "Please provide rental quote, payment details, and pickup/delivery terms.",
     )}`
 
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   // Wire MULTIPLE rental items to Admin via Email
@@ -388,7 +539,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     if (selectedRentals.length === 0) return
 
     const itemsList = selectedRentals
-      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})`)
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.category})${item.dailyRateLabel ? ` - Rates: ${item.dailyRateLabel}/day | ${item.weeklyRateLabel}/wk | ${item.monthlyRateLabel}/mo` : ""}`)
       .join("\n")
 
     const intakeText = formIntake === "pickup" ? "Studio Pickup in Kaduna" : `Courier Delivery to: ${formAddress || "Kaduna Address"}`
@@ -440,22 +591,21 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       formNotes || "None",
     )}%0A%0APlease provide rental rates, payment details, and pickup/delivery arrangement.`
 
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   return (
     <main className="pb-24">
       <SEO
-        title="Musical Instrument & Sound Equipment Rentals in Kaduna | Vivadoxa"
-        description="Showcase of student practice instruments and professional concert sound equipment for rent in Kaduna. Rent violins, keyboards, saxophones, guitars, and stage backline with maintenance included. Contact admin to rent."
-        keywords="instrument rentals kaduna, rent violin kaduna, rent keyboard kaduna, rent saxophone kaduna, sound system rental kaduna, drum kit rental kaduna, vivadoxa rentals"
+        title="Sound Equipment Rentals in Kaduna | Vivadoxa"
+        description="Sound equipment rentals and instrument hire in Kaduna. Rent PA systems, stage pianos, drum kits, guitars &amp; wireless mics with fixed rates. Call 09075330330."
         canonicalUrl="/rentals"
       />
 
       <PageHero
         eyebrow="Instrument & Sound Hire"
         title="Practice today. Perform tomorrow."
-        body="Vetted practice instruments for students and professional stage backline and PA sound systems for concerts and events in Kaduna. Select items to wire your reservation directly to admin."
+        body="Complete rental catalogue with fixed daily, weekly, and monthly rates. Practice instruments for students and professional stage backline and PA sound systems for concerts in Kaduna."
         actions={
           <>
             <a href="#rental-catalog" className="btn btn-primary inline-flex items-center gap-2">
@@ -469,7 +619,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               Reserve via Form &rarr;
             </button>
             <a
-              href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admin%2C%20I%20would%20like%20to%20inquire%20about%20instrument%20and%20sound%20equipment%20rentals."
+              href="https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Admin%2C%20I%20would%20like%20to%20inquire%20about%20instrument%20and%20sound%20equipment%20rentals."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-concierge inline-flex items-center gap-2"
@@ -480,35 +630,35 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         }
       />
 
-      {/* ── Value Pillars Strip (NO 100% refund promise) ─────────────── */}
+      {/* ── Value Pillars Strip ─────────────────────────────────────── */}
       <section className="bg-white border-b border-[var(--line)] py-8">
         <div className="container grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <ScrollReveal direction="up" delay={0}>
             <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-              <span className="text-2xl font-black text-[var(--gold)] block">100%</span>
-              <strong className="text-xs text-[var(--navy)] block mt-1">Technician Vetted</strong>
-              <small className="text-[11px] text-[var(--muted)]">Intonated &amp; setup by our clinic</small>
+              <span className="text-2xl font-black text-[var(--gold)] block">Fixed</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Daily, Weekly &amp; Monthly</strong>
+              <small className="text-[11px] text-[var(--muted)]">Transparent prices on all gear</small>
             </div>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={80}>
             <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-              <span className="text-2xl font-black text-[var(--navy)] block">Flexible</span>
-              <strong className="text-xs text-[var(--navy)] block mt-1">Student Practice Terms</strong>
-              <small className="text-[11px] text-[var(--muted)]">Monthly &amp; term practice access</small>
+              <span className="text-2xl font-black text-[var(--navy)] block">Deposit</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Assessed on Enquiry</strong>
+              <small className="text-[11px] text-[var(--muted)]">Determined by instrument value</small>
             </div>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={160}>
             <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-              <span className="text-2xl font-black text-[var(--gold)] block">Simple</span>
-              <strong className="text-xs text-[var(--navy)] block mt-1">Upfront Rental</strong>
-              <small className="text-[11px] text-[var(--muted)]">Pay, pick up, use &amp; return</small>
+              <span className="text-2xl font-black text-[var(--gold)] block">100%</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Late Return Surcharge</strong>
+              <small className="text-[11px] text-[var(--muted)]">100% daily rate per day overdue</small>
             </div>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={240}>
             <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
-              <span className="text-2xl font-black text-[var(--navy)] block">Kaduna</span>
-              <strong className="text-xs text-[var(--navy)] block mt-1">Pickup &amp; Delivery</strong>
-              <small className="text-[11px] text-[var(--muted)]">Angwan Sunday Studio or doorstep</small>
+              <span className="text-2xl font-black text-[var(--navy)] block">100%</span>
+              <strong className="text-xs text-[var(--navy)] block mt-1">Repair or Replace</strong>
+              <small className="text-[11px] text-[var(--muted)]">Clear damage &amp; loss policy</small>
             </div>
           </ScrollReveal>
         </div>
@@ -676,7 +826,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                                 </div>
                                 <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor || item.recommendedFor}</p>
 
-                                <ul className="space-y-1 text-xs text-slate-600 mb-4">
+                                <ul className="space-y-1 text-xs text-slate-600 mb-3">
                                   {(item.features || item.inclusions || []).map((f, i) => (
                                     <li key={i} className="flex items-start gap-1.5">
                                       <span className="text-[var(--gold)] font-bold">✓</span>
@@ -684,12 +834,41 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                                     </li>
                                   ))}
                                 </ul>
+
+                                {/* Fixed Rental Rates */}
+                                <div className="mb-3 py-2 px-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)]">
+                                      Fixed Rental Rates:
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 font-medium">Daily · Weekly · Monthly</span>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1.5 text-center">
+                                    <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                      <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Daily</small>
+                                      <strong className="text-xs text-[var(--navy)] font-bold">{item.dailyRateLabel || "₦3,500"}</strong>
+                                    </div>
+                                    <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                      <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Weekly</small>
+                                      <strong className="text-xs text-[var(--navy)] font-bold">{item.weeklyRateLabel || "₦15,000"}</strong>
+                                    </div>
+                                    <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                      <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Monthly</small>
+                                      <strong className="text-xs text-amber-700 font-extrabold">{item.monthlyRateLabel || "₦35,000"}</strong>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
 
                               <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
-                                <span className="text-[11px] text-[var(--muted)]">
-                                  {currentFleet.badge || "Technician Vetted"}
-                                </span>
+                                <div>
+                                  <small className="block text-[9px] text-[var(--muted)] uppercase font-semibold">
+                                    Security Deposit
+                                  </small>
+                                  <span className="text-[11px] text-[var(--navy)] font-bold">
+                                    {currentFleet.badge || "Assessed on Enquiry"}
+                                  </span>
+                                </div>
                                 <div className="flex items-center gap-1.5">
                                   <button
                                     type="button"
@@ -773,7 +952,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                               <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
                               <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor || item.idealFor}</p>
 
-                              <div className="mb-4 pt-3 border-t border-[var(--line)]">
+                              <div className="mb-3 pt-3 border-t border-[var(--line)]">
                                 <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)] block mb-1.5">
                                   Inclusions &amp; Setup:
                                 </span>
@@ -787,12 +966,36 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                                 </ul>
                               </div>
 
-                              <div className="mt-auto pt-4 border-t border-[var(--line)] flex items-center justify-between gap-2">
+                              {/* Fixed Rental Rates */}
+                              <div className="mb-4 py-2 px-2.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)]">
+                                    Fixed Rental Rates:
+                                  </span>
+                                  <span className="text-[9px] text-slate-400 font-medium">Daily · Weekly · Monthly</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5 text-center">
+                                  <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                    <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Daily</small>
+                                    <strong className="text-xs text-[var(--navy)] font-bold">{item.dailyRateLabel || "₦3,500"}</strong>
+                                  </div>
+                                  <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                    <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Weekly</small>
+                                    <strong className="text-xs text-[var(--navy)] font-bold">{item.weeklyRateLabel || "₦15,000"}</strong>
+                                  </div>
+                                  <div className="bg-white rounded-lg py-1 px-1 border border-slate-200">
+                                    <small className="block text-[8px] text-[var(--muted)] uppercase font-bold">Monthly</small>
+                                    <strong className="text-xs text-amber-700 font-extrabold">{item.monthlyRateLabel || "₦35,000"}</strong>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-auto pt-3 border-t border-[var(--line)] flex items-center justify-between gap-2">
                                 <div>
-                                  <small className="block text-[10px] text-[var(--muted)] uppercase font-semibold">
-                                    Rental Policy
+                                  <small className="block text-[9px] text-[var(--muted)] uppercase font-semibold">
+                                    Security Deposit
                                   </small>
-                                  <strong className="text-xs text-slate-700 font-semibold">Upfront Payment</strong>
+                                  <strong className="text-xs text-slate-700 font-bold">Assessed on Enquiry</strong>
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   <button
@@ -888,11 +1091,32 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
               </div>
 
               <div className="border-t border-[var(--line)] pt-4">
-                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">4. On-Time Returns &amp; Damage Surcharges</h3>
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">4. Rental Pricing &amp; Security Deposit</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Equipment must be returned promptly at the agreed date and time following your event. There are no deposit refunds
-                  or rent-to-own schemes. Please note that surcharges apply for late returns past the agreed rental window or for
-                  any physical damages and unreturned accessories.
+                  All rental prices are fixed as listed on each item card — daily, weekly, and monthly rates apply.
+                  A <strong>refundable security deposit</strong> is required for every rental. The deposit amount is assessed
+                  at the time of booking based on the instrument's tier, catalog value, and rental duration.
+                  The deposit is returned in full upon safe return of the equipment in its original condition.
+                </p>
+              </div>
+
+              <div className="border-t border-[var(--line)] pt-4">
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">5. Late-Return Charges</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Equipment must be returned promptly at the agreed date and time. Late returns are charged at
+                  <strong> 100% of the daily rental rate</strong> for each additional day overdue. Persistent late returns
+                  may result in suspension of rental privileges. There are no deposit refunds or rent-to-own schemes.
+                </p>
+              </div>
+
+              <div className="border-t border-[var(--line)] pt-4">
+                <h3 className="font-bold text-lg text-[var(--navy)] mb-2">6. Damage &amp; Loss Policy</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Any damage to rented equipment will be assessed by our in-house instrument clinic technician.
+                  The renter is responsible for the <strong>full cost of repair</strong>. In cases of loss or
+                  irreparable damage, the renter is responsible for the <strong>full replacement cost</strong> of
+                  the equipment at current market value. Normal wear and tear from proper use is excluded.
+                  Accessories (gig bags, cables, stands, cases) must be returned intact or replacement costs apply.
                 </p>
               </div>
             </div>
@@ -904,7 +1128,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
       {/* ── STICKY CART BAR (Floating Bottom) ─────────────────────────── */}
       {selectedRentals.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-[var(--gold)] animate-in slide-in-from-bottom">
-          <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:pr-24">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-[var(--gold)] text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
                 {selectedRentals.length}
@@ -946,7 +1170,7 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
         <button
           type="button"
           onClick={() => setShowMultiDrawer(true)}
-          className="fixed bottom-20 right-4 sm:right-6 z-40 bg-[var(--gold)] text-white p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
+          className="cart-floating-btn"
           aria-label={`View Rental Cart (${selectedRentals.length} items)`}
           title="Open Cart"
         >

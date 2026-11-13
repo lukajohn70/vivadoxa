@@ -42,6 +42,7 @@ export interface ProductItem {
   inStock: boolean
   setupNote: string
   specs: string[]
+  priceLabel?: string
 }
 
 const DEFAULT_PRODUCTS: ProductItem[] = [
@@ -288,7 +289,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
     )}%0A• Category: ${encodeURIComponent(
       item.category,
     )}%0A%0APlease let me know the current price, availability, and pickup/delivery options in Kaduna.`
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   // Wire MULTIPLE items to Admin via WhatsApp
@@ -328,7 +329,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       formNotes || "Please contact me with price quotes, stock availability, and payment/handover options.",
     )}`
 
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   // Handle single item modal form submit
@@ -345,7 +346,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       intakeDesc,
     )}%0A• Notes: ${encodeURIComponent(formNotes || "Please contact me with price and availability.")}`
 
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
   }
 
   // Handle Request a Quote modal submit
@@ -381,16 +382,15 @@ export function Store({ go }: { go: (p: Page) => void }) {
       quoteForm.notes || "Please advise on best options and availability.",
     )}`
 
-    window.open(`https://wa.me/2348031308881?text=${msg}`, "_blank")
+    window.open(`https://wa.me/2349075330330?text=${msg}`, "_blank")
     setShowQuoteModal(false)
   }
 
   return (
     <main className="pb-24">
       <SEO
-        title="Vivadoxa Store — Quality Instruments & Audio Equipment | Kaduna"
-        description="Find quality musical instruments and audio equipment suited to your needs, skill level, and budget. Keyboards, guitars, violins, drums, wind instruments, and PA systems in Kaduna."
-        keywords="musical instrument store kaduna, buy keyboard kaduna, buy guitar kaduna, buy drum set kaduna, buy violin, church audio equipment kaduna, vivadoxa store"
+        title="Musical Instrument Shop in Kaduna | Vivadoxa"
+        description="Authentic musical instrument shop in Kaduna. Buy acoustic &amp; electric guitars, digital keyboards, saxophones, drums &amp; audio accessories. Call 09075330330."
         canonicalUrl="/store"
       />
 
@@ -411,7 +411,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
               Request a Quote &rarr;
             </button>
             <a
-              href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Store,%20I%20would%20like%20to%20speak%20with%20your%20sales%20team%20about%20an%20instrument%20purchase."
+              href="https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Store,%20I%20would%20like%20to%20speak%20with%20your%20sales%20team%20about%20an%20instrument%20purchase."
               target="_blank"
               rel="noopener noreferrer"
               className="btn-concierge inline-flex items-center gap-2"
@@ -435,13 +435,13 @@ export function Store({ go }: { go: (p: Page) => void }) {
 
           <div className="flex flex-wrap items-center gap-4">
             <a
-              href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Store,%20I%20have%20an%20instrument%20sales%20inquiry."
+              href="https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Store,%20I%20have%20an%20instrument%20sales%20inquiry."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[var(--gold-text)] font-bold hover:underline"
             >
               <WhatsAppIcon size={14} />
-              <span>WhatsApp: 0803 130 8881</span>
+              <span>WhatsApp: 0907 533 0330</span>
             </a>
 
             <a
@@ -1083,6 +1083,12 @@ export function Store({ go }: { go: (p: Page) => void }) {
 
                     {/* Bottom Actions */}
                     <div className="p-4 sm:p-5 pt-0 border-t border-[var(--line)] mt-2">
+                      {product.priceLabel && (
+                        <div className="pt-3 mb-2">
+                          <span className="text-[9px] uppercase font-bold text-[var(--muted)] block">Price</span>
+                          <span className="text-sm font-extrabold text-[var(--navy)]">{product.priceLabel}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between gap-2 pt-3">
                         <button
                           type="button"
@@ -1184,7 +1190,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
               Request a Quote &rarr;
             </button>
             <a
-              href="https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Sales%20Team,%20I%20would%20like%20guidance%20on%20choosing%20an%20instrument."
+              href="https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Sales%20Team,%20I%20would%20like%20guidance%20on%20choosing%20an%20instrument."
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary !bg-[var(--gold)]/20 !text-[var(--gold2)] !border-[var(--gold)]/30 hover:!bg-[var(--gold)]/30 inline-flex items-center gap-2"
@@ -1199,7 +1205,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
       {/* ── STICKY CART BAR (Floating Bottom) ─────────────────────────── */}
       {selectedItems.length > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-40 bg-[var(--navy)] text-white py-3 px-4 shadow-2xl border-t border-[var(--gold)] animate-in slide-in-from-bottom">
-          <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="container max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3 sm:pr-24">
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 rounded-full bg-[var(--gold)] text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
                 {selectedItems.length}
@@ -1240,7 +1246,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
         <button
           type="button"
           onClick={() => setShowMultiDrawer(true)}
-          className="fixed bottom-20 right-4 sm:right-6 z-40 bg-[var(--gold)] text-white p-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center cursor-pointer border-2 border-white"
+          className="cart-floating-btn"
           aria-label={`View Cart (${selectedItems.length} items)`}
           title="Open Cart"
         >
@@ -1302,7 +1308,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
                   label="Phone / WhatsApp Number *"
                   value={quoteForm.phone}
                   onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })}
-                  placeholder="e.g. 0803 130 8881"
+                  placeholder="e.g. 0907 533 0330"
                   required
                 />
                 <Field

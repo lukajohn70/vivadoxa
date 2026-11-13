@@ -1229,7 +1229,7 @@ export function AdminBulletinView({
                   Vivadoxa Music Academy &amp; Studio · Instrument Clinic · Audio Hub
                 </p>
                 <p style={{ margin: "0 0 4px" }}>
-                  Kaduna Studio, Kaduna State, Nigeria · Phone: +234 907 533 0330 · WhatsApp: +234 803 130 8881
+                  Kaduna Studio, Kaduna State, Nigeria · Phone: 09075330330 · WhatsApp: 09075330330
                 </p>
                 <p style={{ margin: 0, fontSize: 10, color: "#a8a29e" }}>
                   You received this email because you subscribed on vivadoxamusic.com or hold an active academy account.

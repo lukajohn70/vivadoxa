@@ -1154,7 +1154,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                           )}
 
                           <a
-                            href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Admissions,%20I%20am%20following%20up%20on%20my%20application%20(${app.application_no})%20for%20${encodeURIComponent(app.program)}.`}
+                            href={`https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Admissions,%20I%20am%20following%20up%20on%20my%20application%20(${app.application_no})%20for%20${encodeURIComponent(app.program)}.`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
@@ -2101,7 +2101,7 @@ export function Portal({ go }: { go: (p: Page | string) => void }) {
                       }}
                     >
                       <a
-                        href={`https://wa.me/2348031308881?text=Hello%20Vivadoxa%20Workshop,%20I%20am%20inquiring%20about%20my%20repair%20ticket%20(${rep.tracking_code})%20for%20my%20${encodeURIComponent(rep.instrument)}.`}
+                        href={`https://wa.me/2349075330330?text=Hello%20Vivadoxa%20Workshop,%20I%20am%20inquiring%20about%20my%20repair%20ticket%20(${rep.tracking_code})%20for%20my%20${encodeURIComponent(rep.instrument)}.`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

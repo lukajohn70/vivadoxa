@@ -10,7 +10,7 @@ export function Privacy({ go }: { go: (p: Page | string) => void }) {
   return (
     <>
       <SEO
-        title="Privacy Policy & NDPA Compliance — Vivadoxa Music School"
+        title="Privacy Policy | Vivadoxa Music School"
         description="Vivadoxa Music School's privacy policy and personal data protection standards in compliance with the Nigeria Data Protection Act (NDPA 2023)."
         canonicalUrl="/privacy"
       />

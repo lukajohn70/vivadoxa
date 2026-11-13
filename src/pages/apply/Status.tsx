@@ -170,7 +170,7 @@ export function Status() {
   return (
     <main>
       <SEO
-        title="Check Application Status — Vivadoxa Music School Kaduna"
+        title="Application Status | Vivadoxa Music School"
         description="Check your admission application review, audition schedule, or enrollment verification status with Vivadoxa Music School."
         canonicalUrl="/status"
       />

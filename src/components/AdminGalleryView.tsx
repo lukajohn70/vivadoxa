@@ -15,6 +15,7 @@ import {
   getMediaUrl,
 } from "@/lib/api"
 import type { GalleryItem } from "@/types"
+import { compressImageForUpload } from "@/lib/utils"
 
 const DEFAULT_CATEGORIES = [
   "Piano & Keys",
@@ -104,30 +105,28 @@ export function AdminGalleryView({
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const rawFile = e.target.files?.[0]
+    if (!rawFile) return
 
     setUploading(true)
     try {
-      const res = await uploadGalleryPhoto(file) as any
+      setActionNotice("Optimizing photo for web...")
+      const file = await compressImageForUpload(rawFile)
+      setActionNotice("Uploading photo to server...")
+      const res = (await uploadGalleryPhoto(file)) as any
       if (res && res.success && res.image_url) {
         setFormImage(res.image_url as string)
         setActionNotice("Photo uploaded successfully!")
       } else {
-        // Fallback for offline dev: create object URL or base64 preview
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            setFormImage(event.target.result as string)
-            setActionNotice("Image loaded into editor.")
-          }
-        }
-        reader.readAsDataURL(file)
+        alert(res?.error || "Failed to upload photo to server.")
       }
-    } catch {
-      setActionNotice("Failed to upload image. Please enter an image path.")
+    } catch (err: any) {
+      setActionNotice(err.message || "Failed to upload image.")
     } finally {
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 

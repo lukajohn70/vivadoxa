@@ -520,9 +520,8 @@ export function ReviewsHub() {
       aria-label="Student & Parent Reviews"
     >
       <SEO
-        title="Student & Client Reviews — Vivadoxa Music School, Repair & Studio Kaduna"
-        description="Read 130+ verified five-star reviews from students, parents, church musicians, and studio clients across Kaduna. Rated 4.9/5 for music lessons, repairs & recording."
-        keywords="vivadoxa reviews, music school kaduna reviews, instrument repair feedback, recording studio testimonials kaduna"
+        title="Reviews | Vivadoxa Music School Kaduna"
+        description="Read verified 5-star reviews from students, parents, and studio clients across Kaduna. Rated 4.9/5 on Google for music lessons, repairs & recording."
         canonicalUrl="/reviews"
       />
       <div className="container max-w-6xl mx-auto px-4">
@@ -535,15 +534,15 @@ export function ReviewsHub() {
                 <span>Verified Google Reviews Hub</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span className="text-emerald-700 font-medium">
-                  130+ Total Reviews
+                  130+ Google Reviews
                 </span>
               </div>
               <h2 className="text-3xl md:text-4xl font-serif text-[var(--navy)] font-bold tracking-tight">
-                Community & Student Voices
+                Community &amp; Student Voices
               </h2>
               <p className="text-gray-600 text-sm md:text-base mt-1 max-w-2xl">
-                Read authentic feedback from parents, adult learners,
-                choristers, and studio clients across Kaduna.
+                Vivadoxa holds over <strong>130+ verified reviews</strong> on Google Maps.
+                Below is a curated selection of <strong>{ALL_REVIEWS.length} detailed featured stories</strong> from students, parents, and musicians across Kaduna.
               </p>
             </div>
 
@@ -561,10 +560,10 @@ export function ReviewsHub() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg text-blue-700 bg-blue-50/80 hover:bg-blue-100 border-blue-200"
-                title="View on Google Maps"
+                title="View all 130+ reviews on Google Maps"
               >
                 <GoogleIcon size={16} />
-                <span>Google Profile</span>
+                <span>View All 130+ on Google</span>
                 <Icon name="external" size={13} />
               </a>
             </div>
@@ -581,7 +580,7 @@ export function ReviewsHub() {
                   ★★★★★
                 </div>
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-                  130+ Reviews
+                  130+ on Google
                 </span>
               </div>
               <div>
@@ -589,8 +588,7 @@ export function ReviewsHub() {
                   Kaduna's Top-Rated Academy
                 </strong>
                 <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                  98% five-star rating across all 17 official instruments and
-                  studio disciplines.
+                  130+ total Google ratings • {ALL_REVIEWS.length} detailed on-site case studies.
                 </p>
               </div>
             </div>
@@ -760,11 +758,11 @@ export function ReviewsHub() {
           </div>
         </div>
 
-        {/* Results Counter */}
-        <div className="flex items-center justify-between text-xs text-gray-500 mb-4 px-1">
+        {/* Results Counter & Reconciled Explanation */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-500 mb-4 px-1">
           <span>
             Showing <strong>{displayedReviews.length}</strong> of{" "}
-            <strong>{filteredReviews.length}</strong> reviews
+            <strong>{filteredReviews.length}</strong> featured on-page reviews (curated from <strong>130+ verified Google reviews</strong>)
             {categoryFilter !== "all" &&
               ` in ${CATEGORIES.find((c) => c.key === categoryFilter)?.label}`}
             {searchQuery && ` matching "${searchQuery}"`}
@@ -920,7 +918,7 @@ export function ReviewsHub() {
               <Icon name="arrowDown" size={15} />
             </button>
             <p className="text-xs text-gray-400 mt-2">
-              Displaying {visibleCount} of {filteredReviews.length} reviews
+              Displaying {visibleCount} of {filteredReviews.length} featured stories (130+ total Google ratings)
             </p>
           </div>
         )}
@@ -928,7 +926,16 @@ export function ReviewsHub() {
         {visibleCount >= filteredReviews.length &&
           filteredReviews.length > 6 && (
             <p className="text-center text-xs text-gray-400 mt-8">
-              ✓ All {filteredReviews.length} verified reviews loaded.
+              ✓ All {filteredReviews.length} featured student &amp; parent stories displayed.{" "}
+              <a
+                href={GOOGLE_REVIEWS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--gold)] font-semibold hover:underline inline-flex items-center gap-1 ml-1"
+              >
+                <span>Read all 130+ reviews on Google Maps</span>
+                <Icon name="external" size={11} />
+              </a>
             </p>
           )}
 

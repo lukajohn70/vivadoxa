@@ -3,15 +3,11 @@ import { useEffect } from "react"
 interface SEOProps {
   title: string
   description: string
-  keywords?: string
   canonicalUrl?: string
   ogImage?: string
   ogType?: string
   schema?: Record<string, any> | Array<Record<string, any>>
 }
-
-const DEFAULT_KEYWORDS =
-  "music schools, music schools in kaduna, music school kaduna, instrument repair, instrument repair kaduna, musical instrument repair, music studio, music studio kaduna, recording studio kaduna, music lessons, guitar repair, saxophone repair, piano lessons kaduna, voice training, audio mixing studio"
 
 const SITE_URL = "https://vivadoxamusic.com"
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`
@@ -19,18 +15,14 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`
 export function SEO({
   title,
   description,
-  keywords = DEFAULT_KEYWORDS,
   canonicalUrl,
   ogImage = DEFAULT_OG_IMAGE,
   ogType = "website",
   schema,
 }: SEOProps) {
   useEffect(() => {
-    // 1. Update Title
-    const formattedTitle = title.includes("Vivadoxa")
-      ? title
-      : `${title} | Vivadoxa Music School, Instrument Repair & Studio`
-    document.title = formattedTitle
+    // 1. Title — use as-is (each page passes a concise, final title)
+    document.title = title
 
     // Helper to set or update meta tag
     const setMeta = (
@@ -49,9 +41,15 @@ export function SEO({
       tag.setAttribute("content", val)
     }
 
-    // 2. Standard Meta Tags
+    // Helper to remove a meta tag if it exists
+    const removeMeta = (nameAttr: "name" | "property", key: string) => {
+      const tag = document.querySelector(`meta[${nameAttr}="${key}"]`)
+      if (tag) tag.remove()
+    }
+
+    // 2. Standard Meta Tags (keywords tag intentionally omitted — ignored by Google)
     setMeta("name", "description", description)
-    setMeta("name", "keywords", keywords)
+    removeMeta("name", "keywords")
     setMeta(
       "name",
       "robots",
@@ -59,7 +57,7 @@ export function SEO({
     )
 
     // 3. Open Graph
-    setMeta("property", "og:title", formattedTitle)
+    setMeta("property", "og:title", title)
     setMeta("property", "og:description", description)
     setMeta("property", "og:type", ogType)
     setMeta(
@@ -79,7 +77,7 @@ export function SEO({
 
     // 4. Twitter Cards
     setMeta("name", "twitter:card", "summary_large_image")
-    setMeta("name", "twitter:title", formattedTitle)
+    setMeta("name", "twitter:title", title)
     setMeta("name", "twitter:description", description)
     setMeta(
       "name",
@@ -129,7 +127,7 @@ export function SEO({
         currentScript.remove()
       }
     }
-  }, [title, description, keywords, canonicalUrl, ogImage, ogType, schema])
+  }, [title, description, canonicalUrl, ogImage, ogType, schema])
 
   return null
 }

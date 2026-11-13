@@ -304,7 +304,7 @@ export function Repairs() {
         addressRegion: "Kaduna State",
         addressCountry: "NG",
       },
-      telephone: "+2348031308881",
+      telephone: "+2349075330330",
       url: "https://vivadoxamusic.com/repairs",
     },
     areaServed: "Kaduna State, Nigeria",
@@ -336,9 +336,8 @@ export function Repairs() {
   return (
     <main>
       <SEO
-        title="Vivadoxa Repairs & Service Centre — Instrument Care & Maintenance | Kaduna"
-        description="Expert care for your instruments in Kaduna. Keyboard, piano, drum set, guitar, brass, and audio equipment repairs. Track your repair online."
-        keywords="instrument repair, instrument repair kaduna, musical instrument repair, fix keyboard kaduna, saxophone repair kaduna, guitar setup kaduna, vivadoxa repairs"
+        title="Instrument & Keyboard Repairs in Kaduna | Vivadoxa"
+        description="Musical instrument repairs and keyboard repairs in Kaduna. Expert servicing for saxophones, digital pianos, guitars, brass &amp; drums. Call 09075330330."
         canonicalUrl="/repairs"
         ogImage="/media/repairs/repair-saxophone-craftsman.jpeg"
         schema={[repairSchema, repairFaqSchema]}
@@ -354,7 +353,7 @@ export function Repairs() {
               Request Repair Assessment <Icon name="arrow" size={14} />
             </a>
             <a
-              href={`https://wa.me/2348031308881?text=${encodeURIComponent(
+              href={`https://wa.me/2349075330330?text=${encodeURIComponent(
                 "Hello Vivadoxa Repairs & Service Centre, I would like to speak to a technician about an instrument repair.",
               )}`}
               target="_blank"
@@ -379,17 +378,17 @@ export function Repairs() {
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <a
-              href="tel:08031308881"
+              href="tel:09075330330"
               className="font-bold text-[var(--navy)] hover:text-[var(--gold)]"
             >
-              0803 130 8881
+              0907 533 0330
             </a>
             <span className="text-slate-300">|</span>
             <a
-              href="tel:09097070881"
+              href="tel:09010267234"
               className="font-bold text-[var(--navy)] hover:text-[var(--gold)]"
             >
-              0909 707 0881
+              0901 026 7234
             </a>
             <span className="text-slate-300">|</span>
             <a
@@ -436,7 +435,7 @@ export function Repairs() {
                 </Button>
 
                 <a
-                  href={`https://wa.me/2348031308881?text=${encodeURIComponent(
+                  href={`https://wa.me/2349075330330?text=${encodeURIComponent(
                     `Hello Vivadoxa Workshop, I have submitted an Instrument Repair Request.\nTicket Reference: ${sentCode}\nCustomer: ${form.fullName}\nEquipment: ${form.equipmentType} (${form.brandModel})\nIntake: ${form.collectionArrangement === "pickup" ? "Courier Pickup" : "Drop-off at Studio"}`,
                   )}`}
                   target="_blank"
@@ -1012,7 +1011,7 @@ export function Repairs() {
                 Request a Repair Assessment <Icon name="arrow" size={14} />
               </a>
               <a
-                href={`https://wa.me/2348031308881?text=${encodeURIComponent(
+                href={`https://wa.me/2349075330330?text=${encodeURIComponent(
                   "Hello Vivadoxa Repairs, I would like to speak to a technician about repairing my instrument.",
                 )}`}
                 target="_blank"
@@ -1067,7 +1066,7 @@ export function Repairs() {
                   REPAIRS &amp; SERVICE CENTRE
                 </span>
                 <span className="text-[10px] text-[var(--muted)] block">
-                  0803 130 8881 | 0909 707 0881
+                  0907 533 0330 | 0901 026 7234
                 </span>
                 <span className="text-[10px] text-[var(--muted)] block">
                   vivadoxa@gmail.com
@@ -1122,7 +1121,7 @@ export function Repairs() {
                   <Field
                     id="repair-phone"
                     label="Phone / WhatsApp *"
-                    placeholder="0803 130 8881"
+                    placeholder="0907 533 0330"
                     type="tel"
                     value={form.phone}
                     onChange={(v) => set("phone", v)}
@@ -1744,7 +1743,7 @@ export function Repairs() {
                   <strong className="block text-slate-900 font-bold uppercase">
                     REPAIRS &amp; SERVICE CENTRE
                   </strong>
-                  <span>0803 130 8881 | 0909 707 0881</span>
+                  <span>0907 533 0330 | 0901 026 7234</span>
                   <span className="block">vivadoxa@gmail.com</span>
                   <span className="block max-w-xs">
                     No. 49B Umaru Ibrahim Street, off Super Market Street, Beside the Market, Ungwan Sunday, Kaduna.

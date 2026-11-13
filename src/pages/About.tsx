@@ -25,9 +25,8 @@ export function About({ go }: { go: (p: Page) => void }) {
   return (
     <main>
       <SEO
-        title="About Us — Vivadoxa Music"
+        title="About Vivadoxa Music School | Kaduna"
         description="Our Story: Built on a Passion for Music. Learn about Vivadoxa Music's vision, mission, core values, and philosophy."
-        keywords="about vivadoxa, vivadoxa music, music education, kaduna music school"
         canonicalUrl="/about"
         ogImage="/media/studio/academy-cohort-group.jpeg"
       />

@@ -675,7 +675,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-900/40 transition-all text-xs text-white group w-full"
-              title="Direct WhatsApp: 08031308881"
+              title="Direct WhatsApp: 09075330330"
             >
               <WhatsAppIcon
                 size={18}
@@ -686,7 +686,7 @@ export function Footer({ go }: { go: (p: Page) => void }) {
                   WhatsApp Desk
                 </span>
                 <span className="text-[11px] text-emerald-200/80 truncate">
-                  08031308881
+                  09075330330
                 </span>
               </div>
             </a>
