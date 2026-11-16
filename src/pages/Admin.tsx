@@ -3274,7 +3274,7 @@ function AdminManager({ title }: { title: string }) {
               border: "1px solid var(--line)",
             }}
           >
-            🎥 Direct Video ({selectedRecord.aspect_ratio || "16:9"})
+            <Icon name="video" size={14} /> Direct Video ({selectedRecord.aspect_ratio || "16:9"})
           </span>
         )}
       </>
@@ -4426,10 +4426,12 @@ function AdminManager({ title }: { title: string }) {
                                   background: "#e0f2fe",
                                   padding: "3px 8px",
                                   borderRadius: 4,
-                                  display: "inline-block",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
                                 }}
                               >
-                                🎥 Video ({row.aspect_ratio || "16:9"})
+                                <Icon name="video" size={12} /> Video ({row.aspect_ratio || "16:9"})
                               </span>
                             ) : row.youtube_id ? (
                               <code>{row.youtube_id}</code>
@@ -5570,7 +5572,7 @@ function AdminManager({ title }: { title: string }) {
                                   borderRadius: 4,
                                 }}
                               >
-                                🎥 {row.aspect_ratio || "16:9"}
+                                Video ({row.aspect_ratio || "16:9"})
                               </span>
                             ) : (
                               <code>{row.youtube_id}</code>
@@ -8753,7 +8755,7 @@ function AdminManager({ title }: { title: string }) {
                           color: "var(--muted)",
                         }}
                       >
-                        <span>🔒 View-Only: Downloads disabled</span>
+                        <span>View-Only Protected (Downloads Restricted)</span>
                         <span style={{ fontFamily: "monospace" }}>
                           Aspect Ratio: {selectedRecord.aspect_ratio || "16:9"}
                         </span>
@@ -9234,7 +9236,8 @@ function AdminManager({ title }: { title: string }) {
                           gap: 6,
                         }}
                       >
-                        🎥 Direct Video Upload
+                        <Icon name="video" size={15} />
+                        <span>Direct Video Upload</span>
                       </button>
                       <button
                         type="button"
@@ -9244,7 +9247,7 @@ function AdminManager({ title }: { title: string }) {
                           borderRadius: 8,
                           border: `2px solid ${
                             performanceVideoSource === "youtube"
-                              ? "#ef4444"
+                              ? "#dc2626"
                               : "var(--line)"
                           }`,
                           background:
@@ -9264,7 +9267,8 @@ function AdminManager({ title }: { title: string }) {
                           gap: 6,
                         }}
                       >
-                        🔴 YouTube Link / ID
+                        <Icon name="youtube" size={15} />
+                        <span>YouTube Link / ID</span>
                       </button>
                       <button
                         type="button"
@@ -9291,7 +9295,8 @@ function AdminManager({ title }: { title: string }) {
                           gap: 6,
                         }}
                       >
-                        🔗 External Video URL
+                        <Icon name="external" size={14} />
+                        <span>External Video URL</span>
                       </button>
                     </div>
                   </div>
@@ -9370,8 +9375,17 @@ function AdminManager({ title }: { title: string }) {
                               fontSize: 13,
                             }}
                           >
-                            <span style={{ fontWeight: 600, color: "var(--navy)" }}>
-                              📹 {performanceVideoFile.name} (
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                color: "var(--navy)",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <Icon name="video" size={14} />
+                              {performanceVideoFile.name} (
                               {(performanceVideoFile.size / (1024 * 1024)).toFixed(1)} MB)
                             </span>
                             <span
@@ -9585,7 +9599,7 @@ function AdminManager({ title }: { title: string }) {
                             fontWeight: 600,
                           }}
                         >
-                          🔒 Download menu restricted
+                          View-Only Protected
                         </span>
                       </div>
                       <div
@@ -9676,7 +9690,7 @@ function AdminManager({ title }: { title: string }) {
                       </label>
                       <span style={{ fontSize: 12, color: "var(--muted)" }}>
                         {performanceThumbnailFile
-                          ? `🖼️ ${performanceThumbnailFile.name}`
+                          ? `Selected: ${performanceThumbnailFile.name}`
                           : newPerformance.thumbnail_url
                             ? "Current poster set"
                             : "Default frame will be used if omitted"}
