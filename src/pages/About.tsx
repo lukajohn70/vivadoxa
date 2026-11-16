@@ -973,7 +973,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                       marginBottom: 14,
                     }}
                   >
-                    <Icon name="sparkles" size={20} />
+                    <Icon name="lightbulb" size={20} />
                   </div>
                   <h4
                     style={{
@@ -1349,7 +1349,7 @@ export function About({ go }: { go: (p: Page) => void }) {
                   marginBottom: 16,
                 }}
               >
-                <Icon name="sparkles" size={22} />
+                <Icon name="lightbulb" size={22} />
               </div>
               <h3
                 style={{

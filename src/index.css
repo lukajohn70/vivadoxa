@@ -992,6 +992,9 @@ footer a:hover{color:white}
   .doc-sign-block{flex-direction:column;align-items:center;gap:16px;text-align:center}
   .doc-sign-block>div:last-child{text-align:center!important}
   .doc-watermark{font-size:90px;letter-spacing:4px}
+  #admission-letter-doc{padding:20px 16px!important}
+  #admission-letter-doc .doc-sign-section{flex-direction:row!important;justify-content:space-between!important;align-items:flex-end!important;text-align:left!important}
+  #admission-letter-doc .doc-sign-section>div:last-child{text-align:right!important}
 }
 
 @media print {
@@ -1062,6 +1065,8 @@ footer a:hover{color:white}
   #payment-receipt-doc {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
   /* Multi-page form styling */
   #application-slip-doc {

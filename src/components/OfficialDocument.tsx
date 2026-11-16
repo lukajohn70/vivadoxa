@@ -279,6 +279,15 @@ export function printDocumentElement(elementId: string) {
         max-width: 190mm !important;
         padding: 0 !important;
         overflow: visible !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      #admission-letter-doc,
+      #payment-receipt-doc {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
       }
     }
   `
@@ -316,21 +325,25 @@ export async function downloadDocumentPdf(
   if (!target) return
 
   // Render element to high-res canvas (scale: 2 for sharp print output)
+  // windowWidth: 800 ensures html2canvas renders in desktop mode on both mobile & desktop devices
   const canvas = await html2canvas(target, {
     scale: 2,
     useCORS: true,
     logging: false,
     backgroundColor: "#ffffff",
+    windowWidth: 800,
     onclone: (clonedDoc) => {
       const clonedElement = clonedDoc.getElementById(elementId)
       if (clonedElement) {
         clonedElement.style.width = "780px"
         clonedElement.style.maxWidth = "780px"
-        clonedElement.style.padding = "36px 42px"
+        clonedElement.style.minWidth = "780px"
+        clonedElement.style.padding = "30px 36px"
         clonedElement.style.boxShadow = "none"
         clonedElement.style.border = "none"
         clonedElement.style.borderRadius = "0"
         clonedElement.style.margin = "0 auto"
+        clonedElement.style.boxSizing = "border-box"
       }
     },
   })
@@ -344,30 +357,46 @@ export async function downloadDocumentPdf(
 
   const pageWidth = 210
   const pageHeight = 297
-  const margin = 10 // 10mm margins on all sides
-  const printableWidth = pageWidth - margin * 2 // 190mm
-  const printableHeight = pageHeight - margin * 2 // 277mm
+  const margin = 8 // 8mm margins on all sides
+  const printableWidth = pageWidth - margin * 2 // 194mm
+  const printableHeight = pageHeight - margin * 2 // 281mm
 
   const imgWidth = printableWidth
   const imgHeight = (canvas.height * printableWidth) / canvas.width
   const imgData = canvas.toDataURL("image/jpeg", 0.98)
 
-  if (imgHeight <= printableHeight) {
-    // Fits cleanly on 1 page: place with standard margin
-    pdf.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight)
+  const isSinglePageCred =
+    elementId === "admission-letter-doc" ||
+    elementId === "payment-receipt-doc"
+
+  if (isSinglePageCred) {
+    // Single-page institutional letterhead: MUST NEVER split into page 2
+    if (imgHeight > printableHeight) {
+      const scale = printableHeight / imgHeight
+      const scaledWidth = imgWidth * scale
+      const xOffset = margin + (printableWidth - scaledWidth) / 2
+      pdf.addImage(imgData, "JPEG", xOffset, margin, scaledWidth, printableHeight)
+    } else {
+      const yOffset = margin + Math.max(0, (printableHeight - imgHeight) / 4)
+      pdf.addImage(imgData, "JPEG", margin, yOffset, imgWidth, imgHeight)
+    }
   } else {
-    // Multi-page handling
-    let heightLeft = imgHeight
-    let position = margin
+    // Multi-page documents (e.g. application slip)
+    if (imgHeight <= printableHeight) {
+      pdf.addImage(imgData, "JPEG", margin, margin, imgWidth, imgHeight)
+    } else {
+      let heightLeft = imgHeight
+      let position = margin
 
-    pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight)
-    heightLeft -= printableHeight
-
-    while (heightLeft > 0) {
-      position = margin - (imgHeight - heightLeft)
-      pdf.addPage()
       pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight)
       heightLeft -= printableHeight
+
+      while (heightLeft > 0) {
+        position = margin - (imgHeight - heightLeft)
+        pdf.addPage()
+        pdf.addImage(imgData, "JPEG", margin, position, imgWidth, imgHeight)
+        heightLeft -= printableHeight
+      }
     }
   }
 
@@ -957,15 +986,15 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
   const docSheet = (
     <div
       id="admission-letter-doc"
-      className="doc-sheet"
+      className="doc-sheet admission-letter-doc"
       role="region"
       aria-label="Printed Admission Letter"
-      style={{ padding: "40px 48px", width: "min(780px, 100%)" }}
+      style={{ width: "min(780px, 100%)" }}
     >
       {/* Subtle Watermark */}
-          <div className="doc-watermark" aria-hidden="true">
-            VIVADOXA
-          </div>
+      <div className="doc-watermark" aria-hidden="true">
+        VIVADOXA
+      </div>
 
           {/* Academic Letterhead Masthead */}
           <div style={{ textAlign: "center", marginBottom: 8 }}>
@@ -1275,27 +1304,27 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
 
           {/* Signatory & Academic Seal Block */}
           <div
+            className="doc-sign-section"
             style={{
-              marginTop: 20,
-              paddingTop: 14,
+              marginTop: 18,
+              paddingTop: 12,
               borderTop: "1.5px solid var(--line, #e2ded8)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-end",
-              flexWrap: "wrap",
               gap: 16,
             }}
           >
             <div>
-              <div style={{ fontSize: 13, color: "#1a1918", marginBottom: 4 }}>
+              <div style={{ fontSize: 13, color: "#1a1918", marginBottom: 2 }}>
                 Yours faithfully,
               </div>
-              <CeoSignature height={48} />
+              <CeoSignature height={44} />
               <div
                 style={{
                   color: "#64748b",
                   letterSpacing: "1px",
-                  marginBottom: 4,
+                  marginBottom: 2,
                   userSelect: "none",
                 }}
               >
@@ -1329,17 +1358,17 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
                   fontSize: 11,
                   fontStyle: "italic",
                   color: "var(--gold-text, #a24a18)",
-                  marginTop: 4,
+                  marginTop: 2,
                 }}
               >
                 Where Music Comes Alive.
               </div>
             </div>
 
-            <div style={{ textAlign: "right" }}>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
               <AcademicSeal
                 color="#c96b32"
-                size={88}
+                size={82}
                 title="ADMISSIONS APPROVED"
               />
             </div>
@@ -1522,6 +1551,61 @@ export function AdmissionLetterModal({ data, onClose, isPage }: AdmissionLetterP
       aria-label="Official Admission Letter"
     >
       <div style={{ width: "min(780px, 100%)", margin: "auto" }}>
+        {/* Top Header Controls Bar */}
+        <div
+          className="no-print"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+            padding: "8px 14px",
+            background: "rgba(11,26,41,0.92)",
+            backdropFilter: "blur(8px)",
+            borderRadius: 8,
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "white",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                background: "rgba(201,107,50,0.3)",
+                color: "var(--gold2, #f2a672)",
+                padding: "2px 8px",
+                borderRadius: 4,
+              }}
+            >
+              Official 1-Page Letter (A4)
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close modal"
+            style={{
+              background: "rgba(255,255,255,0.12)",
+              border: "none",
+              color: "white",
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 14,
+              fontWeight: 700,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+
         {docSheet}
         <div className="no-print flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mt-3.5 bg-[rgba(11,26,41,0.95)] backdrop-blur-md p-2.5 sm:p-3 rounded-lg shadow-xl">
           <Button
