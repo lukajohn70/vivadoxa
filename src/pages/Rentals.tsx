@@ -44,6 +44,7 @@ export interface RentalItem {
   category: "Strings" | "Keys" | "Guitars" | "Woodwinds" | "Brass" | "PA & Sound" | "Backline" | "Microphones" | string
   type: string
   image: string
+  images?: string[]
   dailyRate?: number
   weeklyRate?: number
   monthlyRate?: number
@@ -385,6 +386,8 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
     }
   })
   const [showMultiDrawer, setShowMultiDrawer] = useState(false)
+  const [selectedDetailRental, setSelectedDetailRental] = useState<RentalItem | null>(null)
+  const [activeRentalImgIndex, setActiveRentalImgIndex] = useState(0)
 
   useEffect(() => {
     try {
@@ -806,7 +809,13 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                               <span>{selected ? "Selected" : "Select"}</span>
                             </button>
 
-                            <div className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">
+                            <div
+                              onClick={() => {
+                                setSelectedDetailRental(item)
+                                setActiveRentalImgIndex(0)
+                              }}
+                              className="sm:w-5/12 h-52 sm:h-auto relative overflow-hidden bg-slate-900 shrink-0 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none cursor-pointer group"
+                            >
                               <LazyImage
                                 src={item.image}
                                 alt={item.name}
@@ -817,12 +826,25 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                               <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-[var(--navy)] font-bold text-[11px] px-2.5 py-1 rounded-md z-10">
                                 {item.category}
                               </span>
+                              {item.images && item.images.length > 1 && (
+                                <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-xs pointer-events-none">
+                                  📷 {item.images.length} photos
+                                </span>
+                              )}
                             </div>
 
                             <div className="p-5 flex-1 flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between gap-2 mb-1 pr-20">
-                                  <h3 className="font-bold text-base text-[var(--navy)]">{item.name}</h3>
+                                  <h3
+                                    onClick={() => {
+                                      setSelectedDetailRental(item)
+                                      setActiveRentalImgIndex(0)
+                                    }}
+                                    className="font-bold text-base text-[var(--navy)] hover:text-[var(--gold)] cursor-pointer transition-colors"
+                                  >
+                                    {item.name}
+                                  </h3>
                                 </div>
                                 <p className="text-xs text-[var(--muted)] mb-3">{item.idealFor || item.recommendedFor}</p>
 
@@ -931,7 +953,13 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                               <span>{selected ? "Selected" : "Select"}</span>
                             </button>
 
-                            <div className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl">
+                            <div
+                              onClick={() => {
+                                setSelectedDetailRental(item)
+                                setActiveRentalImgIndex(0)
+                              }}
+                              className="h-48 relative overflow-hidden bg-slate-900 rounded-t-2xl cursor-pointer group"
+                            >
                               <LazyImage
                                 src={item.image}
                                 alt={item.name}
@@ -946,10 +974,23 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />{" "}
                                 {currentFleet.badge || currentFleet.name}
                               </span>
+                              {item.images && item.images.length > 1 && (
+                                <span className="absolute bottom-3 right-3 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10 shadow-xs pointer-events-none">
+                                  📷 {item.images.length} photos
+                                </span>
+                              )}
                             </div>
 
                             <div className="p-5 flex-1 flex flex-col">
-                              <h3 className="font-bold text-base text-[var(--navy)] mb-1">{item.name}</h3>
+                              <h3
+                                onClick={() => {
+                                  setSelectedDetailRental(item)
+                                  setActiveRentalImgIndex(0)
+                                }}
+                                className="font-bold text-base text-[var(--navy)] mb-1 hover:text-[var(--gold)] cursor-pointer transition-colors"
+                              >
+                                {item.name}
+                              </h3>
                               <p className="text-xs text-[var(--muted)] mb-3">{item.recommendedFor || item.idealFor}</p>
 
                               <div className="mb-3 pt-3 border-t border-[var(--line)]">
@@ -1340,6 +1381,181 @@ export function Rentals({ go }: { go: (p: Page) => void }) {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* ── SINGLE RENTAL GEAR DETAIL & PHOTO GALLERY MODAL ───────────── */}
+      {selectedDetailRental && (() => {
+        const allImages = Array.isArray(selectedDetailRental.images) && selectedDetailRental.images.length > 0
+          ? selectedDetailRental.images
+          : [selectedDetailRental.image]
+        const safeIndex = Math.min(Math.max(0, activeRentalImgIndex), allImages.length - 1)
+        const activeImg = allImages[safeIndex] || selectedDetailRental.image
+        const isRentalSelected = selectedRentals.some((r) => r.id === selectedDetailRental.id)
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--line)] p-6 relative">
+              <button
+                type="button"
+                onClick={() => setSelectedDetailRental(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1 z-20"
+                aria-label="Close modal"
+              >
+                <Icon name="close" size={18} />
+              </button>
+
+              {/* Main Photo with Navigation Arrows & Indicator */}
+              <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-slate-900 rounded-xl overflow-hidden mb-3 border border-[var(--line)]">
+                <img
+                  src={activeImg}
+                  alt={`${selectedDetailRental.name} - photo ${safeIndex + 1}`}
+                  className="w-full h-full object-cover transition-opacity duration-200"
+                />
+
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setActiveRentalImgIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1))}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors cursor-pointer text-sm shadow-md z-10"
+                      aria-label="Previous photo"
+                      title="Previous photo"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveRentalImgIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors cursor-pointer text-sm shadow-md z-10"
+                      aria-label="Next photo"
+                      title="Next photo"
+                    >
+                      ›
+                    </button>
+                    <span className="absolute bottom-2.5 right-2.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      {safeIndex + 1} / {allImages.length}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Thumbnail Gallery Strip */}
+              {allImages.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-thin">
+                  {allImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveRentalImgIndex(idx)}
+                      className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                        safeIndex === idx
+                          ? "border-[var(--gold)] ring-2 ring-[var(--gold)]/30 scale-105"
+                          : "border-slate-200 opacity-60 hover:opacity-100"
+                      }`}
+                      title={`View photo ${idx + 1}`}
+                    >
+                      <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Badge tone="gold">{selectedDetailRental.category}</Badge>
+                  <span className="text-xs text-[var(--muted)] font-medium">
+                    Fleet: {selectedDetailRental.type || "Student Practice"}
+                  </span>
+                </div>
+                <h3 className="font-bold text-lg sm:text-xl text-[var(--navy)]">
+                  {selectedDetailRental.name}
+                </h3>
+                <p className="text-xs text-[var(--muted)] mt-1">
+                  {selectedDetailRental.recommendedFor || selectedDetailRental.idealFor}
+                </p>
+              </div>
+
+              {/* Fixed Rates Breakdown */}
+              <div className="mb-4 py-3 px-3.5 rounded-xl bg-[#FAF8F5] border border-[var(--line)]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--gold)]">
+                    Fixed Rental Rates:
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">Daily · Weekly · Monthly</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white rounded-lg py-1.5 px-1 border border-slate-200">
+                    <small className="block text-[9px] text-[var(--muted)] uppercase font-bold">Daily</small>
+                    <strong className="text-xs sm:text-sm text-[var(--navy)] font-bold">
+                      {selectedDetailRental.dailyRateLabel || "₦3,500"}
+                    </strong>
+                  </div>
+                  <div className="bg-white rounded-lg py-1.5 px-1 border border-slate-200">
+                    <small className="block text-[9px] text-[var(--muted)] uppercase font-bold">Weekly</small>
+                    <strong className="text-xs sm:text-sm text-[var(--navy)] font-bold">
+                      {selectedDetailRental.weeklyRateLabel || "₦15,000"}
+                    </strong>
+                  </div>
+                  <div className="bg-white rounded-lg py-1.5 px-1 border border-slate-200">
+                    <small className="block text-[9px] text-[var(--muted)] uppercase font-bold">Monthly</small>
+                    <strong className="text-xs sm:text-sm text-amber-700 font-extrabold">
+                      {selectedDetailRental.monthlyRateLabel || "₦35,000"}
+                    </strong>
+                  </div>
+                </div>
+                <div className="mt-2.5 pt-2 border-t border-[var(--line)] flex items-center justify-between text-[11px]">
+                  <span className="text-[var(--muted)]">Security Deposit:</span>
+                  <strong className="text-slate-700 font-bold">Assessed on Enquiry</strong>
+                </div>
+              </div>
+
+              {/* Inclusions & Features */}
+              {(selectedDetailRental.inclusions || selectedDetailRental.features) && (
+                <div className="mb-5">
+                  <strong className="text-xs font-bold text-[var(--navy)] block mb-1.5">
+                    Inclusions &amp; Setup:
+                  </strong>
+                  <ul className="space-y-1.5 text-xs text-slate-700">
+                    {(selectedDetailRental.inclusions || selectedDetailRental.features || []).map((inc, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                        <span>{inc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleRentalItem(selectedDetailRental)
+                    setSelectedDetailRental(null)
+                  }}
+                  className={`btn btn-secondary !py-2 !px-4 !text-xs cursor-pointer ${
+                    isRentalSelected ? "!border-[var(--gold)] !text-[var(--gold)] font-bold" : ""
+                  }`}
+                >
+                  {isRentalSelected ? "✓ In Rental Selection" : "+ Select for Rental Cart"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    directWhatsAppInquiry(selectedDetailRental.name)
+                    setSelectedDetailRental(null)
+                  }}
+                  className="btn btn-primary !py-2 !px-4 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <WhatsAppIcon size={14} />
+                  <span>Inquire on WhatsApp</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </main>
   )
 }

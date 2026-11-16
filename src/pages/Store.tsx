@@ -37,6 +37,7 @@ export interface ProductItem {
   name: string
   category: "Guitars" | "Strings" | "Keys" | "Woodwinds" | "Brass" | "Percussion" | "Accessories"
   image: string
+  images?: string[]
   brand: string
   badge?: string
   inStock: boolean
@@ -199,6 +200,7 @@ export function Store({ go }: { go: (p: Page) => void }) {
   // Single Item Modal State
   const [singleInquiryProduct, setSingleInquiryProduct] = useState<ProductItem | null>(null)
   const [selectedDetailProduct, setSelectedDetailProduct] = useState<ProductItem | null>(null)
+  const [activeDetailImgIndex, setActiveDetailImgIndex] = useState(0)
 
   // Shared Form States
   const [formName, setFormName] = useState("")
@@ -1030,6 +1032,13 @@ export function Store({ go }: { go: (p: Page) => void }) {
                           </span>
                         </div>
 
+                        {/* Photo count indicator */}
+                        {product.images && product.images.length > 1 && (
+                          <div className="absolute bottom-2.5 left-2.5 z-10 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs pointer-events-none">
+                            📷 {product.images.length} photos
+                          </div>
+                        )}
+
                         {/* Multi-Select Checkbox */}
                         <label
                           className="absolute top-2.5 right-2.5 z-10 w-6 h-6 rounded-md bg-white/90 backdrop-blur-xs border border-slate-300 flex items-center justify-center cursor-pointer shadow-xs hover:bg-white"
@@ -1055,7 +1064,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
                           {product.category}
                         </span>
                         <h4
-                          onClick={() => setSelectedDetailProduct(product)}
+                          onClick={() => {
+                            setSelectedDetailProduct(product)
+                            setActiveDetailImgIndex(0)
+                          }}
                           className="font-bold text-sm sm:text-base text-[var(--navy)] leading-snug mb-2 hover:text-[var(--gold)] cursor-pointer line-clamp-2"
                         >
                           {product.name}
@@ -1092,7 +1104,10 @@ export function Store({ go }: { go: (p: Page) => void }) {
                       <div className="flex items-center justify-between gap-2 pt-3">
                         <button
                           type="button"
-                          onClick={() => setSelectedDetailProduct(product)}
+                          onClick={() => {
+                            setSelectedDetailProduct(product)
+                            setActiveDetailImgIndex(0)
+                          }}
                           className="text-xs font-semibold text-[var(--navy)] hover:text-[var(--gold)] cursor-pointer"
                         >
                           View Details
@@ -1382,87 +1397,149 @@ export function Store({ go }: { go: (p: Page) => void }) {
       )}
 
       {/* ── SINGLE PRODUCT DETAIL MODAL ───────────────────────────────── */}
-      {selectedDetailProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--line)] p-6 relative">
-            <button
-              type="button"
-              onClick={() => setSelectedDetailProduct(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
-            >
-              <Icon name="close" size={18} />
-            </button>
+      {selectedDetailProduct && (() => {
+        const allImages = Array.isArray(selectedDetailProduct.images) && selectedDetailProduct.images.length > 0
+          ? selectedDetailProduct.images
+          : [selectedDetailProduct.image]
+        const safeIndex = Math.min(Math.max(0, activeDetailImgIndex), allImages.length - 1)
+        const activeImg = allImages[safeIndex] || selectedDetailProduct.image
 
-            <div className="aspect-[4/3] sm:aspect-[16/9] bg-[#FAF8F5] rounded-xl overflow-hidden mb-4 border border-[var(--line)]">
-              <img
-                src={selectedDetailProduct.image}
-                alt={selectedDetailProduct.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[var(--line)] p-6 relative">
+              <button
+                type="button"
+                onClick={() => setSelectedDetailProduct(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 cursor-pointer p-1 z-20"
+                aria-label="Close modal"
+              >
+                <Icon name="close" size={18} />
+              </button>
 
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Badge tone="gold">{selectedDetailProduct.category}</Badge>
-                <span className="text-xs text-[var(--muted)] font-medium">Brand: {selectedDetailProduct.brand}</span>
+              {/* Main Photo with Navigation Arrows & Indicator */}
+              <div className="relative aspect-[4/3] sm:aspect-[16/9] bg-slate-900 rounded-xl overflow-hidden mb-3 border border-[var(--line)]">
+                <img
+                  src={activeImg}
+                  alt={`${selectedDetailProduct.name} - photo ${safeIndex + 1}`}
+                  className="w-full h-full object-cover transition-opacity duration-200"
+                />
+
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailImgIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1))}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors cursor-pointer text-sm shadow-md z-10"
+                      aria-label="Previous photo"
+                      title="Previous photo"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailImgIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center transition-colors cursor-pointer text-sm shadow-md z-10"
+                      aria-label="Next photo"
+                      title="Next photo"
+                    >
+                      ›
+                    </button>
+                    <span className="absolute bottom-2.5 right-2.5 bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      {safeIndex + 1} / {allImages.length}
+                    </span>
+                  </>
+                )}
               </div>
-              <h3 className="font-bold text-lg sm:text-xl text-[var(--navy)]">
-                {selectedDetailProduct.name}
-              </h3>
-            </div>
 
-            <div className="bg-[#FAF8F5] p-3.5 rounded-xl border border-[var(--line)] mb-4">
-              <strong className="text-xs font-bold text-[var(--navy)] block mb-1">
-                Vivadoxa Workshop Inspection:
-              </strong>
-              <p className="text-xs text-[var(--muted)] leading-relaxed m-0">
-                {selectedDetailProduct.setupNote}
-              </p>
-            </div>
+              {/* Thumbnail Gallery Strip */}
+              {allImages.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-thin">
+                  {allImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveDetailImgIndex(idx)}
+                      className={`w-16 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all cursor-pointer ${
+                        safeIndex === idx
+                          ? "border-[var(--gold)] ring-2 ring-[var(--gold)]/30 scale-105"
+                          : "border-slate-200 opacity-60 hover:opacity-100"
+                      }`}
+                      title={`View photo ${idx + 1}`}
+                    >
+                      <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
 
-            <div className="mb-5">
-              <strong className="text-xs font-bold text-[var(--navy)] block mb-1.5">
-                Included Specifications &amp; Accessories:
-              </strong>
-              <ul className="space-y-1.5 text-xs text-slate-700">
-                {selectedDetailProduct.specs.map((spec, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
-                    <span>{spec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Badge tone="gold">{selectedDetailProduct.category}</Badge>
+                  <span className="text-xs text-[var(--muted)] font-medium">Brand: {selectedDetailProduct.brand}</span>
+                  {selectedDetailProduct.priceLabel && (
+                    <span className="ml-auto text-sm font-extrabold text-[var(--gold)]">
+                      {selectedDetailProduct.priceLabel}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-lg sm:text-xl text-[var(--navy)]">
+                  {selectedDetailProduct.name}
+                </h3>
+              </div>
 
-            <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  toggleSelectItem(selectedDetailProduct)
-                  setSelectedDetailProduct(null)
-                }}
-                className={`btn btn-secondary !py-2 !px-4 !text-xs cursor-pointer ${
-                  isSelected(selectedDetailProduct.id) ? "!border-[var(--gold)] !text-[var(--gold)]" : ""
-                }`}
-              >
-                {isSelected(selectedDetailProduct.id) ? "✓ Added to Selection" : "+ Select for Multi-Order"}
-              </button>
+              <div className="bg-[#FAF8F5] p-3.5 rounded-xl border border-[var(--line)] mb-4">
+                <strong className="text-xs font-bold text-[var(--navy)] block mb-1">
+                  Vivadoxa Workshop Inspection:
+                </strong>
+                <p className="text-xs text-[var(--muted)] leading-relaxed m-0">
+                  {selectedDetailProduct.setupNote}
+                </p>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  contactViaWhatsApp(selectedDetailProduct)
-                  setSelectedDetailProduct(null)
-                }}
-                className="btn btn-primary !py-2 !px-4 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <WhatsAppIcon size={14} />
-                <span>Inquire on WhatsApp</span>
-              </button>
+              <div className="mb-5">
+                <strong className="text-xs font-bold text-[var(--navy)] block mb-1.5">
+                  Included Specifications &amp; Accessories:
+                </strong>
+                <ul className="space-y-1.5 text-xs text-slate-700">
+                  {selectedDetailProduct.specs.map((spec, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] shrink-0" />
+                      <span>{spec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-4 border-t border-[var(--line)] flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleSelectItem(selectedDetailProduct)
+                    setSelectedDetailProduct(null)
+                  }}
+                  className={`btn btn-secondary !py-2 !px-4 !text-xs cursor-pointer ${
+                    isSelected(selectedDetailProduct.id) ? "!border-[var(--gold)] !text-[var(--gold)]" : ""
+                  }`}
+                >
+                  {isSelected(selectedDetailProduct.id) ? "✓ Added to Selection" : "+ Select for Multi-Order"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    contactViaWhatsApp(selectedDetailProduct)
+                    setSelectedDetailProduct(null)
+                  }}
+                  className="btn btn-primary !py-2 !px-4 !text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <WhatsAppIcon size={14} />
+                  <span>Inquire on WhatsApp</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </main>
   )
 }

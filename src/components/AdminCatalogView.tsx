@@ -21,6 +21,7 @@ import {
   uploadCatalogImage,
   resetCatalogDefaults,
 } from "@/lib/api"
+import { compressImageForUpload } from "@/lib/utils"
 
 export interface RentalFleetType {
   id: string
@@ -103,12 +104,15 @@ export function ShopAndRentalsView({
   const [formWeeklyRateLabel, setFormWeeklyRateLabel] = useState("")
   const [formMonthlyRateLabel, setFormMonthlyRateLabel] = useState("")
 
-  // Image Upload State
+  // Multi-Image & Featured Image State
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [imageUploadMode, setImageUploadMode] = useState<"upload" | "url">("upload")
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState("")
   const [imageUploadError, setImageUploadError] = useState<string | null>(null)
-  const [localPreview, setLocalPreview] = useState<string | null>(null)
+  const [formImages, setFormImages] = useState<string[]>([])
+  const [formFeaturedImage, setFormFeaturedImage] = useState<string>("")
+  const [customImageUrl, setCustomImageUrl] = useState("")
 
   // Fleet Types Modal State
   const [showFleetTypeModal, setShowFleetTypeModal] = useState(false)
@@ -168,11 +172,12 @@ export function ShopAndRentalsView({
     )
     setFormBrand("")
     setFormBadge("")
-    setFormImage(
-      activeSubTab === "store"
-        ? "/media/programs/guitar-acoustic-recital.jpeg"
-        : "/media/programs/violin-solo-rainbow.jpeg",
-    )
+    const defaultImg = activeSubTab === "store"
+      ? "/media/programs/guitar-acoustic-recital.jpeg"
+      : "/media/programs/violin-solo-rainbow.jpeg"
+    setFormImage(defaultImg)
+    setFormImages([defaultImg])
+    setFormFeaturedImage(defaultImg)
     setFormSetupNote(
       activeSubTab === "store"
         ? "Action adjusted and pre-delivery intonation verified"
@@ -189,7 +194,8 @@ export function ShopAndRentalsView({
     setFormMonthlyRateLabel("")
     setImageUploadMode("upload")
     setImageUploadError(null)
-    setLocalPreview(null)
+    setUploadProgress("")
+    setCustomImageUrl("")
     setShowItemModal(true)
   }
 
@@ -199,7 +205,23 @@ export function ShopAndRentalsView({
     setFormCategory(item.category || (activeSubTab === "store" ? "Guitars" : "Strings"))
     setFormBrand(item.brand || "")
     setFormBadge(item.badge || "")
-    setFormImage(item.image || "/media/programs/guitar-acoustic-recital.jpeg")
+    
+    // Multi-image and featured cover initialization
+    const existingImages: string[] = Array.isArray(item.images) && item.images.length > 0
+      ? item.images.filter((img: any) => typeof img === "string" && img.trim() !== "")
+      : item.image ? [item.image] : []
+    const fallbackCover = activeSubTab === "store"
+      ? "/media/programs/guitar-acoustic-recital.jpeg"
+      : "/media/programs/violin-solo-rainbow.jpeg"
+    const featured = item.image || existingImages[0] || fallbackCover
+    const finalImages = existingImages.length > 0 ? [...existingImages] : [featured]
+    if (!finalImages.includes(featured)) {
+      finalImages.unshift(featured)
+    }
+    setFormImages(finalImages)
+    setFormFeaturedImage(featured)
+    setFormImage(featured)
+
     setFormSetupNote(item.setupNote || "")
     const specsList = Array.isArray(item.specs)
       ? item.specs.join("\n")
@@ -219,55 +241,116 @@ export function ShopAndRentalsView({
     setFormMonthlyRateLabel(item.monthlyRateLabel || (item.monthlyRate ? `₦${Number(item.monthlyRate).toLocaleString()}` : ""))
     setImageUploadMode("upload")
     setImageUploadError(null)
-    setLocalPreview(null)
+    setUploadProgress("")
+    setCustomImageUrl("")
     setShowItemModal(true)
   }
 
-  // ── Image File Upload Handler ─────────────────────────────────────────────
+  // ── Multi-Image File Upload Handler ─────────────────────────────────────────
   const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    // Quick client validation
-    if (!file.type.startsWith("image/")) {
-      setImageUploadError("Please select a valid image file (JPG, PNG, WEBP, GIF).")
-      return
-    }
-    if (file.size > 12 * 1024 * 1024) {
-      setImageUploadError("Image exceeds 12MB limit. Please choose a smaller photo.")
-      return
-    }
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
 
     setImageUploadError(null)
     setUploadingImage(true)
 
-    // Immediate local preview so the admin sees the picture right away
-    const localPreviewUrl = URL.createObjectURL(file)
-    setLocalPreview(localPreviewUrl)
+    const subfolder = activeSubTab === "store" ? "store" : "rentals"
+    const uploadedUrls: string[] = []
 
-    try {
-      const res = await uploadCatalogImage(
-        file,
-        activeSubTab === "store" ? "store" : "rentals",
-      )
-      if (res?.success && res.image_url) {
-        setFormImage(res.image_url)
-        setLocalPreview(null)
-        setActionNotice("Photo uploaded successfully.")
-      } else {
-        setLocalPreview(null)
-        setImageUploadError(res?.error || "Failed to upload image to server.")
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+
+      // Client validation
+      if (!file.type.startsWith("image/")) {
+        setImageUploadError(`"${file.name}" is not a valid image format.`)
+        continue
       }
-    } catch (err: any) {
-      setLocalPreview(null)
-      setImageUploadError(err.message || "Network error during upload.")
-    } finally {
-      setUploadingImage(false)
-      // Reset input value so re-selecting same file triggers onChange
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+      if (file.size > 15 * 1024 * 1024) {
+        setImageUploadError(`"${file.name}" exceeds 15MB limit. Please choose a smaller photo.`)
+        continue
+      }
+
+      setUploadProgress(`Optimizing & uploading ${i + 1} of ${files.length}...`)
+
+      try {
+        const compressed = await compressImageForUpload(file)
+        const res = await uploadCatalogImage(compressed, subfolder)
+        if (res?.success && res.image_url) {
+          uploadedUrls.push(res.image_url)
+        } else {
+          setImageUploadError(res?.error || `Upload failed for ${file.name}`)
+        }
+      } catch (err: any) {
+        setImageUploadError(err.message || `Upload error on ${file.name}`)
       }
     }
+
+    if (uploadedUrls.length > 0) {
+      setFormImages((prev) => {
+        const updated = [...prev, ...uploadedUrls]
+        // If current featured cover is empty or invalid, set the first newly uploaded image
+        if (!formFeaturedImage || !updated.includes(formFeaturedImage)) {
+          setFormFeaturedImage(updated[0])
+          setFormImage(updated[0])
+        }
+        return updated
+      })
+      setActionNotice(
+        `Added ${uploadedUrls.length} photo${uploadedUrls.length > 1 ? "s" : ""} to product gallery.`,
+      )
+    }
+
+    setUploadingImage(false)
+    setUploadProgress("")
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  // Set an image as the Featured (Cover) image
+  const handleSetFeaturedImage = (url: string) => {
+    setFormFeaturedImage(url)
+    setFormImage(url)
+    setActionNotice("Selected as Featured Cover Photo!")
+  }
+
+  // Remove an image from the gallery
+  const handleRemoveImage = (urlToRemove: string) => {
+    const updated = formImages.filter((u) => u !== urlToRemove)
+    setFormImages(updated)
+    if (formFeaturedImage === urlToRemove) {
+      const nextFeatured = updated[0] || ""
+      setFormFeaturedImage(nextFeatured)
+      setFormImage(nextFeatured)
+    }
+    setActionNotice("Photo removed from gallery.")
+  }
+
+  // Move image left / right in the gallery order
+  const handleMoveImage = (index: number, direction: "left" | "right") => {
+    const targetIndex = direction === "left" ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= formImages.length) return
+    const updated = [...formImages]
+    const temp = updated[index]
+    updated[index] = updated[targetIndex]
+    updated[targetIndex] = temp
+    setFormImages(updated)
+  }
+
+  // Add image by URL or Preset
+  const handleAddCustomImageUrl = (urlToAdd: string) => {
+    const trimmed = urlToAdd.trim()
+    if (!trimmed) return
+    if (!formImages.includes(trimmed)) {
+      const updated = [...formImages, trimmed]
+      setFormImages(updated)
+      if (!formFeaturedImage) {
+        setFormFeaturedImage(trimmed)
+        setFormImage(trimmed)
+      }
+      setActionNotice("Photo added to gallery.")
+    }
+    setCustomImageUrl("")
   }
 
   const handleSave = async (e: React.FormEvent) => {
@@ -282,9 +365,17 @@ export function ShopAndRentalsView({
       return
     }
 
-    if (!formImage.trim() || formImage.startsWith("blob:")) {
-      alert("Please upload a photo or enter an image URL.")
+    const featured = (formFeaturedImage && formFeaturedImage.trim()) || formImages[0] || formImage.trim()
+    if (!featured || featured.startsWith("blob:")) {
+      alert("Please upload at least one photo or enter an image URL.")
       return
+    }
+
+    const cleanGallery = formImages.filter((img) => img && typeof img === "string" && !img.startsWith("blob:"))
+    if (cleanGallery.length === 0) {
+      cleanGallery.push(featured)
+    } else if (!cleanGallery.includes(featured)) {
+      cleanGallery.unshift(featured)
     }
 
     setSaving(true)
@@ -300,7 +391,8 @@ export function ShopAndRentalsView({
         category: formCategory,
         brand: formBrand.trim() || "Vivadoxa Certified",
         badge: formBadge.trim(),
-        image: formImage.trim(),
+        image: featured,
+        images: cleanGallery,
         setupNote: formSetupNote.trim() || "Pre-delivery clinic inspection passed",
         specs: specsArray,
         priceLabel: formPriceLabel.trim(),
@@ -326,7 +418,8 @@ export function ShopAndRentalsView({
         name: formName.trim(),
         category: formCategory,
         type: formRentalType,
-        image: formImage.trim(),
+        image: featured,
+        images: cleanGallery,
         recommendedFor: formRecommendedFor.trim(),
         idealFor: formRecommendedFor.trim(),
         dailyRateLabel: formDailyRateLabel.trim(),
@@ -795,49 +888,60 @@ export function ShopAndRentalsView({
                   </>
                 )}
 
-                {/* ── Product / Gear Photo (Direct Device Upload + URL option) ──── */}
-                <div className="bg-[#FAF8F5] p-4 rounded-xl border border-[var(--line)] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[var(--navy)] flex items-center gap-1.5">
-                      <span>Gear Image / Photo *</span>
-                      {uploadingImage && (
-                        <span className="text-[10px] text-[var(--gold)] font-bold animate-pulse">
-                          (Uploading...)
+                {/* ── Product / Gear Multi-Photo Gallery & Featured Image Manager ──── */}
+                <div className="bg-[#FAF8F5] p-4 sm:p-5 rounded-2xl border border-[var(--line)] space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-bold text-[var(--navy)] uppercase tracking-wider flex items-center gap-1.5">
+                          <span>Product Photos &amp; Gallery *</span>
+                        </label>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                          {formImages.length} {formImages.length === 1 ? "Photo" : "Photos"}
                         </span>
-                      )}
-                    </label>
+                        {uploadingImage && (
+                          <span className="text-[10px] text-[var(--gold)] font-bold animate-pulse">
+                            ({uploadProgress || "Uploading..."})
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-[var(--muted)] mt-0.5">
+                        Add multiple photos from different angles. Click <strong>"Set as Featured"</strong> on any photo to choose the primary cover image.
+                      </p>
+                    </div>
 
                     {/* Mode switcher pills */}
-                    <div className="inline-flex p-0.5 rounded-lg bg-white border border-[var(--line)] text-[11px]">
+                    <div className="inline-flex p-0.5 rounded-lg bg-white border border-[var(--line)] text-[11px] shrink-0 self-start sm:self-auto">
                       <button
                         type="button"
                         onClick={() => setImageUploadMode("upload")}
-                        className={`px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-md font-bold transition-all cursor-pointer ${
                           imageUploadMode === "upload"
                             ? "bg-[var(--gold)] text-white shadow-xs"
                             : "text-slate-600 hover:text-[var(--navy)]"
                         }`}
                       >
-                        📷 Upload Photo
+                        📷 Upload Photos
                       </button>
                       <button
                         type="button"
                         onClick={() => setImageUploadMode("url")}
-                        className={`px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-md font-bold transition-all cursor-pointer ${
                           imageUploadMode === "url"
                             ? "bg-[var(--gold)] text-white shadow-xs"
                             : "text-slate-600 hover:text-[var(--navy)]"
                         }`}
                       >
-                        🔗 Image URL / Presets
+                        🔗 URL &amp; Presets
                       </button>
                     </div>
                   </div>
 
-                  {/* Hidden native file input */}
+                  {/* Hidden native file input (supports MULTIPLE files) */}
                   <input
                     ref={fileInputRef}
                     type="file"
+                    multiple
                     accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
                     onChange={handleImageFileUpload}
                     className="hidden"
@@ -845,14 +949,14 @@ export function ShopAndRentalsView({
 
                   {imageUploadMode === "upload" ? (
                     <div>
-                      {/* Clickable upload dropzone */}
+                      {/* Clickable multi-upload dropzone */}
                       <div
                         onClick={() => fileInputRef.current?.click()}
-                        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all bg-white hover:border-[var(--gold)] hover:bg-amber-50/20 ${
+                        className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all bg-white hover:border-[var(--gold)] hover:bg-amber-50/20 ${
                           uploadingImage ? "opacity-60 pointer-events-none" : "border-slate-300"
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-full bg-amber-50 text-[var(--gold)] flex items-center justify-center mx-auto mb-2">
+                        <div className="w-11 h-11 rounded-full bg-amber-50 text-[var(--gold)] flex items-center justify-center mx-auto mb-2">
                           {uploadingImage ? (
                             <Icon name="refresh" size={20} className="animate-spin" />
                           ) : (
@@ -861,11 +965,11 @@ export function ShopAndRentalsView({
                         </div>
                         <p className="text-xs font-bold text-[var(--navy)]">
                           {uploadingImage
-                            ? "Uploading photo to server..."
-                            : "Click here to choose photo from your phone or computer"}
+                            ? uploadProgress || "Uploading photos to server..."
+                            : "Click here to select single or multiple photos from your device"}
                         </p>
                         <p className="text-[11px] text-[var(--muted)] mt-1">
-                          Supports JPG, PNG, WEBP, GIF (High resolution recommended, up to 12MB)
+                          Supports multiple selection (JPG, PNG, WEBP, GIF up to 15MB each). Web compression applied automatically.
                         </p>
                       </div>
 
@@ -876,127 +980,198 @@ export function ShopAndRentalsView({
                       )}
                     </div>
                   ) : (
-                    <div>
-                      <input
-                        type="text"
-                        value={formImage}
-                        onChange={(e) => setFormImage(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
-                        placeholder="/media/programs/guitar-acoustic-recital.jpeg or https://..."
-                        required
-                      />
-                      <div className="flex flex-wrap gap-1 mt-1.5 text-[10px] text-slate-500">
-                        <span>Presets:</span>
+                    <div className="bg-white p-3.5 rounded-xl border border-[var(--line)] space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customImageUrl}
+                          onChange={(e) => setCustomImageUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault()
+                              handleAddCustomImageUrl(customImageUrl)
+                            }
+                          }}
+                          className="flex-1 px-3 py-2 text-xs rounded-lg bg-[#FAF8F5] border border-[var(--line)] focus:outline-none focus:border-[var(--gold)]"
+                          placeholder="Paste image path or URL (e.g. /media/programs/guitar-acoustic-recital.jpeg or https://...)"
+                        />
                         <button
                           type="button"
-                          onClick={() =>
-                            setFormImage("/media/programs/guitar-acoustic-recital.jpeg")
-                          }
-                          className="underline hover:text-[var(--gold)] cursor-pointer"
+                          onClick={() => handleAddCustomImageUrl(customImageUrl)}
+                          className="btn btn-primary !py-1.5 !px-3 !text-xs cursor-pointer shrink-0"
                         >
-                          Guitar
+                          + Add Photo
                         </button>
-                        <span>·</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormImage("/media/programs/violin-solo-rainbow.jpeg")
-                          }
-                          className="underline hover:text-[var(--gold)] cursor-pointer"
-                        >
-                          Violin
-                        </button>
-                        <span>·</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormImage("/media/programs/piano-syllabus.jpeg")
-                          }
-                          className="underline hover:text-[var(--gold)] cursor-pointer"
-                        >
-                          Piano
-                        </button>
-                        <span>·</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormImage("/media/programs/sax-solo-grey.jpeg")
-                          }
-                          className="underline hover:text-[var(--gold)] cursor-pointer"
-                        >
-                          Sax
-                        </button>
-                        <span>·</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormImage("/media/programs/drums-tama-red.jpeg")
-                          }
-                          className="underline hover:text-[var(--gold)] cursor-pointer"
-                        >
-                          Drums
-                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] text-slate-500">
+                        <span className="font-semibold text-slate-700">Quick Presets:</span>
+                        {[
+                          { label: "Acoustic Guitar", url: "/media/programs/guitar-acoustic-recital.jpeg" },
+                          { label: "Electric Guitar", url: "/media/programs/guitar-electric-player.jpeg" },
+                          { label: "Violin", url: "/media/programs/violin-solo-rainbow.jpeg" },
+                          { label: "Keyboard", url: "/media/programs/piano-syllabus.jpeg" },
+                          { label: "Saxophone", url: "/media/programs/sax-solo-grey.jpeg" },
+                          { label: "Flute", url: "/media/programs/flute-recital-boy.jpeg" },
+                          { label: "Trumpet", url: "/media/programs/trumpet-brass.jpeg" },
+                          { label: "Drum Kit", url: "/media/programs/drums-tama-red.jpeg" },
+                          { label: "Studio PA", url: "/media/studio/multi-instrument-lab.jpeg" },
+                        ].map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleAddCustomImageUrl(preset.url)}
+                            className="px-2 py-0.5 rounded bg-slate-100 hover:bg-amber-100 hover:text-amber-900 transition-colors text-[10px] font-medium cursor-pointer border border-slate-200"
+                          >
+                            + {preset.label}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   )}
 
-                  {/* 4:3 Live Image Preview with Replace shortcut */}
-                  <div className="flex items-center gap-4 pt-2">
-                    <div className="w-40 aspect-[4/3] rounded-xl overflow-hidden bg-slate-900 border border-[var(--line)] shadow-xs shrink-0 relative group flex items-center justify-center">
-                      {localPreview || formImage ? (
-                        <img
-                          src={localPreview || formImage}
-                          alt="Image preview"
-                          className="w-full h-full object-cover"
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          onError={(e) => {
-                            ;(e.target as HTMLImageElement).style.opacity = "0.2"
-                          }}
-                        />
-                      ) : (
-                        <div className="text-center p-3 text-slate-400">
-                          <Icon name="upload" size={24} className="mx-auto mb-1 opacity-60" />
-                          <span className="text-[10px] font-semibold">No Image</span>
-                        </div>
-                      )}
-                      {(localPreview || formImage) && (
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-bold cursor-pointer"
-                        >
-                          Change Photo
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="min-w-0 flex-1 text-xs">
-                      <span className="font-bold text-[var(--navy)] block">
-                        4:3 Public Card Preview
+                  {/* ── Interactive Multi-Photo Gallery Grid ──────────────────────── */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-[var(--navy)] uppercase tracking-wider">
+                        Attached Photos ({formImages.length})
                       </span>
-                      <p className="text-[11px] text-[var(--muted)] mt-0.5 truncate">
-                        {localPreview ? (
-                          <span className="text-amber-700 font-semibold animate-pulse">
-                            Uploading photo to server...
-                          </span>
-                        ) : formImage ? (
-                          <>
-                            Path: <code className="text-slate-600">{formImage}</code>
-                          </>
-                        ) : (
-                          <span className="text-slate-400">No image chosen yet</span>
-                        )}
-                      </p>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="btn btn-secondary !py-1 !px-2.5 !text-[11px] mt-2 inline-flex items-center gap-1 cursor-pointer"
+                        className="text-[11px] font-bold text-[var(--gold)] hover:underline flex items-center gap-1 cursor-pointer"
                       >
-                        <Icon name="upload" size={11} />
-                        <span>{formImage || localPreview ? "Select Different Photo" : "Upload Photo"}</span>
+                        <Icon name="plus" size={12} />
+                        <span>Add More Photos</span>
                       </button>
                     </div>
+
+                    {formImages.length === 0 ? (
+                      <div className="text-center p-6 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400 text-xs">
+                        No photos added yet. Upload or add at least one photo above.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {formImages.map((imgUrl, idx) => {
+                          const isFeatured = imgUrl === formFeaturedImage
+                          return (
+                            <div
+                              key={idx}
+                              className={`group relative bg-white rounded-xl overflow-hidden border transition-all flex flex-col justify-between ${
+                                isFeatured
+                                  ? "border-[var(--gold)] ring-2 ring-[var(--gold)]/30 shadow-md"
+                                  : "border-[var(--line)] hover:border-slate-300"
+                              }`}
+                            >
+                              {/* Thumbnail preview */}
+                              <div className="aspect-[4/3] bg-slate-900 relative overflow-hidden">
+                                <img
+                                  src={imgUrl}
+                                  alt={`Product photo ${idx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                  onError={(e) => {
+                                    ;(e.target as HTMLImageElement).style.opacity = "0.3"
+                                  }}
+                                />
+
+                                {/* Featured Badge */}
+                                {isFeatured ? (
+                                  <span className="absolute top-1.5 left-1.5 z-10 bg-[var(--gold)] text-white text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shadow-sm flex items-center gap-0.5">
+                                    ⭐ Featured Cover
+                                  </span>
+                                ) : (
+                                  <span className="absolute top-1.5 left-1.5 z-10 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs">
+                                    #{idx + 1}
+                                  </span>
+                                )}
+
+                                {/* Delete / Remove Button */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleRemoveImage(imgUrl)
+                                  }}
+                                  className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-black/70 hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer text-xs"
+                                  title="Remove photo"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+
+                              {/* Bottom Tile Controls */}
+                              <div className="p-2 bg-white flex items-center justify-between gap-1 border-t border-[var(--line)]">
+                                {isFeatured ? (
+                                  <span className="text-[10px] font-bold text-amber-700 flex items-center gap-1">
+                                    ✓ Active Cover
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSetFeaturedImage(imgUrl)}
+                                    className="text-[10px] font-bold text-[var(--gold)] hover:text-amber-800 transition-colors cursor-pointer"
+                                    title="Make this photo the primary cover image"
+                                  >
+                                    ★ Set as Featured
+                                  </button>
+                                )}
+
+                                {/* Order arrange buttons */}
+                                <div className="flex items-center gap-0.5 ml-auto">
+                                  {idx > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMoveImage(idx, "left")}
+                                      className="w-5 h-5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] cursor-pointer"
+                                      title="Move earlier"
+                                    >
+                                      ←
+                                    </button>
+                                  )}
+                                  {idx < formImages.length - 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleMoveImage(idx, "right")}
+                                      className="w-5 h-5 rounded hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center text-[10px] cursor-pointer"
+                                      title="Move later"
+                                    >
+                                      →
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
+
+                  {/* ── Featured Cover Spotlight ─────────────────────────────────── */}
+                  {formFeaturedImage && (
+                    <div className="bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/80 flex items-center gap-3.5">
+                      <div className="w-20 h-16 rounded-lg overflow-hidden bg-slate-900 border border-amber-300 shadow-xs shrink-0">
+                        <img
+                          src={formFeaturedImage}
+                          alt="Featured Cover Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1 text-xs">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[11px] font-black text-amber-900">
+                            ⭐ Primary Catalog Cover Photo
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 m-0 leading-tight">
+                          This is the cover photo displayed on public showroom cards, search results, and quote inquiries.
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 truncate font-mono">
+                          {formFeaturedImage}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {activeSubTab === "store" ? (
@@ -1575,7 +1750,7 @@ export function ShopAndRentalsView({
                         <div>
                           <div className="flex items-start gap-3 mb-3">
                             <div
-                              className="w-16 h-16 rounded-lg overflow-hidden bg-slate-900 border border-[var(--line)] shrink-0"
+                              className="w-16 h-16 rounded-lg overflow-hidden bg-slate-900 border border-[var(--line)] shrink-0 relative"
                               style={{ width: "64px", height: "64px", minWidth: "64px", maxWidth: "64px" }}
                             >
                               <img
@@ -1584,6 +1759,11 @@ export function ShopAndRentalsView({
                                 className="w-full h-full object-cover"
                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
                               />
+                              {item.images && item.images.length > 1 && (
+                                <span className="absolute bottom-0 right-0 bg-black/80 text-white text-[8px] font-black px-1 rounded-tl">
+                                  {item.images.length}📷
+                                </span>
+                              )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -1623,6 +1803,11 @@ export function ShopAndRentalsView({
                               )}
 
                               <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                                {item.images && item.images.length > 1 && (
+                                  <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200">
+                                    📷 {item.images.length} photos
+                                  </span>
+                                )}
                                 {itemFleetType && (
                                   <span className="text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200 truncate">
                                     {itemFleetType.name}

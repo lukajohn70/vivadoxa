@@ -481,11 +481,17 @@ function getCatalogStoreProducts(array $defaults): array {
     $saved = getSystemSetting('store_catalog_items', null);
     if (!is_array($saved) || empty($saved)) {
         saveSystemSetting('store_catalog_items', $defaults);
-        return $defaults;
+        $saved = $defaults;
     }
     foreach ($saved as &$item) {
         if (isset($item['image'])) {
             $item['image'] = sanitizeCatalogImage($item['image']);
+        }
+        if (isset($item['images']) && is_array($item['images'])) {
+            $cleaned = array_values(array_filter(array_map('sanitizeCatalogImage', $item['images'])));
+            $item['images'] = !empty($cleaned) ? $cleaned : (!empty($item['image']) ? [$item['image']] : []);
+        } else {
+            $item['images'] = !empty($item['image']) ? [$item['image']] : [];
         }
     }
     return $saved;
@@ -496,11 +502,17 @@ function getCatalogRentalItems(array $defaults): array {
     $saved = getSystemSetting('rental_catalog_items', null);
     if (!is_array($saved) || empty($saved)) {
         saveSystemSetting('rental_catalog_items', $defaults);
-        return $defaults;
+        $saved = $defaults;
     }
     foreach ($saved as &$item) {
         if (isset($item['image'])) {
             $item['image'] = sanitizeCatalogImage($item['image']);
+        }
+        if (isset($item['images']) && is_array($item['images'])) {
+            $cleaned = array_values(array_filter(array_map('sanitizeCatalogImage', $item['images'])));
+            $item['images'] = !empty($cleaned) ? $cleaned : (!empty($item['image']) ? [$item['image']] : []);
+        } else {
+            $item['images'] = !empty($item['image']) ? [$item['image']] : [];
         }
         if (!isset($item['isActive'])) {
             $item['isActive'] = isset($item['is_active']) ? (bool)$item['is_active'] : true;
@@ -606,12 +618,42 @@ if ($method === 'GET') {
         $products = getCatalogStoreProducts($defaultStoreProducts);
         $id = !empty($item['id']) ? trim($item['id']) : 'item-' . time() . '-' . rand(100, 999);
         $item['id'] = $id;
-        if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0) {
-            $savedPath = saveBase64MediaImage($item['image'], 'store', 'product');
-            if ($savedPath) {
-                $item['image'] = $savedPath;
+
+        // Process images array if provided
+        $storeImages = [];
+        if (!empty($item['images']) && is_array($item['images'])) {
+            foreach ($item['images'] as $img) {
+                if (is_string($img) && trim($img) !== '') {
+                    $imgStr = trim($img);
+                    if (strpos($imgStr, 'data:image/') === 0) {
+                        $saved = saveBase64MediaImage($imgStr, 'store', 'product');
+                        if ($saved) $imgStr = $saved;
+                    }
+                    $storeImages[] = sanitizeCatalogImage($imgStr);
+                }
             }
         }
+
+        // Process featured image
+        if (!empty($item['image'])) {
+            $featured = trim($item['image']);
+            if (strpos($featured, 'data:image/') === 0) {
+                $savedPath = saveBase64MediaImage($featured, 'store', 'product');
+                if ($savedPath) $featured = $savedPath;
+            }
+            $item['image'] = sanitizeCatalogImage($featured);
+            if (!in_array($item['image'], $storeImages, true)) {
+                array_unshift($storeImages, $item['image']);
+            }
+        } elseif (!empty($storeImages)) {
+            $item['image'] = $storeImages[0];
+        }
+
+        $item['images'] = array_values(array_unique($storeImages));
+        if (empty($item['images']) && !empty($item['image'])) {
+            $item['images'] = [$item['image']];
+        }
+
         $item['inStock'] = isset($item['inStock']) ? (bool)$item['inStock'] : true;
         if (empty($item['specs']) || !is_array($item['specs'])) {
             $item['specs'] = is_string($item['specs'] ?? '') ? array_filter(array_map('trim', explode("\n", $item['specs']))) : [];
@@ -681,12 +723,44 @@ if ($method === 'GET') {
         $rentals = getCatalogRentalItems($defaultRentalItems);
         $id = !empty($item['id']) ? trim($item['id']) : 'rental-' . time() . '-' . rand(100, 999);
         $item['id'] = $id;
-        if (!empty($item['image']) && strpos($item['image'], 'data:image/') === 0) {
-            $savedPath = saveBase64MediaImage($item['image'], 'rentals', 'rental');
-            if ($savedPath) {
-                $item['image'] = $savedPath;
+
+        // Process images array if provided
+        $rentalImages = [];
+        if (!empty($item['images']) && is_array($item['images'])) {
+            foreach ($item['images'] as $img) {
+                if (is_string($img) && trim($img) !== '') {
+                    $imgStr = trim($img);
+                    if (strpos($imgStr, 'data:image/') === 0) {
+                        $saved = saveBase64MediaImage($imgStr, 'rentals', 'rental');
+                        if ($saved) $imgStr = $saved;
+                    }
+                    $rentalImages[] = sanitizeCatalogImage($imgStr);
+                }
             }
         }
+
+        // Process featured image
+        if (!empty($item['image'])) {
+            $featured = trim($item['image']);
+            if (strpos($featured, 'data:image/') === 0) {
+                $savedPath = saveBase64MediaImage($featured, 'rentals', 'rental');
+                if ($savedPath) {
+                    $featured = $savedPath;
+                }
+            }
+            $item['image'] = sanitizeCatalogImage($featured);
+            if (!in_array($item['image'], $rentalImages, true)) {
+                array_unshift($rentalImages, $item['image']);
+            }
+        } elseif (!empty($rentalImages)) {
+            $item['image'] = $rentalImages[0];
+        }
+
+        $item['images'] = array_values(array_unique($rentalImages));
+        if (empty($item['images']) && !empty($item['image'])) {
+            $item['images'] = [$item['image']];
+        }
+
         $item['inStock'] = isset($item['inStock']) ? (bool)$item['inStock'] : true;
         $item['isActive'] = isset($item['isActive']) ? (bool)$item['isActive'] : (isset($item['is_active']) ? (bool)$item['is_active'] : true);
         $item['is_active'] = $item['isActive'];
