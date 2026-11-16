@@ -46,10 +46,13 @@ export function Performances({ go }: { go: (p: Page) => void }) {
               program: p.program,
               category: p.category,
               youtubeId: p.youtube_id,
+              videoUrl: p.video_url,
+              thumbnail: p.thumbnail_url,
+              aspectRatio: p.aspect_ratio || (p.is_short ? "9:16" : "16:9"),
               duration: p.duration,
               date: p.date_label,
               description: p.description,
-              isShort: Boolean(p.is_short ?? p.isShort),
+              isShort: Boolean(p.is_short ?? p.isShort ?? p.aspect_ratio === "9:16"),
             })),
           )
         }
@@ -69,9 +72,9 @@ export function Performances({ go }: { go: (p: Page) => void }) {
 
   const filtered =
     filter === "All"
-      ? items.filter((p) => p.youtubeId !== featured?.youtubeId)
+      ? items.filter((p) => p.id !== featured?.id)
       : filter === "Shorts"
-        ? items.filter((p) => p.isShort)
+        ? items.filter((p) => p.isShort || p.aspectRatio === "9:16" || p.aspectRatio === "9/16")
         : items.filter((p) => p.category === filter)
 
   const visibleItems =
@@ -109,71 +112,125 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                 className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 lg:gap-10 items-center mt-6 p-6 sm:p-9 rounded-2xl border"
                 style={{ background: "var(--cream)", borderColor: "var(--line)" }}
               >
-                <div
-                  style={{
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    background: featured.isShort ? "#080c14" : "#000",
-                    aspectRatio: featured.isShort ? undefined : "16/9",
-                    border: "1px solid var(--line)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: featured.isShort ? 24 : 0,
-                  }}
-                >
-                  {featured.videoUrl ? (
-                    <video
-                      src={featured.videoUrl}
-                      poster={featured.thumbnail}
-                      controls
-                      playsInline
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        background: "#000",
-                      }}
-                    />
-                  ) : featured.isShort ? (
+                {(() => {
+                  const isVert =
+                    featured.aspectRatio === "9:16" ||
+                    featured.aspectRatio === "9/16" ||
+                    featured.isShort
+                  const isSq = featured.aspectRatio === "1:1"
+                  const is43 = featured.aspectRatio === "4:3"
+                  const containerAspect = isVert
+                    ? undefined
+                    : isSq
+                      ? "1/1"
+                      : is43
+                        ? "4/3"
+                        : "16/9"
+
+                  return (
                     <div
                       style={{
-                        width: "100%",
-                        maxWidth: 260,
-                        aspectRatio: "9/16",
-                        borderRadius: 14,
+                        borderRadius: 12,
                         overflow: "hidden",
-                        boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        position: "relative",
-                        background: "#000",
+                        background: isVert ? "#080c14" : "#000",
+                        aspectRatio: containerAspect,
+                        border: "1px solid var(--line)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: isVert ? "24px 16px" : 0,
+                        maxHeight: isVert ? 520 : isSq ? 480 : undefined,
                       }}
                     >
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
-                        title={featured.title}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          border: 0,
-                        }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
+                      {featured.videoUrl ? (
+                        isVert ? (
+                          <div
+                            style={{
+                              width: "100%",
+                              maxWidth: 280,
+                              aspectRatio: "9/16",
+                              borderRadius: 14,
+                              overflow: "hidden",
+                              boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              position: "relative",
+                              background: "#000",
+                            }}
+                          >
+                            <video
+                              src={featured.videoUrl}
+                              poster={featured.thumbnail}
+                              controls
+                              playsInline
+                              controlsList="nodownload noplaybackrate"
+                              disablePictureInPicture
+                              onContextMenu={(e) => e.preventDefault()}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                                background: "#000",
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <video
+                            src={featured.videoUrl}
+                            poster={featured.thumbnail}
+                            controls
+                            playsInline
+                            controlsList="nodownload noplaybackrate"
+                            disablePictureInPicture
+                            onContextMenu={(e) => e.preventDefault()}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                              background: "#000",
+                            }}
+                          />
+                        )
+                      ) : isVert ? (
+                        <div
+                          style={{
+                            width: "100%",
+                            maxWidth: 260,
+                            aspectRatio: "9/16",
+                            borderRadius: 14,
+                            overflow: "hidden",
+                            boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            position: "relative",
+                            background: "#000",
+                          }}
+                        >
+                          <iframe
+                            src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
+                            title={featured.title}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              border: 0,
+                            }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : (
+                        <iframe
+                          src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
+                          title={featured.title}
+                          style={{ width: "100%", height: "100%", border: 0 }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      )}
                     </div>
-                  ) : (
-                    <iframe
-                      src={`https://www.youtube-nocookie.com/embed/${featured.youtubeId}?rel=0&modestbranding=1`}
-                      title={featured.title}
-                      style={{ width: "100%", height: "100%", border: 0 }}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  )}
-                </div>
+                  )
+                })()}
 
                 <div>
                   <Badge tone="gold">{featured.category}</Badge>
@@ -307,113 +364,149 @@ export function Performances({ go }: { go: (p: Page) => void }) {
                     height: "100%",
                   }}
                 >
-                  {item.isShort ? (
-                    <div
-                      style={{
-                        background: "#080c14",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        padding: "24px 16px",
-                        borderBottom: "1px solid var(--line)",
-                      }}
-                    >
-                      {/* Dedicated vertical phone/short player */}
-                      <div
-                        style={{
-                          width: "100%",
-                          maxWidth: "240px",
-                          aspectRatio: "9/16",
-                          borderRadius: 14,
-                          overflow: "hidden",
-                          boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
-                          border: "1px solid rgba(255,255,255,0.12)",
-                          position: "relative",
-                          background: "#000",
-                        }}
-                      >
-                        <iframe
-                          src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
-                          title={item.title}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            border: 0,
-                          }}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                  {(() => {
+                    const isVertical =
+                      item.aspectRatio === "9:16" ||
+                      item.aspectRatio === "9/16" ||
+                      item.isShort
+                    const isSquare = item.aspectRatio === "1:1"
+                    const is4by3 = item.aspectRatio === "4:3"
+
+                    if (isVertical) {
+                      return (
                         <div
                           style={{
-                            position: "absolute",
-                            top: 10,
-                            left: 10,
-                            pointerEvents: "none",
-                            zIndex: 2,
+                            background: "#080c14",
                             display: "flex",
                             alignItems: "center",
-                            gap: 5,
-                            padding: "3px 8px",
-                            borderRadius: 9999,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            letterSpacing: 0.5,
-                            textTransform: "uppercase",
-                            color: "white",
-                            background: "rgba(0,0,0,0.7)",
-                            backdropFilter: "blur(6px)",
-                            border: "1px solid rgba(255,255,255,0.25)",
+                            justifyContent: "center",
+                            padding: "24px 16px",
+                            borderBottom: "1px solid var(--line)",
                           }}
                         >
-                          <span
+                          {/* Dedicated vertical phone/short player */}
+                          <div
                             style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: "50%",
-                              background: "#ef4444",
+                              width: "100%",
+                              maxWidth: "240px",
+                              aspectRatio: "9/16",
+                              borderRadius: 14,
+                              overflow: "hidden",
+                              boxShadow: "0 12px 30px rgba(0,0,0,0.6)",
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              position: "relative",
+                              background: "#000",
+                            }}
+                          >
+                            {item.videoUrl ? (
+                              <video
+                                src={item.videoUrl}
+                                poster={item.thumbnail}
+                                controls
+                                playsInline
+                                controlsList="nodownload noplaybackrate"
+                                disablePictureInPicture
+                                onContextMenu={(e) => e.preventDefault()}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain",
+                                  background: "#000",
+                                }}
+                              />
+                            ) : (
+                              <iframe
+                                src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
+                                title={item.title}
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "100%",
+                                  border: 0,
+                                }}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            )}
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: 10,
+                                left: 10,
+                                pointerEvents: "none",
+                                zIndex: 2,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                                padding: "3px 8px",
+                                borderRadius: 9999,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                letterSpacing: 0.5,
+                                textTransform: "uppercase",
+                                color: "white",
+                                background: "rgba(0,0,0,0.7)",
+                                backdropFilter: "blur(6px)",
+                                border: "1px solid rgba(255,255,255,0.25)",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: "#ef4444",
+                                }}
+                              />
+                              Short
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <div
+                        style={{
+                          aspectRatio: isSquare ? "1/1" : is4by3 ? "4/3" : "16/9",
+                          background: "#000",
+                          borderBottom: "1px solid var(--line)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          maxHeight: isSquare ? 380 : undefined,
+                        }}
+                      >
+                        {item.videoUrl ? (
+                          <video
+                            src={item.videoUrl}
+                            poster={item.thumbnail}
+                            controls
+                            playsInline
+                            controlsList="nodownload noplaybackrate"
+                            disablePictureInPicture
+                            onContextMenu={(e) => e.preventDefault()}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                              background: "#000",
                             }}
                           />
-                          Short
-                        </div>
+                        ) : (
+                          <iframe
+                            src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
+                            title={item.title}
+                            style={{ width: "100%", height: "100%", border: 0 }}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        )}
                       </div>
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        aspectRatio: "16/9",
-                        background: "#000",
-                        borderBottom: "1px solid var(--line)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {item.videoUrl ? (
-                        <video
-                          src={item.videoUrl}
-                          poster={item.thumbnail}
-                          controls
-                          playsInline
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      ) : (
-                        <iframe
-                          src={`https://www.youtube-nocookie.com/embed/${item.youtubeId}?rel=0&modestbranding=1`}
-                          title={item.title}
-                          style={{ width: "100%", height: "100%", border: 0 }}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      )}
-                    </div>
-                  )}
+                    )
+                  })()}
 
                   <div
                     style={{

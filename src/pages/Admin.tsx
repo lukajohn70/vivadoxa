@@ -25,6 +25,8 @@ import {
   savePerformance,
   deletePerformance,
   deletePerformancesBatch,
+  uploadPerformanceVideo,
+  uploadPerformanceThumbnail,
   enrollStudent,
   updateStudent,
   deleteStudent,
@@ -2375,10 +2377,75 @@ function AdminManager({ title }: { title: string }) {
     program: "Piano & Keyboard Mastery",
     category: "Recital",
     youtube_id: "",
+    video_url: "",
+    thumbnail_url: "",
+    aspect_ratio: "16:9",
     duration: "4:15",
     date_label: "Term Recital",
     description: "",
   })
+  const [performanceVideoSource, setPerformanceVideoSource] = useState<
+    "file" | "youtube" | "url"
+  >("file")
+  const [performanceVideoFile, setPerformanceVideoFile] = useState<File | null>(
+    null,
+  )
+  const [performanceThumbnailFile, setPerformanceThumbnailFile] =
+    useState<File | null>(null)
+  const [performanceUploadProgress, setPerformanceUploadProgress] = useState<
+    number | null
+  >(null)
+  const [performanceUploadError, setPerformanceUploadError] =
+    useState<string>("")
+  const [isUploadingPerformanceVideo, setIsUploadingPerformanceVideo] =
+    useState<boolean>(false)
+  const [performanceVideoPreview, setPerformanceVideoPreview] =
+    useState<string>("")
+
+  function handlePerformanceFileSelect(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPerformanceVideoFile(file)
+    setPerformanceUploadError("")
+
+    // Generate local preview URL
+    const previewUrl = URL.createObjectURL(file)
+    setPerformanceVideoPreview(previewUrl)
+
+    // Auto-detect video duration and aspect ratio
+    const video = document.createElement("video")
+    video.preload = "metadata"
+    video.src = previewUrl
+    video.onloadedmetadata = () => {
+      const w = video.videoWidth
+      const h = video.videoHeight
+      if (w && h) {
+        const ratio = w / h
+        let detectedRatio = "16:9"
+        if (ratio < 0.75) {
+          detectedRatio = "9:16"
+        } else if (ratio >= 0.75 && ratio <= 1.15) {
+          detectedRatio = "1:1"
+        } else if (ratio > 1.15 && ratio < 1.45) {
+          detectedRatio = "4:3"
+        } else {
+          detectedRatio = "16:9"
+        }
+        setNewPerformance((prev) => ({
+          ...prev,
+          aspect_ratio: detectedRatio,
+          duration:
+            video.duration && !isNaN(video.duration)
+              ? `${Math.floor(video.duration / 60)}:${String(
+                  Math.floor(video.duration % 60),
+                ).padStart(2, "0")}`
+              : prev.duration,
+        }))
+      }
+    }
+  }
   const [selectedRecitalIds, setSelectedRecitalIds] = useState<number[]>([])
 
   // Repair workflow state
@@ -2803,12 +2870,83 @@ function AdminManager({ title }: { title: string }) {
 
   async function handleAddPerformance(e: React.FormEvent) {
     e.preventDefault()
-    if (!newPerformance.title || !newPerformance.youtube_id) return
-    const cleanedYid = extractYouTubeId(newPerformance.youtube_id)
+    setPerformanceUploadError("")
+
+    if (!newPerformance.title.trim()) {
+      setActionNotice("Please enter a title for the performance recital.")
+      return
+    }
+
+    let finalVideoUrl = (newPerformance.video_url || "").trim()
+    let finalThumbnailUrl = (newPerformance.thumbnail_url || "").trim()
+    let cleanedYid = ""
+
+    if (performanceVideoSource === "youtube") {
+      if (!newPerformance.youtube_id.trim()) {
+        setActionNotice("Please enter a YouTube video URL or ID.")
+        return
+      }
+      cleanedYid = extractYouTubeId(newPerformance.youtube_id)
+      if (!cleanedYid) {
+        setActionNotice("Could not parse a valid YouTube ID from the provided link.")
+        return
+      }
+    } else if (performanceVideoSource === "file") {
+      if (!finalVideoUrl && !performanceVideoFile) {
+        setActionNotice("Please select a video file (.mp4, .webm, .mov) to upload.")
+        return
+      }
+
+      // If file selected but not yet uploaded to server:
+      if (performanceVideoFile && !finalVideoUrl) {
+        setIsUploadingPerformanceVideo(true)
+        setPerformanceUploadProgress(0)
+        try {
+          const upRes = await uploadPerformanceVideo(performanceVideoFile, (pct) => {
+            setPerformanceUploadProgress(pct)
+          })
+          if (!upRes.success || !upRes.video_url) {
+            setIsUploadingPerformanceVideo(false)
+            setPerformanceUploadError(upRes.error || "Failed to upload video.")
+            return
+          }
+          finalVideoUrl = upRes.video_url
+        } catch (err: any) {
+          setIsUploadingPerformanceVideo(false)
+          setPerformanceUploadError(err.message || "Failed to upload video.")
+          return
+        } finally {
+          setIsUploadingPerformanceVideo(false)
+        }
+      }
+
+      // Upload custom poster thumbnail if provided
+      if (performanceThumbnailFile && !finalThumbnailUrl) {
+        try {
+          const thumbRes = await uploadPerformanceThumbnail(performanceThumbnailFile)
+          if (thumbRes.success && (thumbRes.image_url || thumbRes.url)) {
+            finalThumbnailUrl = thumbRes.image_url || thumbRes.url || ""
+          }
+        } catch {
+          // Poster upload failure is non-blocking
+        }
+      }
+    } else if (performanceVideoSource === "url") {
+      if (!finalVideoUrl) {
+        setActionNotice("Please enter a direct video URL.")
+        return
+      }
+    }
+
     const res = await savePerformance({
       ...newPerformance,
       youtube_id: cleanedYid,
+      video_url: finalVideoUrl,
+      thumbnail_url: finalThumbnailUrl,
+      aspect_ratio: newPerformance.aspect_ratio || "16:9",
+      is_short: newPerformance.aspect_ratio === "9:16" ? 1 : 0,
     })
+
     if (res && res.success) {
       setShowAddModal(false)
       setNewPerformance({
@@ -2817,12 +2955,25 @@ function AdminManager({ title }: { title: string }) {
         program: "Piano & Keyboard Mastery",
         category: "Recital",
         youtube_id: "",
+        video_url: "",
+        thumbnail_url: "",
+        aspect_ratio: "16:9",
         duration: "4:15",
         date_label: "Term Recital",
         description: "",
       })
-      setActionNotice("Performance recital video published.")
+      setPerformanceVideoFile(null)
+      setPerformanceThumbnailFile(null)
+      setPerformanceUploadProgress(null)
+      setPerformanceUploadError("")
+      if (performanceVideoPreview && performanceVideoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(performanceVideoPreview)
+      }
+      setPerformanceVideoPreview("")
+      setActionNotice("Performance recital video published successfully.")
       loadData()
+    } else {
+      setActionNotice(res?.error || "Failed to save recital performance.")
     }
   }
 
@@ -3107,6 +3258,24 @@ function AdminManager({ title }: { title: string }) {
             <Icon name="youtube" size={14} />
             Watch on YouTube
           </a>
+        )}
+        {title === "Performances & Recitals" && selectedRecord.video_url && (
+          <span
+            style={{
+              padding: "8px 14px",
+              borderRadius: 6,
+              background: "#f1f5f9",
+              color: "var(--navy)",
+              fontSize: 12,
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              border: "1px solid var(--line)",
+            }}
+          >
+            🎥 Direct Video ({selectedRecord.aspect_ratio || "16:9"})
+          </span>
         )}
       </>
     )
@@ -4248,7 +4417,25 @@ function AdminManager({ title }: { title: string }) {
                             </small>
                           </td>
                           <td>
-                            <code>{row.youtube_id}</code>
+                            {row.video_url ? (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  color: "#0369a1",
+                                  background: "#e0f2fe",
+                                  padding: "3px 8px",
+                                  borderRadius: 4,
+                                  display: "inline-block",
+                                }}
+                              >
+                                🎥 Video ({row.aspect_ratio || "16:9"})
+                              </span>
+                            ) : row.youtube_id ? (
+                              <code>{row.youtube_id}</code>
+                            ) : (
+                              <span style={{ color: "var(--muted)" }}>—</span>
+                            )}
                           </td>
                           <td>{row.date_label || "Annual Recital"}</td>
                           <td>
@@ -5372,7 +5559,22 @@ function AdminManager({ title }: { title: string }) {
                             <span>
                               {row.program} ({row.category})
                             </span>
-                            <code>{row.youtube_id}</code>
+                            {row.video_url ? (
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  color: "#0369a1",
+                                  background: "#e0f2fe",
+                                  padding: "2px 6px",
+                                  borderRadius: 4,
+                                }}
+                              >
+                                🎥 {row.aspect_ratio || "16:9"}
+                              </span>
+                            ) : (
+                              <code>{row.youtube_id}</code>
+                            )}
                           </div>
                           <div
                             style={{ display: "flex", gap: 8, marginTop: 4 }}
@@ -8467,30 +8669,99 @@ function AdminManager({ title }: { title: string }) {
                   <div className="doc-grid" style={{ margin: "0 0 16px" }}>
                     <div>
                       <small>Featured Performers</small>
-                      <strong>{selectedRecord.performers}</strong>
+                      <strong>
+                        {selectedRecord.performer ||
+                          selectedRecord.performers ||
+                          "—"}
+                      </strong>
                     </div>
                     <div>
-                      <small>Genre / Category</small>
-                      <strong>{selectedRecord.category}</strong>
+                      <small>Course / Category</small>
+                      <strong>
+                        {selectedRecord.program ||
+                          selectedRecord.category ||
+                          "—"}
+                      </strong>
                     </div>
                     <div>
-                      <small>Event Showcase Type</small>
-                      <strong>{selectedRecord.event_type}</strong>
+                      <small>Aspect Ratio</small>
+                      <strong>{selectedRecord.aspect_ratio || "16:9"}</strong>
                     </div>
                     <div>
-                      <small>YouTube Video ID</small>
+                      <small>Video Source</small>
                       <strong
                         style={{
                           fontFamily: "monospace",
                           color: "var(--navy)",
                         }}
                       >
-                        {selectedRecord.youtube_id || "—"}
+                        {selectedRecord.video_url
+                          ? "Direct Video Upload"
+                          : selectedRecord.youtube_id
+                            ? `YouTube (${selectedRecord.youtube_id})`
+                            : "—"}
                       </strong>
                     </div>
                   </div>
 
-                  {selectedRecord.youtube_id && (
+                  {/* Direct View-Only Video Player */}
+                  {selectedRecord.video_url && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div
+                        style={{
+                          background: "#080c14",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                          border: "1px solid var(--line)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          maxHeight: 280,
+                        }}
+                      >
+                        <video
+                          src={selectedRecord.video_url}
+                          poster={selectedRecord.thumbnail_url}
+                          controls
+                          playsInline
+                          controlsList="nodownload noplaybackrate"
+                          disablePictureInPicture
+                          onContextMenu={(e) => e.preventDefault()}
+                          style={{
+                            width: "100%",
+                            maxHeight: 280,
+                            objectFit: "contain",
+                            aspectRatio:
+                              selectedRecord.aspect_ratio === "9:16"
+                                ? "9/16"
+                                : selectedRecord.aspect_ratio === "1:1"
+                                  ? "1/1"
+                                  : selectedRecord.aspect_ratio === "4:3"
+                                    ? "4/3"
+                                    : "16/9",
+                            background: "#000",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: 6,
+                          fontSize: 11,
+                          color: "var(--muted)",
+                        }}
+                      >
+                        <span>🔒 View-Only: Downloads disabled</span>
+                        <span style={{ fontFamily: "monospace" }}>
+                          Aspect Ratio: {selectedRecord.aspect_ratio || "16:9"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {!selectedRecord.video_url && selectedRecord.youtube_id && (
                     <div style={{ marginBottom: 16 }}>
                       <a
                         href={`https://www.youtube.com/watch?v=${selectedRecord.youtube_id}`}
@@ -8915,6 +9186,505 @@ function AdminManager({ title }: { title: string }) {
             {title === "Performances & Recitals" && (
               <form onSubmit={handleAddPerformance}>
                 <div style={{ padding: "28px 32px" }}>
+                  {/* Video Source Selector */}
+                  <div style={{ marginBottom: 20 }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "var(--navy)",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Video Source & Platform
+                    </label>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                        gap: 10,
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setPerformanceVideoSource("file")}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 8,
+                          border: `2px solid ${
+                            performanceVideoSource === "file"
+                              ? "var(--gold)"
+                              : "var(--line)"
+                          }`,
+                          background:
+                            performanceVideoSource === "file"
+                              ? "#fffbeb"
+                              : "#faf8f5",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color:
+                            performanceVideoSource === "file"
+                              ? "var(--gold)"
+                              : "var(--navy)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                        }}
+                      >
+                        🎥 Direct Video Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPerformanceVideoSource("youtube")}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 8,
+                          border: `2px solid ${
+                            performanceVideoSource === "youtube"
+                              ? "#ef4444"
+                              : "var(--line)"
+                          }`,
+                          background:
+                            performanceVideoSource === "youtube"
+                              ? "#fef2f2"
+                              : "#faf8f5",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color:
+                            performanceVideoSource === "youtube"
+                              ? "#dc2626"
+                              : "var(--navy)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                        }}
+                      >
+                        🔴 YouTube Link / ID
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPerformanceVideoSource("url")}
+                        style={{
+                          padding: "10px 14px",
+                          borderRadius: 8,
+                          border: `2px solid ${
+                            performanceVideoSource === "url"
+                              ? "var(--navy)"
+                              : "var(--line)"
+                          }`,
+                          background:
+                            performanceVideoSource === "url"
+                              ? "#f1f5f9"
+                              : "#faf8f5",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: "var(--navy)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                        }}
+                      >
+                        🔗 External Video URL
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Direct Video File Upload UI */}
+                  {performanceVideoSource === "file" && (
+                    <div
+                      style={{
+                        background: "#faf9f6",
+                        border: "1.5px dashed var(--line)",
+                        borderRadius: 12,
+                        padding: "20px 24px",
+                        marginBottom: 20,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 10,
+                          }}
+                        >
+                          <div>
+                            <strong
+                              style={{
+                                display: "block",
+                                fontSize: 14,
+                                color: "var(--navy)",
+                              }}
+                            >
+                              Choose Video File
+                            </strong>
+                            <small style={{ color: "var(--muted)" }}>
+                              Supports MP4, WebM, QuickTime MOV, M4V (View-Only Protected)
+                            </small>
+                          </div>
+                          <label
+                            className="btn btn-secondary"
+                            style={{
+                              cursor: "pointer",
+                              padding: "7px 16px",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              background: "white",
+                            }}
+                          >
+                            <span>Browse Video...</span>
+                            <input
+                              type="file"
+                              accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/*"
+                              onChange={handlePerformanceFileSelect}
+                              style={{ display: "none" }}
+                            />
+                          </label>
+                        </div>
+
+                        {performanceVideoFile && (
+                          <div
+                            style={{
+                              background: "white",
+                              border: "1px solid var(--line)",
+                              borderRadius: 8,
+                              padding: "10px 14px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              fontSize: 13,
+                            }}
+                          >
+                            <span style={{ fontWeight: 600, color: "var(--navy)" }}>
+                              📹 {performanceVideoFile.name} (
+                              {(performanceVideoFile.size / (1024 * 1024)).toFixed(1)} MB)
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "#166534",
+                                background: "#dcfce7",
+                                padding: "3px 8px",
+                                borderRadius: 4,
+                                fontWeight: 700,
+                              }}
+                            >
+                              Ready for upload
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Upload Progress Bar */}
+                        {isUploadingPerformanceVideo && (
+                          <div style={{ marginTop: 6 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                fontSize: 12,
+                                marginBottom: 4,
+                                fontWeight: 600,
+                                color: "var(--gold)",
+                              }}
+                            >
+                              <span>Uploading video to Vivadoxa cloud...</span>
+                              <span>{performanceUploadProgress ?? 0}%</span>
+                            </div>
+                            <div
+                              style={{
+                                height: 8,
+                                background: "#e2e8f0",
+                                borderRadius: 4,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  height: "100%",
+                                  width: `${performanceUploadProgress ?? 0}%`,
+                                  background: "var(--gold)",
+                                  transition: "width 0.2s ease",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {performanceUploadError && (
+                          <div
+                            style={{
+                              padding: "8px 12px",
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              fontSize: 12,
+                              borderRadius: 6,
+                              border: "1px solid #fecaca",
+                            }}
+                          >
+                            {performanceUploadError}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* YouTube Link / ID Input */}
+                  {performanceVideoSource === "youtube" && (
+                    <div style={{ marginBottom: 20 }}>
+                      <Field
+                        id="add-pf-yid"
+                        label="YouTube URL or Video ID"
+                        value={newPerformance.youtube_id}
+                        onChange={(v) =>
+                          setNewPerformance({ ...newPerformance, youtube_id: v })
+                        }
+                        placeholder="https://youtu.be/... or 11-char ID (e.g. -IcdMT9uCLU)"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* External Video URL Input */}
+                  {performanceVideoSource === "url" && (
+                    <div style={{ marginBottom: 20 }}>
+                      <Field
+                        id="add-pf-url"
+                        label="Direct Video URL (MP4 / WebM)"
+                        value={newPerformance.video_url}
+                        onChange={(v) => {
+                          setNewPerformance({ ...newPerformance, video_url: v })
+                          setPerformanceVideoPreview(v)
+                        }}
+                        placeholder="https://cdn.example.com/recital.mp4"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Aspect Ratio Selector */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                        }}
+                      >
+                        Display Aspect Ratio
+                      </label>
+                      <small style={{ color: "var(--muted)" }}>
+                        Auto-detected or manually chosen
+                      </small>
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+                        gap: 8,
+                      }}
+                    >
+                      {[
+                        { id: "16:9", label: "16:9 Landscape", sub: "Standard Stage" },
+                        { id: "9:16", label: "9:16 Vertical", sub: "Reels / Shorts" },
+                        { id: "1:1", label: "1:1 Square", sub: "Studio Focus" },
+                        { id: "4:3", label: "4:3 Standard", sub: "Classic / Class" },
+                      ].map((ar) => {
+                        const active = (newPerformance.aspect_ratio || "16:9") === ar.id
+                        return (
+                          <button
+                            key={ar.id}
+                            type="button"
+                            onClick={() =>
+                              setNewPerformance({ ...newPerformance, aspect_ratio: ar.id })
+                            }
+                            style={{
+                              padding: "8px 12px",
+                              borderRadius: 8,
+                              border: `1.5px solid ${
+                                active ? "var(--gold)" : "var(--line)"
+                              }`,
+                              background: active ? "white" : "#faf8f5",
+                              color: active ? "var(--gold)" : "var(--navy)",
+                              cursor: "pointer",
+                              textAlign: "left",
+                              transition: "all 0.15s ease",
+                            }}
+                          >
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>
+                              {ar.label}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--muted)" }}>
+                              {ar.sub}
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* View-Only Preview Player */}
+                  {(performanceVideoPreview || newPerformance.video_url) && (
+                    <div
+                      style={{
+                        marginBottom: 20,
+                        background: "#080c14",
+                        borderRadius: 10,
+                        padding: 14,
+                        border: "1px solid var(--line)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#94a3b8",
+                            letterSpacing: "0.05em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          View-Only Video Preview ({newPerformance.aspect_ratio || "16:9"})
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            color: "#4ade80",
+                            background: "rgba(74, 222, 128, 0.1)",
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            fontWeight: 600,
+                          }}
+                        >
+                          🔒 Download menu restricted
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          background: "#000",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                          maxHeight: 280,
+                        }}
+                      >
+                        <video
+                          src={performanceVideoPreview || newPerformance.video_url}
+                          controls
+                          playsInline
+                          controlsList="nodownload noplaybackrate"
+                          disablePictureInPicture
+                          onContextMenu={(e) => e.preventDefault()}
+                          style={{
+                            width: "100%",
+                            maxHeight: 280,
+                            objectFit: "contain",
+                            aspectRatio:
+                              newPerformance.aspect_ratio === "9:16"
+                                ? "9/16"
+                                : newPerformance.aspect_ratio === "1:1"
+                                  ? "1/1"
+                                  : newPerformance.aspect_ratio === "4:3"
+                                    ? "4/3"
+                                    : "16/9",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Optional Custom Video Poster Thumbnail */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: "var(--navy)",
+                        }}
+                      >
+                        Video Poster Thumbnail (Optional)
+                      </label>
+                      <small style={{ color: "var(--muted)" }}>
+                        Custom cover image before video plays
+                      </small>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      <label
+                        className="btn btn-secondary"
+                        style={{
+                          cursor: "pointer",
+                          padding: "6px 14px",
+                          fontSize: 12,
+                          background: "white",
+                        }}
+                      >
+                        <span>Select Poster Image...</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) setPerformanceThumbnailFile(file)
+                          }}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                      <span style={{ fontSize: 12, color: "var(--muted)" }}>
+                        {performanceThumbnailFile
+                          ? `🖼️ ${performanceThumbnailFile.name}`
+                          : newPerformance.thumbnail_url
+                            ? "Current poster set"
+                            : "Default frame will be used if omitted"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Performance Details Metadata */}
                   <Field
                     id="add-pf-title"
                     label="Performance Title"
@@ -8922,7 +9692,7 @@ function AdminManager({ title }: { title: string }) {
                     onChange={(v) =>
                       setNewPerformance({ ...newPerformance, title: v })
                     }
-                    placeholder="e.g. Chopin Nocturne in C Minor"
+                    placeholder="e.g. Chopin Nocturne in C Minor Recital"
                     required
                   />
                   <div className="form-grid">
@@ -8947,14 +9717,13 @@ function AdminManager({ title }: { title: string }) {
                   </div>
                   <div className="form-grid">
                     <Field
-                      id="add-pf-yid"
-                      label="YouTube URL or Video ID"
-                      value={newPerformance.youtube_id}
+                      id="add-pf-dur"
+                      label="Duration (mm:ss)"
+                      value={newPerformance.duration}
                       onChange={(v) =>
-                        setNewPerformance({ ...newPerformance, youtube_id: v })
+                        setNewPerformance({ ...newPerformance, duration: v })
                       }
-                      placeholder="https://youtu.be/... or 11-char ID"
-                      required
+                      placeholder="4:15"
                     />
                     <Field
                       id="add-pf-date"
@@ -8973,7 +9742,7 @@ function AdminManager({ title }: { title: string }) {
                     onChange={(v) =>
                       setNewPerformance({ ...newPerformance, description: v })
                     }
-                    placeholder="Performance context, milestone celebration..."
+                    placeholder="Performance context, milestone celebration, syllabus pieces performed..."
                   />
                 </div>
                 <div
@@ -8990,10 +9759,18 @@ function AdminManager({ title }: { title: string }) {
                     variant="ghost"
                     type="button"
                     onClick={() => setShowAddModal(false)}
+                    disabled={isUploadingPerformanceVideo}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Publish Recital Video</Button>
+                  <Button
+                    type="submit"
+                    disabled={isUploadingPerformanceVideo}
+                  >
+                    {isUploadingPerformanceVideo
+                      ? `Uploading Video (${performanceUploadProgress ?? 0}%)...`
+                      : "Publish Recital Video"}
+                  </Button>
                 </div>
               </form>
             )}

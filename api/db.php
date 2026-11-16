@@ -249,6 +249,90 @@ function saveMediaImage(array $fileInfo, string $subfolder, string $prefix = 'im
 }
 
 /**
+ * Save an uploaded video file to media directory, mirror across public and dist,
+ * and return public web path.
+ */
+function saveMediaVideo(array $fileInfo, string $subfolder = 'video', string $prefix = 'recital'): array {
+    $errorCode = $fileInfo['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($errorCode !== UPLOAD_ERR_OK) {
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $errorMsg = 'Uploaded video file exceeds server size limits.';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errorMsg = 'Video file upload was only partially completed. Please try again.';
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                $errorMsg = 'No video file was selected for upload.';
+                break;
+            default:
+                $errorMsg = 'Video upload error (Code ' . $errorCode . ').';
+                break;
+        }
+        return ['success' => false, 'error' => $errorMsg];
+    }
+
+    $fileTmp = $fileInfo['tmp_name'];
+    $origName = basename($fileInfo['name']);
+    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+    $allowedExts = ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'mkv', 'avi'];
+    if (!in_array($ext, $allowedExts)) {
+        return ['success' => false, 'error' => 'Invalid video format (.' . $ext . '). Supported formats: MP4, WebM, MOV, M4V, OGV.'];
+    }
+
+    $safeName = $prefix . '-' . time() . '-' . rand(100, 999) . '.' . $ext;
+    $baseDir = dirname(__DIR__);
+
+    $primaryDir = $baseDir . '/media/' . $subfolder;
+    $publicDir = $baseDir . '/public/media/' . $subfolder;
+    $distDir = $baseDir . '/dist/media/' . $subfolder;
+
+    $allDirs = [$primaryDir, $publicDir, $distDir];
+    foreach ($allDirs as $dir) {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+    }
+
+    $saved = false;
+    $primaryPath = $primaryDir . '/' . $safeName;
+    if (move_uploaded_file($fileTmp, $primaryPath)) {
+        $saved = true;
+        @chmod($primaryPath, 0644);
+    } else {
+        $publicPath = $publicDir . '/' . $safeName;
+        if (move_uploaded_file($fileTmp, $publicPath)) {
+            $saved = true;
+            $primaryPath = $publicPath;
+            @chmod($publicPath, 0644);
+        }
+    }
+
+    if (!$saved) {
+        return ['success' => false, 'error' => 'Failed to write uploaded video to server storage. Please check disk permissions.'];
+    }
+
+    foreach ($allDirs as $dir) {
+        $targetFile = $dir . '/' . $safeName;
+        if ($targetFile !== $primaryPath) {
+            @copy($primaryPath, $targetFile);
+            @chmod($targetFile, 0644);
+        }
+    }
+
+    $webUrl = '/media/' . $subfolder . '/' . $safeName;
+
+    return [
+        'success' => true,
+        'message' => 'Video uploaded successfully.',
+        'video_url' => $webUrl,
+        'filename' => $safeName,
+    ];
+}
+
+/**
  * Convert base64 data URI (data:image/...) to a static file in all media directories.
  */
 function saveBase64MediaImage(string $dataUri, string $subfolder, string $prefix = 'img'): ?string {

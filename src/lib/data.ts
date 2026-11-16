@@ -525,6 +525,7 @@ export interface PerformanceItem {
   youtubeId?: string
   videoUrl?: string
   thumbnail?: string
+  aspectRatio?: "16:9" | "9:16" | "1:1" | "4:3" | "auto" | string
   duration: string
   date: string
   description: string

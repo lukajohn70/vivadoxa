@@ -73,6 +73,20 @@ function ensureCatalogTables(PDO $pdo): void {
     }
 
     // 4. Performances
+    try {
+        $cols = $pdo->query("SHOW COLUMNS FROM `performances`")->fetchAll(PDO::FETCH_COLUMN);
+        if (!in_array('video_url', $cols)) {
+            $pdo->exec("ALTER TABLE `performances` ADD COLUMN `video_url` TEXT NULL AFTER `youtube_id`");
+        }
+        if (!in_array('thumbnail_url', $cols)) {
+            $pdo->exec("ALTER TABLE `performances` ADD COLUMN `thumbnail_url` VARCHAR(255) NULL AFTER `video_url`");
+        }
+        if (!in_array('aspect_ratio', $cols)) {
+            $pdo->exec("ALTER TABLE `performances` ADD COLUMN `aspect_ratio` VARCHAR(20) NOT NULL DEFAULT '16:9' AFTER `thumbnail_url`");
+        }
+        $pdo->exec("ALTER TABLE `performances` MODIFY COLUMN `youtube_id` VARCHAR(100) NULL DEFAULT ''");
+    } catch (Exception $e) {}
+
     $perfCount = (int)$pdo->query("SELECT COUNT(*) FROM `performances`")->fetchColumn();
     if ($perfCount === 0) {
         $performances = [
@@ -127,6 +141,23 @@ if ($method === 'GET') {
         jsonResponse(['success' => true, 'data' => $stmt->fetchAll()]);
     }
 } elseif ($method === 'POST') {
+    // ── Direct Video File Upload Handler ───────────────────────────
+    $uploadVideo = $_FILES['video'] ?? $_FILES['file'] ?? null;
+    if ($uploadVideo !== null || $type === 'video_upload') {
+        if ($uploadVideo === null) {
+            jsonResponse(['success' => false, 'error' => 'No video file was sent in upload payload.'], 400);
+        }
+        $result = saveMediaVideo($uploadVideo, 'video', 'recital');
+        jsonResponse($result, $result['success'] ? 200 : 400);
+    }
+
+    // ── Direct Video Poster / Thumbnail Upload Handler ─────────────
+    $uploadPoster = $_FILES['thumbnail'] ?? $_FILES['poster'] ?? null;
+    if ($uploadPoster !== null) {
+        $result = saveMediaImage($uploadPoster, 'video', 'thumb');
+        jsonResponse($result, $result['success'] ? 200 : 400);
+    }
+
     $input = getJsonInput();
     $action = trim($input['action'] ?? 'add');
 
@@ -306,22 +337,30 @@ if ($method === 'GET') {
         $performer = trim($input['performer'] ?? 'Vivadoxa Ensemble');
         $program = trim($input['program'] ?? 'General Performance');
         $category = trim($input['category'] ?? 'Concert');
-        $youtubeId = trim($input['youtube_id'] ?? '');
+        $youtubeId = trim($input['youtube_id'] ?? $input['youtubeId'] ?? '');
+        $videoUrl = trim($input['video_url'] ?? $input['videoUrl'] ?? '');
+        $thumbnailUrl = trim($input['thumbnail_url'] ?? $input['thumbnail'] ?? '');
+        $aspectRatio = trim($input['aspect_ratio'] ?? $input['aspectRatio'] ?? '16:9');
         $duration = trim($input['duration'] ?? '3:30');
         $dateLabel = trim($input['date_label'] ?? 'Annual Recital');
         $description = trim($input['description'] ?? '');
         $isFeatured = !empty($input['is_featured']) ? 1 : 0;
-        $isShort = !empty($input['is_short']) ? 1 : 0;
+        $isShort = (!empty($input['is_short']) || $aspectRatio === '9:16') ? 1 : 0;
 
-        if (empty($title) || empty($youtubeId)) {
-            jsonResponse(['success' => false, 'error' => 'Title and YouTube video ID are required.'], 400);
+        if (empty($title)) {
+            jsonResponse(['success' => false, 'error' => 'Title is required.'], 400);
+        }
+
+        if (empty($youtubeId) && empty($videoUrl)) {
+            jsonResponse(['success' => false, 'error' => 'Please provide a YouTube video ID/URL or upload a video file.'], 400);
         }
 
         if ($id > 0) {
             $stmt = $pdo->prepare("
                 UPDATE `performances`
                 SET `title` = :title, `performer` = :performer, `program` = :program, `category` = :category,
-                    `youtube_id` = :yid, `duration` = :dur, `date_label` = :dt, `description` = :desc,
+                    `youtube_id` = :yid, `video_url` = :vurl, `thumbnail_url` = :thumb, `aspect_ratio` = :ar,
+                    `duration` = :dur, `date_label` = :dt, `description` = :desc,
                     `is_featured` = :feat, `is_short` = :short, `is_active` = 1
                 WHERE id = :id
             ");
@@ -331,6 +370,9 @@ if ($method === 'GET') {
                 ':program' => $program,
                 ':category' => $category,
                 ':yid' => $youtubeId,
+                ':vurl' => $videoUrl,
+                ':thumb' => $thumbnailUrl,
+                ':ar' => $aspectRatio,
                 ':dur' => $duration,
                 ':dt' => $dateLabel,
                 ':desc' => $description,
@@ -340,8 +382,8 @@ if ($method === 'GET') {
             ]);
         } else {
             $stmt = $pdo->prepare("
-                INSERT INTO `performances` (`title`, `performer`, `program`, `category`, `youtube_id`, `duration`, `date_label`, `description`, `is_featured`, `is_short`, `is_active`)
-                VALUES (:title, :performer, :program, :category, :yid, :dur, :dt, :desc, :feat, :short, 1)
+                INSERT INTO `performances` (`title`, `performer`, `program`, `category`, `youtube_id`, `video_url`, `thumbnail_url`, `aspect_ratio`, `duration`, `date_label`, `description`, `is_featured`, `is_short`, `is_active`)
+                VALUES (:title, :performer, :program, :category, :yid, :vurl, :thumb, :ar, :dur, :dt, :desc, :feat, :short, 1)
             ");
             $stmt->execute([
                 ':title' => $title,
@@ -349,6 +391,9 @@ if ($method === 'GET') {
                 ':program' => $program,
                 ':category' => $category,
                 ':yid' => $youtubeId,
+                ':vurl' => $videoUrl,
+                ':thumb' => $thumbnailUrl,
+                ':ar' => $aspectRatio,
                 ':dur' => $duration,
                 ':dt' => $dateLabel,
                 ':desc' => $description,

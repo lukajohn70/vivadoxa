@@ -1595,6 +1595,98 @@ export async function deleteInstructor(id: number): Promise<ApiResponse> {
   return { success: false, error: "Failed to delete instructor from database." }
 }
 
+export function uploadPerformanceVideo(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<ApiResponse & { video_url?: string; url?: string; filename?: string }> {
+  return new Promise((resolve) => {
+    try {
+      const xhr = new XMLHttpRequest()
+      const formData = new FormData()
+      formData.append("video", file)
+
+      const url = `${getApiUrl("academics.php")}?type=video_upload`
+      xhr.open("POST", url, true)
+      xhr.withCredentials = true
+
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100)
+            onProgress(percent)
+          }
+        }
+      }
+
+      xhr.onload = () => {
+        try {
+          const resp = JSON.parse(xhr.responseText || "{}")
+          if (xhr.status >= 200 && xhr.status < 300 && resp.success) {
+            resolve(resp)
+          } else {
+            resolve({
+              success: false,
+              error: resp.error || `Upload failed with status ${xhr.status}`,
+            })
+          }
+        } catch {
+          resolve({
+            success: false,
+            error: "Failed to parse video upload response.",
+          })
+        }
+      }
+
+      xhr.onerror = () => {
+        resolve({
+          success: false,
+          error: "Network error occurred while uploading video.",
+        })
+      }
+
+      xhr.ontimeout = () => {
+        resolve({
+          success: false,
+          error: "Video upload timed out. Please try compressing the video file or check your connection.",
+        })
+      }
+
+      xhr.timeout = 600000
+
+      xhr.send(formData)
+    } catch (err: any) {
+      resolve({
+        success: false,
+        error: err.message || "Failed to initiate video upload.",
+      })
+    }
+  })
+}
+
+export async function uploadPerformanceThumbnail(
+  file: File,
+): Promise<ApiResponse & { image_url?: string; url?: string; filename?: string }> {
+  try {
+    const formData = new FormData()
+    formData.append("thumbnail", file)
+    const res = await fetch(`${getApiUrl("academics.php")}?type=performances`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    })
+    const text = await res.text().catch(() => "")
+    if (text && text.trim().startsWith("{")) {
+      return JSON.parse(text)
+    }
+    return {
+      success: false,
+      error: "Failed to parse thumbnail upload response.",
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to upload thumbnail." }
+  }
+}
+
 export async function savePerformance(
   data: Record<string, any>,
 ): Promise<ApiResponse> {
